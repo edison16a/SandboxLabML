@@ -19,6 +19,8 @@ export interface RacingFrame {
   /** Instance hidden from the instanced mesh because the detailed car draws it. */
   hiddenPopulation: number;
   hiddenGhost: number;
+  /** Rays drawn by the inputs overlay this frame, reported to browser tests. */
+  rayCount: number;
 }
 
 export function createFrame(): RacingFrame {
@@ -31,6 +33,7 @@ export function createFrame(): RacingFrame {
     focusIndex: -1,
     hiddenPopulation: -1,
     hiddenGhost: -1,
+    rayCount: 0,
   };
 }
 

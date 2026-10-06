@@ -38,6 +38,11 @@ export class RayBuffer {
     this.dots.renderOrder = 11;
   }
 
+  /** Rays added since the last begin(). */
+  get count(): number {
+    return this.n;
+  }
+
   begin(): void {
     this.n = 0;
   }

@@ -30,7 +30,10 @@ export function RaysOverlay({ schema }: { schema: InputSpec[] }) {
     const visible = inputsOverlay && rays.length > 0;
     buffer.lines.visible = buffer.dots.visible = visible;
     labels.current.forEach((l) => l && (l.style.display = 'none'));
-    if (!visible) return;
+    if (!visible) {
+      frame.rayCount = 0;
+      return;
+    }
     buffer.begin();
     const y = 0.7;
     const stream = frame.focusStream === 'ghosts' ? ghosts : population;
@@ -70,6 +73,7 @@ export function RaysOverlay({ schema }: { schema: InputSpec[] }) {
       });
     }
     buffer.end();
+    frame.rayCount = buffer.count;
   });
 
   return (

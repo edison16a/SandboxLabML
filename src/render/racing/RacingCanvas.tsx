@@ -80,7 +80,15 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
         <CameraRig mode={camera} target={target} />
         {children}
         <Effects tier={tier} />
-        <StatsProbe instances={() => ({ population: population?.count ?? 0, ghosts: ghosts?.count ?? 0 })} />
+        <StatsProbe
+          instances={() => ({
+            population: population?.count ?? 0,
+            ghosts: ghosts?.count ?? 0,
+            rays: frame.rayCount,
+            ghostsSelected: useRacingLab.getState().ghostGenerations.length,
+            generations: useRacingLab.getState().records.length,
+          })}
+        />
       </RacingSceneContext.Provider>
     </Canvas>
   );
