@@ -5,7 +5,7 @@ import type { HideSeekMatch } from '../match/match';
 import { DEFAULT_HIDESEEK_PHYSICS, type HideSeekPhysics } from '../physics';
 import type { HideSeekRewardId } from '../rewards';
 import { createArenaPool, type ArenaPool } from '../world/pool';
-import { idle, NO_PREP, scriptedMatch } from './helpers';
+import { FACE_NORTH, FACE_SOUTH, NO_PREP, placedMatch } from './helpers';
 
 let pool: ArenaPool;
 beforeAll(async () => {
@@ -13,30 +13,13 @@ beforeAll(async () => {
 });
 afterAll(() => pool.dispose());
 
-/** Facing -z is yaw PI/2, facing +z is yaw -PI/2 (see frame.ts). */
-const FACE_NORTH = Math.PI / 2;
-const FACE_SOUTH = -Math.PI / 2;
-
-/**
- * Two idle agents placed by hand, boxes parked in the corners. The seeker
- * stands at (sx, sz) with yaw `seekerYaw`, the hider at (hx, hz) facing it.
- */
-function standoff(
+const standoff = (
   layout: HideSeekLayoutId,
-  [sx, sz, seekerYaw]: [number, number, number],
-  [hx, hz]: [number, number],
+  seeker: [number, number, number],
+  hider: [number, number],
   physics: HideSeekPhysics = NO_PREP,
   reward: HideSeekRewardId = 'v1',
-): HideSeekMatch {
-  const m = scriptedMatch(pool, layout, idle(reward), idle(reward), physics);
-  m.moveAgent('seeker', sx, sz, seekerYaw);
-  m.moveAgent('hider', hx, hz, FACE_SOUTH);
-  m.moveBox(0, -8.5, 8.5);
-  m.moveBox(1, 8.5, 8.5);
-  m.moveBox(2, -7.5, -8.5);
-  m.moveBox(3, 7.5, -8.5);
-  return m;
-}
+): HideSeekMatch => placedMatch(pool, layout, seeker, hider, physics, reward);
 
 function seesAfterOneTick(m: HideSeekMatch): boolean {
   m.step();

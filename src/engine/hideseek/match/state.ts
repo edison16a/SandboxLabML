@@ -43,6 +43,8 @@ export interface MatchTally {
   seekTicks: number;
   hiddenTicks: number;
   seenTicks: number;
+  /** Seek phase ticks the hider spent exposed (see HideSeekAgent.exposed). */
+  exposedTicks: number;
   /** Tick of the first sighting in the seek phase, or -1. */
   firstSeenTick: number;
   locks: number;
@@ -78,8 +80,17 @@ function createControl(): AgentControl {
   };
 }
 
+/**
+ * Prep ticks for a match: the physics share, or `prepSeconds` when given.
+ * At least one tick is always left for seeking, so results stay defined.
+ */
+export function matchPrepTicks(p: HideSeekPhysics, prepSeconds?: number): number {
+  if (prepSeconds === undefined || !Number.isFinite(prepSeconds)) return prepTicks(p);
+  return Math.max(0, Math.min(matchTicks(p) - 1, Math.round(prepSeconds / p.dt)));
+}
+
 /** A fresh match state on a world that `setup` has just been applied to. */
-export function createMatchState(arena: ArenaWorld, setup: MatchSetup, rayCounts: [number, number]): MatchState {
+export function createMatchState(arena: ArenaWorld, setup: MatchSetup, rayCounts: [number, number], prepSeconds?: number): MatchState {
   const p = arena.physics;
   const agents: [HideSeekAgent, HideSeekAgent] = [createAgent(HIDER, rayCounts[0], p.dt), createAgent(SEEKER, rayCounts[1], p.dt)];
   agents.forEach((a, i) => {
@@ -98,9 +109,9 @@ export function createMatchState(arena: ArenaWorld, setup: MatchSetup, rayCounts
     agents,
     controls: [createControl(), createControl()],
     boxes,
-    tally: { seekTicks: 0, hiddenTicks: 0, seenTicks: 0, firstSeenTick: -1, locks: 0, unlocks: 0 },
+    tally: { seekTicks: 0, hiddenTicks: 0, seenTicks: 0, exposedTicks: 0, firstSeenTick: -1, locks: 0, unlocks: 0 },
     totalTicks: matchTicks(p),
-    prepTicks: prepTicks(p),
+    prepTicks: matchPrepTicks(p, prepSeconds),
     tick: 0,
   };
 }

@@ -18,6 +18,13 @@ export interface MatchTeamSpec {
    * slots that are not -1.
    */
   slot?: number;
+  /**
+   * Plays the team's hand-written agent (the scripted seeker or scripted
+   * hider) instead of the genome. It wins over any script controller, so a
+   * sparring match stays the same whatever script the run uses. The genome
+   * is still required, because the match checks the brain shape.
+   */
+  scripted?: boolean;
 }
 
 /**
@@ -34,6 +41,12 @@ export interface MatchSpec {
   reward?: HideSeekRewardId;
   /** Defaults to DEFAULT_HIDESEEK_PHYSICS. */
   physics?: HideSeekPhysics;
+  /**
+   * Prep phase length, s, overriding the physics prepShare. Kept out of the
+   * physics so a prep curriculum changes neither the rules hash nor the
+   * pooled worlds. Clamped to leave at least one seek tick.
+   */
+  prepSeconds?: number;
   /** Where the trainer scheduled it: round number and position in the round. */
   round?: number;
   index?: number;
@@ -57,6 +70,13 @@ export interface MatchResult {
   hiddenShare: number;
   /** Share of seek phase ticks the seeker had the hider in sight. Always 1 minus hiddenShare. */
   seenShare: number;
+  /**
+   * Share of seek phase ticks the hider was exposed: in range of the seeker
+   * with a clear line between them, whichever way the seeker faced. Low
+   * values mean the hider kept to cover, even against a seeker that never
+   * looked its way. Optional because results saved before it existed lack it.
+   */
+  exposedShare?: number;
   /** Seconds into the seek phase of the first sighting, or -1 if the hider was never seen. */
   firstSeenAt: number;
   /** Locks the hider placed (each lock event, even if later unlocked). */
@@ -87,4 +107,6 @@ export interface HideSeekMatchOptions {
   seed: number;
   hider: HideSeekTeamSetup;
   seeker: HideSeekTeamSetup;
+  /** Prep phase length, s. Defaults to the physics prepShare of the match. */
+  prepSeconds?: number;
 }

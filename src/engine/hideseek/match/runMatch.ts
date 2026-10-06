@@ -4,6 +4,7 @@ import { DEFAULT_HIDESEEK_PHYSICS } from '../physics';
 import { builtinHideSeekController } from '../rewards';
 import type { ArenaPool } from '../world/pool';
 import { HideSeekMatch } from './match';
+import { scriptedTeamController } from './scriptedTeam';
 import type { MatchControllers, MatchResult, MatchSpec } from './types';
 
 /**
@@ -16,13 +17,16 @@ export function startMatch(spec: MatchSpec, pool: ArenaPool, controllers: MatchC
   const physics = spec.physics ?? DEFAULT_HIDESEEK_PHYSICS;
   const arena = pool.acquire(getLayout(spec.layout), physics);
   const builtin = builtinHideSeekController(spec.reward ?? 'v1');
+  const hider = spec.hider.scripted ? scriptedTeamController(spec.hider, true) : (controllers.hider ?? builtin);
+  const seeker = spec.seeker.scripted ? scriptedTeamController(spec.seeker, false) : (controllers.seeker ?? builtin);
   try {
     return new HideSeekMatch(
       arena,
       {
         seed: spec.seed,
-        hider: { brain: new Network(spec.hider.genome), inputs: spec.hider.inputs, controller: controllers.hider ?? builtin },
-        seeker: { brain: new Network(spec.seeker.genome), inputs: spec.seeker.inputs, controller: controllers.seeker ?? builtin },
+        hider: { brain: new Network(spec.hider.genome), inputs: spec.hider.inputs, controller: hider },
+        seeker: { brain: new Network(spec.seeker.genome), inputs: spec.seeker.inputs, controller: seeker },
+        prepSeconds: spec.prepSeconds,
       },
       () => pool.release(arena),
     );

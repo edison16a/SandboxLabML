@@ -49,7 +49,7 @@ export class HideSeekMatch {
     this.teams.forEach((t, i) => checkBrain(t, i === HIDER ? 'hider' : 'seeker'));
     this.setup = sampleSetup(arena.layout, p, opts.seed);
     arena.reset(this.setup);
-    this.state = createMatchState(arena, this.setup, [opts.hider.inputs.rays.count, opts.seeker.inputs.rays.count]);
+    this.state = createMatchState(arena, this.setup, [opts.hider.inputs.rays.count, opts.seeker.inputs.rays.count], opts.prepSeconds);
     this.rays = this.teams.map((t) => new SensorRays(t.inputs.rays.count, t.inputs.rays.range, p));
     this.observers = this.teams.map((t) => new HideSeekObserver(t.inputs, p));
     this.obs = this.teams.map((t) => new Float64Array(t.brain.inputCount));

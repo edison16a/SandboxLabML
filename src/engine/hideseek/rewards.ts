@@ -1,7 +1,7 @@
 import type { AgentController, TickIO } from '../env/types';
 import type { HideSeekAgent } from './agents/agent';
 
-export type HideSeekRewardId = 'v1' | 'starter';
+export type HideSeekRewardId = 'v1' | 'starter' | 'cover';
 
 /** Brain outputs become actions unchanged: move, turn, grab, lock. */
 function copyBrain(io: TickIO): void {
@@ -51,9 +51,40 @@ export const starterHideSeekController: AgentController<HideSeekAgent> = {
   },
 };
 
+/**
+ * The cover rewards: v1 with a neutral middle. In the seek phase the hider
+ * earns +1/s only while it is covered (out of the seeker's range or behind
+ * a wall or box, see HideSeekAgent.exposed) and -1/s while seen. Being out
+ * of sight only because the seeker looks the other way scores 0. The
+ * seeker gets the exact opposite, so the game stays zero sum.
+ *
+ * Why: under v1 a hider facing a clumsy seeker is "hidden" almost all the
+ * time wherever it stands, so every hider scores near the maximum and
+ * selection cannot tell skill from luck. Cover does not depend on how good
+ * the seeker is, so hiders get a clear signal from the first generation,
+ * and seekers get one for finding a line of sight before they can aim. As
+ * a script:
+ *
+ *   reward +1 * dt when agent.hidden and not agent.exposed (hiders)
+ *   reward -1 * dt when agent.seen (hiders)
+ *   reward +1 * dt when agent.seesOpponent (seekers)
+ *   reward -1 * dt when not agent.prep and not agent.exposed (seekers)
+ */
+export const coverHideSeekController: AgentController<HideSeekAgent> = {
+  customSensorCount: 0,
+  sensors() {},
+  tick(a: HideSeekAgent, io: TickIO) {
+    copyBrain(io);
+    if (a.prep) return;
+    const score = a.seen ? -1 : a.exposed ? 0 : 1;
+    io.reward = (a.team === 'hider' ? score : -score) * a.dt;
+  },
+};
+
 export const HIDESEEK_REWARDS: Record<HideSeekRewardId, AgentController<HideSeekAgent>> = {
   v1: v1HideSeekController,
   starter: starterHideSeekController,
+  cover: coverHideSeekController,
 };
 
 export function builtinHideSeekController(id: HideSeekRewardId = 'v1'): AgentController<HideSeekAgent> {

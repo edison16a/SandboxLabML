@@ -39,6 +39,14 @@ export interface HideSeekAgent extends Pose {
   seen: boolean;
   /** Seek phase and the hider is out of sight. Same value for both agents. */
   hidden: boolean;
+  /**
+   * The seeker would see the hider if it turned to face it: the hider is
+   * within vision range and nothing blocks the line between them. Unlike
+   * `seen` it ignores which way the seeker faces, so it measures how well
+   * the hider has taken cover however good or bad the seeker is. Updated
+   * in prep too. Same value for both agents.
+   */
+  exposed: boolean;
   /** The step that just ran was part of the prep phase. */
   prep: boolean;
   /** Cannot act: a seeker during prep, or an agent its controller stopped. */
@@ -90,6 +98,7 @@ export function createAgent(index: number, rayCount: number, dt: number): HideSe
     seesOpponent: false,
     seen: false,
     hidden: false,
+    exposed: false,
     prep: true,
     frozen: false,
     time: 0,

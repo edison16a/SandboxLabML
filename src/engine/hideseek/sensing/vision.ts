@@ -43,13 +43,22 @@ export class SightLines {
    * calls cast no ray at all.
    */
   sees(viewer: Pose, target: Pose): boolean {
+    return this.check(viewer, target, true);
+  }
+
+  /** Like `sees`, but as if the viewer faced the target: range and a clear line only. */
+  inLine(viewer: Pose, target: Pose): boolean {
+    return this.check(viewer, target, false);
+  }
+
+  private check(viewer: Pose, target: Pose, facing: boolean): boolean {
     const p = this.arena.physics;
     const dx = target.x - viewer.x;
     const dz = target.z - viewer.z;
     const d = Math.hypot(dx, dz);
     if (d > p.vision.range) return false;
     if (d < 1e-6) return true;
-    if (Math.abs(bearing(dx, dz, viewer.yaw)) > p.vision.fov / 2) return false;
+    if (facing && Math.abs(bearing(dx, dz, viewer.yaw)) > p.vision.fov / 2) return false;
     if (this.clear(viewer.x, viewer.z, target.x, target.z)) return true;
     const sx = (-dz / d) * p.agent.radius;
     const sz = (dx / d) * p.agent.radius;
@@ -59,7 +68,7 @@ export class SightLines {
 
 /**
  * Updates who sees whom after a step. The seeker is blind during prep.
- * Also records the last sighting (for the opponentLastSeen input and
+ * Also works out whether the hider is exposed, records the last sighting (for the opponentLastSeen input and
  * scripts) and counts seek phase ticks for the match result.
  */
 export function updateVision(s: MatchState, sight: SightLines): void {
@@ -68,11 +77,13 @@ export function updateVision(s: MatchState, sight: SightLines): void {
   hider.seesOpponent = sight.sees(hider, seeker);
   seeker.seesOpponent = !prep && sight.sees(seeker, hider);
   const seen = seeker.seesOpponent;
+  const exposed = seen || sight.inLine(seeker, hider);
   for (let i = 0; i < s.agents.length; i++) {
     const a = s.agents[i];
     const other = s.agents[1 - i];
     a.seen = seen;
     a.hidden = !prep && !seen;
+    a.exposed = exposed;
     if (a.seesOpponent) {
       a.lastSeenAge = 0;
       a.lastSeenX = other.x;
@@ -84,6 +95,7 @@ export function updateVision(s: MatchState, sight: SightLines): void {
   if (prep) return;
   const t = s.tally;
   t.seekTicks++;
+  if (exposed) t.exposedTicks++;
   if (!seen) t.hiddenTicks++;
   else {
     t.seenTicks++;
