@@ -6,6 +6,7 @@ import { fromBlocks, lineOf, print, toBlocks, type BlockWorkspace } from '@/engi
 import { Button } from '@/ui/primitives/Button';
 import { Switch } from '@/ui/primitives/Switch';
 import { analyze } from '../doc/analyze';
+import { lastValidText } from '../doc/lastValid';
 import { duplicate } from '../state/scriptActions';
 import { selectText, useStudio } from '../state/studioStore';
 import { BlocksContext, type BlocksApi, type BlockEdit } from './BlocksContext';
@@ -37,11 +38,11 @@ export default function BlocksView() {
   const presetOnly = useStudio((s) => s.script?.readonly ?? true);
   const scriptId = useStudio((s) => s.script?.id ?? null);
   const explain = useStudio((s) => s.explain);
+  const history = useStudio((s) => s.history);
   const analysis = useMemo(() => analyze(text), [text]);
-  const fresh = useMemo(() => (analysis.syntaxError ? null : toBlocks(analysis.parsed.program)), [analysis]);
-  const lastValid = useRef<{ id: string | null; ws: BlockWorkspace } | null>(null);
-  if (fresh) lastValid.current = { id: scriptId, ws: fresh };
-  const ws = fresh ?? (lastValid.current?.id === scriptId ? lastValid.current.ws : null);
+  // While the text is broken, show the newest earlier version that parsed. The undo history already holds it.
+  const shown = useMemo(() => (analysis.syntaxError ? lastValidText(history) : text), [analysis, history, text]);
+  const ws = useMemo(() => (shown === null ? null : toBlocks(analyze(shown).parsed.program)), [shown]);
   const wsRef = useRef(ws);
   wsRef.current = ws;
 

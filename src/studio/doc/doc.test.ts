@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { analyze } from './analyze';
 import { canRedo, canUndo, commit, createHistory, GROUP_WINDOW_MS, HISTORY_DEPTH, redo, seal, undo } from './history';
 import { appendToSection, insertBelowLine } from './insert';
+import { lastValidText } from './lastValid';
 import { lineCol, minimalChange } from './textChange';
 
 describe('document history', () => {
@@ -68,6 +69,19 @@ describe('inserting examples', () => {
     const gen = appendToSection(src, 'generation', 'speciate(target: 8)');
     expect(gen).toContain('\neach generation {\n  speciate(target: 8)\n}\n');
     expect(appendToSection('script "t" for racing v1\neach tick {\n', 'tick', 'reward 1')).toBeNull();
+  });
+});
+
+describe('last valid text', () => {
+  it('finds the newest state in the history that parses', () => {
+    const good = 'script "t" for racing v1\neach tick {\n  reward 1\n}\n';
+    let h = createHistory('script "t" for racing v1\n');
+    h = commit(h, good);
+    h = commit(h, `${good}reward (`);
+    h = commit(h, `${good}reward ((`);
+    expect(lastValidText(h)).toBe(good);
+    expect(lastValidText(createHistory('each tick {\n  reward (\n'))).toBeNull();
+    expect(lastValidText(createHistory(good))).toBe(good);
   });
 });
 
