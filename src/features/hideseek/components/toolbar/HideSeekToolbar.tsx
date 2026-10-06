@@ -31,7 +31,8 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
     // The row reads its own width, not the window's, since the side panel can be dragged wider. On a
     // phone it scrolls sideways instead of making the whole page wider than the screen.
     <div className="no-scrollbar @container flex h-14 shrink-0 items-center gap-3 overflow-x-auto border-t border-border bg-bg px-3 [&>*]:shrink-0">
-      <Tooltip content={running ? 'Pause training' : 'Start training'} shortcut="Space">
+      {/* In the Sandbox, Space runs the match instead, so the Train button shows no key there. */}
+      <Tooltip content={running ? 'Pause training' : 'Start training'} shortcut={mode === 'sandbox' ? undefined : 'Space'}>
         <Button variant="primary" size="lg" className="w-28 justify-center" onClick={() => void (running ? session.pause() : session.start())} disabled={!run} aria-label={running ? 'Pause' : 'Train'}>
           {running ? <Pause /> : <Play />}
           {running ? 'Pause' : 'Train'}
