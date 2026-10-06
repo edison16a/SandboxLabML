@@ -25,7 +25,7 @@ describe('backdrop blocks', () => {
   });
 
   it('rise with distance, low by the arenas and full height far out', () => {
-    expect(heightRamp(0)).toBeLessThan(0.2);
+    expect(heightRamp(0)).toBeLessThan(0.25);
     expect(heightRamp(20)).toBeGreaterThan(heightRamp(5));
     expect(heightRamp(500)).toBe(1);
   });

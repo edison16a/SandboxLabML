@@ -63,7 +63,7 @@ export function backdropBlocks(seed = 5): BackdropBlock[] {
  * and the skyline rises with distance.
  */
 export function heightRamp(distance: number): number {
-  return Math.min(1, 0.12 + distance / 70);
+  return Math.min(1, 0.2 + distance / 70);
 }
 
 /** Distance from (x, z) to the rectangle |x| <= hx, |z| <= hz, 0 inside it. */

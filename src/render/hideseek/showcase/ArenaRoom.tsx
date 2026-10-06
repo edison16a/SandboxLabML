@@ -37,7 +37,7 @@ export function ArenaRoom({ layout, ao = 0.5 }: { layout: number; /** Strength o
   }, []);
   const wallMat = useDisposable(() => {
     const maps = sharedPlasterMaps();
-    return new THREE.MeshStandardMaterial({ color: HS_COLORS.wall, ...maps, normalScale: new THREE.Vector2(0.3, 0.3), roughness: 1, metalness: 0, envMapIntensity: 0.7 });
+    return new THREE.MeshStandardMaterial({ color: HS_COLORS.wall, ...maps, normalScale: new THREE.Vector2(0.15, 0.15), roughness: 1, metalness: 0, envMapIntensity: 0.7 });
   }, []);
 
   return (
