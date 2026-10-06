@@ -63,7 +63,7 @@ export function explainStmt(s: Stmt, env: EnvId | null): string {
     case 'stop':
       return `End the run as ${quote(s.reason)} when ${explainExpr(s.when, env)}`;
     case 'let':
-      return `Call ${explainExpr(s.value, env)} ${s.name}`;
+      return `Let ${s.name} stand for ${explainExpr(s.value, env)}`;
     case 'if':
       return `If ${explainExpr(s.cond, env)}`;
     case 'repeat':
