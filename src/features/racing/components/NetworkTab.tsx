@@ -10,7 +10,7 @@ import { Button } from '@/ui/primitives/Button';
 import { Slider } from '@/ui/primitives/Slider';
 import { Switch } from '@/ui/primitives/Switch';
 import { racingSession } from '../session/RacingSession';
-import { useRacingLab } from '../state/labStore';
+import { followsGhost, useRacingLab } from '../state/labStore';
 
 /**
  * The champion's brain. The slider scrubs through generations so you can
@@ -20,6 +20,7 @@ import { useRacingLab } from '../state/labStore';
 export function NetworkTab() {
   const records = useRacingLab((s) => s.records);
   const focus = useRacingLab((s) => s.focus);
+  const ghost = useRacingLab(followsGhost);
   const pinned = useRacingLab((s) => s.networkGeneration);
   const hoveredInput = useRacingLab((s) => s.hoveredInput);
   const set = useRacingLab((s) => s.set);
@@ -28,7 +29,9 @@ export function NetworkTab() {
   const lesioned = useMemo(() => new Set(Object.keys(lesions).map(Number)), [lesions]);
   const [playing, setPlaying] = useState(false);
 
-  const followGen = focus.kind === 'ghost' ? focus.generation : records.length - 1;
+  // In the Sandbox the camera follows the car on pole, the last ghost in the stream.
+  const poleGen = useRacingLab((s) => (s.mode === 'sandbox' ? s.ghostGenerations[s.ghostGenerations.length - 1] : undefined));
+  const followGen = focus.kind === 'ghost' ? focus.generation : (poleGen ?? records.length - 1);
   const gen = pinned ?? followGen;
   const record = records.find((r) => r.generation === gen) ?? records[records.length - 1];
   const schema = useRunSchema();
@@ -48,9 +51,9 @@ export function NetworkTab() {
   const live = useCallback(() => {
     const streams = racingSession().streams;
     if (!streams) return null;
-    const stream = focus.kind === 'ghost' ? streams.ghosts : streams.population;
+    const stream = ghost ? streams.ghosts : streams.population;
     return stream.inspect?.obs ?? null;
-  }, [focus]);
+  }, [ghost]);
 
   if (!record) return <div className="p-4 text-[13px] text-muted">The network appears after the first generation.</div>;
   const counts = countGenome(record.genome);

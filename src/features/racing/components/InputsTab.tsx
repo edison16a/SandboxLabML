@@ -7,7 +7,7 @@ import { InputBars } from '@/features/inputs/InputBars';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Switch } from '@/ui/primitives/Switch';
 import { racingSession } from '../session/RacingSession';
-import { useRacingLab } from '../state/labStore';
+import { followsGhost, useRacingLab } from '../state/labStore';
 
 /** Everything the followed car senses right now, plus overlay settings. */
 export function InputsTab() {
@@ -15,7 +15,6 @@ export function InputsTab() {
   const overlay = useRacingLab((s) => s.inputsOverlay);
   const scope = useRacingLab((s) => s.inputsScope);
   const hovered = useRacingLab((s) => s.hoveredInput);
-  const focus = useRacingLab((s) => s.focus);
   const set = useRacingLab((s) => s.set);
   const mode = useRacingLab((s) => s.mode);
   const lesions = useRacingLab((s) => s.lesions);
@@ -28,11 +27,12 @@ export function InputsTab() {
     racingSession().sandboxChanged();
   };
   const schema = useRunSchema();
+  const ghost = useRacingLab(followsGhost);
   const read = useCallback(() => {
     const streams = racingSession().streams;
-    const stream = focus.kind === 'ghost' ? streams?.ghosts : streams?.population;
+    const stream = ghost ? streams?.ghosts : streams?.population;
     return stream?.inspect ?? null;
-  }, [focus]);
+  }, [ghost]);
 
   return (
     <div className="flex flex-col gap-4 p-4">

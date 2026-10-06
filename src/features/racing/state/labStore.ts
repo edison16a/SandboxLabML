@@ -43,6 +43,15 @@ export function openedRunState(run: RunConfig, records: GenerationRecord[], live
 }
 
 /**
+ * True when the followed car is a ghost: the user clicked one, or the lab
+ * is in the Sandbox, where only ghosts drive and the population stream sits
+ * frozen on its last training frame.
+ */
+export function followsGhost(s: { focus: Focus; mode: 'train' | 'sandbox' }): boolean {
+  return s.focus.kind === 'ghost' || s.mode === 'sandbox';
+}
+
+/**
  * Max trades the picture for training speed: while it trains, the viewport
  * stops drawing and the ghost replay stands still, so every core goes to
  * the sim workers. Pausing or picking another speed brings both back.
