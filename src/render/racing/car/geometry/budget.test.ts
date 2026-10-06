@@ -21,7 +21,7 @@ function heroTriangles(tier: 'high' | 'medium' | 'low'): number {
 describe('procedural car', () => {
   it('keeps the hero car within its triangle budget, lighter on lower tiers', () => {
     const high = heroTriangles('high');
-    expect(high).toBeLessThan(60_000);
+    expect(high).toBeLessThan(50_000);
     expect(heroTriangles('medium')).toBeLessThan(high);
     expect(heroTriangles('low')).toBeLessThan(heroTriangles('medium'));
   });
