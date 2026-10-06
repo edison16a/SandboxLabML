@@ -1,0 +1,98 @@
+{
+  "id": "hideseek-01-points-for-hiding",
+  "course": "hideseek",
+  "order": 1,
+  "title": "Points for hiding",
+  "summary": "Let the players move, then give hiders a reason to stay out of sight.",
+  "minutes": 6,
+  "steps": [
+    {
+      "id": "let-them-move",
+      "title": "Let the players move",
+      "body": "A match lasts 30 seconds. For the first 9, the seeker is frozen and blind while the hider gets ready. This is the prep phase. Then the seeker has 21 seconds to find the hider.\n\nOne script trains both teams. Its `each tick` block runs for every player 30 times per second, and `act` turns the brain's outputs into moves. Right now `act` gets zeros, so nobody moves.\n\nPass `brain.move` and `brain.turn` to `act`, and leave grab and lock at 0 for now. Then press Check. It plays one test match in which two fixed test players stand in for the brains, so the result is the same every time.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"My hide and seek\" for hideseek v1\n\n// Every player has a brain: a small neural network.\n// hideseek-starter sees eight distance rays, its speed, whether the other\n// player is in sight and whether the match is still in the prep phase.\nbrain hideseek-starter\n\n// This block runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // act sets how the player moves, turns, grabs and locks in the next step.\n  act(move: 0, turn: 0, grab: 0, lock: 0)\n}\n",
+      "highlight": {
+        "lines": [12]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "hiderDistance",
+        "op": ">",
+        "value": 5,
+        "message": "The hider should walk at least 5 m in the test match."
+      },
+      "hints": [
+        "The brain's outputs are named brain.move, brain.turn, brain.grab and brain.lock.",
+        "Change the line to act(move: brain.move, turn: brain.turn, grab: 0, lock: 0)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"My hide and seek\" for hideseek v1\n\n// Every player has a brain: a small neural network.\n// hideseek-starter sees eight distance rays, its speed, whether the other\n// player is in sight and whether the match is still in the prep phase.\nbrain hideseek-starter\n\n// This block runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // act sets how the player moves, turns, grabs and locks in the next step.\n  act(move: brain.move, turn: brain.turn, grab: 0, lock: 0)\n}\n"
+    },
+    {
+      "id": "points-for-hiding",
+      "title": "Points for hiding",
+      "body": "Training is evolution. Every player gets a score called fitness: the sum of the rewards it collects. The best scorers become the parents of the next generation.\n\nThere are no rewards yet, so every hider scores 0 and evolution has nothing to go on.\n\n`agent.hidden` is true while the seeker cannot see the hider. Add `reward +1 * dt when agent.hidden`. `dt` is the length of one tick, a thirtieth of a second, so the hider earns 1 point for every second it stays hidden.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"My hide and seek\" for hideseek v1\n\n// Every player has a brain: a small neural network.\n// hideseek-starter sees eight distance rays, its speed, whether the other\n// player is in sight and whether the match is still in the prep phase.\nbrain hideseek-starter\n\n// This block runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // act sets how the player moves, turns, grabs and locks in the next step.\n  act(move: brain.move, turn: brain.turn, grab: 0, lock: 0)\n\n  // Add a reward here.\n}\n",
+      "highlight": {
+        "lines": [14]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "hiderReward",
+        "op": ">",
+        "value": 0,
+        "message": "The hider should score some points in the test match."
+      },
+      "hints": [
+        "A reward line looks like this: reward +points when condition.",
+        "Replace the comment with reward +1 * dt when agent.hidden."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"My hide and seek\" for hideseek v1\n\n// Every player has a brain: a small neural network.\n// hideseek-starter sees eight distance rays, its speed, whether the other\n// player is in sight and whether the match is still in the prep phase.\nbrain hideseek-starter\n\n// This block runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // act sets how the player moves, turns, grabs and locks in the next step.\n  act(move: brain.move, turn: brain.turn, grab: 0, lock: 0)\n\n  // A point for every second the seeker cannot see the hider.\n  reward +1 * dt when agent.hidden\n}\n"
+    },
+    {
+      "id": "one-script-two-teams",
+      "title": "One script, two teams",
+      "body": "Every line in `each tick` runs for the seeker too. So right now the seeker also earns a point for every second the hider stays hidden. That pays the seeker to look away, which is the opposite of its job.\n\n`agent.isHider` is true for hiders only. Put the reward inside `if agent.isHider { }` so that only hiders get it. The check makes sure the seeker scores 0.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"My hide and seek\" for hideseek v1\n\n// Every player has a brain: a small neural network.\n// hideseek-starter sees eight distance rays, its speed, whether the other\n// player is in sight and whether the match is still in the prep phase.\nbrain hideseek-starter\n\n// This block runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // act sets how the player moves, turns, grabs and locks in the next step.\n  act(move: brain.move, turn: brain.turn, grab: 0, lock: 0)\n\n  // A point for every second the seeker cannot see the hider.\n  reward +1 * dt when agent.hidden\n}\n",
+      "highlight": {
+        "lines": [15]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "seekerReward",
+        "op": "==",
+        "value": 0,
+        "message": "The seeker should score 0 points."
+      },
+      "hints": [
+        "An if runs the lines inside its braces only when its condition is true.",
+        "Write if agent.isHider { on the line above the reward and } on the line below it."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"My hide and seek\" for hideseek v1\n\n// Every player has a brain: a small neural network.\n// hideseek-starter sees eight distance rays, its speed, whether the other\n// player is in sight and whether the match is still in the prep phase.\nbrain hideseek-starter\n\n// This block runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // act sets how the player moves, turns, grabs and locks in the next step.\n  act(move: brain.move, turn: brain.turn, grab: 0, lock: 0)\n\n  // One script trains both teams, so first check which team this player is on.\n  if agent.isHider {\n    // A point for every second the seeker cannot see the hider.\n    reward +1 * dt when agent.hidden\n  }\n}\n"
+    },
+    {
+      "id": "seen-costs-points",
+      "title": "Being seen costs points",
+      "body": "A hider that is seen for most of the match still scores, as long as it hides some of the time. Being seen should cost something.\n\n`agent.seen` is true while the seeker has the hider in sight. Inside the hider's block, add `reward -1 * dt when agent.seen`. Now a hider gains a point for each second hidden and loses one for each second seen, so the best hiders are the ones the seeker never catches.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"My hide and seek\" for hideseek v1\n\n// Every player has a brain: a small neural network.\n// hideseek-starter sees eight distance rays, its speed, whether the other\n// player is in sight and whether the match is still in the prep phase.\nbrain hideseek-starter\n\n// This block runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // act sets how the player moves, turns, grabs and locks in the next step.\n  act(move: brain.move, turn: brain.turn, grab: 0, lock: 0)\n\n  // One script trains both teams, so first check which team this player is on.\n  if agent.isHider {\n    // A point for every second the seeker cannot see the hider.\n    reward +1 * dt when agent.hidden\n  }\n}\n",
+      "highlight": {
+        "lines": [17]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "if",
+            "scope": "tick",
+            "uses": ["agent.isHider", "agent.seen"]
+          }
+        ],
+        "message": "Add a penalty inside the hider's block that uses agent.seen."
+      },
+      "hints": [
+        "A penalty is a reward with a minus sign.",
+        "Add reward -1 * dt when agent.seen under the first reward, inside the braces."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"My hide and seek\" for hideseek v1\n\n// Every player has a brain: a small neural network.\n// hideseek-starter sees eight distance rays, its speed, whether the other\n// player is in sight and whether the match is still in the prep phase.\nbrain hideseek-starter\n\n// This block runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // act sets how the player moves, turns, grabs and locks in the next step.\n  act(move: brain.move, turn: brain.turn, grab: 0, lock: 0)\n\n  // One script trains both teams, so first check which team this player is on.\n  if agent.isHider {\n    // A point for every second the seeker cannot see the hider.\n    reward +1 * dt when agent.hidden\n    // And loses one for every second the seeker has it in sight.\n    reward -1 * dt when agent.seen\n  }\n}\n"
+    }
+  ]
+}
