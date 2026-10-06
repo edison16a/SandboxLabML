@@ -58,8 +58,9 @@ export interface RacingCar {
 /**
  * A car on the grid, ready to go. Training only ever uses slot 0, the start
  * line itself. The Sandbox lines extra cars up behind it, and those start
- * with negative progress so their first lap counts from the line like
- * everyone else's.
+ * with negative progress, so a lap only counts once they have reached the
+ * line and gone all the way round. Their first lap time includes the run
+ * up to the line.
  */
 export function createRacingCar(index: number, track: Track, rayCount: number, seed = index, slot = 0): RacingCar {
   const grid = gridSlot(track, slot);
