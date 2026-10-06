@@ -88,3 +88,18 @@ describe('branch and reset', () => {
     expect((await listTrash()).map((r) => r.id)).toEqual([config.id]);
   });
 });
+
+describe('grow a brain', () => {
+  it('forks a trained run onto a bigger blueprint and keeps training', async () => {
+    const { forkRacingRun } = await import('./forkRun');
+    const { config } = await trainedRun(2);
+    const grown = await forkRacingRun(config.id, RACING_BLUEPRINTS[3]);
+    const cp = await latestCheckpoint(grown.id);
+    const t = new RacingTrainer(grown, cp!.state as never);
+    expect(t.genomes[0].inputs).toHaveLength(15);
+    const cache = new TrackCache();
+    const setup = t.setup();
+    const results = evaluateRacing(t.genomes, envOptionsFor(setup, cache.get(setup.track), t.host(), 0), t.seeds());
+    expect(t.complete(results, 1).generation).toBe(2);
+  });
+});
