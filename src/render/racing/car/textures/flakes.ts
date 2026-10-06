@@ -15,8 +15,10 @@ export function flakeNormalMap(size: number): THREE.DataTexture {
   return pixelTexture('flakes', size, false, (x, y, out) => {
     const cx = Math.floor(x / cell);
     const cy = Math.floor(y / cell);
+    // The winning cell is kept as two numbers, not an array, so the loop over every texel does not allocate.
     let best = Infinity;
-    let id = [0, 0];
+    let idx = 0;
+    let idy = 0;
     for (let dy = -1; dy <= 1; dy++) {
       for (let dx = -1; dx <= 1; dx++) {
         const gx = cx + dx;
@@ -28,12 +30,13 @@ export function flakeNormalMap(size: number): THREE.DataTexture {
         const d = (fx - x - 0.5) ** 2 + (fy - y - 0.5) ** 2;
         if (d < best) {
           best = d;
-          id = [wx, wy];
+          idx = wx;
+          idy = wy;
         }
       }
     }
-    const a = hash(id[0], id[1], 3) * Math.PI * 2;
-    const r = tilt * Math.sqrt(hash(id[0], id[1], 4));
+    const a = hash(idx, idy, 3) * Math.PI * 2;
+    const r = tilt * Math.sqrt(hash(idx, idy, 4));
     packNormal(Math.cos(a) * r, Math.sin(a) * r, out);
   });
 }

@@ -19,14 +19,20 @@ function honeycomb(size: number) {
   const hy = size / ROWS;
   const squash = (Math.sqrt(3) * a) / hy;
   const wall = a * 0.16;
+  // One result reused for every texel, so the loops do not allocate. Read it before the next call.
+  const best = { d: Infinity, dx: 0, dy: 0 };
   const cellAt = (x: number, y: number) => {
-    let best = { d: Infinity, dx: 0, dy: 0 };
+    best.d = Infinity;
     for (let j = -1; j <= ROWS; j++) {
       for (let i = -1; i <= COLS; i++) {
         const dx = x - (i + (j & 1 ? 0.5 : 0)) * 2 * a;
         const dy = (y - j * hy) * squash;
         const d = Math.max(Math.abs(dx), Math.abs(dx) / 2 + (Math.abs(dy) * Math.sqrt(3)) / 2);
-        if (d < best.d) best = { d, dx, dy };
+        if (d < best.d) {
+          best.d = d;
+          best.dx = dx;
+          best.dy = dy;
+        }
       }
     }
     return best;
