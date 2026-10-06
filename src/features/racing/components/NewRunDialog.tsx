@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Dices } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Dices, SlidersHorizontal } from 'lucide-react';
 import { RACING_BLUEPRINTS } from '@/engine/blueprints/presets';
 import type { RacingBlueprint } from '@/engine/blueprints/types';
 import type { CarPresetId } from '@/engine/racing/car/params';
@@ -20,6 +20,8 @@ import { racingSession } from '../session/RacingSession';
 import { blueprintInputCount } from '@/engine/blueprints/shape';
 import { TrackThumb } from './TrackThumb';
 import { ScriptPicker, type ScriptChoice } from './ScriptPicker';
+import { BlueprintDialog } from '@/features/blueprints/BlueprintDialog';
+import { listBlueprints } from '@/storage/blueprints';
 
 interface Props {
   open: boolean;
@@ -41,6 +43,12 @@ export function NewRunDialog({ open, onOpenChange, initialTrack }: Props) {
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1e6));
   const [script, setScript] = useState<ScriptChoice>({ kind: 'builtin' });
   const [busy, setBusy] = useState(false);
+  const [custom, setCustom] = useState<RacingBlueprint[]>([]);
+  const [editing, setEditing] = useState(false);
+  useEffect(() => {
+    if (open) void listBlueprints('racing').then((list) => setCustom(list.filter((b): b is RacingBlueprint => b.env === 'racing')));
+  }, [open]);
+  const blueprints = [...RACING_BLUEPRINTS, ...custom];
   const tracks = initialTrack ? [initialTrack, ...BUILT_IN_TRACKS] : BUILT_IN_TRACKS;
 
   const create = async () => {
@@ -109,9 +117,9 @@ export function NewRunDialog({ open, onOpenChange, initialTrack }: Props) {
         </Field>
         <ScriptPicker value={script} onChange={setScript} />
         {script.kind === 'builtin' && (
-          <Field label="Brain blueprint" hint={blueprint.teaches}>
+          <Field label="Brain blueprint" hint={blueprint.teaches || 'Your own blueprint.'}>
             <div className="grid grid-cols-2 gap-2">
-              {RACING_BLUEPRINTS.map((b) => (
+              {blueprints.map((b) => (
                 <button
                   key={b.id}
                   type="button"
@@ -119,9 +127,13 @@ export function NewRunDialog({ open, onOpenChange, initialTrack }: Props) {
                   className={cn('flex flex-col items-start gap-0.5 rounded-md border p-2.5 text-left', b.id === blueprint.id ? 'border-accent bg-accent-soft' : 'border-border hover:border-border-strong')}
                 >
                   <span className="text-[13px] font-medium">{b.name.replace('Racing ', '')}</span>
-                  <span className="text-[11px] text-muted">{blueprintInputCount(b)} inputs. {b.description.split('.')[0]}.</span>
+                  <span className="text-[11px] text-muted">{blueprintInputCount(b)} inputs. {b.description ? `${b.description.split('.')[0]}.` : 'Custom blueprint.'}</span>
                 </button>
               ))}
+              <button type="button" onClick={() => setEditing(true)} className="flex items-center justify-center gap-2 rounded-md border border-dashed border-border p-2.5 text-[13px] text-muted hover:border-border-strong hover:text-fg">
+                <SlidersHorizontal className="size-4" />
+                Customize {blueprint.name.replace('Racing ', '')}
+              </button>
             </div>
           </Field>
         )}
@@ -137,6 +149,18 @@ export function NewRunDialog({ open, onOpenChange, initialTrack }: Props) {
           </Field>
         </div>
       </div>
+      <BlueprintDialog
+        open={editing}
+        onOpenChange={setEditing}
+        base={blueprint}
+        title="Customize the brain"
+        description="Pick what the car senses and how the brain starts. Saved as your own blueprint."
+        action="Use this blueprint"
+        onSave={(b) => {
+          setCustom((list) => [b, ...list]);
+          setBlueprint(b);
+        }}
+      />
     </Dialog>
   );
 }
