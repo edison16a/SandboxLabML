@@ -5,8 +5,12 @@ import { bothSides, gridGeometry, polygonGeometry, type Vec3 } from './grid';
 import type { Detail, PartBin } from './parts';
 import { warp } from './warp';
 
-/** The inner wall of each wheel well, inboard of the tire even at full lock. */
-const WELL_Z = 0.565;
+/**
+ * The inner wall of each wheel well. At full steering lock the front
+ * tire's inner edge swings in to about 0.51, so the wall sits inboard of
+ * that. A unit test checks it against the engine's steering limit.
+ */
+export const WELL_Z = 0.49;
 const FLOOR_Y = 0.115;
 /** How far the well stays under the paint where the hood dips below the arch line. */
 const UNDER_SKIN = 0.012;

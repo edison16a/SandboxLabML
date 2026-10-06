@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_CAR } from '@/engine/racing/car/params';
 import { CAR, WHEEL } from '../dimensions';
+import { WELL_Z } from './arches';
 import { buildBody } from './assemble';
 import { archFloor, AXLES } from './bodyProfile';
 import { crowdGeometry } from './crowd';
@@ -48,5 +50,18 @@ describe('procedural car', () => {
         expect(archFloor(axle + dx)).toBeGreaterThan(tireTop + 0.03);
       }
     }
+  });
+
+  it('keeps the front wheel off the inner well wall at full lock', () => {
+    // Front wheels steer about their center, so turn every vertex both ways and find the furthest inboard.
+    const parts = [...buildWheel(DETAIL.high).values(), caliper(DETAIL.high)];
+    let inner = Infinity;
+    for (const g of parts) {
+      const p = g.attributes.position;
+      for (let i = 0; i < p.count; i++) {
+        for (const a of [DEFAULT_CAR.steerMax, -DEFAULT_CAR.steerMax]) inner = Math.min(inner, CAR.track - p.getX(i) * Math.sin(a) + p.getZ(i) * Math.cos(a));
+      }
+    }
+    expect(inner).toBeGreaterThan(WELL_Z + 0.01);
   });
 });
