@@ -6,13 +6,14 @@ import { Segmented } from '@/ui/primitives/Segmented';
 import { Select } from '@/ui/primitives/Select';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import { allowedGridSizes } from '../../hooks/useHideSeekShortcuts';
+import { useSettings } from '@/features/settings/settingsStore';
 import { gridCapped, useHideSeekLab } from '../../state/hideSeekStore';
-import type { GridSize, HsCamera, HsQualitySetting } from '../../state/types';
+import type { GridSize, HsCamera } from '../../state/types';
 
 export const glass = 'border-white/10 bg-black/50 text-white backdrop-blur-sm hover:bg-black/65';
 const on = 'border-accent/60 bg-accent/25 text-white hover:bg-accent/35';
 
-/** Grid size, camera, overlays, effects and quality, top right of the viewport. */
+/** Grid size, camera, overlays and effects, top right of the viewport. Quality lives in Settings. */
 export function ViewControls() {
   const mode = useHideSeekLab((s) => s.mode);
   const grid = useHideSeekLab((s) => s.gridSize);
@@ -20,15 +21,13 @@ export function ViewControls() {
   const inputs = useHideSeekLab((s) => s.inputsOverlay);
   const pov = useHideSeekLab((s) => s.pov);
   const effects = useHideSeekLab((s) => s.effects);
-  const quality = useHideSeekLab((s) => s.quality);
-  const tier = useHideSeekLab((s) => s.activeTier);
-  const weak = useHideSeekLab(gridCapped);
+  const weak = useSettings(gridCapped);
   const set = useHideSeekLab((s) => s.set);
   const sizes = allowedGridSizes(weak);
   return (
     <div className="flex flex-wrap items-center justify-end gap-1.5">
       {mode === 'train' && (
-        <Tooltip content={weak ? 'Arenas on screen. On Auto quality this GPU shows up to 25; pick a quality to lift the cap.' : 'Arenas on screen'} shortcut="G">
+        <Tooltip content={weak ? 'Arenas on screen. This GPU shows up to 25 until you pick a quality in Settings.' : 'Arenas on screen'} shortcut="G">
           <span>
             <Segmented<`${GridSize}`>
               label="Arenas on screen"
@@ -65,7 +64,7 @@ export function ViewControls() {
           <SquareSplitHorizontal />
         </Button>
       </Tooltip>
-      <Tooltip content="Ambient occlusion, bloom and tone mapping on the focused arena (High and Ultra)">
+      <Tooltip content="Ambient occlusion, bloom and tone mapping on the focused arena, at High quality">
         <Button size="icon-sm" variant="secondary" className={effects ? on : glass} onClick={() => set({ effects: !effects })} aria-pressed={effects} aria-label="Post-processing">
           <Sparkles />
         </Button>
@@ -75,19 +74,6 @@ export function ViewControls() {
           <Camera />
         </Button>
       </Tooltip>
-      <Select<HsQualitySetting>
-        label="Quality"
-        value={quality}
-        onChange={(v) => set({ quality: v, activeTier: v === 'auto' ? (tier === 'ultra' ? 'high' : tier) : v, ...(gridCapped({ integratedGpu: useHideSeekLab.getState().integratedGpu, quality: v }) && grid > 25 ? { gridSize: 25 } : {}) })}
-        className={`h-7 w-32 ${glass}`}
-        options={[
-          { value: 'auto', label: `Auto (${tier})`, hint: 'Steps down if frames run long' },
-          { value: 'ultra', label: 'Showcase+', hint: '4096 px shadows, full resolution effects' },
-          { value: 'high', label: 'High', hint: 'Soft shadows, AO, bloom, SMAA' },
-          { value: 'medium', label: 'Medium', hint: 'Shadows, no post-processing' },
-          { value: 'low', label: 'Low', hint: 'No shadows, fastest' },
-        ]}
-      />
     </div>
   );
 }

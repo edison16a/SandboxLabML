@@ -1,15 +1,15 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTrainScriptParam } from '@/features/scripts/useTrainScriptParam';
 import { HideSeekCanvas } from '@/render/hideseek/HideSeekCanvas';
 import { useHideSeekBootstrap } from '../hooks/useHideSeekBootstrap';
 import { useHideSeekInspect } from '../hooks/useHideSeekInspect';
+import { useHideSeekQuality } from '../hooks/useHideSeekQuality';
 import { useHideSeekShortcuts } from '../hooks/useHideSeekShortcuts';
 import { useTeamSchemas } from '../hooks/useTeamSchema';
 import { hideSeekSession } from '../session/HideSeekSession';
-import { useHideSeekLab } from '../state/hideSeekStore';
 import { InputsCard } from './hud/InputsCard';
 import { SandboxCard } from './hud/SandboxCard';
 import { ViewportHud } from './hud/ViewportHud';
@@ -29,11 +29,8 @@ export function HideSeekLab() {
   const schemas = useTeamSchemas();
   useHideSeekShortcuts(openNewRun);
   useHideSeekInspect(ready);
-  useEffect(() => {
-    // ?quality=low|medium|high|ultra pins the render tier, handy on slow machines and in browser tests.
-    const q = params.get('quality');
-    if (q === 'low' || q === 'medium' || q === 'high' || q === 'ultra') useHideSeekLab.getState().set({ quality: q, activeTier: q });
-  }, [params]);
+  // ?quality=low|medium|high|ultra pins the render tier over Settings, handy on slow machines and in browser tests.
+  useHideSeekQuality(params.get('quality'));
 
   const session = hideSeekSession();
   const getFeed = useCallback(() => session.feed(), [session]);

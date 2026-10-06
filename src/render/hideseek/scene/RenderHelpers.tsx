@@ -2,8 +2,7 @@
 
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import { PerformanceMonitor } from '@react-three/drei';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
@@ -48,28 +47,7 @@ export function InvalidateOnChange({ feeds }: { feeds: () => ArenaFeed[] }) {
   return null;
 }
 
-const ORDER: HsQualityTier[] = ['low', 'medium', 'high'];
-
-/**
- * Auto quality: steps the tier down when frames run long and back up after
- * ten seconds of headroom, so it does not flip back and forth. Ultra is
- * never chosen automatically.
- */
-export function QualityMonitor() {
-  const last = useRef(0);
-  const step = (dir: -1 | 1) => {
-    const s = useHideSeekLab.getState();
-    if (s.quality !== 'auto') return;
-    const now = performance.now();
-    if (dir > 0 && now - last.current < 10_000) return;
-    last.current = now;
-    const i = Math.max(0, ORDER.indexOf(s.activeTier === 'ultra' ? 'high' : s.activeTier));
-    s.set({ activeTier: ORDER[Math.min(ORDER.length - 1, Math.max(0, i + dir))] });
-  };
-  return <PerformanceMonitor bounds={(r) => [Math.min(45, r * 0.75), r]} onDecline={() => step(-1)} onIncline={() => step(1)} />;
-}
-
-/** Pixel ratio range per tier: resolution is the first thing to give when frames run long. */
+/** Pixel ratio range per tier: resolution is the first thing a cheaper tier gives up. */
 export function tierDpr(tier: HsQualityTier): [number, number] {
   if (tier === 'low') return [1, 1];
   if (tier === 'medium') return [1, 1.5];

@@ -6,7 +6,7 @@ import { Segmented } from '@/ui/primitives/Segmented';
 import { Select } from '@/ui/primitives/Select';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
-import { useRacingLab, viewportHeld, type CameraMode, type QualitySetting, type ViewMode } from '../state/labStore';
+import { useRacingLab, viewportHeld, type CameraMode, type ViewMode } from '../state/labStore';
 import { GhostMenu } from './GhostMenu';
 import { LiveStats } from './LiveStats';
 
@@ -44,8 +44,6 @@ function HeldNote() {
 export function ViewportHud({ population }: { population: SnapshotStream | null }) {
   const view = useRacingLab((s) => s.view);
   const camera = useRacingLab((s) => s.camera);
-  const quality = useRacingLab((s) => s.quality);
-  const tier = useRacingLab((s) => s.activeTier);
   const inputs = useRacingLab((s) => s.inputsOverlay);
   const set = useRacingLab((s) => s.set);
   return (
@@ -89,18 +87,6 @@ export function ViewportHud({ population }: { population: SnapshotStream | null 
             { value: 'orbit', label: 'Orbit' },
             { value: 'top', label: 'Top down' },
             { value: 'free', label: 'Free' },
-          ]}
-        />
-        <Select<QualitySetting>
-          label="Quality"
-          value={quality}
-          onChange={(v) => set({ quality: v, activeTier: v === 'auto' ? tier : v })}
-          className={`h-7 w-32 ${glass}`}
-          options={[
-            { value: 'auto', label: `Auto (${tier})`, hint: 'Steps down if frames run long' },
-            { value: 'high', label: 'High', hint: 'Soft shadows, bloom, SMAA' },
-            { value: 'medium', label: 'Medium', hint: 'Shadows, no post-processing' },
-            { value: 'low', label: 'Low', hint: 'No shadows, fastest' },
           ]}
         />
       </div>

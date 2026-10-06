@@ -11,7 +11,6 @@ import type { GhostSelection } from '../session/ghostSelection';
 export type ViewMode = 'population' | 'overlay' | 'both';
 export type CameraMode = 'chase' | 'orbit' | 'top' | 'free';
 export type QualityTier = 'low' | 'medium' | 'high';
-export type QualitySetting = QualityTier | 'auto';
 
 /** What the camera follows and what the inputs overlay inspects. */
 export type Focus = { kind: 'champion' } | { kind: 'car'; index: number } | { kind: 'ghost'; generation: number };
@@ -69,7 +68,7 @@ export interface RacingLabState {
 
   camera: CameraMode;
   focus: Focus;
-  quality: QualitySetting;
+  /** Render tier. Settings own the choice; useRacingQuality copies it here for the renderer. */
   activeTier: QualityTier;
   inputsOverlay: boolean;
   inputsScope: 'selected' | 'all';
@@ -112,7 +111,6 @@ export const useRacingLab = create<RacingLabState>((set, get) => ({
 
   camera: 'chase',
   focus: { kind: 'champion' },
-  quality: 'auto',
   activeTier: 'high',
   inputsOverlay: false,
   inputsScope: 'selected',

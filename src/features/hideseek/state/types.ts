@@ -9,9 +9,8 @@ export type AgentSlot = 0 | 1;
 export type GridSize = 1 | 4 | 9 | 25 | 50;
 export const GRID_SIZES: GridSize[] = [1, 4, 9, 25, 50];
 
-/** Render tiers. Ultra is the Showcase+ setting: 4096 px shadows and full resolution effects. */
+/** Render tiers. Ultra adds 4096 px shadows and full resolution effects to the showcase; see useHideSeekQuality for when it applies. */
 export type HsQualityTier = 'low' | 'medium' | 'high' | 'ultra';
-export type HsQualitySetting = HsQualityTier | 'auto';
 
 /** Orbit and top down look at the arenas; the POV cameras ride on an agent of the focused arena. */
 export type HsCamera = 'orbit' | 'top' | 'seeker' | 'hider';

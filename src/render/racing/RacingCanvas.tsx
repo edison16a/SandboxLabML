@@ -2,7 +2,6 @@
 
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
-import { PerformanceMonitor } from '@react-three/drei';
 import { useMemo, useRef } from 'react';
 import type { InputSpec } from '@/engine/env/types';
 import type { Track } from '@/engine/racing/track/types';
@@ -10,7 +9,7 @@ import { useRacingLab, viewportHeld } from '@/features/racing/state/labStore';
 import { Effects } from '@/render/shared/Effects';
 import { FramePacer } from '@/render/shared/FramePacer';
 import { useFrameLoop } from '@/render/shared/frameLoop';
-import { lowerTier, raiseTier, tierDpr } from '@/render/shared/quality';
+import { tierDpr } from '@/render/shared/quality';
 import { StatsProbe } from '@/render/shared/StatsProbe';
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
 import { CameraRig, useCameraMode } from './CameraRig';
@@ -42,7 +41,6 @@ interface Props {
  */
 export function RacingCanvas({ track, population, ghosts, schema, children }: Props) {
   const tier = useRacingLab((s) => s.activeTier);
-  const quality = useRacingLab((s) => s.quality);
   const camera = useCameraMode();
   // While a watch-speed run is paused nothing moves (ghosts pause too), so only redraw on demand.
   const idle = useRacingLab((s) => s.status === 'paused' && s.mode === 'train' && s.speed !== 'turbo' && s.speed !== 'max');
@@ -52,17 +50,6 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
   const frame = useMemo(() => createFrame(), []);
   const target = useRef(new THREE.Vector3());
   const value = useMemo(() => ({ track, population, ghosts, frame }), [track, population, ghosts, frame]);
-  const lastChange = useRef(0);
-
-  const step = (dir: -1 | 1) => {
-    const s = useRacingLab.getState();
-    if (s.quality !== 'auto') return;
-    const now = performance.now();
-    // Raising waits for ten seconds of headroom so the tier does not flip back and forth.
-    if (dir > 0 && now - lastChange.current < 10_000) return;
-    lastChange.current = now;
-    s.set({ activeTier: dir < 0 ? lowerTier(s.activeTier) : raiseTier(s.activeTier) });
-  };
 
   return (
     <Canvas
@@ -77,7 +64,6 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
       frameloop={loop.frameloop}
       className="touch-none"
     >
-      {quality === 'auto' && <PerformanceMonitor bounds={(r) => [Math.min(50, r * 0.8), r]} onDecline={() => step(-1)} onIncline={() => step(1)} />}
       <FramePacer loop={loop} />
       <RacingSceneContext.Provider value={value}>
         <FrameDriver />

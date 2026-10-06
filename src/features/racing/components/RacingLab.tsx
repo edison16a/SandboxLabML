@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { buildTrack } from '@/engine/racing/track/buildTrack';
 import { TelemetryStrip } from '@/features/charts/TelemetryStrip';
 import { RacingCanvas } from '@/render/racing/RacingCanvas';
 import { useInspectSubscription } from '../hooks/useInspectSubscription';
 import { useLabShortcuts } from '../hooks/useLabShortcuts';
+import { useRacingQuality } from '../hooks/useRacingQuality';
 import { useRunBootstrap } from '../hooks/useRunBootstrap';
 import { useRunSchema } from '../hooks/useRunSchema';
 import { racingSession } from '../session/RacingSession';
@@ -40,11 +41,8 @@ export function RacingLab() {
   const openNewRun = useCallback(() => setNewRun(true), []);
   const pendingScript = useTrainScriptParam('racing', params, openNewRun);
   useLabShortcuts(openNewRun);
-  useEffect(() => {
-    // ?quality=low|medium|high pins the render tier, handy on slow machines and in browser tests.
-    const q = params.get('quality');
-    if (q === 'low' || q === 'medium' || q === 'high') useRacingLab.getState().set({ quality: q, activeTier: q });
-  }, [params]);
+  // ?quality=low|medium|high pins the render tier over Settings, handy on slow machines and in browser tests.
+  useRacingQuality(params.get('quality'));
   useInspectSubscription(ready);
 
   const spec = (mode === 'sandbox' ? sandboxTrack : null) ?? trackSpec ?? run?.racing?.track ?? null;

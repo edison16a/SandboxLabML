@@ -4,10 +4,9 @@ import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import { useCallback, useMemo } from 'react';
 import type { InputSpec } from '@/engine/env/types';
-import { gridCapped, useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
+import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
 import { FramePacer } from '@/render/shared/FramePacer';
 import { useFrameLoop } from '@/render/shared/frameLoop';
-import { isIntegratedGpu } from '@/render/shared/quality';
 import { StatsProbe } from '@/render/shared/StatsProbe';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
 import { CameraRig } from './camera/CameraRig';
@@ -17,7 +16,7 @@ import { GridScene } from './grid/GridScene';
 import { GRID_LAYER } from './grid/scratch';
 import { overlayCounts, RaysOverlay } from './overlay/RaysOverlay';
 import { Backdrop } from './scene/Backdrop';
-import { InvalidateOnChange, MainPass, QualityMonitor, tierDpr, ToneMappingSync } from './scene/RenderHelpers';
+import { InvalidateOnChange, MainPass, tierDpr, ToneMappingSync } from './scene/RenderHelpers';
 import { StudioLighting } from './scene/StudioLighting';
 import { PovViews } from './showcase/PovViews';
 import { ShowcaseArena } from './showcase/ShowcaseArena';
@@ -39,7 +38,6 @@ interface Props {
  */
 export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLock }: Props) {
   const tier = useHideSeekLab((s) => s.activeTier);
-  const quality = useHideSeekLab((s) => s.quality);
   const showcase = useHideSeekLab((s) => s.mode === 'sandbox' || s.gridSize === 1 || s.focus !== null);
   const sandbox = useHideSeekLab((s) => s.mode === 'sandbox');
   const effectsOn = useHideSeekLab((s) => s.effects);
@@ -75,15 +73,9 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
         gl.outputColorSpace = THREE.SRGBColorSpace;
         camera.layers.enable(GRID_LAYER);
         raycaster.layers.enable(GRID_LAYER);
-        if (isIntegratedGpu(gl.getContext())) {
-          const s = useHideSeekLab.getState();
-          const capped = gridCapped({ integratedGpu: true, quality: s.quality });
-          s.set({ integratedGpu: true, ...(capped ? { effects: false, gridSize: s.gridSize > 25 ? 25 : s.gridSize } : {}) });
-        }
       }}
       className="touch-none"
     >
-      {quality === 'auto' && <QualityMonitor />}
       <FramePacer loop={loop} />
       <HsSceneContext.Provider value={value}>
         <FrameDriver />

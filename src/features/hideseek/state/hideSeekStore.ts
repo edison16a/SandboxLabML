@@ -3,7 +3,8 @@ import type { HideSeekRecord } from '@/engine/training/hideseekRecords';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { TrainingStatus } from '@/workers/coordinator/events';
 import type { SpeedMode } from '@/workers/shared/protocol';
-import type { AgentSlot, FeedSource, GridSize, HsCamera, HsPanelTab, HsQualitySetting, HsQualityTier, LabMode, RoundInfo, SandboxSettings, Team } from './types';
+import { qualityChosen, type SettingsState } from '@/features/settings/settingsStore';
+import type { AgentSlot, FeedSource, GridSize, HsCamera, HsPanelTab, HsQualityTier, LabMode, RoundInfo, SandboxSettings, Team } from './types';
 
 /**
  * UI state for the Hide and Seek lab. Like the Racing store it never holds
@@ -32,10 +33,8 @@ export interface HideSeekLabState {
   camera: HsCamera;
   /** Picture in picture views from both agents' eyes. */
   pov: boolean;
-  quality: HsQualitySetting;
+  /** Render tier. Settings own the choice; useHideSeekQuality copies it here for the renderer. */
   activeTier: HsQualityTier;
-  /** An integrated or software GPU. On Auto quality it caps the grid at 25 arenas and starts with post-processing off. */
-  integratedGpu: boolean;
   effects: boolean;
   photoMode: boolean;
   inputsOverlay: boolean;
@@ -55,12 +54,12 @@ export interface HideSeekLabState {
 }
 
 /**
- * Whether the grid stops at 25 arenas. Only Auto quality caps a weak GPU:
- * Low is cheap enough for all 50, and someone who pins a tier has chosen
- * the cost themselves.
+ * Whether the grid stops at 25 arenas. A weak GPU is only capped while
+ * nobody has picked a quality: Low is cheap enough for all 50, and someone
+ * who picks a tier has chosen the cost themselves. Takes the Settings state.
  */
-export function gridCapped(s: { integratedGpu: boolean; quality: HsQualitySetting }): boolean {
-  return s.integratedGpu && s.quality === 'auto';
+export function gridCapped(s: Pick<SettingsState, 'weakGpu' | 'pinned' | 'quality'>): boolean {
+  return s.weakGpu === true && !qualityChosen(s);
 }
 
 export const useHideSeekLab = create<HideSeekLabState>((set, get) => ({
@@ -80,9 +79,7 @@ export const useHideSeekLab = create<HideSeekLabState>((set, get) => ({
   focus: null,
   camera: 'orbit',
   pov: true,
-  quality: 'auto',
   activeTier: 'high',
-  integratedGpu: false,
   effects: true,
   photoMode: false,
   inputsOverlay: false,
