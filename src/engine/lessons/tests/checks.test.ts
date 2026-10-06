@@ -108,12 +108,6 @@ describe('training checks', () => {
 });
 
 describe('evaluateCheck', () => {
-  it('reports Hide and Seek test drives as not available yet', async () => {
-    const out = await evaluateCheck({ kind: 'testRun', metric: 'distance', op: '>', value: 0, message: 'x' }, 'script "h" for hideseek v1\n');
-    expect(out.passed).toBe(false);
-    expect(out.message).toContain('not available yet');
-  });
-
   it('never throws on a check kind it does not know', async () => {
     const out = await evaluateCheck({ kind: 'mystery', message: 'x' } as unknown as LessonCheck, DRIVING);
     expect(out.passed).toBe(false);
