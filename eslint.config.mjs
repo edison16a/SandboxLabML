@@ -10,7 +10,7 @@ const config = [
   ...nextVitals,
   ...nextTs,
   {
-    ignores: ['.next/**', 'node_modules/**', 'playwright-report/**', 'test-results/**', 'public/**'],
+    ignores: ['.next/**', 'node_modules/**', 'playwright-report/**', 'test-results/**', 'public/**', '.claude/**'],
   },
   {
     rules: {
