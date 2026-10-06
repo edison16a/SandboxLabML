@@ -5,7 +5,6 @@ import { Plus } from 'lucide-react';
 import { buildTrack } from '@/engine/racing/track/buildTrack';
 import { ghostCss } from '@/features/charts/ghostCss';
 import { cn } from '@/ui/cn';
-import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
 import { Slider } from '@/ui/primitives/Slider';
 import { copiesOf, fieldSize, MAX_FIELD, setCopies, type FieldEntry } from '../../session/field';
@@ -82,7 +81,7 @@ export function FieldEditor() {
       </div>
       <div className="flex items-center gap-2 px-2 text-[10px] font-medium tracking-wide text-white/40 uppercase">
         <span className="flex-1">Champion</span>
-        <span className="w-[76px] text-right">This track</span>
+        <span className="w-[92px] text-right">On this track</span>
         <span className="w-[82px] text-center">Copies</span>
       </div>
       <ul className="flex flex-col gap-1">
@@ -91,11 +90,10 @@ export function FieldEditor() {
           return (
             <li key={e.generation} className="flex h-8 items-center gap-2 rounded-md bg-white/[0.04] pr-0.5 pl-2">
               <span className="size-2 shrink-0 rounded-full" style={{ background: colors.get(e.generation) }} />
-              <span className="flex min-w-0 flex-1 items-center gap-1.5 text-[12px] font-medium text-white">
+              <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-white">
                 Gen {e.generation + 1}
-                {e.generation === newest && <Badge tone="accent">Newest</Badge>}
               </span>
-              <span className={cn('w-[76px] truncate text-right text-[11px]', result?.crashed ? 'text-danger' : 'text-white/60')}>{result?.text ?? 'Timing'}</span>
+              <span className={cn('w-[92px] truncate text-right text-[11px]', result?.crashed ? 'text-danger' : 'text-white/60')}>{result?.text ?? 'Timing'}</span>
               <CopiesStepper label={`Gen ${e.generation + 1}`} value={e.copies} max={e.copies + MAX_FIELD - total} canRemove={total > 1} onChange={(n) => change(e.generation, n)} />
             </li>
           );
