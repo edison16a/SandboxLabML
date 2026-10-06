@@ -34,6 +34,7 @@ describe('training setups', () => {
   it('v1 keeps the original schedule, and the rounds option still works', () => {
     const o = HideSeekTrainer.create(options({ setup: 'v1', rounds: 3 })).options;
     expect([o.reward, o.mixLayouts, o.opponents]).toEqual(['v1', false, { current: 2, hallOfFame: 1, scripted: 0 }]);
+    expect(HideSeekTrainer.create(options({ rounds: 3 })).options.opponents).toEqual({ current: 2, hallOfFame: 0, scripted: 1 });
     expect(() => HideSeekTrainer.create(options({ opponents: { current: 0, hallOfFame: 0, scripted: 0 } }))).toThrow();
   });
 

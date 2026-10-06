@@ -32,10 +32,16 @@ export const DEFAULT_HIDESEEK_SETUP: HideSeekSetupId = 'v2';
 /** Most rounds a generation may have, which caps matches at 8N per generation. */
 export const MAX_ROUNDS = 6;
 
-/** Rounds of the old `rounds` option: the first two current, the rest hall of fame. */
-function fromRounds(rounds: number): HideSeekOpponents {
+/**
+ * The mix for the plain `rounds` option: the first two rounds are current,
+ * then come the setup's scripted rounds, then hall of fame rounds. Under
+ * v1 that is the original meaning, and under v2 four rounds is its usual mix.
+ */
+function fromRounds(rounds: number, setup: HideSeekSetup): HideSeekOpponents {
   if (rounds < 1 || rounds > 4) throw new Error('A generation has 1 to 4 rounds.');
-  return { current: Math.min(rounds, 2), hallOfFame: Math.max(0, rounds - 2), scripted: 0 };
+  const current = Math.min(rounds, 2);
+  const scripted = Math.min(rounds - current, setup.opponents.scripted);
+  return { current, hallOfFame: rounds - current - scripted, scripted };
 }
 
 /** Throws on a mix nobody can play: negative or fractional counts, or a total outside 1 to MAX_ROUNDS. */
@@ -56,7 +62,7 @@ export function resolveTrainerOptions(o: HideSeekTrainerOptions): ResolvedTraine
   const setupId = o.setup ?? DEFAULT_HIDESEEK_SETUP;
   const setup = HIDESEEK_SETUPS[setupId];
   if (!setup) throw new Error(`Unknown Hide and Seek setup "${setupId}".`);
-  const opponents = checkOpponents(o.opponents ?? (o.rounds !== undefined ? fromRounds(Math.round(o.rounds)) : setup.opponents));
+  const opponents = checkOpponents(o.opponents ?? (o.rounds !== undefined ? fromRounds(Math.round(o.rounds), setup) : setup.opponents));
   return {
     ...o,
     setup: setupId,
@@ -78,8 +84,8 @@ export function resolveTrainerOptions(o: HideSeekTrainerOptions): ResolvedTraine
 
 /**
  * Options from a checkpoint. Checkpoints written before setups existed
- * have no setup, opponents or rotation, and they ran as v1, so they resume
- * as v1 rather than picking up the newer defaults.
+ * have no setup, opponents, room mixing or shared starts, and they ran as
+ * v1, so they resume as v1 rather than picking up the newer defaults.
  */
 export function upgradeStoredOptions(stored: ResolvedTrainerOptions): ResolvedTrainerOptions {
   const o = stored as Partial<ResolvedTrainerOptions> & ResolvedTrainerOptions;
@@ -87,7 +93,7 @@ export function upgradeStoredOptions(stored: ResolvedTrainerOptions): ResolvedTr
   return {
     ...stored,
     setup: o.setup ?? 'v1',
-    opponents: o.opponents ?? fromRounds(o.rounds),
+    opponents: o.opponents ?? fromRounds(o.rounds, HIDESEEK_SETUPS.v1),
     mixLayouts: o.mixLayouts ?? false,
     sharedSeeds: o.sharedSeeds ?? false,
   };

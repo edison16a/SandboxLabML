@@ -75,7 +75,8 @@ export interface HideSeekTrainerOptions {
   layouts?: HideSeekLayoutId[];
   /**
    * Rounds per generation, 1 to 4: the first two against current genomes,
-   * the rest against the hall of fame. Ignored when `opponents` is given.
+   * then the setup's scripted round (v2 only), then the hall of fame.
+   * Ignored when `opponents` is given.
    */
   rounds?: number;
   /** Rounds of each kind of opponent, 1 to 6 in total. Wins over `rounds`. */
