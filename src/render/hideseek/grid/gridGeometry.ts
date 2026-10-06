@@ -98,3 +98,11 @@ export function blobTexture(size = 64): THREE.CanvasTexture {
   t.needsUpdate = true;
   return t;
 }
+
+let sharedBlob: THREE.CanvasTexture | null = null;
+
+/** One blob texture for every character and crate shadow of the showcase, kept for the page's life. */
+export function sharedBlobTexture(): THREE.CanvasTexture {
+  sharedBlob ??= blobTexture();
+  return sharedBlob;
+}

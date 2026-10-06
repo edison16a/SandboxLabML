@@ -1,5 +1,5 @@
 import type * as THREE from 'three';
-import { blobTexture } from '../grid/gridGeometry';
+import { sharedBlobTexture } from '../grid/gridGeometry';
 import { FACES, faceGeometry, type FaceKey } from './characterFace';
 import { armGeometry, blobGeometry, bodyGeometry, headGeometry } from './characterGeometry';
 import type { CharacterDetail } from './types';
@@ -30,7 +30,7 @@ export function characterKit(detail: CharacterDetail): CharacterKit {
       arm: armGeometry(detail),
       faces: Object.fromEntries(FACES.map((f) => [f, faceGeometry(f)])) as Record<FaceKey, THREE.BufferGeometry>,
       blob: blobGeometry(),
-      blobMap: kits.get(detail === 'full' ? 'low' : 'full')?.blobMap ?? blobTexture(),
+      blobMap: sharedBlobTexture(),
     };
     kits.set(detail, kit);
   }

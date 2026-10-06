@@ -1,6 +1,6 @@
 import type * as THREE from 'three';
 import type { BoxSize } from '@/engine/hideseek/physics';
-import { blobTexture, floorQuad } from '../grid/gridGeometry';
+import { floorQuad, sharedBlobTexture } from '../grid/gridGeometry';
 import { bracedBox, type BracedBoxParts } from './bracedBox';
 import { padlockBodyGeometry, padlockShackleGeometry } from './padlock';
 
@@ -23,6 +23,6 @@ export function crateParts(size: BoxSize): BracedBoxParts {
 
 /** The padlock and the soft floor shadow, shared by every crate. */
 export function crateExtras() {
-  shared ??= { lockBody: padlockBodyGeometry(), lockShackle: padlockShackleGeometry(), blob: floorQuad(1), blobMap: blobTexture() };
+  shared ??= { lockBody: padlockBodyGeometry(), lockShackle: padlockShackleGeometry(), blob: floorQuad(1), blobMap: sharedBlobTexture() };
   return shared;
 }
