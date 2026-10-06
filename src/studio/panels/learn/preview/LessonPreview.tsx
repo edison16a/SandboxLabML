@@ -63,7 +63,7 @@ export function LessonPreview({ lesson, step, text }: Props) {
             {state.message ?? (state.broken ? 'Fix the errors in the script to see it play.' : 'Simulating...')}
           </p>
         )}
-        <span ref={readout} className="tabular pointer-events-none absolute bottom-1.5 left-2 font-mono text-[11px] text-muted" aria-hidden="true" />
+        <span ref={readout} className="tabular pointer-events-none absolute bottom-1.5 left-1.5 rounded bg-bg/80 px-1.5 py-0.5 font-mono text-[11px] text-muted empty:hidden" aria-hidden="true" />
       </div>
       <p className="text-[11px] text-subtle">
         {CAPTION[lesson.course]}
