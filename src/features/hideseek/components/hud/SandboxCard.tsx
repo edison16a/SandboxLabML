@@ -14,6 +14,7 @@ import { RoomEditorDialog } from '../sandbox/editor/RoomEditorDialog';
 import { RoomPicker } from '../sandbox/RoomPicker';
 import { SandboxRunBar } from '../sandbox/SandboxRunBar';
 import { SandboxStatus } from '../sandbox/SandboxStatus';
+import { HUD_CARD } from './hudCard';
 
 function Section({ title, children, aside }: { title: string; children: React.ReactNode; aside?: React.ReactNode }) {
   return (
@@ -59,7 +60,7 @@ export function SandboxCard() {
   return (
     <div
       data-testid="sandbox-card"
-      className="flex max-h-[calc(60vh-1.5rem)] w-80 max-w-[calc(100vw-1.5rem)] flex-col gap-3 rounded-lg border border-white/10 bg-black/65 p-3 text-white shadow-xl shadow-black/30 backdrop-blur-md"
+      className={cn(HUD_CARD, 'flex max-h-[calc(60vh-1.5rem)] flex-col gap-3 p-3')}
     >
       <div className="flex items-center justify-between gap-2">
         <button

@@ -2,8 +2,10 @@
 
 import { HIDESEEK_OUTPUTS } from '@/engine/hideseek/sensing/inputSchema';
 import { InputBars } from '@/features/inputs/InputBars';
+import { cn } from '@/ui/cn';
 import { useInspectReader, useTeamSchemas } from '../../hooks/useTeamSchema';
 import { useHideSeekLab } from '../../state/hideSeekStore';
+import { HUD_CARD } from './hudCard';
 
 /** The inspected agent's non-ray inputs and its outputs, floating over the viewport while the overlay is on. */
 export function InputsCard() {
@@ -15,7 +17,7 @@ export function InputsCard() {
   const read = useInspectReader(agent);
   if (!on) return null;
   return (
-    <div className="w-72 rounded-lg border border-white/10 bg-black/60 p-2 text-white backdrop-blur-md">
+    <div className={cn(HUD_CARD, 'p-2')}>
       <div className="mb-1 flex items-center gap-1.5 px-1.5 text-[11px] font-semibold tracking-wide text-white/60 uppercase">
         <span className={`size-2 rounded-full ${agent === 0 ? 'bg-hider' : 'bg-seeker'}`} />
         {agent === 0 ? 'Hider' : 'Seeker'} inputs
