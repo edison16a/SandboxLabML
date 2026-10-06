@@ -10,13 +10,13 @@ import { fitView, px, py, type View } from './view';
 const P = DEFAULT_HIDESEEK_PHYSICS;
 const STRIDE = HIDESEEK_SNAPSHOT.stride;
 
-/** The 3D scene's colors on a dark floor: team blue and red, wood boxes, and a locked box edged in hider blue like its 3D braces. */
+/** The 3D scene's colors on a dark floor: team blue and red, gold crates, and a locked crate edged in hider blue like its 3D braces. */
 const C = {
   floor: '#151a24',
   grid: '#1b212d',
   wall: '#8a94a7',
-  cube: '#b89a70',
-  plank: '#a6865f',
+  cube: '#bf9a3e',
+  plank: '#c28d45',
   locked: '#4c9aff',
   hider: '#4c9aff',
   seeker: '#ff5f6d',
