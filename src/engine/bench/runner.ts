@@ -8,7 +8,7 @@ import { createScriptHost } from '../script/host';
 import type { RunConfig } from '../training/runConfig';
 import { driveCourse, type EpisodeResult, type ExamDriver } from './drive';
 import { examTracks } from './exam';
-import { averageScores, composite, scoreEpisode, trackScore } from './scoring';
+import { averageScores, composite, scoreEpisode, trackScore, type EpisodeScore } from './scoring';
 import type { BenchResult } from './types';
 
 /** Seed for sensor noise and script sensors during the exam. Fixed, so the same brain always scores the same. */
@@ -38,7 +38,10 @@ function examDriverFor(config: RunConfig): ExamDriver | null {
 const pause = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
-/** Raw numbers for a group of episodes, used for each track and for the whole exam. */
+/**
+ * Raw numbers for a group of episodes, used for each road and for the
+ * whole exam. lapTime is the fastest lap in the group, or 0 without one.
+ */
 function rawMetrics(results: EpisodeResult[]): Record<string, number> {
   const lapTimes = results.filter((r) => r.laps > 0).map((r) => r.bestLapTime);
   return {
@@ -66,7 +69,7 @@ export async function benchmarkRacing(config: RunConfig, genome: Genome, opts: B
   const total = exam.reduce((n, t) => n + t.courses.length, 0);
   let done = 0;
   const parts: BenchResult['parts'] = [];
-  const perTrack = [];
+  const perTrack: EpisodeScore[] = [];
   const everything: EpisodeResult[] = [];
   for (const [ti, track] of exam.entries()) {
     const results: EpisodeResult[] = [];
