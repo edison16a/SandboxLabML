@@ -1,7 +1,7 @@
 import { ENGINE_VERSION } from '@/engine/core/version';
 import { base64ToBytes, bytesToBase64 } from '@/engine/neat/serialize';
 import { newRunId, type RunConfig } from '@/engine/training/runConfig';
-import { db, type GenerationRow } from './db';
+import { db, type GenerationRow, type HideSeekGenerationRow } from './db';
 import { createRun, getRun } from './runs';
 
 export const EXPORT_FORMAT = 'sandboxlab-run';
@@ -14,6 +14,8 @@ export interface RunExport {
   engineVersion: number;
   config: RunConfig;
   generations: Array<Omit<GenerationRow, 'genome'> & { genome: string }>;
+  /** Hide and Seek runs: both champions per generation. Round replays stay behind to keep files small. */
+  hsGenerations?: Array<Omit<HideSeekGenerationRow, 'hiderChampion' | 'seekerChampion' | 'replay'> & { hiderChampion: string; seekerChampion: string }>;
   checkpoint: { generation: number; state: unknown } | null;
 }
 
@@ -22,6 +24,7 @@ export async function exportRun(runId: string): Promise<RunExport> {
   const run = await getRun(runId);
   if (!run) throw new Error('Run not found.');
   const gens = await d.generations.where('runId').equals(runId).sortBy('generation');
+  const hs = await d.hsGenerations.where('runId').equals(runId).sortBy('generation');
   const cps = await d.checkpoints.where('runId').equals(runId).sortBy('generation');
   const last = cps[cps.length - 1];
   return {
@@ -31,6 +34,7 @@ export async function exportRun(runId: string): Promise<RunExport> {
     engineVersion: ENGINE_VERSION,
     config: run.config,
     generations: gens.map((g) => ({ ...g, genome: bytesToBase64(g.genome) })),
+    hsGenerations: hs.map(({ replay: _replay, ...g }) => ({ ...g, hiderChampion: bytesToBase64(g.hiderChampion), seekerChampion: bytesToBase64(g.seekerChampion) })),
     checkpoint: last ? { generation: last.generation, state: last.state } : null,
   };
 }
@@ -61,6 +65,13 @@ export async function importRun(text: string): Promise<RunConfig> {
   await createRun(config);
   const rows: GenerationRow[] = parsed.generations.map((g) => ({ ...g, runId: config.id, genome: base64ToBytes(g.genome) }));
   await d.generations.bulkPut(rows);
+  const hsRows: HideSeekGenerationRow[] = (parsed.hsGenerations ?? []).map((g) => ({
+    ...g,
+    runId: config.id,
+    hiderChampion: base64ToBytes(g.hiderChampion),
+    seekerChampion: base64ToBytes(g.seekerChampion),
+  }));
+  await d.hsGenerations.bulkPut(hsRows);
   if (parsed.checkpoint) {
     await d.checkpoints.put({
       runId: config.id,
@@ -71,7 +82,7 @@ export async function importRun(text: string): Promise<RunConfig> {
     });
   }
   const best = rows.reduce((b, r) => Math.max(b, r.champion.fitness), 0);
-  await d.runs.update(config.id, { generation: rows.length, bestFitness: best });
+  await d.runs.update(config.id, { generation: Math.max(rows.length, hsRows.length), bestFitness: best });
   return config;
 }
 
