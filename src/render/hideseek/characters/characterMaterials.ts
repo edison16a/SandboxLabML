@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { HS, HS_COLORS } from '../palette';
 import type { CharacterPose } from './characterMotion';
 import type { CharacterDetail, CharacterTeam } from './types';
 
@@ -7,9 +8,6 @@ export const TEAM_LOOK: Record<CharacterTeam, { body: string; glow: string }> = 
   hider: { body: '#5fbdfb', glow: '#b3e4ff' },
   seeker: { body: '#ff6b62', glow: '#ffae9c' },
 };
-
-/** A sleeping character fades toward this, so a frozen seeker reads as switched off. */
-const DORMANT = new THREE.Color('#9aa0aa');
 
 /**
  * Adds a soft light inside the body: a core glow strongest where the
@@ -60,13 +58,13 @@ export class CharacterMaterials {
     addInnerGlow(this.body, this.uniforms);
     // Pushed past 1 so bloom, where it runs, gives the face a soft halo.
     this.face = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.7, 1.75, 1.8), toneMapped: false });
-    this.blob = new THREE.MeshBasicMaterial({ color: '#1a1712', alphaMap: blobMap, transparent: true, opacity: 0.42, depthWrite: false });
+    this.blob = new THREE.MeshBasicMaterial({ color: HS_COLORS.blobShadow, alphaMap: blobMap, transparent: true, opacity: 0.42, depthWrite: false });
   }
 
   /** Follows the pose: the sleepy fade and the glow that rises when seen or seeing. */
   apply(pose: CharacterPose): void {
     const sleepy = 1 - pose.awake;
-    this.body.color.copy(this.tint).lerp(DORMANT, sleepy * 0.55);
+    this.body.color.copy(this.tint).lerp(HS.dormant, sleepy * 0.55);
     this.uniforms.uGlow.value = pose.glow * (1 - sleepy * 0.85);
     const f = 1.7 - sleepy * 1.05;
     this.face.color.setRGB(f, f * 1.03, f * 1.06);

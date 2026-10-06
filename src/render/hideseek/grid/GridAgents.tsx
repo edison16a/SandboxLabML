@@ -10,12 +10,12 @@ import { instancedCharacterGeometry } from '../characters/instancedCharacter';
 import { useHsScene } from '../frame/sceneContext';
 import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
+import { HS } from '../palette';
 import { commit, GRID_LAYER, makeScratch, MAX_ARENAS } from './scratch';
 import { tintMaskMaterial } from '../shared/tintMask';
 
 const BODY = [new THREE.Color(TEAM_LOOK.hider.body), new THREE.Color(TEAM_LOOK.seeker.body)];
 const WHITE = new THREE.Color('#ffffff');
-const DORMANT = new THREE.Color('#9aa0aa');
 /** Snapshots arrive at 30 Hz, so a step between two of them over this gives a speed. */
 const SNAPSHOT_SECONDS = 1 / 30;
 
@@ -63,7 +63,7 @@ export function GridAgents({ onPick }: { onPick: (slot: number) => void }) {
         m.setMatrixAt(n, t.m.compose(t.p, t.q, t.s));
         t.c.copy(BODY[a]);
         if (a === 0 && hasFlag(flags, FLAG_SEEN)) t.c.lerp(WHITE, 0.4);
-        if (frozen) t.c.lerp(DORMANT, 0.55);
+        if (frozen) t.c.lerp(HS.dormant, 0.55);
         if (a === 1 && hasFlag(flags, FLAG_SEEING)) t.c.multiplyScalar(1.2);
         m.setColorAt(n++, t.c);
       }

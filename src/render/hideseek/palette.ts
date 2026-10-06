@@ -21,6 +21,10 @@ export const HS_COLORS = {
   seeker: '#ff5f6d',
   sightClear: '#ff4d5e',
   sightBlocked: '#8a94a7',
+  /** A sleeping character fades toward this, so a frozen seeker reads as switched off, near and far. */
+  dormant: '#9aa0aa',
+  /** The soft round shadow under every character and crate. */
+  blobShadow: '#1a1712',
 } as const;
 
 /** The same colors as three.js Colors, created once and never mutated. */

@@ -37,7 +37,7 @@ export class BoxMaterials {
     this.brace = new THREE.MeshStandardMaterial({ color: BRACE.clone(), roughness: 0.34, metalness: 0, emissive: BRACE.clone(), emissiveIntensity: 0.06, envMapIntensity: 0.9 });
     this.lockBody = hologramMaterial(LOCK_GLOW, true);
     this.lockShackle = hologramMaterial(LOCK_GLOW, false);
-    this.blob = new THREE.MeshBasicMaterial({ color: '#1a1712', alphaMap: blobMap, transparent: true, opacity: 0.5, depthWrite: false });
+    this.blob = new THREE.MeshBasicMaterial({ color: HS_COLORS.blobShadow, alphaMap: blobMap, transparent: true, opacity: 0.5, depthWrite: false });
   }
 
   /** `lock` runs 0 (free) to 1 (locked) through the lock animation. */
