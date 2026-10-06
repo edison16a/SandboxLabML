@@ -1,7 +1,8 @@
 import type { RigidBody, World } from '@dimforge/rapier3d-compat';
 import { quatToYaw, yawToQuat, type Pose, type Quat } from '../frame';
 import type { MatchSetup } from '../layouts/spawn';
-import type { ArenaLayout } from '../layouts/types';
+import { arenaWallRects } from '../layouts/geometry';
+import type { ArenaLayout, Rect } from '../layouts/types';
 import { boxSize, type HideSeekPhysics } from '../physics';
 import { buildArena } from './build';
 import type { Rapier } from './rapier';
@@ -25,13 +26,16 @@ export class ArenaWorld {
   /** Hider first, then seeker. */
   readonly agents: RigidBody[];
   readonly boxes: RigidBody[];
-  private readonly R: Rapier;
+  /** Every wall as a floor rectangle, outer walls first. Used by the sensor ray caster. */
+  readonly walls: Rect[];
+  /** The loaded Rapier module, for queries that need its classes. */
+  readonly rapier: Rapier;
   private readonly vec = { x: 0, y: 0, z: 0 };
   private readonly quat: Quat = { x: 0, y: 0, z: 0, w: 1 };
   private disposed = false;
 
   constructor(R: Rapier, layout: ArenaLayout, physics: HideSeekPhysics) {
-    this.R = R;
+    this.rapier = R;
     this.layout = layout;
     this.physics = physics;
     this.world = new R.World({ x: 0, y: 0, z: 0 });
@@ -40,6 +44,7 @@ export class ArenaWorld {
     const bodies = buildArena(R, this.world, layout, physics);
     this.agents = bodies.agents;
     this.boxes = bodies.boxes;
+    this.walls = arenaWallRects(layout, physics);
   }
 
   /**
@@ -110,7 +115,7 @@ export class ArenaWorld {
   /** Locked boxes become fixed bodies: nothing can push them until they are unlocked. */
   setFixed(body: RigidBody, fixed: boolean): void {
     if (body.isFixed() === fixed) return;
-    body.setBodyType(fixed ? this.R.RigidBodyType.Fixed : this.R.RigidBodyType.Dynamic, true);
+    body.setBodyType(fixed ? this.rapier.RigidBodyType.Fixed : this.rapier.RigidBodyType.Dynamic, true);
     if (!fixed) this.setVelocity(body, 0, 0, 0);
   }
 
