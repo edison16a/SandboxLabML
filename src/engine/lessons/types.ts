@@ -12,8 +12,12 @@ export type LessonCheck =
   | { kind: 'testRun'; metric: string; op: '>' | '>=' | '<' | '<=' | '=='; value: number; message: string }
   /** Training for N generations must push a metric over a value. */
   | { kind: 'metricAbove'; generations: number; metric: string; value: number; message: string }
-  /** The script compiles without errors (and optionally without warnings). */
-  | { kind: 'compiles'; noWarnings?: boolean; message: string };
+  /**
+   * The script compiles without errors (and optionally without warnings).
+   * With matchesPreset, it must also be the same program as that script
+   * preset, ignoring comments and layout.
+   */
+  | { kind: 'compiles'; noWarnings?: boolean; matchesPreset?: string; message: string };
 
 /** A small structural pattern matched against the script's syntax tree. */
 export interface AstPattern {
