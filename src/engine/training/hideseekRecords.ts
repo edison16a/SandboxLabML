@@ -16,6 +16,11 @@ export interface ReplayMatch {
   /** Index into `RoundReplay.genomes`. */
   hider: number;
   seeker: number;
+  /** Prep length when the match overrode it, s. */
+  prepSeconds?: number;
+  /** Sparring matches put a scripted agent on one side. */
+  hiderScripted?: boolean;
+  seekerScripted?: boolean;
 }
 
 /**
@@ -76,7 +81,15 @@ export function buildRoundReplay(round: MatchSpec[], info: ReplayInfo, limit = R
     }
     return i;
   };
-  const matches = round.slice(0, limit).map((s) => ({ layout: s.layout, seed: s.seed, hider: ref(s.hider.genome), seeker: ref(s.seeker.genome) }));
+  const matches = round.slice(0, limit).map((s) => ({
+    layout: s.layout,
+    seed: s.seed,
+    hider: ref(s.hider.genome),
+    seeker: ref(s.seeker.genome),
+    ...(s.prepSeconds !== undefined ? { prepSeconds: s.prepSeconds } : {}),
+    ...(s.hider.scripted ? { hiderScripted: true } : {}),
+    ...(s.seeker.scripted ? { seekerScripted: true } : {}),
+  }));
   const first = round[0];
   return {
     ...info,
@@ -94,8 +107,9 @@ export function replaySpecs(replay: RoundReplay): MatchSpec[] {
   return replay.matches.map((m, index) => ({
     layout: m.layout,
     seed: m.seed,
-    hider: { genome: replay.genomes[m.hider], inputs: replay.hiderInputs, slot: -1 },
-    seeker: { genome: replay.genomes[m.seeker], inputs: replay.seekerInputs, slot: -1 },
+    hider: { genome: replay.genomes[m.hider], inputs: replay.hiderInputs, slot: -1, ...(m.hiderScripted ? { scripted: true } : {}) },
+    seeker: { genome: replay.genomes[m.seeker], inputs: replay.seekerInputs, slot: -1, ...(m.seekerScripted ? { scripted: true } : {}) },
+    ...(m.prepSeconds !== undefined ? { prepSeconds: m.prepSeconds } : {}),
     reward: replay.reward,
     physics: replay.physics,
     round: replay.round,
