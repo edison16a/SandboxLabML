@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useTrainScriptParam } from '@/features/scripts/useTrainScriptParam';
 import { HideSeekCanvas } from '@/render/hideseek/HideSeekCanvas';
 import { useHideSeekBootstrap } from '../hooks/useHideSeekBootstrap';
 import { useHideSeekInspect } from '../hooks/useHideSeekInspect';
@@ -23,6 +24,7 @@ export function HideSeekLab() {
   const ready = useHideSeekBootstrap(params.get('run'));
   const [newRun, setNewRun] = useState(false);
   const openNewRun = useCallback(() => setNewRun(true), []);
+  const pendingScript = useTrainScriptParam('hideseek', params, openNewRun);
   const viewport = useRef<HTMLDivElement>(null);
   const schemas = useTeamSchemas();
   useHideSeekShortcuts(openNewRun);
@@ -63,7 +65,7 @@ export function HideSeekLab() {
       <aside className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[400px] lg:border-t-0 lg:border-l">
         <SidePanel />
       </aside>
-      <NewRunDialog open={newRun} onOpenChange={setNewRun} />
+      <NewRunDialog open={newRun} onOpenChange={setNewRun} initialScript={pendingScript} />
       {ready && <HideSeekTour />}
     </div>
   );
