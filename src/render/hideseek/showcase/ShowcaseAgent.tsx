@@ -11,8 +11,8 @@ import { teamColor } from '../palette';
 import { baseRingGeometry, bodyGeometry, visorGeometry, visorLineGeometry, waistRingGeometry } from './agentGeometry';
 import { MotionTrail } from './MotionTrail';
 
-/** Body tints: near white, leaning toward the team color so a glance tells the teams apart. */
-const BODY = ['#e3ecfb', '#fbe7ea'];
+/** Body tints in a softened team color, so a glance tells hiders from seekers even from far away. */
+const BODY = ['#8fbcff', '#ff9aa4'];
 
 /** Geometry shared by both agents, built once per showcase. */
 export function useAgentGeometry() {
