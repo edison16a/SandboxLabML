@@ -19,6 +19,9 @@ export const HS_COLORS = {
   gridWall: '#f8f7f4',
   hider: '#4c9aff',
   seeker: '#ff5f6d',
+  /** Crates: cubes gold, planks a warmer ochre, so the two read apart at a glance. Shared with the 2D room maps. */
+  cube: '#bf9a3e',
+  plank: '#c28d45',
   sightClear: '#ff4d5e',
   sightBlocked: '#8a94a7',
   /** A sleeping character fades toward this, so a frozen seeker reads as switched off, near and far. */

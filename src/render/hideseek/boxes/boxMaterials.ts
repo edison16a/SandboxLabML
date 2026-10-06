@@ -3,10 +3,10 @@ import type { BoxKind } from '@/engine/hideseek/physics';
 import { HS_COLORS } from '../palette';
 import { hologramMaterial } from './padlock';
 
-/** Crate colors. Cubes are gold, planks a warmer ochre, so the two read apart at a glance. */
+/** Crate colors. The panel colors live in the palette, so the room maps draw crates in the same gold. */
 export const BOX_LOOK = {
-  cube: '#bf9a3e',
-  plank: '#c28d45',
+  cube: HS_COLORS.cube,
+  plank: HS_COLORS.plank,
   brace: '#f5f1e8',
   /** Braces of a locked crate take the hider color, like the padlock over it. */
   lockedBrace: '#cfeaff',
