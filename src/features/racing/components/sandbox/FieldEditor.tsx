@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { buildTrack } from '@/engine/racing/track/buildTrack';
 import { ghostCss } from '@/features/charts/ghostCss';
+import { cn } from '@/ui/cn';
 import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
 import { Slider } from '@/ui/primitives/Slider';
@@ -13,17 +14,28 @@ import { useRacingLab } from '../../state/labStore';
 import { CopiesStepper } from './CopiesStepper';
 import { overlayButton, sectionLabel } from './overlay';
 
-/** How far a champion got on the Sandbox track, from the headless telemetry pass. */
-function useResults(): Map<number, string> {
+interface Result {
+  text: string;
+  crashed: boolean;
+}
+
+/**
+ * How each champion did on the Sandbox track, from the headless telemetry
+ * pass. Distances count from the car's own grid slot, so a car that starts
+ * 30 m back and crashes 20 m later reads 20 m, not a negative number.
+ */
+function useResults(): Map<number, Result> {
   const telemetry = useRacingLab((s) => s.telemetry);
   const spec = useRacingLab((s) => s.sandboxTrack);
   const length = useMemo(() => (spec ? buildTrack(spec).length : 0), [spec]);
   return useMemo(() => {
-    const out = new Map<number, string>();
+    const out = new Map<number, Result>();
     for (const t of telemetry) {
-      const d = t.distance[t.distance.length - 1] ?? 0;
-      const laps = length > 0 ? Math.floor(d / length) : 0;
-      out.set(t.generation, laps >= 1 ? `${laps} ${laps === 1 ? 'lap' : 'laps'} on this track` : `${Math.max(0, Math.round(d))} m on this track`);
+      const end = t.distance[t.distance.length - 1] ?? 0;
+      const driven = Math.max(0, Math.round(end - (t.distance[0] ?? 0)));
+      const laps = length > 0 ? Math.floor(end / length) : 0;
+      const text = t.crash ? `Crash at ${driven} m` : laps >= 1 ? `${laps} ${laps === 1 ? 'lap' : 'laps'}` : `${driven} m`;
+      out.set(t.generation, { text, crashed: !!t.crash });
     }
     return out;
   }, [telemetry, length]);
@@ -44,7 +56,7 @@ function rowColors(field: readonly FieldEntry[]): Map<number, string> {
 /**
  * The cars on the grid: which champions race and how many copies of each.
  * The newest champion takes pole and copies line up behind it, so six of
- * the same brain show how one small difference at the start plays out.
+ * the same brain show how a different start plays out.
  */
 export function FieldEditor() {
   const field = useRacingLab((s) => s.sandboxField);
@@ -61,29 +73,35 @@ export function FieldEditor() {
   const change = (generation: number, copies: number) => racingSession().sandbox?.setField(setCopies(field, generation, copies));
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <span className={sectionLabel}>On the grid</span>
         <span className="tabular font-mono text-[11px] text-white/55">
           {total} of {MAX_FIELD} cars
         </span>
       </div>
+      <div className="flex items-center gap-2 px-2 text-[10px] font-medium tracking-wide text-white/40 uppercase">
+        <span className="flex-1">Champion</span>
+        <span className="w-[76px] text-right">This track</span>
+        <span className="w-[82px] text-center">Copies</span>
+      </div>
       <ul className="flex flex-col gap-1">
-        {field.map((e) => (
-          <li key={e.generation} className="flex items-center gap-2 rounded-md bg-white/[0.04] py-1 pr-1 pl-2">
-            <span className="size-2 shrink-0 rounded-full" style={{ background: colors.get(e.generation) }} />
-            <div className="flex min-w-0 flex-1 flex-col leading-tight">
-              <span className="flex items-center gap-1.5 text-[12px] font-medium text-white">
+        {field.map((e) => {
+          const result = results.get(e.generation);
+          return (
+            <li key={e.generation} className="flex h-8 items-center gap-2 rounded-md bg-white/[0.04] pr-0.5 pl-2">
+              <span className="size-2 shrink-0 rounded-full" style={{ background: colors.get(e.generation) }} />
+              <span className="flex min-w-0 flex-1 items-center gap-1.5 text-[12px] font-medium text-white">
                 Gen {e.generation + 1}
                 {e.generation === newest && <Badge tone="accent">Newest</Badge>}
               </span>
-              <span className="truncate text-[11px] text-white/50">{results.get(e.generation) ?? 'Timing the lap'}</span>
-            </div>
-            <CopiesStepper label={`Gen ${e.generation + 1}`} value={e.copies} max={e.copies + MAX_FIELD - total} canRemove={total > 1} onChange={(n) => change(e.generation, n)} />
-          </li>
-        ))}
+              <span className={cn('w-[76px] truncate text-right text-[11px]', result?.crashed ? 'text-danger' : 'text-white/60')}>{result?.text ?? 'Timing'}</span>
+              <CopiesStepper label={`Gen ${e.generation + 1}`} value={e.copies} max={e.copies + MAX_FIELD - total} canRemove={total > 1} onChange={(n) => change(e.generation, n)} />
+            </li>
+          );
+        })}
       </ul>
-      <div className="flex flex-col gap-1.5 border-t border-white/10 pt-2.5">
+      <div className="mt-1 flex flex-col gap-1.5 border-t border-white/10 pt-2.5">
         <div className="flex items-center justify-between text-[12px] text-white/70">
           <span>Add a champion</span>
           <span className="tabular font-mono text-white">Gen {adding + 1}</span>
@@ -96,7 +114,7 @@ export function FieldEditor() {
           </Button>
         </div>
       </div>
-      <p className="text-[11px] leading-snug text-white/50">The newest champion starts on pole. Picking generations in the Ghosts menu also sets the grid.</p>
+      <p className="text-[11px] leading-snug text-white/50">The newest champion on the grid starts on pole. Picking generations in the Ghosts menu also sets the grid.</p>
     </div>
   );
 }
