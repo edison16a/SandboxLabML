@@ -56,6 +56,9 @@ export function TrackEditor({ spec, onChange }: Props) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Backspace in a text field, such as the track name, edits the text and leaves the track alone.
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))) return;
       if ((e.key === 'Delete' || e.key === 'Backspace') && selected !== null && spec.points.length > 4) {
         const points = spec.points.filter((_, i) => i !== selected);
         set({ selectedHandle: null });
