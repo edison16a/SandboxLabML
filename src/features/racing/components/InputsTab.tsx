@@ -1,0 +1,53 @@
+'use client';
+
+import { useCallback, useMemo } from 'react';
+import { RACING_OUTPUTS, racingInputSchema } from '@/engine/racing/sensors/inputSchema';
+import { InputBars } from '@/features/inputs/InputBars';
+import { Segmented } from '@/ui/primitives/Segmented';
+import { Switch } from '@/ui/primitives/Switch';
+import { racingSession } from '../session/RacingSession';
+import { useRacingLab } from '../state/labStore';
+
+/** Everything the followed car senses right now, plus overlay settings. */
+export function InputsTab() {
+  const run = useRacingLab((s) => s.run);
+  const overlay = useRacingLab((s) => s.inputsOverlay);
+  const scope = useRacingLab((s) => s.inputsScope);
+  const hovered = useRacingLab((s) => s.hoveredInput);
+  const focus = useRacingLab((s) => s.focus);
+  const set = useRacingLab((s) => s.set);
+  const schema = useMemo(() => (run?.blueprint.env === 'racing' && run.racing ? racingInputSchema(run.blueprint.inputs, run.racing.car) : []), [run]);
+  const read = useCallback(() => {
+    const streams = racingSession().streams;
+    const stream = focus.kind === 'ghost' ? streams?.ghosts : streams?.population;
+    return stream?.inspect ?? null;
+  }, [focus]);
+
+  return (
+    <div className="flex flex-col gap-4 p-4">
+      <div className="flex flex-col gap-3 rounded-md border border-border bg-surface-2 p-3">
+        <label className="flex items-center justify-between text-[13px]">
+          Draw inputs in the viewport
+          <Switch label="Inputs overlay" checked={overlay} onChange={(v) => set({ inputsOverlay: v })} />
+        </label>
+        <div className="flex items-center justify-between text-[13px]">
+          <span className="text-muted">Show rays for</span>
+          <Segmented
+            label="Overlay scope"
+            size="sm"
+            value={scope}
+            onChange={(v) => set({ inputsScope: v })}
+            options={[
+              { value: 'selected', label: 'Followed car' },
+              { value: 'all', label: 'All cars' },
+            ]}
+          />
+        </div>
+      </div>
+      <p className="text-[12px] text-muted">
+        {schema.length} inputs from the <span className="text-fg">{run?.blueprint.name}</span> blueprint. Hover a row to highlight that sensor in 3D and in the network.
+      </p>
+      <InputBars schema={schema} outputs={RACING_OUTPUTS} read={read} hovered={hovered} onHover={(i) => set({ hoveredInput: i })} />
+    </div>
+  );
+}

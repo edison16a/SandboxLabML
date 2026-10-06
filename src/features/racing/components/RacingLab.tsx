@@ -15,6 +15,10 @@ import { LabToolbar } from './LabToolbar';
 import { NewRunDialog } from './NewRunDialog';
 import { SidePanel } from './SidePanel';
 import { ViewportHud } from './ViewportHud';
+import { InputsCard } from './InputsCard';
+import { InputsTab } from './InputsTab';
+import { ModelTab } from './ModelTab';
+import { NetworkTab } from './NetworkTab';
 
 /** The Racing lab: viewport, telemetry, controls and the side panel. */
 export function RacingLab() {
@@ -47,6 +51,7 @@ export function RacingLab() {
             <div className="flex h-full items-center justify-center bg-bg text-[13px] text-muted">Starting the simulation workers...</div>
           )}
           {streams && <ViewportHud population={streams.population} />}
+          <InputsCard />
         </div>
         {view !== 'population' && hasTelemetry && (
           <div className="h-36 shrink-0 border-t border-border bg-surface px-2 pt-1">
@@ -56,13 +61,9 @@ export function RacingLab() {
         <LabToolbar onNewRun={openNewRun} />
       </div>
       <aside className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[400px] lg:border-t-0 lg:border-l">
-        <SidePanel network={<Placeholder />} inputs={<Placeholder />} model={<Placeholder />} />
+        <SidePanel network={<NetworkTab />} inputs={<InputsTab />} model={<ModelTab />} />
       </aside>
       <NewRunDialog open={newRun} onOpenChange={setNewRun} />
     </div>
   );
-}
-
-function Placeholder() {
-  return <div className="p-4 text-[13px] text-muted">Coming up.</div>;
 }
