@@ -93,6 +93,25 @@ export interface BenchmarkRow {
   createdAt: number;
 }
 
+/**
+ * One Hide and Seek generation: both teams' stats and champions, plus game
+ * stats such as hidden share. Kept apart from racing rows because the shape
+ * differs (two populations per generation).
+ */
+export interface HideSeekGenerationRow {
+  runId: string;
+  generation: number;
+  /** HideSeekGenerationStats from the engine, stored as plain data. */
+  stats: unknown;
+  hiderChampion: Uint8Array;
+  seekerChampion: Uint8Array;
+  /** Seeds and layouts of the last round, so the grid can replay it. */
+  replay?: unknown;
+  simSeconds: number;
+  wallMs: number;
+  benchmark?: number;
+}
+
 export interface SettingRow {
   key: string;
   value: unknown;
@@ -112,6 +131,7 @@ export class SandboxDb extends Dexie {
   lessonProgress!: Table<LessonProgressRow, string>;
   benchmarks!: Table<BenchmarkRow, [string, number]>;
   settings!: Table<SettingRow, string>;
+  hsGenerations!: Table<HideSeekGenerationRow, [string, number]>;
 
   constructor(name = 'sandboxlab') {
     super(name);
@@ -126,6 +146,7 @@ export class SandboxDb extends Dexie {
       benchmarks: '[runId+generation], runId',
       settings: 'key',
     });
+    this.version(2).stores({ hsGenerations: '[runId+generation], runId' });
   }
 }
 

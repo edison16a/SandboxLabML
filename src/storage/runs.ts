@@ -58,8 +58,9 @@ export async function restoreRun(id: string): Promise<void> {
 /** Deletes a run and everything stored under it, for good. */
 export async function destroyRun(id: string): Promise<void> {
   const d = db();
-  await d.transaction('rw', [d.runs, d.generations, d.checkpoints, d.pathCache, d.benchmarks], async () => {
+  await d.transaction('rw', [d.runs, d.generations, d.hsGenerations, d.checkpoints, d.pathCache, d.benchmarks], async () => {
     await d.generations.where('runId').equals(id).delete();
+    await d.hsGenerations.where('runId').equals(id).delete();
     await d.checkpoints.where('runId').equals(id).delete();
     await d.pathCache.where('runId').equals(id).delete();
     await d.benchmarks.where('runId').equals(id).delete();
