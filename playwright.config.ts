@@ -17,6 +17,7 @@ export default defineConfig({
   use: {
     baseURL: `http://127.0.0.1:${port}`,
     trace: 'retain-on-failure',
+    locale: 'en-US',
     viewport: { width: 1440, height: 900 },
     launchOptions: {
       executablePath: process.env.PW_CHROMIUM_PATH || undefined,
