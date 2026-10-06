@@ -17,7 +17,7 @@ const BRACE = new THREE.Color(BOX_LOOK.brace);
 /** Pushed past 1 so a locked crate's braces read as lit even from far away. */
 const LOCKED = new THREE.Color(BOX_LOOK.lockGlow).multiplyScalar(1.5);
 /** Box indexes of each kind: two cubes, then two planks. */
-const OF_KIND: Record<BoxKind, number[]> = { cube: [], plank: [] };
+const OF_KIND: Record<BoxKind, number[]> = { cube: [], plank: [], ramp: [] };
 BOX_KINDS.forEach((k, i) => OF_KIND[k].push(i));
 
 /**

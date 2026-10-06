@@ -41,6 +41,13 @@ export interface HideSeekPhysics {
   box: {
     cube: BoxSize;
     plank: BoxSize;
+    /**
+     * A wedge: its top rises from 0 at the foot (local -x end) to `height`
+     * at the lip (local +x end). The lip stands a little above a cube, so an
+     * agent on it sees over every box, and the slope (about 27 degrees) is
+     * long enough to take a second or so to climb.
+     */
+    ramp: BoxSize;
     mass: number;
     friction: number;
     /** Stands in for floor friction, since boxes slide on a plane with no floor contact. */
@@ -60,6 +67,33 @@ export interface HideSeekPhysics {
     breakDistance: number;
   };
   lock: { range: number; cone: number };
+  climb: {
+    /**
+     * The mount zone at the foot of a ramp reaches this far out from the
+     * foot, m. An agent walking into the slope comes to rest about 0.1 m
+     * out, because its round bottom meets the thin end of the wedge.
+     */
+    footOut: number;
+    /** ...and this far up the slope from the foot, m. */
+    footIn: number;
+    /** Smallest move output that mounts a ramp, so a brain idling near one does not climb by accident. */
+    mountMove: number;
+    /** Widest angle between the facing and the uphill direction that still mounts, rad. */
+    mountAngle: number;
+    /** Speed along the slope at full move output, as a share of agent maxSpeed. Backing down uses backwardShare of it. */
+    speedShare: number;
+    /** From this elevation an agent sees over boxes and is seen over them, m: the cube and plank height. */
+    seeOverBoxes: number;
+    /** How long a jump off the lip lasts, s. Rounded to whole ticks. */
+    jumpSeconds: number;
+    /** Landing spots are tried every jumpStep m from just past the lip out to this distance, m. */
+    jumpRange: number;
+    jumpStep: number;
+    /** The top of the jump arc clears the tallest thing it crosses by this much, m. */
+    clearance: number;
+    /** Air kept between a landing or step off spot and anything solid, m. */
+    landingGap: number;
+  };
   vision: {
     range: number;
     /** Full field of view, rad. */
@@ -89,6 +123,7 @@ export const DEFAULT_HIDESEEK_PHYSICS: HideSeekPhysics = {
   box: {
     cube: { length: 1, width: 1, height: 1 },
     plank: { length: 2.4, width: 0.4, height: 1 },
+    ramp: { length: 2.4, width: 1.2, height: 1.2 },
     mass: 30,
     friction: 0.8,
     linearDamping: 3,
@@ -96,6 +131,20 @@ export const DEFAULT_HIDESEEK_PHYSICS: HideSeekPhysics = {
   },
   grab: { range: 1.6, cone: Math.PI / 2, gain: 0.8, maxSpeed: 8, maxSpin: 8, breakDistance: 1 },
   lock: { range: 1.6, cone: Math.PI / 2 },
+  climb: {
+    footOut: 0.6,
+    footIn: 0.3,
+    mountMove: 0.2,
+    mountAngle: Math.PI / 4,
+    speedShare: 0.6,
+    seeOverBoxes: 1,
+    // Half a second is long enough to read as a jump on screen and short enough that a vault still pays.
+    jumpSeconds: 0.5,
+    jumpRange: 3,
+    jumpStep: 0.1,
+    clearance: 0.3,
+    landingGap: 0.02,
+  },
   vision: { range: 14, fov: (135 * Math.PI) / 180 },
   rayHeight: 0.5,
   spawn: { boxJitter: 0.4, boxYawJitter: 0.3 },
@@ -118,6 +167,7 @@ export function hideSeekPhysics(overrides: HideSeekPhysicsOverrides = {}): HideS
     box: { ...d.box, ...overrides.box },
     grab: { ...d.grab, ...overrides.grab },
     lock: { ...d.lock, ...overrides.lock },
+    climb: { ...d.climb, ...overrides.climb },
     vision: { ...d.vision, ...overrides.vision },
     spawn: { ...d.spawn, ...overrides.spawn },
   };
@@ -137,17 +187,4 @@ export function prepTicks(p: HideSeekPhysics): number {
   return Math.round(matchTicks(p) * p.prepShare);
 }
 
-/** Every arena has four boxes: two cubes, then two planks. */
-export const BOX_COUNT = 4;
-export const BOX_KINDS = ['cube', 'cube', 'plank', 'plank'] as const;
-export type BoxKind = (typeof BOX_KINDS)[number];
-
-/** Size of box `index` of a 1 v 1 match, whose kinds follow BOX_KINDS. */
-export function boxSize(p: HideSeekPhysics, index: number): BoxSize {
-  return boxKindSize(p, BOX_KINDS[index]);
-}
-
-/** Size of a box by kind. The Sandbox places any mix of cubes and planks, so its boxes carry their kind. */
-export function boxKindSize(p: HideSeekPhysics, kind: BoxKind): BoxSize {
-  return kind === 'cube' ? p.box.cube : p.box.plank;
-}
+export * from './boxKinds';

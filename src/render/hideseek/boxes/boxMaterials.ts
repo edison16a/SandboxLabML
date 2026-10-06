@@ -7,6 +7,7 @@ import { hologramMaterial } from './padlock';
 export const BOX_LOOK = {
   cube: HS_COLORS.cube,
   plank: HS_COLORS.plank,
+  ramp: HS_COLORS.ramp,
   brace: '#f5f1e8',
   /** Braces of a locked crate take the hider color, like the padlock over it. */
   lockedBrace: '#cfeaff',

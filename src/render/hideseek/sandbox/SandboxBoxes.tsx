@@ -11,6 +11,7 @@ import { isLocked, readBox, sandboxFrame } from './sandboxRead';
 const SIZES: Record<BoxKind, ReturnType<typeof boxKindSize>> = {
   cube: boxKindSize(DEFAULT_HIDESEEK_PHYSICS, 'cube'),
   plank: boxKindSize(DEFAULT_HIDESEEK_PHYSICS, 'plank'),
+  ramp: boxKindSize(DEFAULT_HIDESEEK_PHYSICS, 'ramp'),
 };
 
 interface Props {

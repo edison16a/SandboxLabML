@@ -22,6 +22,8 @@ export const HS_COLORS = {
   /** Crates: cubes gold, planks a warmer ochre, so the two read apart at a glance. Shared with the 2D room maps. */
   cube: '#bf9a3e',
   plank: '#c28d45',
+  /** Ramps: a muted jade, so a ramp never reads as a crate or as either team. A placeholder until ramps get their own look. */
+  ramp: '#5f9e7f',
   sightClear: '#ff4d5e',
   sightBlocked: '#8a94a7',
   /** A sleeping character fades toward this, so a frozen seeker reads as switched off, near and far. */

@@ -4,7 +4,8 @@ import { arenaWallRects } from '../layouts/geometry';
 import type { MatchSetup } from '../layouts/spawn';
 import type { ArenaLayout, Rect } from '../layouts/types';
 import { BOX_KINDS, boxKindSize, type BoxKind, type HideSeekPhysics } from '../physics';
-import { AGENT_GROUPS, BOX_GROUPS, WALL_GROUPS } from './groups';
+import { boxCollider } from './boxShape';
+import { AGENT_GROUPS, WALL_GROUPS } from './groups';
 import type { Rapier } from './rapier';
 
 export interface ArenaBodies {
@@ -14,7 +15,7 @@ export interface ArenaBodies {
   boxes: RigidBody[];
 }
 
-/** A box to build: where it starts and whether it is a cube or a plank. */
+/** A box to build: where it starts and what kind it is. */
 export interface BoxSpawn {
   pose: Pose;
   kind: BoxKind;
@@ -65,17 +66,13 @@ export function buildRoom(R: Rapier, p: HideSeekPhysics, walls: Rect[], agentPos
       .setLinearDamping(p.box.linearDamping)
       .setAngularDamping(p.box.angularDamping);
     const body = world.createRigidBody(desc);
-    const shape = R.ColliderDesc.cuboid(size.length / 2, size.height / 2, size.width / 2)
-      .setMass(p.box.mass)
-      .setFriction(p.box.friction)
-      .setCollisionGroups(BOX_GROUPS);
-    world.createCollider(shape, body);
+    world.createCollider(boxCollider(R, p, spawn.kind), body);
     boxes.push(body);
   }
   return { world, agents, boxes };
 }
 
-/** A 1 v 1 room: the layout's walls, the hider and the seeker, then the four boxes in BOX_KINDS order. */
+/** A 1 v 1 room: the layout's walls, the hider and the seeker, then the boxes in BOX_KINDS order. */
 export function buildArena(R: Rapier, layout: ArenaLayout, p: HideSeekPhysics, setup: MatchSetup): ArenaBodies {
   const boxes = setup.boxes.map((pose, i) => ({ pose, kind: BOX_KINDS[i] }));
   return buildRoom(R, p, arenaWallRects(layout, p), setup.agents, boxes);
