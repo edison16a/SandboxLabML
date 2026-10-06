@@ -24,7 +24,12 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 }
 
 function Empty() {
-  return <div className="flex h-24 items-center justify-center rounded-md border border-dashed border-border text-[12px] text-subtle">Press Train to play the first generation.</div>;
+  const running = useHideSeekLab((s) => s.status === 'running');
+  return (
+    <div className="flex h-24 items-center justify-center rounded-md border border-dashed border-border px-6 text-center text-[12px] text-subtle">
+      {running ? 'The first generation is playing. Charts appear once all its rounds are done.' : 'Press Train to play the first generation.'}
+    </div>
+  );
 }
 
 /** Both teams' fitness, how long hiders stay hidden, how much the boxes get used, and species. */

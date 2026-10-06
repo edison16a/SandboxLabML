@@ -27,6 +27,7 @@ export function GridLabels() {
   const anchors = useRef<Array<THREE.Group | null>>([]);
   const names = useRef<Array<HTMLSpanElement | null>>([]);
   const chips = useRef<Array<HTMLSpanElement | null>>([]);
+  const cards = useRef<Array<HTMLDivElement | null>>([]);
   const state = useMemo(() => ({ o: { x: 0, z: 0 }, phases: [] as Array<Phase | null>, first: -1 }), []);
 
   useFrame(() => {
@@ -44,7 +45,9 @@ export function GridLabels() {
       if (!anchor) continue;
       arenaOrigin(k, frame.lattice, state.o);
       anchor.position.set(state.o.x, 0, state.o.z - ARENA_SPAN / 2 - 0.9);
-      anchor.visible = k !== frame.focusSlot;
+      // The showcase labels the focused arena itself, so its DOM label would only sit in the way.
+      const card = cards.current[k];
+      if (card) card.style.display = k === frame.focusSlot ? 'none' : 'flex';
       const o = (frame.first + k) * STRIDE;
       const phase: Phase = curr[o + 1] === 1 ? 'prep' : curr[o + 2] === 1 ? 'seen' : 'hidden';
       const chip = chips.current[k];
@@ -63,7 +66,7 @@ export function GridLabels() {
       {Array.from({ length: shown }, (_, k) => (
         <group key={k} ref={(el) => void (anchors.current[k] = el)}>
           <Html center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
-            <div className="flex items-center gap-1.5 rounded-md border border-white/10 bg-black/55 px-1.5 py-0.5 whitespace-nowrap text-white backdrop-blur-sm">
+            <div ref={(el) => void (cards.current[k] = el)} className="flex items-center gap-1.5 rounded-md border border-white/10 bg-black/55 px-1.5 py-0.5 whitespace-nowrap text-white backdrop-blur-sm">
               <span ref={(el) => void (names.current[k] = el)} className="font-mono text-[11px] text-white/85" />
               <span ref={(el) => void (chips.current[k] = el)} />
             </div>
