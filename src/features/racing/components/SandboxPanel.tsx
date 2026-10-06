@@ -17,7 +17,11 @@ type SandboxTab = 'track' | 'cars';
 
 const iconButton = 'text-white/70 hover:bg-white/10 hover:text-white';
 
-/** Phones start with the panel folded down to its race controls, so the cars are not hidden behind it. */
+/**
+ * Phones start with the panel folded down to its race controls, so the cars
+ * are not hidden behind it. Unfolded there, it takes the whole viewport like
+ * a sheet: pick a track or a field, then fold it to watch.
+ */
 const startsOpen = () => typeof window === 'undefined' || window.matchMedia('(min-width: 640px)').matches;
 
 /**
@@ -38,7 +42,7 @@ export function SandboxPanel() {
   return (
     <section
       aria-label="Sandbox"
-      className="absolute right-3 bottom-3 flex max-h-[calc(100%-4.5rem)] w-[316px] flex-col overflow-hidden rounded-lg border border-white/10 bg-black/65 text-white shadow-lg shadow-black/30 backdrop-blur-md max-sm:right-2 max-sm:bottom-2 max-sm:left-2 max-sm:max-h-[60%] max-sm:w-auto"
+      className="absolute right-3 bottom-3 flex max-h-[calc(100%-4.5rem)] w-[316px] flex-col overflow-hidden rounded-lg border border-white/10 bg-black/65 text-white shadow-lg shadow-black/30 backdrop-blur-md max-sm:right-2 max-sm:bottom-2 max-sm:left-2 max-sm:max-h-[calc(100%-1rem)] max-sm:w-auto"
     >
       <header className="flex h-10 shrink-0 items-center gap-2 border-b border-white/10 pr-1.5 pl-3">
         <FlaskConical className="size-3.5 text-orange" />
