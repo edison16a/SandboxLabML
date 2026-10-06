@@ -49,10 +49,21 @@ The shipped file uses 12 seeds and 100 generations per preset, which takes about
 | --- | --- |
 | Beginner | 23.5 |
 | Intermediate | 39.3 |
-| Advanced | 30.2 |
+| Advanced | 90.5 |
 
-The curves are worth a look on their own. Beginner peaks around generation 5 and then falls as it memorizes the Oval, a textbook picture of overfitting.
+The curves are worth a look on their own. Beginner peaks around generation 5 and then falls as it memorizes the Oval, a textbook picture of overfitting. Intermediate climbs further but also trains on the Oval only, so it plateaus well below what it could reach.
 
-Advanced is meant to come out on top, but at this budget it does not. Its champions steer harder, crash more and score lower than Intermediate's on every part of the exam, including the random roads it trains on. Turning off its random tracks, its adaptive mutation or its slip penalty one at a time does not close the gap, and neither does training longer (400 generations scored lower than 150). Retuning the weights cannot fix it either, because Intermediate leads on every axis. Its bigger brain explains part of the gap: the same script with the standard brain scores a few points higher, though still below Intermediate. A likely reason is that curvature inputs let a brain memorize the shape of its current training road instead of learning to read any road with its rays. The reference test marks "Advanced beats Intermediate" as a known failure, so it gets noticed when a preset change makes it pass.
+Advanced wins by training on a curriculum: it rotates through all five built-in circuits, eight generations each. The recipe was picked by experiment (4 seeds, 80 generations each, same exam):
+
+| Variant | Median |
+| --- | --- |
+| Intermediate | 46 |
+| Old Advanced: bigger brain, random roads, adaptive mutation, lookahead sensor | 32 |
+| Intermediate with the Advanced brain | 30 |
+| Intermediate with a random road every 5 generations | 33 |
+| Intermediate rotating the built-in circuits | 78 |
+| Rotation plus the slip penalty (the shipped Advanced) | 77 |
+
+Random roads were too varied to learn from in 100 generations, and the bigger brain learned more slowly in the same time. Real circuits in rotation teach the brain to read the road with its rays instead of memorizing one shape. A related engine fix landed at the same time: when a script switches tracks, species stagnation now resets, since scores on a new road are not comparable with the old one.
 
 Regenerate the file with `npm run refs`. It uses two worker threads by default, and `npm run refs -- --workers 0` keeps it on one. A test fails when the file's versions do not match the current constants, so a version bump forces a regeneration. A nightly workflow, `.github/workflows/references.yml`, also regenerates it and commits any change to the `references/update` branch for review.
