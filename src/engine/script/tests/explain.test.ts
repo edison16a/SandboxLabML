@@ -23,8 +23,8 @@ describe('explain', () => {
 
   it('reads the Advanced generation block', () => {
     const lines = explainBlock(findScriptPreset('racing-advanced')!.source, 'generation');
-    expect(lines[0]).toBe('Aim for 10 species');
+    expect(lines[0]).toBe('Aim for 8 species');
     expect(lines[1]).toBe('Let the top 20% of each species breed');
-    expect(lines.at(-1)).toBe('If the generation number modulo 10 equals 0 and the generation number is above 0');
+    expect(lines.at(-1)).toBe('If the generation number modulo 40 equals 0 and the generation number is above 0');
   });
 });

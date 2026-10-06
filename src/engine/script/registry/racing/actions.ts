@@ -85,7 +85,7 @@ export const RACING_ACTION_ENTRIES: RegistryEntry[] = [
     summary: 'Races the next generation on a built-in track.',
     description: 'Switches the track for the generations that follow. Training on one fixed track is fastest, while switching tracks teaches brains to drive roads they have never seen.',
     example: 'useTrack(id: "oval")',
-    presets: ['beginner'],
+    presets: ['beginner', 'advanced'],
     block: { category: 'environment', label: 'use track {id}' },
     explain: 'race on the {id} track',
     binding: {
@@ -110,7 +110,7 @@ export const RACING_ACTION_ENTRIES: RegistryEntry[] = [
     summary: 'Races the next generation on a random track.',
     description: 'Builds a new closed track from the seed. Random tracks stop brains from memorizing one road. Using the generation number as the seed gives a fresh track each time.',
     example: 'randomTrack(seed: generation)',
-    presets: ['advanced'],
+    presets: [],
     block: { category: 'environment', label: 'random track {seed}' },
     explain: 'race on random track {seed}',
     binding: {

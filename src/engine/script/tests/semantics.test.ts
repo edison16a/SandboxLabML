@@ -8,12 +8,11 @@ import { defaultPlan, Population } from '../../neat/population';
 import { builtinRacingController } from '../../racing/builtinReward';
 import { DEFAULT_CAR } from '../../racing/car/params';
 import type { RacingCar } from '../../racing/car/runtime';
-import { RacingEnv, type RacingEnvOptions } from '../../racing/env';
+import type { RacingEnvOptions } from '../../racing/env';
 import { evaluateRacing } from '../../racing/episode';
 import { racingInputSchema, type CustomSensorSpec } from '../../racing/sensors/inputSchema';
 import { buildTrack } from '../../racing/track/buildTrack';
 import { BUILT_IN_TRACKS } from '../../racing/track/presets';
-import { Network } from '../../neat/network';
 import { compileScript, type CompiledScript } from '../compiler';
 import { findScriptPreset } from '../presets/racing';
 import { inTick } from './helpers';
@@ -96,28 +95,23 @@ describe('Beginner preset', () => {
 describe('Advanced preset', () => {
   const script = compiled(findScriptPreset('racing-advanced')!.source);
 
-  it('adds one normalized sensor and runs a generation', () => {
-    expect(script.sensors).toEqual([{ key: 'bendFar', label: 'Bend 60 m ahead', unit: '1/m', min: -0.05, max: 0.05 }]);
+  it('runs a generation with the standard brain and no extra sensors', () => {
+    expect(script.sensors).toEqual([]);
     const controller = script.createController({ seed: 2, track: oval });
-    const opts = options('racing-advanced', controller, script.sensors);
-    const pop = population('racing-advanced', 5, 1);
+    const opts = options('racing-standard', controller, script.sensors);
+    const pop = population('racing-standard', 5, 1);
     expect(evaluateRacing(pop.genomes, opts)).toHaveLength(30);
-    const env = new RacingEnv(opts);
-    env.reset(pop.genomes.slice(0, 1).map((g) => new Network(g)));
-    env.step();
-    const obs = env.lastObservation(0);
-    expect(obs).toHaveLength(16);
-    expect(obs[15]).toBeGreaterThanOrEqual(0);
-    expect(obs[15]).toBeLessThanOrEqual(1);
   });
 
-  it('switches to a random track every 10 generations and mutates adaptively', () => {
+  it('rotates through the built-in circuits every 8 generations', () => {
     const at = (generation: number) => script.runGeneration({ ...GEN, generation }, new Rng(generation));
-    expect(at(10).racing?.track).toEqual({ kind: 'random', seed: 10 });
-    expect(at(20).racing?.track).toEqual({ kind: 'random', seed: 20 });
+    expect(at(8).racing?.track).toEqual({ kind: 'builtin', id: 'sprint' });
+    expect(at(16).racing?.track).toEqual({ kind: 'builtin', id: 'hairpin' });
+    expect(at(32).racing?.track).toEqual({ kind: 'builtin', id: 'grand-prix' });
+    expect(at(40).racing?.track).toEqual({ kind: 'builtin', id: 'oval' });
     expect(at(0).racing).toBeUndefined();
     expect(at(7).racing).toBeUndefined();
-    expect(at(3).plan).toMatchObject({ targetSpecies: 10, adaptive: true, mutation: { addConnection: 0.08, addNode: 0.04 } });
+    expect(at(3).plan).toMatchObject({ targetSpecies: 8, adaptive: false });
   });
 });
 

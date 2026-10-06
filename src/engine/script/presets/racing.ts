@@ -36,7 +36,7 @@ export const RACING_PRESETS: readonly ScriptPreset[] = [
     name: 'Advanced',
     tier: 'advanced',
     env: 'racing',
-    description: 'Adds a tire slip penalty, a far curvature sensor, adaptive mutation and a random track every 10 generations.',
+    description: 'Rotates through every built-in circuit and adds a tire slip penalty, so the brain learns to read any road instead of memorizing one.',
     source: RACING_ADVANCED,
   },
 ];

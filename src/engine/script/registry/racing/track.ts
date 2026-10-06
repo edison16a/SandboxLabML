@@ -33,7 +33,7 @@ export const RACING_TRACK_ENTRIES: RegistryEntry[] = [
     description:
       'Curvature is one over the radius of the bend, positive when the road turns left. A bend with a 20 m radius gives 0.05 1/m and a straight gives 0. Looking ahead lets a brain brake before the corner arrives.',
     example: 'reward -0.01 * car.speed * abs(track.curvatureAhead(distance: 20 m))',
-    presets: ['advanced'],
+    presets: [],
     block: { category: 'sensors', label: 'road bend {distance} ahead' },
     explain: 'how sharply the road bends {distance} ahead',
     needs: ['track'],
