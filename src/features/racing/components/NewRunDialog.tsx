@@ -61,7 +61,8 @@ export function NewRunDialog({ open, onOpenChange, initialTrack, initialScript }
     if (open) void listBlueprints('racing').then((list) => setCustom(list.filter((b): b is RacingBlueprint => b.env === 'racing')));
   }, [open]);
   const blueprints = [...RACING_BLUEPRINTS, ...custom];
-  const tracks = initialTrack ? [initialTrack, ...BUILT_IN_TRACKS] : BUILT_IN_TRACKS;
+  // A built in track sent here unedited already has its tile.
+  const tracks = initialTrack && !BUILT_IN_TRACKS.some((t) => t.id === initialTrack.id) ? [initialTrack, ...BUILT_IN_TRACKS] : BUILT_IN_TRACKS;
 
   const create = async () => {
     setBusy(true);
