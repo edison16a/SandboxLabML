@@ -46,16 +46,20 @@ export function FramePacer({ loop }: { loop: FrameLoop }) {
 
   useEffect(() => {
     let pending = 0;
+    const drawSoon = () => {
+      if (pending) return;
+      pending = requestAnimationFrame(() => {
+        pending = 0;
+        draw(store, 0);
+      });
+    };
+    // A canvas that mounts while held has no last frame to keep, so it draws one.
+    if (store.getState().frameloop === 'never' && !live.current.pacing) drawSoon();
     const unsubscribe = store.subscribe((s, prev) => {
       if (s.size === prev.size && s.viewport.dpr === prev.viewport.dpr) return;
       if (s.frameloop === 'demand') s.invalidate();
       else if (s.frameloop === 'never' && live.current.pacing) live.current.resized = true;
-      else if (s.frameloop === 'never' && !pending) {
-        pending = requestAnimationFrame(() => {
-          pending = 0;
-          draw(store, 0);
-        });
-      }
+      else if (s.frameloop === 'never') drawSoon();
     });
     return () => {
       unsubscribe();
