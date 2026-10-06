@@ -119,7 +119,9 @@ export class HideSeekTrainer {
   /**
    * Changes match rules (opponent mix, prep time, rooms, hall of fame
    * size). They apply from the next generation that is not planned yet:
-   * a pending plan is never changed under the workers playing it.
+   * a pending plan is never changed under the workers playing it. A
+   * checkpoint taken in between stores the new rules, so resuming from it
+   * replans the pending generation under them.
    */
   applyDirective(directive: HideSeekDirective): void {
     const d = readHideSeekDirective(directive);

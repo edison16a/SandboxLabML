@@ -96,7 +96,7 @@ export const HIDESEEK_MATCH_RULE_ENTRIES: RegistryEntry[] = [
     description:
       'Brains in the same room and round then begin from identical positions with the same box layout, so their scores differ by skill rather than by a lucky start. Starts still change every round and every generation.',
     example: 'sameStarts()',
-    presets: ['intermediate', 'advanced'],
+    presets: ['intermediate'],
     block: { category: 'environment', label: 'same starts {enabled}' },
     explain: 'start every match of a round from the same spots: {enabled}',
     binding: {

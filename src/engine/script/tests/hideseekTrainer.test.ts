@@ -29,7 +29,7 @@ describe('scripts in the trainer', () => {
     // The generation block also ran before generation 0, so its rules hold from the start.
     expect(trainer.options.prepSeconds).toBe(12);
     expect(trainer.options.opponents).toEqual({ current: 2, hallOfFame: 0, scripted: 2 });
-    expect([trainer.options.mixLayouts, trainer.options.sharedSeeds]).toEqual([true, true]);
+    expect([trainer.options.mixLayouts, trainer.options.sharedSeeds]).toEqual([true, false]);
     expect(trainer.options.layouts).toEqual(['open', 'shelter', 'corridor']);
     for (let g = 0; g < 3; g++) {
       const stats = trainer.runGeneration(pool, (spec) => host.createHideSeekControllers(spec.seed), host);

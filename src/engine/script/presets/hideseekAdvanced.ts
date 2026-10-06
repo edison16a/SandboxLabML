@@ -1,8 +1,8 @@
 /**
  * Advanced Hide and Seek preset: the v2 training setup written out (cover
- * rewards, scripted sparring, mixed rooms and shared starts), plus a
- * shelter bonus, seeker approach shaping, a hall of fame schedule and a
- * shrinking prep phase.
+ * rewards, scripted sparring and mixed rooms), plus a shelter bonus,
+ * seeker approach shaping, a hall of fame schedule that starts with two
+ * sparring rounds, and a shrinking prep phase.
  */
 export const HIDESEEK_ADVANCED = `// Advanced: real cover, shelters that stay built and a curriculum.
 script "Advanced: cover and shelters" for hideseek v1
@@ -62,12 +62,11 @@ each generation {
     prepTime(length: 9 s)
   }
 
-  // Every room, mixed inside each round, and every match of a round starting
-  // from the same spots, so brains are compared on equal terms.
+  // Every room, mixed inside each round, so the share of time hidden from the
+  // scripted seeker can be compared from one generation to the next.
   useLayout(id: "open")
   useLayout(id: "shelter")
   useLayout(id: "corridor")
   mixLayouts()
-  sameStarts()
 }
 `;
