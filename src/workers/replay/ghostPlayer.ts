@@ -26,8 +26,12 @@ export interface GhostTelemetry {
   speed: Float32Array;
   /** Brake pedal per tick, 0 to 1, for the brake map. */
   brake: Float32Array;
-  /** Where the replay left the road, if it did. The Sandbox draws crash rings from this, since its track is not the one the records were made on. */
-  crash: { x: number; y: number } | null;
+  /**
+   * Where the replay left the road, if it did, and how many meters the car
+   * drove from its own grid slot to get there. The Sandbox draws crash rings
+   * from this, since its track is not the one the records were made on.
+   */
+  crash: { x: number; y: number; driven: number } | null;
 }
 
 /**
@@ -138,7 +142,7 @@ export class GhostPlayer {
         brake.push(Math.max(0, -rc.car.pedal));
       }
       const rc = env.cars[0];
-      const crash = rc.status === STATUS_CRASHED ? { x: rc.crashX, y: rc.crashY } : null;
+      const crash = rc.status === STATUS_CRASHED ? { x: rc.crashX, y: rc.crashY, driven: Math.max(0, (dist[dist.length - 1] ?? 0) - (dist[0] ?? 0)) } : null;
       return { generation: g.generation, slot: g.slot ?? 0, distance: Float32Array.from(dist), speed: Float32Array.from(speed), brake: Float32Array.from(brake), crash };
     });
   }

@@ -44,6 +44,10 @@ describe('ghost player grid', () => {
     // The pole car drives exactly the lap it would drive alone, and back slots start behind the line.
     expect(Array.from(lines[3].distance)).toEqual(Array.from(lone.telemetry()[0].distance));
     expect(lines[0].distance[0]).toBeLessThan(-10);
+    // A crash carries the meters the car drove from its own slot, which is what the crash label shows.
+    const crashed = lines.filter((t) => t.crash);
+    expect(crashed.length).toBeGreaterThan(0);
+    for (const t of crashed) expect(t.crash?.driven).toBeCloseTo(Math.max(0, t.distance[t.distance.length - 1] - t.distance[0]), 4);
   });
 
   it('starts copies of one champion on separate grid slots', async () => {

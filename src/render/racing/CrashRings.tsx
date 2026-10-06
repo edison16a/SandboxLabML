@@ -3,7 +3,6 @@
 import * as THREE from 'three';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { Html } from '@react-three/drei';
-import { drivenDistance } from '@/features/racing/session/telemetry';
 import { useRacingLab } from '@/features/racing/state/labStore';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { ghostColor } from './palette';
@@ -30,7 +29,7 @@ function useCrashes(): Crash[] {
   return useMemo(() => {
     if (sandbox) {
       const n = telemetry.length;
-      return telemetry.flatMap((tm, i) => (tm.crash ? [{ generation: tm.generation, t: n > 1 ? i / (n - 1) : 1, ...tm.crash, distance: drivenDistance(tm) }] : []));
+      return telemetry.flatMap((tm, i) => (tm.crash ? [{ generation: tm.generation, t: n > 1 ? i / (n - 1) : 1, x: tm.crash.x, y: tm.crash.y, distance: tm.crash.driven }] : []));
     }
     const byGen = new Map(records.map((r) => [r.generation, r]));
     return gens.flatMap((g, i) => {
