@@ -142,6 +142,12 @@ export const BOX_COUNT = 4;
 export const BOX_KINDS = ['cube', 'cube', 'plank', 'plank'] as const;
 export type BoxKind = (typeof BOX_KINDS)[number];
 
+/** Size of box `index` of a 1 v 1 match, whose kinds follow BOX_KINDS. */
 export function boxSize(p: HideSeekPhysics, index: number): BoxSize {
-  return BOX_KINDS[index] === 'cube' ? p.box.cube : p.box.plank;
+  return boxKindSize(p, BOX_KINDS[index]);
+}
+
+/** Size of a box by kind. The Sandbox places any mix of cubes and planks, so its boxes carry their kind. */
+export function boxKindSize(p: HideSeekPhysics, kind: BoxKind): BoxSize {
+  return kind === 'cube' ? p.box.cube : p.box.plank;
 }
