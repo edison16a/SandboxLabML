@@ -10,6 +10,13 @@ import { arenaOrigin } from '../layout/gridLattice';
 import { PIP_AGENTS, pipRects } from './pipLayout';
 
 const EYE = 1.32;
+/**
+ * The views render after every scene update (priority 0) and before the
+ * main pass (1). Rendered earlier, they would show the agents and crates
+ * where the last frame left them, and after a round reset the hider's
+ * camera would look straight at its own body back at the old spot.
+ */
+const POV_PRIORITY = 0.5;
 
 /**
  * First person views from both agents of the focused arena, shown picture
@@ -68,7 +75,7 @@ export function PovViews() {
     gl.clear();
     gl.render(scene, cam);
     gl.setRenderTarget(null);
-  }, -1);
+  }, POV_PRIORITY);
 
   return <PipPresenter overlay={built.overlay} ortho={built.ortho} quads={built.quads} />;
 }
