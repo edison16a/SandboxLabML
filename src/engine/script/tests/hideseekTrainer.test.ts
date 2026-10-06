@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { findPresetBlueprint } from '../../blueprints/presets';
-import { createArenaPool, HideSeekTrainer, type ArenaPool, type HideSeekInputConfig, type HideSeekTrainerOptions } from '../../hideseek';
+import { createArenaPool, HideSeekTrainer, type ArenaPool, type HideSeekGenerationScript, type HideSeekInputConfig, type HideSeekTrainerOptions } from '../../hideseek';
+import { builtinHost } from '../../training/scriptHost';
 import { hideSeekPhysics } from '../../hideseek/physics';
 import { createScriptHost, type ScriptHostAdapter } from '../host';
 import { findScriptPreset } from '../presets/racing';
@@ -51,6 +52,14 @@ describe('scripts in the trainer', () => {
     const plan = trainer.planGeneration();
     expect(plan.map((r) => r.length)).toEqual([4, 8]);
     expect(plan.flat().every((s) => s.prepSeconds === 2)).toBe(true);
+  });
+
+  it('accepts the training layer script hosts as they are', () => {
+    // Type level: both ScriptHost implementations fit the trainer's generation script hook.
+    const hooks: HideSeekGenerationScript[] = [builtinHost, createScriptHost(findScriptPreset('hideseek-beginner')!.source)];
+    const trainer = scriptedRun(createScriptHost(generationOnly('  useLayout(id: "corridor")')), 'hideseek-starter', { physics: hideSeekPhysics({ matchSeconds: 3 }) });
+    expect(() => trainer.runGeneration(pool, {}, hooks[0])).not.toThrow();
+    expect(trainer.options.layouts).toEqual(['corridor']);
   });
 
   it('breeds each team with the plan its pass of the block asked for', () => {
