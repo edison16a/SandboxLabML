@@ -65,6 +65,8 @@ export interface EffectArgs {
   bool: ReadonlyMap<string, Test>;
   str: ReadonlyMap<string, string>;
   rec: ReadonlyMap<string, ReadonlyMap<string, Reader>>;
+  /** Arguments written as a plain name, such as steer to "brain.steer", so a binding can take a faster path. */
+  names: ReadonlyMap<string, string>;
 }
 
 /**

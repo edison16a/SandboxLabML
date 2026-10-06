@@ -6,9 +6,11 @@ import type { BindContext } from '../registry/types';
 /**
  * A compiled statement. It returns true when a stop fired, which ends the
  * rest of the tick, so the block runner can bail out without checking
- * `io.stop` after every line.
+ * `io.stop` after every line. Anything falsy, including no return value,
+ * means carry on, which lets an action's effect closure be a statement
+ * as it is, without a wrapper call.
  */
-export type Exec = (view: unknown, io: TickIO) => boolean;
+export type Exec = (view: unknown, io: TickIO) => boolean | void;
 
 /**
  * What closures are built against. `slots` holds every local of one block,

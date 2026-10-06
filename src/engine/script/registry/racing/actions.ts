@@ -58,6 +58,13 @@ export const RACING_ACTION_ENTRIES: RegistryEntry[] = [
     binding: {
       kind: 'effect',
       apply: (args) => {
+        // Passing the brain straight through is in nearly every script, so it skips the argument closures.
+        if (args.names.get('steer') === 'brain.steer' && args.names.get('pedal') === 'brain.pedal') {
+          return (_v, io) => {
+            io.action[0] = io.brain[0];
+            io.action[1] = io.brain[1];
+          };
+        }
         const steer = req(args.num, 'steer');
         const pedal = req(args.num, 'pedal');
         return (v, io) => {

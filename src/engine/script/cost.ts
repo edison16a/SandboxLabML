@@ -4,11 +4,11 @@ import { entriesByName } from './registry';
 import { eachBlock } from './walk';
 
 /**
- * Nanoseconds per cost unit, calibrated with the speed test in tests/: the
- * Intermediate preset costs about 20 units and adds roughly 0.1 µs per car
- * per tick on a laptop. Treat the result as a rough guide.
+ * Nanoseconds per cost unit, calibrated with a microbenchmark of the
+ * controller alone: the Intermediate preset costs 20 units and adds about
+ * 70 ns per car per tick on a laptop. Treat the result as a rough guide.
  */
-export const NS_PER_UNIT = 5;
+export const NS_PER_UNIT = 3.5;
 
 /** Above this the linter warns that the script may slow training noticeably. */
 export const HIGH_COST = 400;
