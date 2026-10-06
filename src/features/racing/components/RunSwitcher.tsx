@@ -11,7 +11,7 @@ import { LAST_RUN_KEY } from '../hooks/useRunBootstrap';
 import { racingSession } from '../session/RacingSession';
 import { useRacingLab } from '../state/labStore';
 
-/** The open run's name, as a menu that switches to any other racing run. */
+/** The open run's name, as a menu that switches to any other racing run. It steps aside when the toolbar is narrow; the Runs page does the same job. */
 export function RunSwitcher() {
   const run = useRacingLab((s) => s.run);
   const router = useRouter();
@@ -24,7 +24,7 @@ export function RunSwitcher() {
   return (
     <M.Root onOpenChange={(o) => o && void listRuns().then((r) => setRuns(r.filter((x) => x.env === 'racing').slice(0, 12)))}>
       <M.Trigger asChild>
-        <button className="hidden h-8 max-w-60 items-center gap-1.5 rounded-md px-2 text-[13px] text-muted hover:bg-surface-2 hover:text-fg lg:inline-flex">
+        <button className="hidden h-8 max-w-60 items-center gap-1.5 rounded-md px-2 text-[13px] text-muted hover:bg-surface-2 hover:text-fg @min-[44rem]:inline-flex">
           <span className="truncate">{run.name}</span>
           <ChevronsUpDown className="size-3.5 shrink-0" />
         </button>
