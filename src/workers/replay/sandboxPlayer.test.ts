@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HIDESEEK_BLUEPRINTS } from '@/engine/blueprints/presets';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
-import { boxAt } from '@/render/hideseek/frame/snapshotRead';
+import { presetRoom } from '@/engine/hideseek/sandbox/room';
+import { readSandboxSnapshot, sandboxCounts } from '@/engine/hideseek/sandbox/snapshot';
 import { HideSeekTrainer } from '@/engine/hideseek/trainer/trainer';
 import { createArenaPool, type ArenaPool } from '@/engine/hideseek/world/pool';
 import { Network } from '@/engine/neat/network';
@@ -21,47 +22,81 @@ afterAll(() => pool.dispose());
 
 /** A stream whose frames are copied out and whose buffers go straight back, like the main thread does. */
 function capture() {
-  const frames: Float32Array[] = [];
+  const frames: StreamOut[] = [];
   const port = {
     onmessage: null as unknown,
     postMessage(msg: StreamOut) {
-      if (msg.kind !== 'frame') return;
-      frames.push(msg.buffer.slice());
+      if (msg.kind !== 'frame') return void frames.push(msg);
+      frames.push({ ...msg, buffer: msg.buffer.slice() });
       sender.ring.give(msg.buffer.buffer as ArrayBuffer);
     },
   };
-  const sender = new StreamSender(port as unknown as MessagePort, 'arenas');
-  return { sender, frames };
+  const sender = new StreamSender(port as unknown as MessagePort, 'sandbox');
+  const last = () => {
+    const f = frames.filter((m) => m.kind === 'frame').pop();
+    return f && f.kind === 'frame' ? f : null;
+  };
+  return { sender, frames, last };
 }
 
-function scene(): SandboxScene {
+function scene(hiders = 3, seekers = 2): SandboxScene {
   const config = createHideSeekRunConfig({ name: 's', seed: 3, blueprint: HIDESEEK_BLUEPRINTS[1], populationPerTeam: 4, rounds: 1 });
   const t = HideSeekTrainer.create(hideSeekTrainerOptions(config));
   const inputs = HIDESEEK_BLUEPRINTS[1].inputs;
-  return { hider: t.hiders.genomes[0], seeker: t.seekers.genomes[0], hiderInputs: inputs, seekerInputs: inputs, layout: 'open', seed: 9, reward: 'v1', physics: DEFAULT_HIDESEEK_PHYSICS, scriptSource: null };
+  return {
+    room: presetRoom('shelter'),
+    hider: { genome: t.hiders.genomes[0], inputs, count: hiders },
+    seeker: { genome: t.seekers.genomes[0], inputs, count: seekers },
+    seed: 9,
+    physics: DEFAULT_HIDESEEK_PHYSICS,
+    scriptSource: null,
+  };
 }
 
-describe('Sandbox', () => {
-  it('moves and locks boxes mid match and shows it in the next frame', async () => {
-    const { sender, frames } = capture();
+describe('Sandbox player', () => {
+  it('streams frames sized for the players and boxes, and shows edits in the next frame', async () => {
+    const { sender, frames, last } = capture();
     const player = new SandboxPlayer(sender, async () => pool, new HideSeekHostCache());
-    await player.load(scene());
+    await player.load(scene(3, 2));
+    expect(frames[0].kind).toBe('start');
+    expect(sandboxCounts(last()!.buffer)).toEqual({ hiders: 3, seekers: 2, boxes: 4 });
     player.moveBox(2, 3.5, -2.25);
-    let last = frames[frames.length - 1];
-    expect(last[boxAt(0, 2)]).toBeCloseTo(3.5, 5);
-    expect(last[boxAt(0, 2) + 1]).toBeCloseTo(-2.25, 5);
+    let snap = readSandboxSnapshot(last()!.buffer);
+    expect(snap.boxes[2].x).toBeCloseTo(3.5, 5);
+    expect(snap.boxes[2].z).toBeCloseTo(-2.25, 5);
     player.setBoxLocked(0, true);
-    last = frames[frames.length - 1];
-    expect(last[boxAt(0, 0) + 3]).toBe(1);
+    expect(readSandboxSnapshot(last()!.buffer).boxes[0].locked).toBe(true);
     player.setBoxLocked(0, false);
-    expect(frames[frames.length - 1][boxAt(0, 0) + 3]).toBe(0);
+    expect(readSandboxSnapshot(last()!.buffer).boxes[0].locked).toBe(false);
+
+    await player.load(scene(8, 6));
+    snap = readSandboxSnapshot(last()!.buffer);
+    expect([snap.hiders.length, snap.seekers.length]).toEqual([8, 6]);
+    player.stop();
+  });
+
+  it('lesions an input for every player of a team, and keeps it across a restart', async () => {
+    const { sender, last } = capture();
+    const player = new SandboxPlayer(sender, async () => pool, new HideSeekHostCache());
+    await player.load(scene(2, 3));
+    player.setLesion(1, 0, 0.25);
+    sender.inspect = 1;
+    await player.restart();
+    // Brains first see inputs on the first tick, so let it play a few.
+    player.setPaused(false);
+    await new Promise((r) => setTimeout(r, 300));
+    player.setPaused(true);
+    expect(last()!.tick).toBeGreaterThan(0);
+    const inspect = last()!.inspect;
+    expect(inspect?.index).toBe(1);
+    expect(inspect?.obs[0]).toBeCloseTo(0.25, 6);
     player.stop();
   });
 });
 
 describe('lesion network', () => {
   it('acts exactly like the plain network fed the forced inputs', () => {
-    const genome = scene().hider;
+    const genome = scene().hider.genome;
     const plain = new Network(genome);
     const lesioned = new LesionNetwork(genome);
     const obs = Float64Array.from({ length: plain.inputCount }, (_, i) => Math.sin(i * 1.7));

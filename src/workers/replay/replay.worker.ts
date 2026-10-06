@@ -57,12 +57,15 @@ const api = {
     const result = await runBenchmark(config, model, opts);
     return result ? { score: result.score, radar: result.radar } : null;
   },
-  /** Hide and Seek: the round replay and the Sandbox share one arena stream, so starting one stops the other. */
-  connectArenas(streamPort: MessagePort) {
-    const stream = new StreamSender(streamPort, 'arenas');
+  /**
+   * Hide and Seek: round replays stream arenas on one port and the Sandbox
+   * its own frames on another, since a Sandbox frame changes size with the
+   * number of players. They share this worker, so starting one stops the other.
+   */
+  connectArenas(streamPort: MessagePort, sandboxPort: MessagePort) {
     const hosts = new HideSeekHostCache();
-    round = new RoundPlayer(new ArenaFrameWriter(stream), arenas, hosts);
-    sandbox = new SandboxPlayer(stream, arenas, hosts);
+    round = new RoundPlayer(new ArenaFrameWriter(new StreamSender(streamPort, 'arenas')), arenas, hosts);
+    sandbox = new SandboxPlayer(new StreamSender(sandboxPort, 'sandbox'), arenas, hosts);
   },
   playRound(replay: RoundReplay, speed: number, loop: boolean) {
     sandbox?.stop();
@@ -96,8 +99,8 @@ const api = {
   sandboxSetBoxLocked(index: number, locked: boolean) {
     sandbox?.setBoxLocked(index, locked);
   },
-  sandboxLesion(agent: number, index: number, value: number | null) {
-    sandbox?.setLesion(agent, index, value);
+  sandboxLesion(team: number, index: number, value: number | null) {
+    sandbox?.setLesion(team, index, value);
   },
   sandboxClearLesions() {
     sandbox?.clearLesions();

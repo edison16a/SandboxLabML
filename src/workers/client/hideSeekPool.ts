@@ -11,8 +11,10 @@ export interface HideSeekPool {
   replay: Comlink.Remote<ReplayApi>;
   /** The live round, merged from every sim worker in match order. */
   live: ArenaStream;
-  /** Round replays and the Sandbox, from the replay worker. */
+  /** Round replays, from the replay worker. */
   replayed: SnapshotStream;
+  /** The Sandbox match, from the replay worker. Its frames follow writeSandboxSnapshot, not the arena layout. */
+  sandbox: SnapshotStream;
   simCount: number;
   terminate(): void;
 }
@@ -47,12 +49,14 @@ export async function createHideSeekPool(onEvent: HideSeekEventSink): Promise<Hi
   await coordinator.connectHideSeek(Comlink.proxy(onEvent));
   const replay = Comlink.wrap<ReplayApi>(replayWorker);
   const replayChannel = new MessageChannel();
-  await replay.connectArenas(Comlink.transfer(replayChannel.port2, [replayChannel.port2]));
+  const sandboxChannel = new MessageChannel();
+  await replay.connectArenas(Comlink.transfer(replayChannel.port2, [replayChannel.port2]), Comlink.transfer(sandboxChannel.port2, [sandboxChannel.port2]));
   return {
     coordinator,
     replay,
     live: new ArenaStream('arenas', arenaPorts),
     replayed: new SnapshotStream('arenas', replayChannel.port1),
+    sandbox: new SnapshotStream('sandbox', sandboxChannel.port1),
     simCount: n,
     terminate() {
       coordWorker.terminate();

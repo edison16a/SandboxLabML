@@ -4,6 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useMemo } from 'react';
 import { HIDESEEK_LAYOUT_IDS } from '@/engine/hideseek/layouts/presets';
 import type { HideSeekLayoutId } from '@/engine/hideseek/layouts/types';
+import { isPresetRoomId } from '@/engine/hideseek/sandbox/room';
 import { hideSeekSettingsOf } from '@/engine/training/hideseekRunConfig';
 import { useHideSeekLab, type HideSeekLabState } from '@/features/hideseek/state/hideSeekStore';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
@@ -14,7 +15,7 @@ import { STRIDE } from './snapshotRead';
 
 /** Room shown before anything has streamed: the round's, else the run's first. */
 function idleLayout(s: HideSeekLabState): HideSeekLayoutId {
-  if (s.mode === 'sandbox') return s.sandbox.layout;
+  if (s.mode === 'sandbox') return isPresetRoomId(s.sandbox.roomId) ? s.sandbox.roomId : 'open';
   if (s.round) return s.round.layout;
   return s.run?.env === 'hideseek' ? hideSeekSettingsOf(s.run).layouts[0] : 'shelter';
 }
@@ -35,7 +36,9 @@ export function FrameDriver() {
     const sandbox = s.mode === 'sandbox';
     const want = sandbox ? 1 : s.gridSize;
     let feed = getFeed();
+    frame.preview = false;
     if (!feed?.curr || feed.count === 0) {
+      frame.preview = true;
       const layout = idleLayout(s);
       const key = `${layout}:${want}`;
       feed = memo.previews.get(key) ?? previewFeed(layout, want);

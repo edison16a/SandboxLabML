@@ -1,4 +1,5 @@
 import type { HideSeekLayoutId } from '@/engine/hideseek/layouts/types';
+import type { SandboxRoom } from '@/engine/hideseek/sandbox/room';
 
 export type Team = 'hider' | 'seeker';
 
@@ -18,7 +19,7 @@ export const HS_CAMERAS: HsCamera[] = ['orbit', 'top', 'seeker', 'hider'];
 
 export type HsPanelTab = 'progress' | 'network' | 'inputs' | 'model';
 
-/** Training shows the live round or a replay; the Sandbox plays one match the user can edit. */
+/** Training shows the live round or a replay; the Sandbox plays one match the user sets up and can edit. */
 export type LabMode = 'train' | 'sandbox';
 
 /** Which arena stream the viewport reads. */
@@ -34,8 +35,9 @@ export interface RoundInfo {
   live: boolean;
 }
 
-/** A forced input in the Sandbox lesion test. */
+/** A forced input in the Sandbox lesion test. It applies to every player of the team. */
 export interface Lesion {
+  /** The team: 0 hiders, 1 seekers. */
   agent: AgentSlot;
   index: number;
   /** 0 for "off", anything else for a frozen reading. */
@@ -45,8 +47,14 @@ export interface Lesion {
 export interface SandboxSettings {
   hiderGeneration: number;
   seekerGeneration: number;
-  layout: HideSeekLayoutId;
+  /** The room in play: a preset layout id or the id of one of `rooms`. */
+  roomId: string;
+  hiders: number;
+  seekers: number;
+  /** Fixes the spawn spots. The dice button rolls a new one. */
   seed: number;
   playing: boolean;
   lesions: Lesion[];
+  /** The user's own rooms, loaded from storage when the Sandbox first opens. */
+  rooms: SandboxRoom[];
 }

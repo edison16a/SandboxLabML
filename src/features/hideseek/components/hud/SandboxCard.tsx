@@ -1,37 +1,38 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Dices, Lock, LockOpen, Pause, Play, RotateCcw } from 'lucide-react';
-import { HIDESEEK_LAYOUT_IDS, HIDESEEK_LAYOUTS } from '@/engine/hideseek/layouts/presets';
-import type { HideSeekLayoutId } from '@/engine/hideseek/layouts/types';
+import { useState } from 'react';
+import { Copy, Dices, Pause, Pencil, Play, RotateCcw } from 'lucide-react';
+import { emptyRoom, isPresetRoomId, SANDBOX_LIMITS, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import { Button } from '@/ui/primitives/Button';
-import { Segmented } from '@/ui/primitives/Segmented';
 import { Slider } from '@/ui/primitives/Slider';
-import { boxAt } from '@/render/hideseek/frame/snapshotRead';
+import { Tooltip } from '@/ui/primitives/Tooltip';
 import { hideSeekSession } from '../../session/HideSeekSession';
+import { draftRoom, roomById } from '../../session/sandboxRooms';
 import { useHideSeekLab } from '../../state/hideSeekStore';
+import { CountStepper } from '../sandbox/CountStepper';
+import { RoomEditorDialog } from '../sandbox/editor/RoomEditorDialog';
+import { RoomPicker } from '../sandbox/RoomPicker';
+import { SandboxStatus } from '../sandbox/SandboxStatus';
 
-const BOX_NAMES = ['Cube 1', 'Cube 2', 'Plank 1', 'Plank 2'];
+const glassButton = 'border-white/10 bg-white/10 text-white hover:bg-white/20';
 
-/** Lock state of the Sandbox crates, read from the feed a few times a second. */
-function useLocks(): boolean[] {
-  const [locks, setLocks] = useState([false, false, false, false]);
-  useEffect(() => {
-    const id = setInterval(() => {
-      const buf = hideSeekSession().feed()?.curr?.buffer;
-      if (!buf) return;
-      const next = BOX_NAMES.map((_, b) => buf[boxAt(0, b) + 3] === 1);
-      setLocks((prev) => (prev.every((v, i) => v === next[i]) ? prev : next));
-    }, 250);
-    return () => clearInterval(id);
-  }, []);
-  return locks;
+function Section({ title, children, aside }: { title: string; children: React.ReactNode; aside?: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-1.5">
+      <div className="flex h-5 items-center justify-between">
+        <h3 className="text-[11px] font-medium text-white/50">{title}</h3>
+        {aside}
+      </div>
+      {children}
+    </section>
+  );
 }
 
 /**
- * Sandbox controls over the viewport: which generation's champion plays
- * each side, the room, play and restart, and a lock switch per crate.
- * Changing a pick rebuilds the match; lesions carry over.
+ * The Sandbox setup over the viewport: the room (presets, the user's own
+ * and a new one), how many hiders and seekers, which generation's champion
+ * each team plays, and Run, Pause and Restart. Any change rebuilds the
+ * match at once; lesions carry over.
  */
 export function SandboxCard() {
   const mode = useHideSeekLab((s) => s.mode);
@@ -39,70 +40,118 @@ export function SandboxCard() {
   const sandbox = useHideSeekLab((s) => s.sandbox);
   const records = useHideSeekLab((s) => s.records);
   const setSandbox = useHideSeekLab((s) => s.setSandbox);
-  const locks = useLocks();
+  const [editing, setEditing] = useState<{ room: SandboxRoom; saved: boolean } | null>(null);
   if (mode !== 'sandbox' || photo || !records.length) return null;
   const control = hideSeekSession().sandbox;
   const first = records[0].generation;
   const last = records[records.length - 1].generation;
-  const pick = (patch: Partial<typeof sandbox>) => {
-    setSandbox(patch);
-    void control?.reload();
-  };
+  const room = roomById(sandbox.roomId, sandbox.rooms);
+  const preset = isPresetRoomId(room.id);
+  const max = SANDBOX_LIMITS.playersPerTeam;
+
   return (
-    <div className="flex w-72 flex-col gap-3 rounded-lg border border-white/10 bg-black/60 p-3 text-white backdrop-blur-md">
-      <div className="flex items-center justify-between">
+    <div data-testid="sandbox-card" className="flex w-80 flex-col gap-3 rounded-lg border border-white/10 bg-black/65 p-3 text-white shadow-xl shadow-black/30 backdrop-blur-md">
+      <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-semibold tracking-wide text-white/60 uppercase">Sandbox</span>
-        <div className="flex gap-1">
-          <Button size="icon-sm" variant="secondary" className="border-white/10 bg-white/10 text-white hover:bg-white/20" onClick={() => void control?.setPlaying(!sandbox.playing)} aria-label={sandbox.playing ? 'Pause' : 'Play'}>
-            {sandbox.playing ? <Pause /> : <Play />}
-          </Button>
-          <Button size="icon-sm" variant="secondary" className="border-white/10 bg-white/10 text-white hover:bg-white/20" onClick={() => void control?.restart()} aria-label="Restart the match">
-            <RotateCcw />
-          </Button>
-        </div>
+        <SandboxStatus />
       </div>
-      {(['hider', 'seeker'] as const).map((team) => {
-        const key = team === 'hider' ? 'hiderGeneration' : 'seekerGeneration';
-        return (
-          <div key={team} className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-[12px]">
-              <span className="flex items-center gap-1.5 text-white/75">
-                <span className={`size-2 rounded-full ${team === 'hider' ? 'bg-hider' : 'bg-seeker'}`} />
-                {team === 'hider' ? 'Hider' : 'Seeker'} from generation
-              </span>
-              <span className="tabular font-mono">{sandbox[key] + 1}</span>
-            </div>
-            <Slider label={`${team} generation`} min={first} max={last} value={sandbox[key]} onChange={(v) => setSandbox({ [key]: v })} onCommit={(v) => pick({ [key]: v })} />
-          </div>
-        );
-      })}
-      <div className="flex items-center gap-1.5">
-        <Segmented<HideSeekLayoutId>
-          label="Room"
-          size="sm"
-          overlay
-          className="border-white/10 bg-white/5"
-          value={sandbox.layout}
-          onChange={(v) => pick({ layout: v })}
-          options={HIDESEEK_LAYOUT_IDS.map((id) => ({ value: id, label: HIDESEEK_LAYOUTS[id].name.replace(' room', '') }))}
-        />
-        <Button size="icon-sm" variant="secondary" className="border-white/10 bg-white/10 text-white hover:bg-white/20" onClick={() => pick({ seed: Math.floor(Math.random() * 1e6) })} aria-label="New spawn positions">
-          <Dices />
-        </Button>
-      </div>
-      <div className="grid grid-cols-2 gap-1.5">
-        {BOX_NAMES.map((name, b) => (
+
+      <Section
+        title="Room"
+        aside={
           <button
-            key={name}
             type="button"
-            onClick={() => control?.setBoxLocked(b, !locks[b])}
-            className={`flex h-7 items-center justify-between rounded-md border px-2 text-[12px] transition-colors ${locks[b] ? 'border-hider/60 bg-hider/20 text-white' : 'border-white/10 bg-white/5 text-white/80 hover:bg-white/10'}`}
+            onClick={() => setEditing({ room: preset ? draftRoom(room) : structuredClone(room), saved: !preset })}
+            className="flex items-center gap-1 rounded px-1 text-[11px] text-white/60 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-accent [&_svg]:size-3"
           >
-            {name}
-            {locks[b] ? <Lock className="size-3.5" /> : <LockOpen className="size-3.5 text-white/50" />}
+            {preset ? <Copy /> : <Pencil />}
+            {preset ? 'Edit a copy' : 'Edit room'}
           </button>
-        ))}
+        }
+      >
+        <RoomPicker
+          rooms={sandbox.rooms}
+          value={sandbox.roomId}
+          onPick={(id) => void control?.configure({ roomId: id })}
+          onNew={() => setEditing({ room: draftRoom(emptyRoom('', '')), saved: false })}
+        />
+      </Section>
+
+      <Section title="Players">
+        <div className="grid grid-cols-2 gap-1.5">
+          <CountStepper label="Hiders" dot="bg-hider" value={sandbox.hiders} min={1} max={max} onChange={(v) => void control?.configure({ hiders: v })} />
+          <CountStepper label="Seekers" dot="bg-seeker" value={sandbox.seekers} min={1} max={max} onChange={(v) => void control?.configure({ seekers: v })} />
+        </div>
+      </Section>
+
+      <Section title="Brains">
+        {(['hider', 'seeker'] as const).map((team) => {
+          const key = team === 'hider' ? 'hiderGeneration' : 'seekerGeneration';
+          return (
+            <div key={team} className="flex flex-col gap-1">
+              <div className="flex items-center justify-between text-[12px]">
+                <span className="flex items-center gap-1.5 text-white/75">
+                  <span className={`size-2 rounded-full ${team === 'hider' ? 'bg-hider' : 'bg-seeker'}`} />
+                  {team === 'hider' ? 'Hider' : 'Seeker'} champion from generation
+                </span>
+                <span className="tabular font-mono">{sandbox[key] + 1}</span>
+              </div>
+              <Slider
+                label={`${team} generation`}
+                min={first}
+                max={last}
+                value={sandbox[key]}
+                disabled={first === last}
+                onChange={(v) => setSandbox({ [key]: v })}
+                onCommit={(v) => void control?.configure({ [key]: v })}
+              />
+            </div>
+          );
+        })}
+      </Section>
+
+      <div className="flex items-center gap-1.5 border-t border-white/10 pt-3">
+        <Tooltip content={sandbox.playing ? 'Pause the match' : 'Run the match'} shortcut="Space">
+          <Button variant="primary" size="sm" className="w-24 justify-center" onClick={() => void control?.setPlaying(!sandbox.playing)}>
+            {sandbox.playing ? <Pause /> : <Play />}
+            {sandbox.playing ? 'Pause' : 'Run'}
+          </Button>
+        </Tooltip>
+        <Tooltip content="Restart from the same spawn spots" shortcut="R">
+          <Button size="sm" variant="secondary" className={glassButton} onClick={() => void control?.restart()}>
+            <RotateCcw />
+            Restart
+          </Button>
+        </Tooltip>
+        <span className="flex-1" />
+        <Tooltip content="New spawn spots">
+          <Button
+            size="icon-sm"
+            variant="secondary"
+            className={glassButton}
+            onClick={() => void control?.configure({ seed: Math.floor(Math.random() * 1e6) })}
+            aria-label="New spawn spots"
+          >
+            <Dices />
+          </Button>
+        </Tooltip>
       </div>
+
+      {editing && (
+        <RoomEditorDialog
+          room={editing.room}
+          saved={editing.saved}
+          onClose={() => setEditing(null)}
+          onSave={(r) => {
+            setEditing(null);
+            void control?.saveRoom(r);
+          }}
+          onDelete={(id) => {
+            setEditing(null);
+            void control?.deleteRoom(id);
+          }}
+        />
+      )}
     </div>
   );
 }

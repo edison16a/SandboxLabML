@@ -60,7 +60,7 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
             {run.name}
           </span>
         )}
-        <Tooltip content={mode === 'sandbox' ? 'Back to training' : 'Play trained champions in one arena and change the world mid match'}>
+        <Tooltip content={mode === 'sandbox' ? 'Back to training' : 'Play trained champions, as many as you like, in a preset room or one you build'}>
           <Button
             variant={mode === 'sandbox' ? 'secondary' : 'outline'}
             onClick={() => void (mode === 'sandbox' ? session.exitSandbox() : session.enterSandbox())}

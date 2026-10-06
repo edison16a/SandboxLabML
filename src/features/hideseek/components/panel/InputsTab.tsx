@@ -45,7 +45,7 @@ export function InputsTab() {
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <TeamToggle value={agent} onChange={(v) => set({ inspectAgent: v })} />
-        <span className="text-[12px] text-muted">Arena {inspectedArena(focus) + 1}</span>
+        <span className="text-[12px] text-muted">{sandbox ? `First ${agent === 0 ? 'hider' : 'seeker'} on the field` : `Arena ${inspectedArena(focus) + 1}`}</span>
       </div>
       <div className="flex flex-col gap-3 rounded-md border border-border bg-surface-2 p-3">
         <label className="flex items-center justify-between text-[13px]">
@@ -81,7 +81,9 @@ export function InputsTab() {
               ]}
             />
           </div>
-          <p className="text-muted">Click an input name to {lesionKind === 'off' ? 'force it to 0' : 'hold it at its current reading'}. The brain keeps acting; affected links turn amber in the Network tab.</p>
+          <p className="text-muted">
+            Click an input name to {lesionKind === 'off' ? 'force it to 0' : 'hold it at its current reading'} for every {agent === 0 ? 'hider' : 'seeker'} on the field. The brains keep acting; affected links turn amber in the Network tab.
+          </p>
           {lesioned.size > 0 && (
             <Button size="sm" variant="outline" className="self-start" onClick={() => hideSeekSession().sandbox?.clearLesions()}>
               Clear {lesions.length} lesion{lesions.length === 1 ? '' : 's'}

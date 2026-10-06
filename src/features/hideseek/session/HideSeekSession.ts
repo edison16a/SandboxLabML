@@ -40,14 +40,20 @@ export class HideSeekSession {
     return this.ready;
   }
 
-  get streams(): { live: ArenaFeed; replayed: ArenaFeed } | null {
-    return this.pool ? { live: this.pool.live, replayed: this.pool.replayed } : null;
+  get streams(): { live: ArenaFeed; replayed: ArenaFeed; sandbox: ArenaFeed } | null {
+    return this.pool ? { live: this.pool.live, replayed: this.pool.replayed, sandbox: this.pool.sandbox } : null;
   }
 
-  /** The stream the viewport reads right now. */
+  /**
+   * The stream the viewport reads right now. In the Sandbox that is the
+   * Sandbox stream, whose frames follow writeSandboxSnapshot; its header
+   * starts with time, phase and "seen" like an arena, so HUD readers of
+   * those three work on either.
+   */
   feed(): ArenaFeed | null {
     const streams = this.streams;
     if (!streams) return null;
+    if (this.store.mode === 'sandbox') return streams.sandbox;
     return this.store.source === 'replay' ? streams.replayed : streams.live;
   }
 

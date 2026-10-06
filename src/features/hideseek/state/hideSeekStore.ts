@@ -89,7 +89,7 @@ export const useHideSeekLab = create<HideSeekLabState>((set, get) => ({
   panelTab: 'progress',
   networkGeneration: null,
   modelTeam: 'hider',
-  sandbox: { hiderGeneration: 0, seekerGeneration: 0, layout: 'shelter', seed: 1, playing: false, lesions: [] },
+  sandbox: { hiderGeneration: 0, seekerGeneration: 0, roomId: 'shelter', hiders: 2, seekers: 2, seed: 1, playing: false, lesions: [], rooms: [] },
 
   set: (patch) => set(patch),
   setSandbox: (patch) => set({ sandbox: { ...get().sandbox, ...patch } }),

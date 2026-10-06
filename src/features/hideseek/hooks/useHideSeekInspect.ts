@@ -29,5 +29,7 @@ export function useHideSeekInspect(ready: boolean) {
     const rays = overlay && (scope === 'all' || focus === null);
     streams.live.subscribe(index, rays);
     streams.replayed.subscribe(index, rays);
+    // The Sandbox shows one match, so the inspected team is the whole address.
+    streams.sandbox.subscribe(wanted ? agent : null, false);
   }, [ready, overlay, scope, tab, focus, agent, mode]);
 }

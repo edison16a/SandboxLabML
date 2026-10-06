@@ -22,18 +22,24 @@ export function allowedGridSizes(capped: boolean): GridSize[] {
  * Keyboard shortcuts for the lab: Space trains or pauses, S steps one
  * generation, 1 to 5 pick a speed, I toggles the inputs overlay, C cycles
  * cameras, G cycles the grid size, N opens a new run and Escape steps back
- * out of photo mode, then out of the focused arena. Ignored while typing.
+ * out of photo mode, then out of the focused arena. In the Sandbox, Space
+ * runs or pauses the match and R restarts it. Ignored while typing and
+ * inside dialogs, which have keys of their own.
  */
 export function useHideSeekShortcuts(onNewRun: () => void) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null;
-      if (el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))) return;
+      if (el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.closest?.('[role="dialog"]'))) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const s = useHideSeekLab.getState();
       const session = hideSeekSession();
       const key = e.key.toLowerCase();
-      if (key === ' ') {
+      if (s.mode === 'sandbox' && (key === ' ' || key === 'r')) {
+        e.preventDefault();
+        if (key === ' ') void session.sandbox?.setPlaying(!s.sandbox.playing);
+        else void session.sandbox?.restart();
+      } else if (key === ' ') {
         e.preventDefault();
         void (s.status === 'running' ? session.pause() : session.start());
       } else if (key === 's' && s.status !== 'running') void session.start(1);

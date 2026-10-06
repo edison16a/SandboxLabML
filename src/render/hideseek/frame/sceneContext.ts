@@ -2,6 +2,13 @@ import { createContext, useContext } from 'react';
 import type { InputSpec } from '@/engine/env/types';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
 import { latticeFor, type Lattice } from '../layout/gridLattice';
+import type { FloorPose } from './snapshotRead';
+
+/**
+ * Reads where agent slot `agent` (0 hider, 1 seeker) of the shown arena
+ * stands, blended, and returns its flags, or -1 when there is none.
+ */
+export type AgentPoseReader = (agent: number, out: FloorPose) => number;
 
 /**
  * What every part of the Hide and Seek scene needs to know this frame. The
@@ -30,6 +37,14 @@ export interface HsFrame {
   /** Seconds of match time of the first drawn arena, and whether it is in prep. */
   matchTime: number;
   prep: boolean;
+  /** The feed is a still preview, not a stream: nothing has been sent yet. */
+  preview: boolean;
+  /**
+   * Set by a scene whose stream is not laid out as arenas (the Sandbox), so
+   * the first person cameras and the inspected agent's rays know where to
+   * look. Null reads the arena snapshot (see followedAgent).
+   */
+  agentPose: AgentPoseReader | null;
 }
 
 export function createHsFrame(): HsFrame {
@@ -48,6 +63,8 @@ export function createHsFrame(): HsFrame {
     epoch: 0,
     matchTime: 0,
     prep: true,
+    preview: true,
+    agentPose: null,
   };
 }
 

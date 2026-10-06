@@ -5,7 +5,7 @@
  * a frame.
  */
 
-export type StreamName = 'population' | 'ghosts' | 'arenas';
+export type StreamName = 'population' | 'ghosts' | 'arenas' | 'sandbox';
 
 export type SpeedMode = '1x' | '2x' | '4x' | 'turbo' | 'max';
 
