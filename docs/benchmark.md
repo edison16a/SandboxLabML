@@ -119,42 +119,37 @@ Scores only compare within one `HIDESEEK_BENCHMARK_VERSION` (in `src/engine/core
 
 `public/references/hideseek.json` holds a curve and a champion pair for each of the three Hide and Seek script presets. For each preset, `scripts/references/hideseek/generate.ts` trains several seeds with 50 per team, exactly as the lab would with that preset. Each tier's reference champion is the final pair of its middle seed, ranked by hidden plus seen share against the hand-written agents, so it is typical of the preset rather than its luckiest run. The three pairs are rated against each other, then every pair kept every 10 generations of every run plays the exam against them, and the median and the 25% to 75% band of those scores make the curves.
 
-The shipped file uses 3 seeds of 40 generations per preset. Generating it took 40 minutes on three worker threads of a four core machine that was busy with other work (about 35 minutes when it is quiet):
+The shipped file uses the generator's defaults, the same numbers the nightly workflow runs: 5 seeds of 60 generations per preset. It took 53 minutes on four worker threads:
 
-    npm run refs -- --env hideseek --seeds 3 --generations 40 --workers 3
-
-The generator's defaults are the nightly numbers instead: 5 seeds of 60 generations, about an hour on a four core runner and two hours on two cores. The nightly workflow runs them, so the first nightly file will differ from the shipped one, and its champions are different opponents (see Versions in this part).
+    npm run refs -- --env hideseek --workers 4
 
 | Preset | Final median score | Rating | Reference champion |
 | --- | --- | --- | --- |
-| Beginner | 53.9 | 1554 | seed 1, generation 40 |
-| Intermediate | 51.4 | 1512 | seed 1, generation 40 |
-| Advanced | 43.9 | 1435 | seed 3, generation 40 |
+| Beginner | 47.0 | 1427 | seed 1, generation 60 |
+| Intermediate | 50.7 | 1523 | seed 1, generation 60 |
+| Advanced | 55.7 | 1550 | seed 1, generation 60 |
 
 Median score at each checkpoint:
 
-| Generation | 0 | 10 | 20 | 30 | 40 |
-| --- | --- | --- | --- | --- | --- |
-| Beginner | 35.8 | 63.6 | 64.7 | 61.4 | 53.9 |
-| Intermediate | 38.2 | 48.3 | 55.5 | 60.3 | 51.4 |
-| Advanced | 45.9 | 51.4 | 44.9 | 43.9 | 43.9 |
+| Generation | 0 | 10 | 20 | 30 | 40 | 50 | 60 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Beginner | 42.1 | 59.6 | 56.8 | 60.5 | 50.0 | 57.9 | 47.0 |
+| Intermediate | 39.5 | 55.1 | 57.6 | 58.6 | 58.0 | 60.0 | 50.7 |
+| Advanced | 36.4 | 44.4 | 55.2 | 44.8 | 59.6 | 52.3 | 55.7 |
 
-Single champions are noisy. A generation's champion pair is the one with the best co-evolved fitness, which depends on who it happened to meet, so one Beginner seed scored 62.8 at generation 30 and 37.3 at generation 40. The bands are there to show that spread, and a user's score is read against them at the same generation.
+Single champions are noisy. A generation's champion pair is the one with the best co-evolved fitness, which depends on who it happened to meet, so a tier's median can swing ten points between checkpoints. The bands are there to show that spread, and a user's score is read against them at the same generation.
 
 ## What the references show
 
-The presets were written as teaching tiers, and the benchmark finds that they are not ordered by playing strength at the budgets above. The exam is not the cause: hiders of all three tiers stay hidden about equally long, and the games are decided by the seekers. These single seed experiments (seed 1, win rate over the 90 exam games against the generation 40 champions of the three presets) show where the difference comes from:
+The small Beginner brain learns fast and peaks early, then drifts as the two teams chase each other's latest tricks. Intermediate and Advanced start slower, because evolution needs longer to find the few inputs that matter among 55 or 63, and Advanced only catches up after generation 30. The tiers end in order, but only just, and only at the nightly budget: at 40 generations Intermediate was still ahead of Advanced (57.5 against 54.7).
 
-| Run | Gen 10 | Gen 20 | Gen 30 | Gen 40 | Seen at gen 40 |
-| --- | --- | --- | --- | --- | --- |
-| Beginner | 0.69 | 0.78 | 0.76 | 0.60 | 0.44 |
-| Intermediate | 0.62 | 0.59 | 0.63 | 0.49 | 0.31 |
-| Advanced | 0.31 | 0.46 | 0.52 | 0.41 | 0.21 |
-| Intermediate with the Starter brain | 0.83 | 0.58 | 0.80 | 0.49 | 0.29 |
-| Advanced with v1 seeker rewards | 0.54 | 0.62 | 0.48 | 0.63 | 0.42 |
+Getting there took one change to the Advanced preset. It used to mirror the hiders' cover rewards for seekers, which stopped penalizing a seeker as soon as it had a line of sight to the hider. That made actually turning to see the hider worth half as much, and the first references ranked Advanced last, below Beginner. Single seed experiments against those references, at generation 40:
 
-Two things hold the bigger presets back. The Standard and Advanced brains have 55 and 63 inputs, so evolution likely needs longer to find the one input that matters most for a seeker (opponent in sight). The same Intermediate rules on the 11 input Starter brain win far more games at generations 10 and 30, though not at 20 or 40, so this one is suggestive rather than settled. The clearer cause is the Advanced preset's cover rewards. They stop penalizing a seeker as soon as it has a line of sight to the hider, so turning to actually see the hider is worth half as much as under v1 rewards, and its seekers learn to look much more slowly. With v1 seeker rewards (minus one per second while not seeing the hider) the same preset sees the hider twice as often and edges past Beginner at generation 40.
+| Run | Win rate | Seen share |
+| --- | --- | --- |
+| Advanced with cover rewards for seekers | 0.41 | 0.21 |
+| Advanced with v1 rewards for seekers | 0.63 | 0.40 |
 
-Training longer does not change the picture. Single runs of 100 generations, scored against their own generation 100 champions, average a win rate of 0.65 for Beginner, 0.58 for Intermediate and 0.39 for Advanced over generations 50 to 100.
+Advanced seekers now keep the v1 rewards (plus one per second in sight, minus one per second out of sight after prep), and hiders keep the cover rewards. Starting the bigger brains with sparse wiring was tried too and made no clear difference.
 
-No weighting of the score's parts puts the tiers in order. Only hiding and cover favor the bigger presets at all (at generation 40: hidden 0.66, 0.70 and 0.68, cover 0.41, 0.53 and 0.52), and even there Intermediate edges out Advanced, so a score built on them alone would drop seeking, half of the game, for no gain. So the shipped file reports the order the presets really produce, and a test marks Beginner below Intermediate below Advanced as a known failure. Once the presets are retuned (a smaller or sparser seeker brain for Intermediate and Advanced, and v1 seeker rewards in Advanced are the two changes the data supports), regenerate the file and turn that test into a normal one.
+A test checks that Beginner ranks below Intermediate below Advanced. If a regenerated file breaks the order, look at the curves before changing the exam: the order depends on the presets and on the budget, not on the scoring.
