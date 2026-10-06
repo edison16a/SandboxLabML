@@ -11,6 +11,7 @@ import { createHideSeekPool, type HideSeekPool } from '@/workers/client/hideSeek
 import type { HideSeekEvent } from '@/workers/coordinator/hideSeekEvents';
 import type { SpeedMode } from '@/workers/shared/protocol';
 import { useHideSeekLab } from '../state/hideSeekStore';
+import { maybeBenchmarkPair } from './backgroundBench';
 import { ReplayDirector } from './replayDirector';
 import { loadHideSeekRun, replayBlockedReason, splitReplays } from './runLoader';
 import { SandboxControl } from './sandboxControl';
@@ -155,6 +156,7 @@ export class HideSeekSession {
         const { records, latest } = splitReplays([e.record]);
         this.store.addRecord(records[0]);
         this.director?.offer(latest ?? undefined);
+        if (this.pool) maybeBenchmarkPair(this.pool, e.record);
         break;
       }
       case 'checkpoint':
