@@ -1,0 +1,90 @@
+{
+  "env": "racing",
+  "benchmarkVersion": 1,
+  "engineVersion": 1,
+  "generatedAt": "2026-10-06",
+  "seeds": 12,
+  "references": [
+    {
+      "tier": "beginner",
+      "finalScore": 23.5,
+      "curve": [
+        { "generation": 0, "median": 11, "p25": 4.9, "p75": 35.5 },
+        { "generation": 5, "median": 39.1, "p25": 31.5, "p75": 43.1 },
+        { "generation": 10, "median": 32.2, "p25": 16, "p75": 41.3 },
+        { "generation": 15, "median": 27.9, "p25": 13.5, "p75": 37.9 },
+        { "generation": 20, "median": 29.4, "p25": 13.4, "p75": 42.9 },
+        { "generation": 25, "median": 14.9, "p25": 12.4, "p75": 29.7 },
+        { "generation": 30, "median": 20.2, "p25": 11.1, "p75": 41.9 },
+        { "generation": 35, "median": 26.4, "p25": 11.1, "p75": 33 },
+        { "generation": 40, "median": 25.7, "p25": 13.9, "p75": 35 },
+        { "generation": 45, "median": 18.5, "p25": 11.1, "p75": 28.4 },
+        { "generation": 50, "median": 19.8, "p25": 14.5, "p75": 28 },
+        { "generation": 55, "median": 16.2, "p25": 12.1, "p75": 25.5 },
+        { "generation": 60, "median": 18.2, "p25": 12.1, "p75": 25.5 },
+        { "generation": 65, "median": 18.2, "p25": 12.1, "p75": 25.4 },
+        { "generation": 70, "median": 19.9, "p25": 12.8, "p75": 27 },
+        { "generation": 75, "median": 25.3, "p25": 16.6, "p75": 37 },
+        { "generation": 80, "median": 23.2, "p25": 16.6, "p75": 27 },
+        { "generation": 85, "median": 23.2, "p25": 17.1, "p75": 27 },
+        { "generation": 90, "median": 21.7, "p25": 17.1, "p75": 27.5 },
+        { "generation": 95, "median": 23.5, "p25": 17.1, "p75": 36 },
+        { "generation": 100, "median": 23.5, "p25": 13.6, "p75": 32.3 }
+      ]
+    },
+    {
+      "tier": "intermediate",
+      "finalScore": 39.3,
+      "curve": [
+        { "generation": 0, "median": 29.5, "p25": 21.2, "p75": 31.4 },
+        { "generation": 5, "median": 44.1, "p25": 42.1, "p75": 46.3 },
+        { "generation": 10, "median": 44, "p25": 41.9, "p75": 44.9 },
+        { "generation": 15, "median": 44.8, "p25": 39.3, "p75": 56.4 },
+        { "generation": 20, "median": 44.4, "p25": 41.4, "p75": 49.8 },
+        { "generation": 25, "median": 44.8, "p25": 41, "p75": 48.3 },
+        { "generation": 30, "median": 45.8, "p25": 42.7, "p75": 49 },
+        { "generation": 35, "median": 46.5, "p25": 42.5, "p75": 49 },
+        { "generation": 40, "median": 45.1, "p25": 43.1, "p75": 47.9 },
+        { "generation": 45, "median": 43.6, "p25": 38.6, "p75": 46.2 },
+        { "generation": 50, "median": 45.8, "p25": 42.2, "p75": 49.6 },
+        { "generation": 55, "median": 44.5, "p25": 33.4, "p75": 47 },
+        { "generation": 60, "median": 44.4, "p25": 36, "p75": 46.9 },
+        { "generation": 65, "median": 46.1, "p25": 36, "p75": 47.3 },
+        { "generation": 70, "median": 46.3, "p25": 44.7, "p75": 47.6 },
+        { "generation": 75, "median": 46.8, "p25": 43.7, "p75": 48 },
+        { "generation": 80, "median": 46.3, "p25": 31.5, "p75": 47.7 },
+        { "generation": 85, "median": 45.7, "p25": 31.5, "p75": 47.6 },
+        { "generation": 90, "median": 43.3, "p25": 23.5, "p75": 47.6 },
+        { "generation": 95, "median": 40.1, "p25": 23.5, "p75": 47.5 },
+        { "generation": 100, "median": 39.3, "p25": 22.9, "p75": 47.5 }
+      ]
+    },
+    {
+      "tier": "advanced",
+      "finalScore": 30.2,
+      "curve": [
+        { "generation": 0, "median": 12, "p25": 5.3, "p75": 18 },
+        { "generation": 5, "median": 25.6, "p25": 18.2, "p75": 34.6 },
+        { "generation": 10, "median": 36.4, "p25": 26.7, "p75": 40.5 },
+        { "generation": 15, "median": 38.3, "p25": 35.6, "p75": 43.3 },
+        { "generation": 20, "median": 38.4, "p25": 32.8, "p75": 40.7 },
+        { "generation": 25, "median": 24.8, "p25": 21, "p75": 30.3 },
+        { "generation": 30, "median": 30.3, "p25": 23.9, "p75": 39.2 },
+        { "generation": 35, "median": 32.2, "p25": 29.4, "p75": 34.1 },
+        { "generation": 40, "median": 34.7, "p25": 31.3, "p75": 37.6 },
+        { "generation": 45, "median": 26.4, "p25": 22.5, "p75": 28.9 },
+        { "generation": 50, "median": 27.5, "p25": 24.9, "p75": 31.9 },
+        { "generation": 55, "median": 27.9, "p25": 22.2, "p75": 29.2 },
+        { "generation": 60, "median": 28.4, "p25": 20.4, "p75": 29.9 },
+        { "generation": 65, "median": 30.7, "p25": 29.5, "p75": 34.3 },
+        { "generation": 70, "median": 32.6, "p25": 28.8, "p75": 34.9 },
+        { "generation": 75, "median": 31.1, "p25": 29.4, "p75": 36 },
+        { "generation": 80, "median": 30.2, "p25": 29.5, "p75": 32.2 },
+        { "generation": 85, "median": 31.3, "p25": 27.5, "p75": 32.4 },
+        { "generation": 90, "median": 26.6, "p25": 22.8, "p75": 30.1 },
+        { "generation": 95, "median": 33.9, "p25": 29.5, "p75": 38.7 },
+        { "generation": 100, "median": 30.2, "p25": 28.9, "p75": 35.2 }
+      ]
+    }
+  ]
+}
