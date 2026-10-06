@@ -21,14 +21,18 @@ const secondsSince = (t: number) => ((performance.now() - t) / 1000).toFixed(0);
  * rate the three pairs against each other, then score every checkpoint
  * champion of every run against them for the curves.
  *
- * Options: --seeds 3, --first-seed 1, --generations 30, --every 10,
+ * The defaults are the nightly numbers: 5 seeds of 60 generations at 50
+ * per team, about 50 minutes on four cores. A shared machine can pass
+ * fewer, as the shipped file documents in docs/benchmark.md.
+ *
+ * Options: --seeds 5, --first-seed 1, --generations 60, --every 10,
  * --population 50 (per team), --out public/references/hideseek.json,
  * --raw file.json (every exam's games, for tuning the scoring offline).
  */
 export async function generateHideSeek(args: Args, pool: JobPool): Promise<void> {
-  const seeds = numberArg(args, 'seeds', 3);
+  const seeds = numberArg(args, 'seeds', 5);
   const firstSeed = numberArg(args, 'first-seed', 1);
-  const generations = numberArg(args, 'generations', 30);
+  const generations = numberArg(args, 'generations', 60);
   const every = numberArg(args, 'every', 10);
   const population = numberArg(args, 'population', 50);
   const out = args.out ?? 'public/references/hideseek.json';
