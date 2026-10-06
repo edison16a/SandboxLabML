@@ -10,3 +10,4 @@ export * from './plan';
 export * from './stats';
 export * from './population';
 export * from './serialize';
+export * from './metrics';
