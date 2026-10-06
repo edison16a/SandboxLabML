@@ -15,6 +15,7 @@ interface Props {
   hoveredInput: number | null;
   onHoverInput: (index: number | null) => void;
   showDisabled: boolean;
+  /** Inputs forced by a lesion test, highlighted with their links. */
   lesioned?: ReadonlySet<number>;
 }
 
@@ -58,7 +59,7 @@ export function NetworkCanvas({ genome, inputLabels, outputLabels, liveObservati
         activity = new Map();
         for (let i = 0; i < net.nodeIds.length; i++) activity.set(net.nodeIds[i], net.values[i]);
       }
-      const o: DrawOptions = { width: size.w, height: size.h, inputLabels, outputLabels, activity, hoveredInput: hovered.current, showDisabled, lesioned, margin: MARGIN };
+      const o: DrawOptions = { width: size.w, height: size.h, inputLabels, outputLabels, activity, hoveredInput: hovered.current, lesioned, showDisabled, margin: MARGIN };
       g.setTransform(dpr, 0, 0, dpr, 0, 0);
       drawNetwork(g, genome, nodes, o);
       raf = requestAnimationFrame(render);

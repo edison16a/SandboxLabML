@@ -9,9 +9,9 @@ export interface DrawOptions {
   /** Live activation per node id, if an agent is being inspected. */
   activity: Map<number, number> | null;
   hoveredInput: number | null;
-  showDisabled: boolean;
-  /** Input slots switched off by a lesion test; their links are drawn as broken. */
+  /** Inputs switched off by a Sandbox lesion test; their links are drawn struck out in amber. */
   lesioned?: ReadonlySet<number>;
+  showDisabled: boolean;
   margin: { left: number; right: number; top: number; bottom: number };
 }
 
@@ -38,7 +38,7 @@ export function drawNetwork(g: CanvasRenderingContext2D, genome: Genome, nodes: 
   g.clearRect(0, 0, o.width, o.height);
   const pos = new Map(nodes.map((n) => [n.id, nodePoint(n, o)]));
   const hoveredId = o.hoveredInput !== null ? genome.inputs[o.hoveredInput] : null;
-  const cut = new Set([...(o.lesioned ?? [])].map((slot) => genome.inputs[slot]));
+  const lesionedIds = o.lesioned?.size ? new Set([...o.lesioned].map((i) => genome.inputs[i])) : null;
 
   for (const c of genome.connections) {
     const a = pos.get(c.from);
@@ -53,10 +53,11 @@ export function drawNetwork(g: CanvasRenderingContext2D, genome: Genome, nodes: 
     const dx = (b[0] - a[0]) * 0.45;
     g.moveTo(a[0], a[1]);
     g.bezierCurveTo(a[0] + dx, a[1], b[0] - dx, b[1], b[0], b[1]);
-    if (cut.has(c.from)) {
-      g.setLineDash([2, 3]);
-      g.strokeStyle = 'rgba(255,95,95,0.75)';
-      g.lineWidth = 1.2;
+    if (c.enabled && lesionedIds?.has(c.from)) {
+      // A lesioned input still has its links, but they carry a forced value now.
+      g.setLineDash([5, 3]);
+      g.strokeStyle = 'rgba(245,196,81,0.9)';
+      g.lineWidth = 1.2 + mag * 2;
     } else if (!c.enabled) {
       g.setLineDash([3, 4]);
       g.strokeStyle = 'rgba(138,148,167,0.25)';
@@ -87,7 +88,7 @@ export function drawNetwork(g: CanvasRenderingContext2D, genome: Genome, nodes: 
     if (n.kind === 'input' || n.kind === 'bias') {
       const label = n.kind === 'bias' ? 'Bias' : (o.inputLabels[n.slot] ?? `Input ${n.slot + 1}`);
       g.textAlign = 'right';
-      g.fillStyle = n.id === hoveredId ? '#ffffff' : '#8a94a7';
+      g.fillStyle = n.id === hoveredId ? '#ffffff' : lesionedIds?.has(n.id) ? '#f5c451' : '#8a94a7';
       g.fillText(label.length > 17 ? `${label.slice(0, 16)}.` : label, x - 10, y);
     } else if (n.kind === 'output') {
       g.textAlign = 'left';
