@@ -5,8 +5,14 @@ import type { RacingSetup } from '@/engine/training/racingSetup';
 import type { Genome } from '@/engine/neat/types';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { runBenchmark } from '@/engine/bench';
+import type { RoundReplay } from '@/engine/training/hideseekRecords';
+import { createArenaPool, type ArenaPool } from '@/engine/hideseek/world/pool';
+import { ArenaFrameWriter } from '../shared/arenaFrames';
+import { HideSeekHostCache } from '../shared/hideSeekHost';
 import { StreamSender } from '../shared/streamPort';
 import { GhostPlayer, type GhostSpec } from './ghostPlayer';
+import { RoundPlayer } from './roundPlayer';
+import { SandboxPlayer, type SandboxScene } from './sandboxPlayer';
 
 /**
  * The replay worker re-simulates stored genomes: ghosts for overlay
@@ -14,6 +20,11 @@ import { GhostPlayer, type GhostSpec } from './ghostPlayer';
  * watching never slows training down.
  */
 let ghosts: GhostPlayer | null = null;
+let round: RoundPlayer | null = null;
+let sandbox: SandboxPlayer | null = null;
+let pool: Promise<ArenaPool> | null = null;
+/** One Rapier load and pool for the worker, shared by round replays and the Sandbox. */
+const arenas = () => (pool ??= createArenaPool());
 
 const api = {
   connect(streamPort: MessagePort) {
@@ -38,6 +49,54 @@ const api = {
   async benchmark(config: RunConfig, genome: Genome) {
     const result = await runBenchmark(config, genome);
     return result ? { score: result.score, radar: result.radar } : null;
+  },
+  /** Hide and Seek: the round replay and the Sandbox share one arena stream, so starting one stops the other. */
+  connectArenas(streamPort: MessagePort) {
+    const stream = new StreamSender(streamPort, 'arenas');
+    const hosts = new HideSeekHostCache();
+    round = new RoundPlayer(new ArenaFrameWriter(stream), arenas, hosts);
+    sandbox = new SandboxPlayer(stream, arenas, hosts);
+  },
+  playRound(replay: RoundReplay, speed: number, loop: boolean) {
+    sandbox?.stop();
+    return round?.play(replay, speed, loop);
+  },
+  setRoundSpeed(speed: number) {
+    round?.setSpeed(speed);
+  },
+  setRoundPaused(paused: boolean) {
+    round?.setPaused(paused);
+  },
+  stopRound() {
+    round?.stop();
+  },
+  loadSandbox(scene: SandboxScene) {
+    round?.stop();
+    return sandbox?.load(scene);
+  },
+  setSandboxPaused(paused: boolean) {
+    sandbox?.setPaused(paused);
+  },
+  setSandboxSpeed(speed: number) {
+    sandbox?.setSpeed(speed);
+  },
+  restartSandbox() {
+    return sandbox?.restart();
+  },
+  sandboxMoveBox(index: number, x: number, z: number) {
+    sandbox?.moveBox(index, x, z);
+  },
+  sandboxSetBoxLocked(index: number, locked: boolean) {
+    sandbox?.setBoxLocked(index, locked);
+  },
+  sandboxLesion(agent: number, index: number, value: number | null) {
+    sandbox?.setLesion(agent, index, value);
+  },
+  sandboxClearLesions() {
+    sandbox?.clearLesions();
+  },
+  stopSandbox() {
+    sandbox?.stop();
   },
   ghostTelemetry() {
     const t = ghosts?.telemetry() ?? [];
