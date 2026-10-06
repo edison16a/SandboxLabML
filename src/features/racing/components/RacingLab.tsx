@@ -81,6 +81,7 @@ export function RacingLab() {
         )}
         <LabToolbar onNewRun={openNewRun} />
       </div>
+      {/* The props mirror the panel's classes below. 380 px keeps every tab visible, and with the viewport's 600 px it fits a 1024 px (lg) window. */}
       <ResizeHandle id="racing" cssVar="--panel-w" pane="after" defaultSize={400} min={380} max={900} label="Resize the side panel" />
       <aside data-tour="panel" className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[var(--panel-w,400px)] lg:min-w-[380px] lg:shrink lg:border-t-0 lg:border-l">
         <SidePanel network={<NetworkTab />} inputs={<InputsTab />} model={<ModelTab />} />
