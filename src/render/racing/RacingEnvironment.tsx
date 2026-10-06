@@ -9,7 +9,7 @@ import type { QualityTier } from '@/features/racing/state/labStore';
 
 /** Low afternoon sun: long shadows read well and the paint picks up highlights. */
 const SUN = new THREE.Vector3(120, 140, 80).normalize();
-const HORIZON = '#b9cfe6';
+const HORIZON = '#c4d6ea';
 
 interface Props {
   tier: QualityTier;
@@ -43,9 +43,9 @@ export function RacingEnvironment({ tier, focus }: Props) {
     <>
       <color attach="background" args={[HORIZON]} />
       <fog attach="fog" args={[HORIZON, 320, 1500]} />
-      <Sky distance={4000} sunPosition={SUN.clone().multiplyScalar(100)} turbidity={6} rayleigh={1.2} mieCoefficient={0.004} mieDirectionalG={0.85} />
+      <Sky distance={4000} sunPosition={SUN.clone().multiplyScalar(100)} turbidity={2.6} rayleigh={1.6} mieCoefficient={0.003} mieDirectionalG={0.82} />
       <Environment resolution={tier === 'low' ? 64 : 256} frames={1} environmentIntensity={0.45}>
-        <Sky distance={4000} sunPosition={SUN.clone().multiplyScalar(100)} turbidity={6} rayleigh={1.2} />
+        <Sky distance={4000} sunPosition={SUN.clone().multiplyScalar(100)} turbidity={2.6} rayleigh={1.6} />
       </Environment>
       <hemisphereLight args={['#dbe8ff', '#4d6b3a', 0.35]} />
       <primitive object={target} />

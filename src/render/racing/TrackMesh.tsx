@@ -94,12 +94,19 @@ function Barriers({ track }: { track: Track }) {
 function StartGantry({ track, checker }: { track: Track; checker: THREE.Texture }) {
   const p = startPose(track);
   const w = track.halfWidth * 2;
+  // Square checks: the texture has 10 cells, so repeat it along the line's length.
+  const map = useMemo(() => {
+    const t = checker.clone();
+    t.repeat.set(1, w / 1.6);
+    t.needsUpdate = true;
+    return t;
+  }, [checker, w]);
   const span = w + RUNOFF * 2 + 3;
   return (
     <group position={[p.x, 0, p.z]} rotation={[0, p.yaw, 0]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]} receiveShadow>
         <planeGeometry args={[1.6, w]} />
-        <meshStandardMaterial map={checker} roughness={0.7} />
+        <meshStandardMaterial map={map} roughness={0.7} />
       </mesh>
       {[-1, 1].map((s) => (
         <mesh key={s} position={[0, 3, (s * span) / 2]} castShadow>

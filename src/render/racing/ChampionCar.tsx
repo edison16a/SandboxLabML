@@ -33,8 +33,15 @@ export function ChampionCar() {
   useFrame((_, dt) => {
     const g = root.current;
     const stream = frame.focusStream === 'ghosts' ? ghosts : population;
-    if (!g || !stream?.curr || frame.focusIndex < 0) {
-      if (g) g.visible = false;
+    if (!g) return;
+    if (!stream?.curr || frame.focusIndex < 0) {
+      // Before the first generation, park the car on the start line so the idle scene has a subject.
+      const idle = !population?.curr && !ghosts?.curr;
+      g.visible = idle;
+      if (idle) {
+        g.position.copy(frame.focusPos);
+        g.rotation.set(0, frame.focusYaw, 0);
+      }
       return;
     }
     g.visible = true;
