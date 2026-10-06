@@ -4,6 +4,7 @@ import type { RunConfig } from '@/engine/training/runConfig';
 import { saveCheckpoint } from '@/storage/checkpoints';
 import { saveHideSeekGeneration } from '@/storage/hideSeekGenerations';
 import { createRun } from '@/storage/runs';
+import { WriteQueue } from '@/storage/writeQueue';
 import { toast } from '@/ui/toast/toastStore';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
 import { createHideSeekPool, type HideSeekPool } from '@/workers/client/hideSeekPool';
@@ -25,6 +26,7 @@ export class HideSeekSession {
   private ready: Promise<HideSeekPool> | null = null;
   private director: ReplayDirector | null = null;
   private sandboxControl: SandboxControl | null = null;
+  private readonly writes = new WriteQueue();
 
   async init(): Promise<HideSeekPool> {
     if (!this.ready) {
@@ -133,7 +135,7 @@ export class HideSeekSession {
     const run = this.store.run;
     if (!pool || !run) return;
     const state = await pool.coordinator.checkpointHideSeek();
-    if (state) await saveCheckpoint(run.id, state.hiders.generation, state);
+    if (state) await this.writes.push(() => saveCheckpoint(run.id, state.hiders.generation, state));
   }
 
   private onEvent(e: HideSeekEvent): void {
@@ -149,14 +151,14 @@ export class HideSeekSession {
         break;
       }
       case 'generation': {
-        void saveHideSeekGeneration(e.record);
+        void this.writes.push(() => saveHideSeekGeneration(e.record));
         const { records, latest } = splitReplays([e.record]);
         this.store.addRecord(records[0]);
         this.director?.offer(latest ?? undefined);
         break;
       }
       case 'checkpoint':
-        if (run) void saveCheckpoint(run.id, e.generation, e.state);
+        if (run) void this.writes.push(() => saveCheckpoint(run.id, e.generation, e.state));
         break;
       case 'notice':
         toast.info('Heads up', e.message);

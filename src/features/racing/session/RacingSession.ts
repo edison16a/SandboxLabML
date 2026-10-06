@@ -5,6 +5,7 @@ import { racingSetupFor } from '@/engine/training/racingSetup';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { saveCheckpoint } from '@/storage/checkpoints';
 import { saveGeneration } from '@/storage/generations';
+import { WriteQueue } from '@/storage/writeQueue';
 import { createRun, getRun } from '@/storage/runs';
 import { toast } from '@/ui/toast/toastStore';
 import { createWorkerPool, type WorkerPool } from '@/workers/client/workerPool';
@@ -27,6 +28,7 @@ export class RacingSession {
   private pool: WorkerPool | null = null;
   private ready: Promise<WorkerPool> | null = null;
   private ghostKey = '';
+  private readonly writes = new WriteQueue();
   private readonly batcher = new RecordBatcher((batch) => {
     this.store.addRecords(batch);
     // Benchmark once the records are in the store, so each score has a row to land on.
@@ -118,7 +120,7 @@ export class RacingSession {
     const run = this.store.run;
     if (!pool || !run) return;
     const state = await pool.coordinator.checkpoint();
-    if (state) await saveCheckpoint(run.id, state.population.generation, state);
+    if (state) await this.writes.push(() => saveCheckpoint(run.id, state.population.generation, state));
   }
 
   /** Switches to the Sandbox: champions replay on an editable copy of the track. */
@@ -172,10 +174,10 @@ export class RacingSession {
       }
       case 'generation':
         this.batcher.push(e.record);
-        void saveGeneration(e.record);
+        void this.writes.push(() => saveGeneration(e.record));
         break;
       case 'checkpoint':
-        if (run) void saveCheckpoint(run.id, e.generation, e.state);
+        if (run) void this.writes.push(() => saveCheckpoint(run.id, e.generation, e.state));
         break;
       case 'track':
         this.store.set({ trackSpec: e.spec });
