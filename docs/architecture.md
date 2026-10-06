@@ -25,7 +25,8 @@ SandboxLabML trains NEAT neural networks in the browser and draws them in 3D. Th
 | Replay worker | Ghosts, round replays, Sandbox and telemetry | Main thread, with its own snapshot stream |
 
 * Commands and results go through Comlink. Snapshots never do: each stream has its own `MessagePort`, and buffers cycle through a ring of three so the main thread never queues more than two frames.
-* Watch speeds (1x to 4x) run a whole Racing generation live in one sim worker, paced to real time. Turbo and Max split the population across all sim workers and run flat out.
+* Watch speeds (1x to 4x) run a whole Racing generation live in one sim worker, paced to real time. Turbo and Max split the population across all sim workers and run flat out. Turbo keeps the viewport busy with ghosts or round replays; Max stops drawing and stops the replay so every core trains.
+* At Turbo and Max several generations can finish each second. The lab hands records to its store at most twice a second, so the charts repaint in step with the eye instead of with the trainer.
 * The replay worker re-simulates stored champions. It is separate so watching never slows training down.
 
 ## Determinism
@@ -48,3 +49,5 @@ SBL scripts are parsed with error recovery, checked against one API registry (na
 ## Persistence
 
 Runs, per-generation champions and the newest three population checkpoints live in IndexedDB. Destructive actions keep the old run in Trash for seven days. A run exports to one JSON file with genomes in base64.
+
+Generation records and checkpoints are written through one queue, in the order they happened, because IndexedDB keeps no order between stores. A run reopens from the newest checkpoint its stored history reaches without a gap; later generations are dropped and come back exactly when training resumes.
