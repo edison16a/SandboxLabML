@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { sandboxCounts } from '@/engine/hideseek/sandbox/snapshot';
+import { useSyncExternalStore } from 'react';
+import { sandboxHiderCount } from '@/engine/hideseek/sandbox/snapshot';
 import { STRIDE } from '@/render/hideseek/frame/snapshotRead';
 import { hideSeekSession } from '../session/HideSeekSession';
 import { useHideSeekLab } from '../state/hideSeekStore';
@@ -15,9 +15,14 @@ export interface ArenaPulse {
   /** Arenas in the seek phase, and how many of their hiders are out of sight right now. */
   seeking: number;
   hidden: number;
+  /** Sandbox only (false and zero elsewhere): the match has played out, how many hiders it has and how many are in sight. */
+  over: boolean;
+  hiders: number;
+  hidersSeen: number;
 }
 
-const EMPTY: ArenaPulse = { arenas: 0, time: 0, prep: true, seeking: 0, hidden: 0 };
+const EMPTY: ArenaPulse = { arenas: 0, time: 0, prep: true, seeking: 0, hidden: 0, over: false, hiders: 0, hidersSeen: 0 };
+const SAMPLE_MS = 250;
 
 /**
  * The Sandbox is one arena with many hiders, so "hidden now" counts hiders:
@@ -25,36 +30,64 @@ const EMPTY: ArenaPulse = { arenas: 0, time: 0, prep: true, seeking: 0, hidden: 
  */
 function sandboxPulse(buf: Float32Array): ArenaPulse {
   const prep = buf[1] === 1;
-  const hiders = sandboxCounts(buf).hiders;
-  return { arenas: 1, time: buf[0], prep, seeking: prep ? 0 : hiders, hidden: prep ? 0 : hiders - (buf[7] | 0) };
+  const hiders = sandboxHiderCount(buf);
+  const hidersSeen = buf[7] | 0;
+  return { arenas: 1, time: buf[0], prep, seeking: prep ? 0 : hiders, hidden: prep ? 0 : hiders - hidersSeen, over: buf[3] === 1, hiders, hidersSeen };
+}
+
+/** Reads the latest frame of the feed the viewport shows. */
+function readPulse(): ArenaPulse {
+  const feed = hideSeekSession().feed();
+  const buf = feed?.curr?.buffer;
+  if (!feed || !buf || feed.count === 0) return EMPTY;
+  const s = useHideSeekLab.getState();
+  if (s.mode === 'sandbox') return buf.length >= 8 ? sandboxPulse(buf) : EMPTY;
+  const n = Math.min(feed.count, s.gridSize === 1 ? feed.count : s.gridSize);
+  let seeking = 0;
+  let hidden = 0;
+  for (let i = 0; i < n; i++) {
+    if (buf[i * STRIDE + 1] === 1) continue;
+    seeking++;
+    if (buf[i * STRIDE + 2] === 0) hidden++;
+  }
+  const a = Math.min(feed.count - 1, s.focus ?? 0) * STRIDE;
+  return { ...EMPTY, arenas: n, time: buf[a], prep: buf[a + 1] === 1, seeking, hidden };
+}
+
+const same = (a: ArenaPulse, b: ArenaPulse) => (Object.keys(a) as Array<keyof ArenaPulse>).every((k) => a[k] === b[k]);
+
+// One sampler feeds every part of the HUD that shows the pulse, so they all
+// agree on the frame they read and only one interval runs however many do.
+let current = EMPTY;
+const listeners = new Set<() => void>();
+let timer: ReturnType<typeof setInterval> | null = null;
+
+function sample(): void {
+  const next = readPulse();
+  if (same(next, current)) return;
+  current = next;
+  listeners.forEach((l) => l());
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  if (!timer) {
+    current = readPulse();
+    timer = setInterval(sample, SAMPLE_MS);
+  }
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size || !timer) return;
+    clearInterval(timer);
+    timer = null;
+  };
 }
 
 /**
  * Samples the feed the viewport shows four times a second. The HUD does
  * not need 60 updates a second, and reading the latest buffer here keeps
- * React out of the render loop entirely.
+ * React out of the render loop entirely. A paused match re-renders nothing.
  */
 export function useArenaPulse(): ArenaPulse {
-  const [pulse, setPulse] = useState<ArenaPulse>(EMPTY);
-  useEffect(() => {
-    const id = setInterval(() => {
-      const feed = hideSeekSession().feed();
-      const buf = feed?.curr?.buffer;
-      if (!feed || !buf || feed.count === 0) return setPulse(EMPTY);
-      const s = useHideSeekLab.getState();
-      if (s.mode === 'sandbox') return setPulse(sandboxPulse(buf));
-      const n = Math.min(feed.count, s.gridSize === 1 ? feed.count : s.gridSize);
-      let seeking = 0;
-      let hidden = 0;
-      for (let i = 0; i < n; i++) {
-        if (buf[i * STRIDE + 1] === 1) continue;
-        seeking++;
-        if (buf[i * STRIDE + 2] === 0) hidden++;
-      }
-      const a = Math.min(feed.count - 1, s.focus ?? 0) * STRIDE;
-      setPulse({ arenas: n, time: buf[a], prep: buf[a + 1] === 1, seeking, hidden });
-    }, 250);
-    return () => clearInterval(id);
-  }, []);
-  return pulse;
+  return useSyncExternalStore(subscribe, () => current, () => EMPTY);
 }

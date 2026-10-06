@@ -5,6 +5,7 @@ import { ChevronDown, Copy, Pencil } from 'lucide-react';
 import { emptyRoom, isPresetRoomId, roomById, SANDBOX_LIMITS, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import { cn } from '@/ui/cn';
 import { Slider } from '@/ui/primitives/Slider';
+import { useArenaPulse } from '../../hooks/useArenaPulse';
 import { hideSeekSession } from '../../session/HideSeekSession';
 import { draftRoom } from '../../session/sandboxRooms';
 import { useHideSeekLab } from '../../state/hideSeekStore';
@@ -13,7 +14,6 @@ import { RoomEditorDialog } from '../sandbox/editor/RoomEditorDialog';
 import { RoomPicker } from '../sandbox/RoomPicker';
 import { SandboxRunBar } from '../sandbox/SandboxRunBar';
 import { SandboxStatus } from '../sandbox/SandboxStatus';
-import { useSandboxPulse } from '../sandbox/useSandboxPulse';
 
 function Section({ title, children, aside }: { title: string; children: React.ReactNode; aside?: React.ReactNode }) {
   return (
@@ -46,7 +46,7 @@ export function SandboxCard() {
   const [unfolded, setUnfolded] = useState<boolean | null>(() => (typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches ? false : null));
   const inputsShown = useHideSeekLab((s) => s.inputsOverlay);
   const open = unfolded ?? !inputsShown;
-  const pulse = useSandboxPulse();
+  const pulse = useArenaPulse();
   if (mode !== 'sandbox' || photo || !records.length) return null;
   const control = hideSeekSession().sandbox;
   const first = records[0].generation;

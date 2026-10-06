@@ -1,12 +1,12 @@
 'use client';
 
-import type { SandboxPulse } from './useSandboxPulse';
+import type { ArenaPulse } from '../../hooks/useArenaPulse';
 
 /**
  * One line on how the match stands: the prep countdown, then the seek
  * clock and how many hiders are in sight, then the final count.
  */
-export function SandboxStatus({ pulse: p }: { pulse: SandboxPulse }) {
+export function SandboxStatus({ pulse: p }: { pulse: ArenaPulse }) {
   if (!p.hiders) return null;
   const seen = `${p.hidersSeen} of ${p.hiders} seen`;
   const text = p.over ? `Match over, ${seen}` : `${p.prep ? 'Prep' : 'Seek'} ${p.time.toFixed(1)} s`;

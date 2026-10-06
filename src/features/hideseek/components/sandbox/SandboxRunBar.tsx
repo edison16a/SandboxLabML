@@ -4,7 +4,7 @@ import { Dices, Pause, Play, RotateCcw } from 'lucide-react';
 import { Button } from '@/ui/primitives/Button';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import type { SandboxControl } from '../../session/sandboxControl';
-import type { SandboxPulse } from './useSandboxPulse';
+import type { ArenaPulse } from '../../hooks/useArenaPulse';
 
 const glass = 'border-white/10 bg-white/10 text-white hover:bg-white/20';
 
@@ -12,7 +12,7 @@ const glass = 'border-white/10 bg-white/10 text-white hover:bg-white/20';
  * Run, Pause and Restart for the Sandbox match, plus new spawn spots. Once
  * a match has played out, Run plays it again from the start.
  */
-export function SandboxRunBar({ control, playing, pulse }: { control: SandboxControl | null; playing: boolean; pulse: SandboxPulse }) {
+export function SandboxRunBar({ control, playing, pulse }: { control: SandboxControl | null; playing: boolean; pulse: ArenaPulse }) {
   const running = playing && !pulse.over;
   return (
     <div className="flex items-center gap-1.5">
