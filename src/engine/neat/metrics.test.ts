@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Rng } from '../core/rng';
 import { createGenome, createTemplate } from './genome';
 import { InnovationTracker } from './innovation';
-import { modelMetrics } from './metrics';
+import { formatBytes, modelMetrics } from './metrics';
 import { mutateAddConnection, mutateAddNode, mutateToggle } from './mutation';
 import { Network } from './network';
 import { encodeGenome } from './serialize';
@@ -23,5 +23,13 @@ describe('model metrics', () => {
     expect(m.costPerDecision).toBe(new Network(g).cost);
     expect(m.bytes).toBe(encodeGenome(g).byteLength);
     expect(m.neurons.total).toBe(g.nodes.length);
+  });
+});
+
+describe('formatBytes', () => {
+  it('picks a unit that keeps the number short', () => {
+    expect(formatBytes(708)).toBe('708 B');
+    expect(formatBytes(2.5 * 1024 ** 2)).toBe('2.5 MB');
+    expect(formatBytes(151.2 * 1024 ** 3)).toBe('151.2 GB');
   });
 });
