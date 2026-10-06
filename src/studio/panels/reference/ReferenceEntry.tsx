@@ -34,7 +34,7 @@ export function ReferenceEntry({ entry, readonly }: { entry: RegistryEntry; read
         <pre className="overflow-x-auto rounded border border-border bg-bg px-2 py-1.5 font-mono text-[12px] text-fg">{entry.example}</pre>
         <div className="flex items-center justify-between gap-2">
           <span className="text-[11px] text-subtle">{tiersOf(entry)}</span>
-          <Button size="sm" variant="outline" disabled={readonly} onClick={() => insertExample(entry.example, insertScope(entry))} aria-label={`Insert example for ${entry.name}`}>
+          <Button size="sm" variant="outline" disabled={readonly} onClick={() => insertExample(entry.example, insertScope(entry), entry.scope === 'both')} aria-label={`Insert example for ${entry.name}`}>
             <Plus />
             Insert example
           </Button>

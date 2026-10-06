@@ -1,7 +1,9 @@
 import { applyEdits, fixAll, lineOf, print, type QuickFix } from '@/engine/script';
 import { toast } from '@/ui/toast/toastStore';
 import { analyze } from '../doc/analyze';
+import { scopeAt } from '../code/context';
 import { appendToSection, insertBelowLine, type InsertScope } from '../doc/insert';
+import { minimalChange } from '../doc/textChange';
 import { useStudio } from './studioStore';
 
 /**
@@ -55,14 +57,18 @@ export function applyQuickFix(fix: QuickFix, source: string): void {
 }
 
 /**
- * Inserts an example: below the cursor in the code view, or at the end of
- * the matching section in the blocks view.
+ * Inserts an example. In the code view it goes below the cursor when the
+ * cursor sits in a block where the example is valid, and otherwise at the
+ * end of the right section, so a tick example never lands at the top
+ * level. The blocks view always appends to the section. `anyBlock` marks
+ * examples that work in either each block, such as math.
  */
-export function insertExample(example: string, scope: InsertScope): void {
+export function insertExample(example: string, scope: InsertScope, anyBlock = false): void {
   if (refuseReadonly()) return;
   const s = useStudio.getState();
   const text = s.history.present;
-  if (s.mode === 'code') {
+  const here = scopeAt(text, s.cursor);
+  if (s.mode === 'code' && (here === scope || (anyBlock && here !== 'top'))) {
     const { text: next, cursor } = insertBelowLine(text, s.cursor, example);
     s.edit(next);
     s.revealSpan(cursor - example.split('\n').pop()!.length, cursor);
@@ -70,9 +76,11 @@ export function insertExample(example: string, scope: InsertScope): void {
   }
   const next = appendToSection(text, scope, example);
   if (next === null) {
-    toast.info('Fix the syntax error first', 'Blocks can be added once the script reads cleanly.');
+    toast.info('Fix the syntax error first', 'Examples can be added once the script reads cleanly.');
     return;
   }
   s.edit(next);
-  toast.success('Block added', `Added to ${scope === 'top' ? 'the top level' : `each ${scope}`}.`);
+  const change = minimalChange(text, next);
+  if (s.mode === 'code' && change) s.revealSpan(change.from, change.from + change.insert.length);
+  else toast.success('Block added', `Added to ${scope === 'top' ? 'the top level' : `each ${scope}`}.`);
 }
