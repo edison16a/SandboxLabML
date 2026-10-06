@@ -13,6 +13,7 @@ import type { MatchLog, MatchTestRequest, MatchTestResult } from './types';
 /** Player states kept for the cost bench: one per player every second, enough to cover prep and seek. */
 const VIEW_EVERY = 30;
 const MAX_VIEWS = 64;
+const TIMING_ROUNDS = 2;
 
 function fail(message: string): MatchTestResult {
   return { ok: false, message };
@@ -41,6 +42,27 @@ function record(match: HideSeekMatch): { log: MatchLog; views: HideSeekAgent[] }
   }
   if (n > 0) log.events.push({ tick: n - 1, text: 'match over' });
   return { log: n === cap ? log : trim(log, n), views };
+}
+
+/**
+ * Whole tick time, µs. The same request plays the same match, so it is
+ * replayed unlogged and the faster of two rounds is kept: a test worker
+ * is fresh for every run, and the first round mostly measures the JIT
+ * warming up.
+ */
+function timeTick(start: () => HideSeekMatch): number {
+  let best = Infinity;
+  for (let round = 0; round < TIMING_ROUNDS; round++) {
+    const match = start();
+    try {
+      const t0 = performance.now();
+      while (!match.done) match.step();
+      best = Math.min(best, ((performance.now() - t0) * 1000) / Math.max(1, match.tick));
+    } finally {
+      match.release();
+    }
+  }
+  return best;
 }
 
 function trim(log: MatchLog, n: number): MatchLog {
@@ -76,16 +98,7 @@ export async function runTestMatch(req: MatchTestRequest): Promise<MatchTestResu
   }
   const ticks = recorded.log.time.length;
 
-  // The same request plays the same match, so a second, unlogged run times the tick cleanly.
-  const again = startRequestedMatch(script, req.brains, pool, req.seed);
-  let tickMicros: number;
-  try {
-    const t0 = performance.now();
-    while (!again.done) again.step();
-    tickMicros = ((performance.now() - t0) * 1000) / Math.max(1, again.tick);
-  } finally {
-    again.release();
-  }
+  const tickMicros = timeTick(() => startRequestedMatch(script, req.brains, pool, req.seed));
   const scriptMicros = measureScriptMicros(() => p.script.createController<HideSeekAgent>({ seed: req.seed }), recorded.views, HIDESEEK_OUTPUT_COUNT);
   return {
     ok: true,
