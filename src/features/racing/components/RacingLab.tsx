@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { buildTrack } from '@/engine/racing/track/buildTrack';
-import { racingInputSchema } from '@/engine/racing/sensors/inputSchema';
 import { TelemetryStrip } from '@/features/charts/TelemetryStrip';
 import { RacingCanvas } from '@/render/racing/RacingCanvas';
 import { useInspectSubscription } from '../hooks/useInspectSubscription';
 import { useLabShortcuts } from '../hooks/useLabShortcuts';
 import { useRunBootstrap } from '../hooks/useRunBootstrap';
+import { useRunSchema } from '../hooks/useRunSchema';
 import { racingSession } from '../session/RacingSession';
 import { useRacingLab } from '../state/labStore';
 import { LabToolbar } from './LabToolbar';
@@ -40,10 +40,7 @@ export function RacingLab() {
 
   const spec = trackSpec ?? run?.racing?.track ?? null;
   const track = useMemo(() => (spec ? buildTrack(spec) : null), [spec]);
-  const schema = useMemo(
-    () => (run?.blueprint.env === 'racing' && run.racing ? racingInputSchema(run.blueprint.inputs, run.racing.car) : []),
-    [run],
-  );
+  const schema = useRunSchema();
   const streams = ready ? racingSession().streams : null;
 
   return (

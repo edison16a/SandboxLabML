@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
-import { RACING_OUTPUTS, racingInputSchema } from '@/engine/racing/sensors/inputSchema';
+import { useCallback } from 'react';
+import { RACING_OUTPUTS } from '@/engine/racing/sensors/inputSchema';
+import { useRunSchema } from '../hooks/useRunSchema';
 import { InputBars } from '@/features/inputs/InputBars';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Switch } from '@/ui/primitives/Switch';
@@ -16,7 +17,7 @@ export function InputsTab() {
   const hovered = useRacingLab((s) => s.hoveredInput);
   const focus = useRacingLab((s) => s.focus);
   const set = useRacingLab((s) => s.set);
-  const schema = useMemo(() => (run?.blueprint.env === 'racing' && run.racing ? racingInputSchema(run.blueprint.inputs, run.racing.car) : []), [run]);
+  const schema = useRunSchema();
   const read = useCallback(() => {
     const streams = racingSession().streams;
     const stream = focus.kind === 'ghost' ? streams?.ghosts : streams?.population;

@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pause, Play } from 'lucide-react';
 import { countGenome } from '@/engine/neat/genome';
-import { RACING_OUTPUTS, racingInputSchema } from '@/engine/racing/sensors/inputSchema';
+import { RACING_OUTPUTS } from '@/engine/racing/sensors/inputSchema';
+import { useRunSchema } from '../hooks/useRunSchema';
 import { NetworkCanvas } from '@/features/network/NetworkCanvas';
 import { Button } from '@/ui/primitives/Button';
 import { Slider } from '@/ui/primitives/Slider';
@@ -18,7 +19,6 @@ import { useRacingLab } from '../state/labStore';
  */
 export function NetworkTab() {
   const records = useRacingLab((s) => s.records);
-  const run = useRacingLab((s) => s.run);
   const focus = useRacingLab((s) => s.focus);
   const pinned = useRacingLab((s) => s.networkGeneration);
   const hoveredInput = useRacingLab((s) => s.hoveredInput);
@@ -29,10 +29,8 @@ export function NetworkTab() {
   const followGen = focus.kind === 'ghost' ? focus.generation : records.length - 1;
   const gen = pinned ?? followGen;
   const record = records.find((r) => r.generation === gen) ?? records[records.length - 1];
-  const labels = useMemo(
-    () => (run?.blueprint.env === 'racing' && run.racing ? racingInputSchema(run.blueprint.inputs, run.racing.car).map((s) => s.label) : []),
-    [run],
-  );
+  const schema = useRunSchema();
+  const labels = useMemo(() => schema.map((s) => s.label), [schema]);
 
   useEffect(() => {
     if (!playing) return;
