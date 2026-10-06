@@ -1,9 +1,10 @@
 import { Workspace } from '@/features/shell/Workspace';
+import { Landing } from '@/features/landing/Landing';
 
 export default function HomePage() {
   return (
     <Workspace>
-      <div className="p-8 text-muted">Landing page coming up.</div>
+      <Landing />
     </Workspace>
   );
 }
