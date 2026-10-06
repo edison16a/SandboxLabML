@@ -61,7 +61,7 @@ export function printExpr(e: Expr): string {
       return e.path.join('.');
     case 'unary': {
       if (e.op === 'not') return `not ${wrap(printExpr(e.operand), prec(e.operand) < NOT_PREC)}`;
-      // A nested sign gets parentheses so `-(-x)` never prints as `--x`.
+      // A sign inside a sign gets parentheses, so `-(-x)` never prints as two minus signs in a row.
       return `${e.op}${wrap(printExpr(e.operand), prec(e.operand) < ATOM_PREC)}`;
     }
     case 'binary': {
