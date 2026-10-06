@@ -6,8 +6,9 @@ import type * as THREE from 'three';
  * metalness, glow and tint. The shader reads those instead of the
  * material's single values, applies the instance color only where tint is
  * 1 (the paint), and adds the untinted color as light where glow is set
- * (the lamps). Smooth surfaces also pick up the clear coat, if the
- * material has one.
+ * (the lamps). If the material has a clear coat, it covers surfaces with
+ * a roughness of 0.4 or less, like the paint and glass, and fades out by
+ * 0.5, so tires and liners stay matte.
  *
  * Ghosts set `ghost`: the instance color then washes over the whole car,
  * full strength on the paint and dimmer elsewhere, so a translucent ghost
@@ -43,7 +44,8 @@ export function withCarSurface<T extends THREE.MeshStandardMaterial>(material: T
       .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = vSurface.x;')
       .replace('#include <metalnessmap_fragment>', 'float metalnessFactor = vSurface.y;')
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += vRawColor * vSurface.z;')
-      .replace('material.clearcoat = clearcoat;', 'material.clearcoat = clearcoat * clamp( ( 0.5 - vSurface.x ) * 2.5, 0.0, 1.0 );');
+      // The coat is set inside this chunk, and includes are not expanded yet here, so scale it right after.
+      .replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n#ifdef USE_CLEARCOAT\n  material.clearcoat *= clamp( ( 0.5 - vSurface.x ) * 10.0, 0.0, 1.0 );\n#endif');
   };
   material.customProgramCacheKey = () => `${key()}|car-surface${ghost ? '-ghost' : ''}`;
   return material;
