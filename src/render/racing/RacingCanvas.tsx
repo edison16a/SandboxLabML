@@ -41,6 +41,8 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
   const tier = useRacingLab((s) => s.activeTier);
   const quality = useRacingLab((s) => s.quality);
   const camera = useCameraMode();
+  // While a watch-speed run is paused nothing moves (ghosts pause too), so only redraw on demand.
+  const idle = useRacingLab((s) => s.status === 'paused' && s.mode === 'train' && s.speed !== 'turbo' && s.speed !== 'max');
   const frame = useMemo(() => createFrame(), []);
   const target = useRef(new THREE.Vector3());
   const value = useMemo(() => ({ track, population, ghosts, frame }), [track, population, ghosts, frame]);
@@ -66,6 +68,7 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
         gl.outputColorSpace = THREE.SRGBColorSpace;
         gl.toneMappingExposure = 0.92;
       }}
+      frameloop={idle ? 'demand' : 'always'}
       className="touch-none"
     >
       {quality === 'auto' && <PerformanceMonitor bounds={(r) => [Math.min(50, r * 0.8), r]} onDecline={() => step(-1)} onIncline={() => step(1)} />}
