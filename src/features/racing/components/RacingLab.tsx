@@ -81,8 +81,8 @@ export function RacingLab() {
         )}
         <LabToolbar onNewRun={openNewRun} />
       </div>
-      <ResizeHandle id="racing" cssVar="--panel-w" pane="after" defaultSize={400} min={340} max={900} label="Resize the side panel" />
-      <aside data-tour="panel" className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[var(--panel-w,400px)] lg:min-w-[340px] lg:shrink lg:border-t-0 lg:border-l">
+      <ResizeHandle id="racing" cssVar="--panel-w" pane="after" defaultSize={400} min={380} max={900} label="Resize the side panel" />
+      <aside data-tour="panel" className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[var(--panel-w,400px)] lg:min-w-[380px] lg:shrink lg:border-t-0 lg:border-l">
         <SidePanel network={<NetworkTab />} inputs={<InputsTab />} model={<ModelTab />} />
       </aside>
       <NewRunDialog open={newRun} onOpenChange={setNewRun} initialScript={pendingScript} />
