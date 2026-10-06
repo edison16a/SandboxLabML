@@ -17,14 +17,12 @@ SandboxLabML trains NEAT neural networks in the browser and draws them in 3D. Th
 
 ## Threads
 
-```
-main thread           coordinator worker          sim workers (cores minus 2)       replay worker
------------           ------------------          ---------------------------       -------------
-UI and renderer  <-- events (Comlink) ---  NEAT, generations, checkpoints
-                                           |  batches of genomes or matches  -->  headless episodes
-renderer  <------------- snapshot stream (MessagePort, transferable Float32Arrays) --  live generation
-renderer  <------------- ghost stream ----------------------------------------------------------  ghosts, sandbox
-```
+| Thread | Job | Talks to |
+| --- | --- | --- |
+| Main | UI, charts and the 3D renderer. No simulation. | Coordinator through Comlink; receives snapshot streams |
+| Coordinator worker | NEAT selection, generations, rounds and checkpoints | Sim workers through ports the main thread hands it |
+| Sim workers (cores minus 2) | Headless batches, plus the live generation in watch mode | Coordinator; the live one streams snapshots to the main thread |
+| Replay worker | Ghosts, round replays, Sandbox and telemetry | Main thread, with its own snapshot stream |
 
 * Commands and results go through Comlink. Snapshots never do: each stream has its own `MessagePort`, and buffers cycle through a ring of three so the main thread never queues more than two frames.
 * Watch speeds (1x to 4x) run a whole Racing generation live in one sim worker, paced to real time. Turbo and Max split the population across all sim workers and run flat out.
