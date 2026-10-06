@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 28 28" fill="none" stroke-linecap="round">
+  <title>SandboxLabML</title>
+  <path d="M6 20 L14 8 L22 20" stroke="#4C9AFF" stroke-width="2"/>
+  <circle cx="6" cy="20" r="3" fill="#4C9AFF"/>
+  <circle cx="22" cy="20" r="3" fill="#4C9AFF"/>
+  <circle cx="14" cy="8" r="3.5" fill="#FF9F43"/>
+</svg>
