@@ -14,6 +14,8 @@ import { useRacingLab } from '../state/labStore';
 import { LabToolbar } from './LabToolbar';
 import { NewRunDialog } from './NewRunDialog';
 import { RacingTour } from './RacingTour';
+import { choiceFromSource, type ScriptChoice } from './ScriptPicker';
+import { getScript } from '@/storage/scripts';
 import { SidePanel } from './SidePanel';
 import { ViewportHud } from './ViewportHud';
 import { InputsCard } from './InputsCard';
@@ -35,6 +37,18 @@ export function RacingLab() {
   const view = useRacingLab((s) => s.view);
   const hasTelemetry = useRacingLab((s) => s.telemetry.length > 0);
   const [newRun, setNewRun] = useState(false);
+  const [pendingScript, setPendingScript] = useState<ScriptChoice | undefined>();
+  useEffect(() => {
+    // Studio's Train button lands here with ?trainScript=<id>: open New run with that script chosen.
+    const id = params.get('trainScript');
+    if (!id) return;
+    void getScript(id).then((entry) => {
+      const choice = entry ? choiceFromSource(entry.id, entry.name, entry.source) : null;
+      if (!choice) return;
+      setPendingScript(choice);
+      setNewRun(true);
+    });
+  }, [params]);
   const tourSignal = useRacingLab((s) => s.tourSignal);
   const openNewRun = useCallback(() => setNewRun(true), []);
   useLabShortcuts(openNewRun);
@@ -83,7 +97,7 @@ export function RacingLab() {
       <aside data-tour="panel" className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[400px] lg:border-t-0 lg:border-l">
         <SidePanel network={<NetworkTab />} inputs={<InputsTab />} model={<ModelTab />} />
       </aside>
-      <NewRunDialog open={newRun} onOpenChange={setNewRun} />
+      <NewRunDialog open={newRun} onOpenChange={setNewRun} initialScript={pendingScript} />
       {ready && <RacingTour openSignal={tourSignal} />}
     </div>
   );

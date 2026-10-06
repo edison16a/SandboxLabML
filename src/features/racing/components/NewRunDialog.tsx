@@ -28,13 +28,15 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   /** Prefill, e.g. when training on a track drawn in the editor. */
   initialTrack?: TrackSpec;
+  /** Prefill the script, e.g. when Studio sends a script here to train. */
+  initialScript?: ScriptChoice;
 }
 
 /**
  * Everything frozen at run creation: track, brain blueprint, script, physics,
  * population size and seed. Changing any of these later means a new run.
  */
-export function NewRunDialog({ open, onOpenChange, initialTrack }: Props) {
+export function NewRunDialog({ open, onOpenChange, initialTrack, initialScript }: Props) {
   const [name, setName] = useState('New run');
   const [track, setTrack] = useState<TrackSpec>(initialTrack ?? BUILT_IN_TRACKS[0]);
   const [blueprint, setBlueprint] = useState<RacingBlueprint>(RACING_BLUEPRINTS[2]);
@@ -48,6 +50,12 @@ export function NewRunDialog({ open, onOpenChange, initialTrack }: Props) {
   useEffect(() => {
     if (open && initialTrack) setTrack(initialTrack);
   }, [open, initialTrack]);
+  useEffect(() => {
+    if (open && initialScript) {
+      setScript(initialScript);
+      if (initialScript.kind === 'script') setName(initialScript.name);
+    }
+  }, [open, initialScript]);
   useEffect(() => {
     if (open) void listBlueprints('racing').then((list) => setCustom(list.filter((b): b is RacingBlueprint => b.env === 'racing')));
   }, [open]);

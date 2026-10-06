@@ -1,6 +1,7 @@
 'use client';
 
-import { Blocks, Code2, Redo2, Save, Undo2, WandSparkles, AlignLeft } from 'lucide-react';
+import Link from 'next/link';
+import { Blocks, Code2, Flag, Redo2, Save, Undo2, WandSparkles, AlignLeft } from 'lucide-react';
 import { canRedo, canUndo } from '../doc/history';
 import { fixAllDocument, formatDocument } from '../state/docActions';
 import { saveCurrent } from '../state/scriptActions';
@@ -69,6 +70,20 @@ export function EditorToolbar() {
             <span className="hidden sm:inline">Fix all</span>
           </Button>
         </Tooltip>
+        {script?.env === 'racing' && (
+          <Tooltip content={dirty ? 'Save first, then train with this script' : 'Start a racing run that trains with this script'}>
+            <Link
+              href={`/lab/racing?trainScript=${encodeURIComponent(script.id)}`}
+              prefetch={false}
+              aria-disabled={dirty}
+              onClick={(e) => dirty && e.preventDefault()}
+              className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] font-medium hover:border-border-strong hover:bg-surface-2 aria-disabled:opacity-40 [&_svg]:size-4"
+            >
+              <Flag />
+              <span className="hidden sm:inline">Train</span>
+            </Link>
+          </Tooltip>
+        )}
         <Tooltip content="Save" shortcut="Ctrl S">
           <Button size="sm" variant={dirty ? 'primary' : 'outline'} disabled={readonly || !dirty} onClick={() => void saveCurrent()}>
             <Save />
