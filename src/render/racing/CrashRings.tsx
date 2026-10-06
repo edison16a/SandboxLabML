@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { Html } from '@react-three/drei';
-import { useRacingLab } from '@/features/racing/state/labStore';
+import { placedTelemetry, useRacingLab } from '@/features/racing/state/labStore';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { ghostColor } from './palette';
 
@@ -24,7 +24,7 @@ interface Crash {
 function useCrashes(): Crash[] {
   const records = useRacingLab((s) => s.records);
   const gens = useRacingLab((s) => s.ghostGenerations);
-  const telemetry = useRacingLab((s) => s.telemetry);
+  const telemetry = useRacingLab(placedTelemetry);
   const sandbox = useRacingLab((s) => s.mode === 'sandbox');
   return useMemo(() => {
     if (sandbox) {

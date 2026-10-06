@@ -34,6 +34,7 @@ export function openedRunState(run: RunConfig, records: GenerationRecord[], live
     focus: { kind: 'champion' },
     networkGeneration: null,
     telemetry: [],
+    telemetryTrack: null,
     ghostGenerations: [],
     // A Sandbox set up for one run means nothing for the next, so it closes and starts over.
     mode: 'train',
@@ -54,6 +55,18 @@ export function openedRunState(run: RunConfig, records: GenerationRecord[], live
  */
 export function followsGhost(s: { focus: Focus; mode: 'train' | 'sandbox' }): boolean {
   return s.focus.kind === 'ghost' || s.mode === 'sandbox';
+}
+
+const NO_TELEMETRY: GhostTelemetry[] = [];
+
+/**
+ * The telemetry measured on the track on screen, or none. A Sandbox track
+ * shows up before its race is timed, and until then the old crash points
+ * and results would land on the wrong road. Training telemetry carries no
+ * track, so Sandbox telemetry left over after leaving it stays hidden too.
+ */
+export function placedTelemetry(s: Pick<RacingLabState, 'mode' | 'sandboxTrack' | 'telemetry' | 'telemetryTrack'>): GhostTelemetry[] {
+  return s.telemetryTrack === (s.mode === 'sandbox' ? s.sandboxTrack : null) ? s.telemetry : NO_TELEMETRY;
 }
 
 /**
@@ -88,6 +101,8 @@ export interface RacingLabState {
   brakeMap: boolean;
   ghostGenerations: number[];
   telemetry: GhostTelemetry[];
+  /** The Sandbox track `telemetry` was timed on, or null when it came from training. */
+  telemetryTrack: TrackSpec | null;
   hoveredGhost: number | null;
 
   camera: CameraMode;
@@ -136,6 +151,7 @@ export const useRacingLab = create<RacingLabState>((set, get) => ({
   brakeMap: true,
   ghostGenerations: [],
   telemetry: [],
+  telemetryTrack: null,
   hoveredGhost: null,
 
   camera: 'chase',

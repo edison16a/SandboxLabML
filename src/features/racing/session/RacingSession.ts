@@ -152,7 +152,7 @@ export class RacingSession {
     this.store.set({ ghostGenerations: gens });
     if (!isWatchSpeed(speed) || this.store.status !== 'running') await this.playGhosts(isWatchSpeed(speed) ? WATCH_SPEEDS[speed] : 1, true);
     const telemetry = await pool.replay.ghostTelemetry();
-    this.store.set({ telemetry });
+    this.store.set({ telemetry, telemetryTrack: null });
   }
 
   private async playGhosts(speed: number, loop: boolean): Promise<void> {

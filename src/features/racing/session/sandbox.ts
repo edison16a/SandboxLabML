@@ -66,7 +66,8 @@ export async function sendSandboxScene(pool: WorkerPool): Promise<void> {
     await pool.replay.stopGhosts();
     pool.ghosts.clear();
   } else await pool.replay.playGhosts(replaySpeed(), true);
-  s.set({ telemetry: await pool.replay.ghostTelemetry() });
+  // Tagged with the track it was timed on, so a result that lands after another edit is never drawn on the wrong road.
+  s.set({ telemetry: await pool.replay.ghostTelemetry(), telemetryTrack: s.sandboxTrack });
 }
 
 /** What the Sandbox panel drives. Training never runs through any of it. */

@@ -10,7 +10,7 @@ import { copiesOf, fieldSize, MAX_FIELD, setCopies, type FieldEntry } from '../.
 import { racingSession } from '../../session/RacingSession';
 import { drivenDistance, frontCopies } from '../../session/telemetry';
 import { trackFor } from '../../session/trackChoice';
-import { useRacingLab } from '../../state/labStore';
+import { placedTelemetry, useRacingLab } from '../../state/labStore';
 import { CopiesStepper } from './CopiesStepper';
 import { overlayButton, sectionLabel } from './overlay';
 
@@ -25,7 +25,7 @@ interface Result {
  * grid slot.
  */
 function useResults(): Map<number, Result> {
-  const telemetry = useRacingLab((s) => s.telemetry);
+  const telemetry = useRacingLab(placedTelemetry);
   const spec = useRacingLab((s) => s.sandboxTrack);
   return useMemo(() => {
     const length = spec ? trackFor(spec).length : 0;
