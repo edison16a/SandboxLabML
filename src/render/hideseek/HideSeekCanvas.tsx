@@ -61,6 +61,7 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
       sightLines: overlayCounts.sightLines,
       sandboxAgents: sandboxStats.agents,
       sandboxBoxes: sandboxStats.boxes,
+      sandboxLocked: sandboxStats.locked,
     }),
     [frame],
   );

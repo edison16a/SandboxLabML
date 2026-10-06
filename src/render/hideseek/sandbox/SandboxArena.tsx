@@ -22,7 +22,7 @@ import { SeenMarkers } from './SeenMarkers';
 const P = DEFAULT_HIDESEEK_PHYSICS;
 
 /** What is on the field, published with the render stats for tests. */
-export const sandboxStats = { agents: 0, boxes: 0, walls: 0 };
+export const sandboxStats = { agents: 0, boxes: 0, locked: 0, walls: 0 };
 
 interface Shape {
   hiders: number;
@@ -70,10 +70,16 @@ export function SandboxArena({ tier }: { tier: HsQualityTier }) {
     if (!curr) return;
     const c = sandboxCounts(curr);
     const kinds: BoxKind[] = [];
-    for (let b = 0; b < c.boxes; b++) kinds.push(curr[sandboxBoxAt(c.hiders + c.seekers, b) + 3] & BOX_PLANK ? 'plank' : 'cube');
+    let locked = 0;
+    for (let b = 0; b < c.boxes; b++) {
+      const bits = curr[sandboxBoxAt(c.hiders + c.seekers, b) + 3];
+      kinds.push(bits & BOX_PLANK ? 'plank' : 'cube');
+      if (isLocked(bits)) locked++;
+    }
     if (!shape || shape.hiders !== c.hiders || shape.seekers !== c.seekers || shape.kinds.join() !== kinds.join()) setShape({ hiders: c.hiders, seekers: c.seekers, kinds });
     sandboxStats.agents = c.hiders + c.seekers;
     sandboxStats.boxes = c.boxes;
+    sandboxStats.locked = locked;
     sandboxStats.walls = room.walls.length;
   }, -1);
 
@@ -91,7 +97,7 @@ export function SandboxArena({ tier }: { tier: HsQualityTier }) {
     return () => {
       frame.agentPose = null;
       off?.();
-      Object.assign(sandboxStats, { agents: 0, boxes: 0, walls: 0 });
+      Object.assign(sandboxStats, { agents: 0, boxes: 0, locked: 0, walls: 0 });
     };
   }, [frame, getFeed, invalidate]);
 
