@@ -66,8 +66,10 @@ export interface HideSeekPhysics {
     fov: number;
   };
   /**
-   * Height of sensor rays and sight lines, m. It sits below the 1 m box tops
-   * so boxes block both, which is what makes building shelters worth it.
+   * Height of sensor rays and sight lines, m. Eyes at 1.2 m would look
+   * straight over the 1 m boxes, so sight runs at half box height instead:
+   * walls and boxes both block it, which is what makes building shelters
+   * worth it. The shoulder sample points of the vision check sit here too.
    */
   rayHeight: number;
   spawn: {
