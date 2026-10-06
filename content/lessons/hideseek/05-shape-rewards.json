@@ -1,0 +1,106 @@
+{
+  "id": "hideseek-05-shape-rewards",
+  "course": "hideseek",
+  "order": 5,
+  "title": "Shape rewards without breaking them",
+  "summary": "Small extra rewards can point new brains toward good ideas. Keep them small and hard to game.",
+  "minutes": 8,
+  "steps": [
+    {
+      "id": "too-big-to-ignore",
+      "title": "Too big to ignore",
+      "body": "New brains almost never build cover by luck, so the idea of hiding behind boxes is hard to find. Shaping helps: small extra rewards for steps toward the goal, such as carrying a box.\n\nA teammate added one, and it is broken. It has no `* dt`, so it pays 1 point every tick, which is 30 points per second. Hiding is worth at most 21 points in a match, one per second after prep. A hider that carries a box for a second outscores the best hider there is, so evolution would breed box carriers instead of hiders.\n\nPress Check to see the test hider's score. Then make the bonus 0.1 point per second: `reward +0.1 * dt when agent.holding`.",
+      "starter": "// Your script from lesson 4. A teammate added a bonus for carrying boxes.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n    // Bonus for carrying a box.\n    reward +1 when agent.holding\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains,\n  // two against its past champions and one against the scripted players.\n  opponents(current: 2, hallOfFame: 2, scripted: 1)\n  // Keep the 20 most recent champions of each team.\n  hallOfFame(size: 20)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n",
+      "highlight": {
+        "lines": [19, 20]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "hiderReward",
+        "op": "<",
+        "value": 22,
+        "message": "The hider's score should stay under 22 points: at most 21 from hiding, plus a little."
+      },
+      "hints": [
+        "A reward that should pay per second is multiplied by dt.",
+        "Change the line to reward +0.1 * dt when agent.holding."
+      ],
+      "solution": "// Your script from lesson 4. A teammate added a bonus for carrying boxes.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n    // A small bonus for carrying a box: 0.1 point per second.\n    reward +0.1 * dt when agent.holding\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains,\n  // two against its past champions and one against the scripted players.\n  opponents(current: 2, hallOfFame: 2, scripted: 1)\n  // Keep the 20 most recent champions of each team.\n  hallOfFame(size: 20)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n"
+    },
+    {
+      "id": "only-while-it-helps",
+      "title": "Only while it helps",
+      "body": "Even a small bonus can be gamed. This one pays for carrying a box all match long, even while the seeker watches. Carrying a box helps a hider during prep, when it can build cover in peace. After that it is a distraction.\n\nAdd `and agent.prep` to the bonus, so that it only pays during prep.",
+      "starter": "// Your script from lesson 4. A teammate added a bonus for carrying boxes.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n    // A small bonus for carrying a box: 0.1 point per second.\n    reward +0.1 * dt when agent.holding\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains,\n  // two against its past champions and one against the scripted players.\n  opponents(current: 2, hallOfFame: 2, scripted: 1)\n  // Keep the 20 most recent champions of each team.\n  hallOfFame(size: 20)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n",
+      "highlight": {
+        "lines": [20]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "reward",
+            "scope": "tick",
+            "uses": ["agent.holding", "agent.prep"]
+          }
+        ],
+        "message": "The carrying bonus should read agent.holding and agent.prep."
+      },
+      "hints": [
+        "and joins two conditions. Both must be true for the reward to pay.",
+        "Change the line to reward +0.1 * dt when agent.holding and agent.prep."
+      ],
+      "solution": "// Your script from lesson 4. A teammate added a bonus for carrying boxes.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n    // A small bonus for carrying a box during prep: 0.1 point per second.\n    reward +0.1 * dt when agent.holding and agent.prep\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains,\n  // two against its past champions and one against the scripted players.\n  opponents(current: 2, hallOfFame: 2, scripted: 1)\n  // Keep the 20 most recent champions of each team.\n  hallOfFame(size: 20)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n"
+    },
+    {
+      "id": "events-pay-once",
+      "title": "Events pay once",
+      "body": "Some things last, like being hidden or holding a box. Rewards for them pay per second, with `* dt`. Other things happen once, like locking a box. `agent.justLocked` is true for exactly one tick, the tick the lock happens, so a reward for it has no `dt`.\n\nAdd a bonus of 0.2 points for each box locked during prep: `reward +0.2 when agent.justLocked and agent.prep`.",
+      "starter": "// Your script from lesson 4. A teammate added a bonus for carrying boxes.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n    // A small bonus for carrying a box during prep: 0.1 point per second.\n    reward +0.1 * dt when agent.holding and agent.prep\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains,\n  // two against its past champions and one against the scripted players.\n  opponents(current: 2, hallOfFame: 2, scripted: 1)\n  // Keep the 20 most recent champions of each team.\n  hallOfFame(size: 20)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n",
+      "highlight": {
+        "lines": [20]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "reward",
+            "scope": "tick",
+            "uses": ["agent.justLocked"]
+          }
+        ],
+        "message": "Add a reward that reads agent.justLocked."
+      },
+      "hints": [
+        "It is a reward line like the others, with no dt.",
+        "Add reward +0.2 when agent.justLocked and agent.prep under the carrying bonus."
+      ],
+      "solution": "// Your script from lesson 4. A teammate added a bonus for carrying boxes.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n    // A small bonus for carrying a box during prep: 0.1 point per second.\n    reward +0.1 * dt when agent.holding and agent.prep\n    // A one time bonus for each box locked during prep.\n    reward +0.2 when agent.justLocked and agent.prep\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains,\n  // two against its past champions and one against the scripted players.\n  opponents(current: 2, hallOfFame: 2, scripted: 1)\n  // Keep the 20 most recent champions of each team.\n  hallOfFame(size: 20)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n"
+    },
+    {
+      "id": "close-the-loophole",
+      "title": "Close the loophole",
+      "body": "Every bonus is a promise, and evolution finds every way to collect it. A hider can lock a box, unlock it and lock it again, and get paid each time.\n\nMake unlocking cost what locking pays: add `reward -0.2 when agent.justUnlocked`. Now flicking a lock on and off earns nothing. The only way to profit is to lock a box and leave it locked.",
+      "starter": "// Your script from lesson 4. A teammate added a bonus for carrying boxes.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n    // A small bonus for carrying a box during prep: 0.1 point per second.\n    reward +0.1 * dt when agent.holding and agent.prep\n    // A one time bonus for each box locked during prep.\n    reward +0.2 when agent.justLocked and agent.prep\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains,\n  // two against its past champions and one against the scripted players.\n  opponents(current: 2, hallOfFame: 2, scripted: 1)\n  // Keep the 20 most recent champions of each team.\n  hallOfFame(size: 20)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n",
+      "highlight": {
+        "lines": [22]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "reward",
+            "scope": "tick",
+            "uses": ["agent.justUnlocked"]
+          }
+        ],
+        "message": "Add a penalty that reads agent.justUnlocked."
+      },
+      "hints": [
+        "agent.justUnlocked is true on the tick a hider unlocks a box.",
+        "Add reward -0.2 when agent.justUnlocked under the lock bonus."
+      ],
+      "solution": "// Your script from lesson 4. A teammate added a bonus for carrying boxes.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n    // A small bonus for carrying a box during prep: 0.1 point per second.\n    reward +0.1 * dt when agent.holding and agent.prep\n    // A one time bonus for each box locked during prep.\n    reward +0.2 when agent.justLocked and agent.prep\n    // Unlocking pays it back, so flicking a lock on and off earns nothing.\n    reward -0.2 when agent.justUnlocked\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains,\n  // two against its past champions and one against the scripted players.\n  opponents(current: 2, hallOfFame: 2, scripted: 1)\n  // Keep the 20 most recent champions of each team.\n  hallOfFame(size: 20)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n"
+    }
+  ]
+}
