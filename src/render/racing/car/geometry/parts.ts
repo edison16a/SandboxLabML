@@ -25,7 +25,11 @@ export interface Detail {
   wheel: number;
   /** Brake discs, tread grooves and chamfered spokes: wheel detail the crowd car skips. */
   brakes: boolean;
-  /** Small parts only worth their triangles up close: mirror stalks, exhaust tips, wing slots. */
+  /**
+   * Detail only worth its triangles up close. It adds the mirrors, the door
+   * shut line, the intake blade and bevels, uses more steps on curved parts,
+   * and dices decals finely so they sit close to the paint.
+   */
   fine: boolean;
 }
 
