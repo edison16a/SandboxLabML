@@ -3,21 +3,41 @@
 import { useEffect, useMemo, useState } from 'react';
 import type uPlot from 'uplot';
 import { loadReferences, type BenchReferences } from '@/engine/bench';
-import type { GenerationRecord } from '@/engine/training/records';
+import type { EnvId } from '@/engine/env/types';
 import { axis, UPlotChart } from './UPlotChart';
 
 const TIER_COLORS = { beginner: '#5d6779', intermediate: '#8a94a7', advanced: '#ff9f43' } as const;
 
+/** What the chart says before the first benchmark lands. */
+const EMPTY: Record<EnvId, string> = {
+  racing: 'The champion is scored on held-out roads every 5 generations.',
+  hideseek: 'The champion pair plays the reference champions every 10 generations.',
+};
+
+/** Any record with a generation and, once benchmarked, its score. Racing and Hide and Seek records both fit. */
+interface Scored {
+  generation: number;
+  benchmark?: number;
+}
+
+interface Props {
+  env?: EnvId;
+  records: readonly Scored[];
+  height?: number;
+}
+
 /**
- * The run's benchmark score every fifth generation against the reference
- * scripts' median and 25 to 75% band. Scores come from held-out roads, so a
- * curve that falls while fitness rises is overfitting to the training track.
+ * The run's benchmark score against the reference scripts' median and 25
+ * to 75% band. In Racing the scores come from held-out roads, so a curve
+ * that falls while fitness rises is overfitting to the training track. In
+ * Hide and Seek they come from games against fixed reference champions,
+ * which co-evolved fitness cannot show, since both teams improve together.
  */
-export function BenchmarkChart({ records, height = 160 }: { records: GenerationRecord[]; height?: number }) {
+export function BenchmarkChart({ env = 'racing', records, height = 160 }: Props) {
   const [refs, setRefs] = useState<BenchReferences | null>(null);
   useEffect(() => {
-    void loadReferences('racing').then(setRefs);
-  }, []);
+    void loadReferences(env).then(setRefs);
+  }, [env]);
   const points = useMemo(() => records.filter((r) => r.benchmark !== undefined), [records]);
   const tiers = useMemo(() => refs?.references ?? [], [refs]);
 
@@ -58,7 +78,7 @@ export function BenchmarkChart({ records, height = 160 }: { records: GenerationR
   }, [tiers, points]);
 
   if (!points.length) {
-    return <div className="flex h-24 items-center justify-center rounded-md border border-dashed border-border text-center text-[12px] text-subtle">The champion is scored on held-out roads every 5 generations.</div>;
+    return <div className="flex h-24 items-center justify-center rounded-md border border-dashed border-border px-6 text-center text-[12px] text-subtle">{EMPTY[env]}</div>;
   }
   return (
     <div className="flex flex-col gap-1.5">
