@@ -41,6 +41,7 @@ export class GhostPlayer {
   private pacer: Pacer | null = null;
   private loop = true;
   private paused = false;
+  private speed = 1;
   private run = 0;
   private scratch = new Float32Array(RACING_SNAPSHOT.stride * 64);
 
@@ -55,6 +56,7 @@ export class GhostPlayer {
   play(speed: number, loop: boolean): void {
     this.stop();
     this.paused = false;
+    this.speed = speed;
     if (!this.setup || this.ghosts.length === 0) return;
     this.loop = loop;
     this.build();
@@ -79,7 +81,7 @@ export class GhostPlayer {
       () => this.sendFrame(),
       () => {
         this.sendFrame();
-        if (this.loop && runId === this.run) setTimeout(() => runId === this.run && this.replay(speed), 1200);
+        if (this.loop && runId === this.run) setTimeout(() => runId === this.run && this.replay(), 1200);
       },
     );
     this.pacer = pacer;
@@ -87,6 +89,7 @@ export class GhostPlayer {
   }
 
   setSpeed(speed: number): void {
+    this.speed = speed;
     this.pacer?.setSpeed(speed);
   }
 
@@ -95,10 +98,13 @@ export class GhostPlayer {
     this.pacer?.setPaused(paused);
   }
 
-  /** The loop's own restart. A pause pressed during the gap between laps still holds once the next one starts. */
-  private replay(speed: number): void {
+  /**
+   * The loop's own restart. It keeps the speed picked since the loop began,
+   * and a pause pressed during the gap between runs still holds afterwards.
+   */
+  private replay(): void {
     const paused = this.paused;
-    this.play(speed, true);
+    this.play(this.speed, true);
     if (paused) this.setPaused(true);
   }
 
