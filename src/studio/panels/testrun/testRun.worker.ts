@@ -1,14 +1,17 @@
 /// <reference lib="webworker" />
 import * as Comlink from 'comlink';
 import '@/workers/shared/loadScripts';
+import { recordPreview } from '@/engine/lessons/preview/record';
+import { previewBuffers, type PreviewResult } from '@/engine/lessons/preview/types';
 import { runTestEpisode } from './episode';
 import type { MatchTestRequest, MatchTestResult } from './hideseek/types';
 import type { TestRunRequest, TestRunResult } from './types';
 
 /**
- * A small worker for the Studio's Test run tab. One is started per run and
- * terminated afterwards, which is also how Cancel works, so a slow script
- * never freezes the editor. Hide and Seek code loads on its first match,
+ * A small worker for the Studio's Test run tab and the lesson preview. The
+ * tab starts one per run and terminates it afterwards, which is also how
+ * Cancel works, so a slow script never freezes the editor. The preview
+ * keeps one while it is open. Hide and Seek code loads on its first match,
  * since it brings the Rapier physics engine and a racing run never needs it.
  */
 const api = {
@@ -25,6 +28,12 @@ const api = {
     if (!result.ok) return result;
     const { time, hiderReward, seekerReward, hiderTotal, seekerTotal } = result.log;
     return Comlink.transfer(result, [time.buffer, hiderReward.buffer, seekerReward.buffer, hiderTotal.buffer, seekerTotal.buffer] as ArrayBuffer[]);
+  },
+
+  /** Records the drive or match a lesson check runs, for the preview beside the lesson. */
+  async preview(source: string): Promise<PreviewResult> {
+    const result = await recordPreview(source);
+    return result.ok ? Comlink.transfer(result, previewBuffers(result.preview)) : result;
   },
 };
 
