@@ -93,9 +93,9 @@ export function BenchmarkChart({ env = 'racing', records, height = 160 }: Props)
           This run
         </span>
         {tiers.map((t) => (
-          <span key={t.tier} className="flex items-center gap-1.5 capitalize">
+          <span key={t.tier} className="flex items-center gap-1.5">
             <span className="h-0.5 w-3" style={{ background: TIER_COLORS[t.tier] }} />
-            {t.tier} script
+            {t.tier[0].toUpperCase() + t.tier.slice(1)} script
           </span>
         ))}
       </div>
