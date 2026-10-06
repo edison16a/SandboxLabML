@@ -12,6 +12,8 @@ interface SavedTracksState {
   /** Resolves to the deleted row, for Undo, or undefined when it was already gone. */
   remove: (id: string) => Promise<TrackRow | undefined>;
   restore: (row: TrackRow) => Promise<void>;
+  /** Forgets the list after storage was wiped, so the next load reads it fresh. */
+  reset: () => void;
 }
 
 let reading: Promise<void> | null = null;
@@ -22,15 +24,21 @@ export const useSavedTracks = create<SavedTracksState>((set, get) => ({
   loaded: false,
   load: () => {
     if (get().loaded) return Promise.resolve();
-    reading ??= listTracks()
+    if (reading) return reading;
+    const read: Promise<void> = listTracks()
       .then((stored) => {
+        // A reset while this read was out means its rows may be gone already.
+        if (reading !== read) return;
         // A save that finished while the list was being read is already in the state; keep it on top.
         const fresh = get().tracks;
         set({ tracks: [...fresh, ...stored.filter((t) => !fresh.some((f) => f.id === t.id))], loaded: true });
       })
       .catch(() => undefined)
-      .finally(() => (reading = null));
-    return reading;
+      .finally(() => {
+        if (reading === read) reading = null;
+      });
+    reading = read;
+    return read;
   },
   save: async (name, spec) => {
     const saved = await saveTrack(name, spec);
@@ -46,5 +54,9 @@ export const useSavedTracks = create<SavedTracksState>((set, get) => ({
     await restoreTrack(row);
     // Read the list back so the track lands where its save time puts it.
     set({ tracks: await listTracks() });
+  },
+  reset: () => {
+    reading = null;
+    set({ tracks: [], loaded: false });
   },
 }));

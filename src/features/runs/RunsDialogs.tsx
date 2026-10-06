@@ -1,5 +1,6 @@
 'use client';
 
+import { useSavedTracks } from '@/features/racing/state/savedTracks';
 import type { RunRow } from '@/storage/db';
 import { deleteAllData } from '@/storage/runs';
 import { toast } from '@/ui/toast/toastStore';
@@ -63,6 +64,8 @@ export function RunsDialogs({ open, setOpen, actions, reload }: Props) {
           onClose={() => setOpen(null)}
           onConfirm={() =>
             void deleteAllData().then(() => {
+              // The Racing Sandbox keeps its saved track list in memory; drop it so it reads the empty table.
+              useSavedTracks.getState().reset();
               setOpen(null);
               toast.success('All data deleted');
               void reload();
