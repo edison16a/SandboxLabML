@@ -53,12 +53,21 @@ The cars on screen are built in code from one design in `src/render/racing/car`.
 
 The Sandbox races stored champions on any track through the replay worker, and training never sees it. Extra cars line up on a staggered grid that follows the road behind the start line, 6 m apart, or closer on a road too short for a full grid. Slot 0 is the start line itself, where training puts every car, so a lone champion still replays its lap tick for tick.
 
+## Hide and Seek Sandbox
+
+The Sandbox plays trained champions outside training: up to eight hiders and eight seekers in a preset room or one the user draws. `SandboxMatch` (in `src/engine/hideseek/sandbox/`) builds its own Rapier world from any walls and boxes and runs the same movement, grab, lock, sensor ray and sight code as a training match, in the same tick order. Those systems take a `PlayState` and check teams through each agent's team index, which is how one code path serves both.
+
+* Each player senses exactly its team's trained inputs. A brain learned against one opponent, so its opponent inputs follow the nearest opponent it can see, else the nearest one. Rays pass through teammates, so "agent on ray" still means an opponent.
+* A hider counts as seen when any seeker sees it. Brain outputs drive players directly and nothing is rewarded, like the benchmark, so the Sandbox cannot change a training result.
+* Its stream has its own port, because a frame's size follows the number of players and boxes. An 8 float header says how many of each follow; its first three fields match an arena snapshot, so the HUD reads either.
+* The room editor works on immutable rooms through the rules in `roomEdit.ts`, so undo is a list of earlier rooms. Rooms the user saves live in their own IndexedDB table and belong to no run, so every model can play in every room.
+
 ## Scripts
 
 SBL scripts are parsed with error recovery, checked against one API registry (names, kinds, units and scopes) and compiled into closure trees. Nothing ever evaluates generated JavaScript, so an imported run cannot carry code that runs on open. Generation operators like `speciate` and `breed` only fill a plan; the tested NEAT code does the work.
 
 ## Persistence
 
-Runs, per-generation champions and the newest three population checkpoints live in IndexedDB. Destructive actions keep the old run in Trash for seven days. A run exports to one JSON file with genomes in base64.
+Runs, per-generation champions and the newest three population checkpoints live in IndexedDB, next to the Sandbox rooms the user draws. Destructive actions keep the old run in Trash for seven days. A run exports to one JSON file with genomes in base64.
 
 Generation records and checkpoints are written through one queue, in the order they happened, because IndexedDB keeps no order between stores. A run reopens from the newest checkpoint its stored history reaches without a gap; later generations are dropped and come back exactly when training resumes.

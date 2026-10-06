@@ -5,10 +5,12 @@ import type { MatchState } from './state';
 import { updateDerived } from './sync';
 
 /**
- * Sandbox edits a person makes mid match. Each one changes the world right
- * away (the cached pose too, so the next snapshot shows it) and the
- * physics carries on from there on the next step. They are deterministic,
- * so a replay that makes the same edits on the same ticks matches.
+ * Edits to a running 1 v 1 match, used to set up test scenes. Each one
+ * changes the world right away (the cached pose too, so the next snapshot
+ * shows it) and the physics carries on from there on the next step. They
+ * are deterministic, so a replay that makes the same edits on the same
+ * ticks matches. The app's Sandbox plays SandboxMatch, whose edits live in
+ * sandbox/edits.ts.
  */
 
 /** Moves box `index` to (x, z), keeping its yaw. A held box is dropped first. */
