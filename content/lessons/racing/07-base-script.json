@@ -1,0 +1,100 @@
+{
+  "id": "racing-07-base-script",
+  "course": "racing",
+  "order": 7,
+  "title": "Build the base script",
+  "summary": "Turn the Beginner preset into the Intermediate one, then see how it scores on roads it has never seen.",
+  "minutes": 8,
+  "steps": [
+    {
+      "id": "standard-brain",
+      "title": "Start from Beginner",
+      "body": "This lesson rebuilds the Intermediate preset from the Beginner one. Intermediate is the base every run starts from when it has no script, so once yours matches, you know exactly what a default run does.\n\nThe starter is the Beginner preset. First, give it the brain from lesson 3: `racing-standard`, with nine rays, the speed and the heading error.",
+      "starter": "// Your own copy of the Beginner preset. By the end of this lesson it matches\n// the Intermediate preset: the rules every run without a script uses.\nscript \"Intermediate: built-in reward\" for racing v1\n\n// racing-starter sees three distance rays (left, ahead, right) and its speed.\nbrain racing-starter\n\n// Runs for every car, 30 times per second.\neach tick {\n  // Steer and press the pedal as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // One point for each checkpoint, one every 10 m of road.\n  reward +1 when checkpoint.passed\n\n  // Crossing the white edge line ends the run.\n  stop \"crash\" when car.offTrack\n  // So does going 5 seconds without getting further along the road.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// Runs once per generation and sets how the next brains are bred.\neach generation {\n  // Aim for 8 species of similar brains.\n  speciate(target: 8)\n  // The best 20% of each species become parents.\n  select(top: 20%)\n  // Mix two parents 75% of the time, then mutate a little.\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  // Copy each species' best brain into the next generation unchanged.\n  keepChampions()\n  // Always race on the Oval.\n  useTrack(id: \"oval\")\n}\n",
+      "highlight": {
+        "lines": [5, 6]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "inputs",
+        "op": "==",
+        "value": 11,
+        "message": "The brain should have 11 inputs: nine rays, the speed and the heading error."
+      },
+      "hints": [
+        "The brain line picks the network and its inputs.",
+        "Change brain racing-starter to brain racing-standard."
+      ],
+      "solution": "// Your own copy of the Beginner preset. By the end of this lesson it matches\n// the Intermediate preset: the rules every run without a script uses.\nscript \"Intermediate: built-in reward\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// Runs for every car, 30 times per second.\neach tick {\n  // Steer and press the pedal as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // One point for each checkpoint, one every 10 m of road.\n  reward +1 when checkpoint.passed\n\n  // Crossing the white edge line ends the run.\n  stop \"crash\" when car.offTrack\n  // So does going 5 seconds without getting further along the road.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// Runs once per generation and sets how the next brains are bred.\neach generation {\n  // Aim for 8 species of similar brains.\n  speciate(target: 8)\n  // The best 20% of each species become parents.\n  select(top: 20%)\n  // Mix two parents 75% of the time, then mutate a little.\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  // Copy each species' best brain into the next generation unchanged.\n  keepChampions()\n  // Always race on the Oval.\n  useTrack(id: \"oval\")\n}\n"
+    },
+    {
+      "id": "lap-bonus",
+      "title": "The lap bonus",
+      "body": "Checkpoints are the dense reward that lets evolution see small progress. The lap bonus is a big, rare prize on top, so a car that keeps going all the way round beats one that only gets far.\n\nAdd `reward +10 when lap.completed` right after the checkpoint reward.",
+      "starter": "// Your own copy of the Beginner preset. By the end of this lesson it matches\n// the Intermediate preset: the rules every run without a script uses.\nscript \"Intermediate: built-in reward\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// Runs for every car, 30 times per second.\neach tick {\n  // Steer and press the pedal as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // One point for each checkpoint, one every 10 m of road.\n  reward +1 when checkpoint.passed\n  // Add the lap bonus here.\n\n  // Crossing the white edge line ends the run.\n  stop \"crash\" when car.offTrack\n  // So does going 5 seconds without getting further along the road.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// Runs once per generation and sets how the next brains are bred.\neach generation {\n  // Aim for 8 species of similar brains.\n  speciate(target: 8)\n  // The best 20% of each species become parents.\n  select(top: 20%)\n  // Mix two parents 75% of the time, then mutate a little.\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  // Copy each species' best brain into the next generation unchanged.\n  keepChampions()\n  // Always race on the Oval.\n  useTrack(id: \"oval\")\n}\n",
+      "highlight": {
+        "lines": [15]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "reward",
+            "scope": "tick",
+            "uses": ["lap.completed"]
+          }
+        ],
+        "message": "Add a reward inside each tick that uses lap.completed."
+      },
+      "hints": [
+        "Lesson 2 had this exact line.",
+        "Replace the comment with reward +10 when lap.completed."
+      ],
+      "solution": "// Your own copy of the Beginner preset. By the end of this lesson it matches\n// the Intermediate preset: the rules every run without a script uses.\nscript \"Intermediate: built-in reward\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// Runs for every car, 30 times per second.\neach tick {\n  // Steer and press the pedal as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // One point for each checkpoint, one every 10 m of road.\n  reward +1 when checkpoint.passed\n  // A big bonus for finishing a whole lap.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends the run.\n  stop \"crash\" when car.offTrack\n  // So does going 5 seconds without getting further along the road.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// Runs once per generation and sets how the next brains are bred.\neach generation {\n  // Aim for 8 species of similar brains.\n  speciate(target: 8)\n  // The best 20% of each species become parents.\n  select(top: 20%)\n  // Mix two parents 75% of the time, then mutate a little.\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  // Copy each species' best brain into the next generation unchanged.\n  keepChampions()\n  // Always race on the Oval.\n  useTrack(id: \"oval\")\n}\n"
+    },
+    {
+      "id": "speed-first",
+      "title": "Speed first",
+      "body": "Add the small speed reward from lesson 4, `reward +0.002 * car.speed`, as the very first reward.\n\nOrder matters here for a subtle reason. The app's built-in reward adds speed first, then checkpoints, then laps. Computers round every addition a tiny bit, so adding the same points in another order can differ in the last digit. Matching the order makes your script and a default run score every car identically.",
+      "starter": "// Your own copy of the Beginner preset. By the end of this lesson it matches\n// the Intermediate preset: the rules every run without a script uses.\nscript \"Intermediate: built-in reward\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// Runs for every car, 30 times per second.\neach tick {\n  // Steer and press the pedal as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // Add a small reward for speed here.\n  // One point for each checkpoint, one every 10 m of road.\n  reward +1 when checkpoint.passed\n  // A big bonus for finishing a whole lap.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends the run.\n  stop \"crash\" when car.offTrack\n  // So does going 5 seconds without getting further along the road.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// Runs once per generation and sets how the next brains are bred.\neach generation {\n  // Aim for 8 species of similar brains.\n  speciate(target: 8)\n  // The best 20% of each species become parents.\n  select(top: 20%)\n  // Mix two parents 75% of the time, then mutate a little.\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  // Copy each species' best brain into the next generation unchanged.\n  keepChampions()\n  // Always race on the Oval.\n  useTrack(id: \"oval\")\n}\n",
+      "highlight": {
+        "lines": [13]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "reward",
+            "scope": "tick",
+            "uses": ["car.speed"]
+          }
+        ],
+        "message": "Add a reward inside each tick that uses car.speed."
+      },
+      "hints": [
+        "It goes where the comment is, above the checkpoint reward.",
+        "Replace the comment with reward +0.002 * car.speed."
+      ],
+      "solution": "// Your own copy of the Beginner preset. By the end of this lesson it matches\n// the Intermediate preset: the rules every run without a script uses.\nscript \"Intermediate: built-in reward\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// Runs for every car, 30 times per second.\neach tick {\n  // Steer and press the pedal as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point for each checkpoint, one every 10 m of road.\n  reward +1 when checkpoint.passed\n  // A big bonus for finishing a whole lap.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends the run.\n  stop \"crash\" when car.offTrack\n  // So does going 5 seconds without getting further along the road.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// Runs once per generation and sets how the next brains are bred.\neach generation {\n  // Aim for 8 species of similar brains.\n  speciate(target: 8)\n  // The best 20% of each species become parents.\n  select(top: 20%)\n  // Mix two parents 75% of the time, then mutate a little.\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  // Copy each species' best brain into the next generation unchanged.\n  keepChampions()\n  // Always race on the Oval.\n  useTrack(id: \"oval\")\n}\n"
+    },
+    {
+      "id": "match-the-preset",
+      "title": "Match the preset and compare",
+      "body": "Two differences are left. Intermediate gives up on a stuck car after 3 seconds, which keeps generations short. It also has no `useTrack`, so it trains on whatever road you pick when you create the run.\n\nPress Check to see the first difference. When your script matches, the check passes.\n\nThen train it for 50 generations and open the Bench tab. The benchmark drives your best brain on five roads it has never seen and scores it from 0 to 100, next to the Beginner, Intermediate and Advanced reference scripts.",
+      "starter": "// Your own copy of the Beginner preset. By the end of this lesson it matches\n// the Intermediate preset: the rules every run without a script uses.\nscript \"Intermediate: built-in reward\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// Runs for every car, 30 times per second.\neach tick {\n  // Steer and press the pedal as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point for each checkpoint, one every 10 m of road.\n  reward +1 when checkpoint.passed\n  // A big bonus for finishing a whole lap.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends the run.\n  stop \"crash\" when car.offTrack\n  // So does going 5 seconds without getting further along the road.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// Runs once per generation and sets how the next brains are bred.\neach generation {\n  // Aim for 8 species of similar brains.\n  speciate(target: 8)\n  // The best 20% of each species become parents.\n  select(top: 20%)\n  // Mix two parents 75% of the time, then mutate a little.\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  // Copy each species' best brain into the next generation unchanged.\n  keepChampions()\n  // Always race on the Oval.\n  useTrack(id: \"oval\")\n}\n",
+      "highlight": {
+        "lines": [22, 23, 36, 37]
+      },
+      "check": {
+        "kind": "compiles",
+        "matchesPreset": "racing-intermediate",
+        "message": "Your script should do exactly what the Intermediate preset does."
+      },
+      "hints": [
+        "Look at the stalled rule and at the end of the generation block.",
+        "Change 5 s to 3 s in the stalled rule, and delete the useTrack line and its comment."
+      ],
+      "solution": "// Your own copy of the Beginner preset. By the end of this lesson it matches\n// the Intermediate preset: the rules every run without a script uses.\nscript \"Intermediate: built-in reward\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// Runs for every car, 30 times per second.\neach tick {\n  // Steer and press the pedal as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point for each checkpoint, one every 10 m of road.\n  reward +1 when checkpoint.passed\n  // A big bonus for finishing a whole lap.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends the run.\n  stop \"crash\" when car.offTrack\n  // So does going 3 seconds without getting further along the road.\n  stop \"stalled\" when car.noProgress > 3 s\n}\n\n// Runs once per generation and sets how the next brains are bred.\neach generation {\n  // Aim for 8 species of similar brains.\n  speciate(target: 8)\n  // The best 20% of each species become parents.\n  select(top: 20%)\n  // Mix two parents 75% of the time, then mutate a little.\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  // Copy each species' best brain into the next generation unchanged.\n  keepChampions()\n}\n"
+    }
+  ]
+}
