@@ -10,7 +10,7 @@ import { hasFlag } from '../frame/snapshotRead';
 import { teamColor } from '../palette';
 import { MotionTrail } from '../showcase/MotionTrail';
 import type { useAgentGeometry } from '../showcase/ShowcaseAgent';
-import { readPlayer, sandboxFrame } from './sandboxRead';
+import { readPlayer, sandboxFrame, seekerIdle } from './sandboxRead';
 
 /** Body tints in a softened team color, the same as the showcase agents. */
 const BODY = ['#8fbcff', '#ff9aa4'];
@@ -71,7 +71,7 @@ export function SandboxAgent({ slot, team, geometry }: Props) {
       body.current.position.y = Math.sin(t * 2.3 + state.phase) * 0.022 * (1 - Math.min(1, speed / 2));
       body.current.rotation.z = -state.lean;
     }
-    const frozen = hasFlag(flags, FLAG_FROZEN);
+    const frozen = team === 1 ? seekerIdle(curr, flags) : hasFlag(flags, FLAG_FROZEN);
     const seen = team === 0 && hasFlag(flags, FLAG_SEEN);
     const seeing = team === 1 && hasFlag(flags, FLAG_SEEING);
     const pulse = seen ? 0.5 + 0.5 * Math.sin(t * 14) : 0;

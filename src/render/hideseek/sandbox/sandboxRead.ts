@@ -1,5 +1,6 @@
 import type { Rect } from '@/engine/hideseek/layouts/types';
 import { boxKindSize, DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
+import { FLAG_FROZEN } from '@/engine/hideseek/snapshot';
 import { BOX_LOCKED, BOX_PLANK, sandboxAgentAt, sandboxBoxAt, sandboxCounts, sandboxSnapshotLength } from '@/engine/hideseek/sandbox/snapshot';
 import { rayAabb, rayBox } from '@/engine/hideseek/sensing/raycast2d';
 import type { HsFrame } from '../frame/sceneContext';
@@ -41,6 +42,15 @@ export function readBox(frame: HsFrame, curr: Float32Array, players: number, ind
 
 export const isLocked = (bits: number) => (bits & BOX_LOCKED) !== 0;
 export const isPlank = (bits: number) => (bits & BOX_PLANK) !== 0;
+
+/**
+ * Whether a seeker is blind and still: frozen by the engine, or in prep.
+ * The frame before the first tick has no frozen flags yet, but its phase
+ * already says prep, so seekers never show a cone before the seek starts.
+ */
+export function seekerIdle(curr: Float32Array, flags: number): boolean {
+  return (flags & FLAG_FROZEN) !== 0 || curr[1] === 1;
+}
 
 /**
  * Distance from (x, z) along the unit direction (dx, dz) to the first wall
