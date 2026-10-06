@@ -47,6 +47,10 @@ export type HideSeekDirective = {
   layouts?: HideSeekLayoutId[];
   /** Past champions kept per team. */
   hallOfFameSize?: number;
+  /** Mix rooms inside rounds (see HideSeekTrainerOptions.mixLayouts). */
+  mixLayouts?: boolean;
+  /** Same start for every match of a round (see HideSeekTrainerOptions.sharedSeeds). */
+  sharedSeeds?: boolean;
 };
 
 /** How a co-evolution run is set up. Everything but the seed and inputs has a default. */

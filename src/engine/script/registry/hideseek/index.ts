@@ -2,7 +2,8 @@ import type { RegistrySlice } from '../types';
 import { HIDESEEK_ACTION_ENTRIES } from './actions';
 import { HIDESEEK_AGENT_ENTRIES } from './agent';
 import { HIDESEEK_BOX_ENTRIES } from './boxes';
-import { HIDESEEK_OPERATOR_ENTRIES } from './operators';
+import { HIDESEEK_MATCH_RULE_ENTRIES } from './matchRules';
+import { HIDESEEK_OPPONENT_ENTRIES } from './operators';
 import { HIDESEEK_RAY_ENTRIES } from './rays';
 import { agent } from './sensor';
 import { HIDESEEK_SIGHT_ENTRIES } from './sight';
@@ -21,7 +22,8 @@ export const HIDESEEK_SLICE: RegistrySlice = {
     ...HIDESEEK_BOX_ENTRIES,
     ...HIDESEEK_RAY_ENTRIES,
     ...HIDESEEK_ACTION_ENTRIES,
-    ...HIDESEEK_OPERATOR_ENTRIES,
+    ...HIDESEEK_OPPONENT_ENTRIES,
+    ...HIDESEEK_MATCH_RULE_ENTRIES,
   ],
   // The team slot is stable for a match, so each team's rand() stream is the same in training and in a replay.
   agentSeed: (v) => agent(v).index + 1,

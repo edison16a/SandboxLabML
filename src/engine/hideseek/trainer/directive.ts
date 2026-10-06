@@ -23,6 +23,8 @@ export function readHideSeekDirective(raw: unknown): HideSeekDirective {
   const out: HideSeekDirective = {};
   if (isNumber(r.prepSeconds)) out.prepSeconds = clamp(r.prepSeconds, 0, MAX_PREP_SECONDS);
   if (isNumber(r.hallOfFameSize)) out.hallOfFameSize = Math.round(clamp(r.hallOfFameSize, 1, MAX_HALL_OF_FAME));
+  if (typeof r.mixLayouts === 'boolean') out.mixLayouts = r.mixLayouts;
+  if (typeof r.sharedSeeds === 'boolean') out.sharedSeeds = r.sharedSeeds;
   if (Array.isArray(r.layouts)) {
     const known = r.layouts.filter((id): id is HideSeekLayoutId => (HIDESEEK_LAYOUT_IDS as readonly unknown[]).includes(id));
     if (known.length > 0) out.layouts = known;
@@ -46,6 +48,8 @@ export function applyHideSeekDirective(o: ResolvedTrainerOptions, d: HideSeekDir
   if (d.prepSeconds !== undefined) o.prepSeconds = d.prepSeconds;
   if (d.hallOfFameSize !== undefined) o.hallOfFameSize = d.hallOfFameSize;
   if (d.layouts && d.layouts.length > 0) o.layouts = [...d.layouts];
+  if (d.mixLayouts !== undefined) o.mixLayouts = d.mixLayouts;
+  if (d.sharedSeeds !== undefined) o.sharedSeeds = d.sharedSeeds;
   if (d.opponents) {
     try {
       o.opponents = checkOpponents({ ...o.opponents, ...d.opponents });

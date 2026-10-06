@@ -101,4 +101,12 @@ describe('directives', () => {
     t.applyDirective({ prepSeconds: 99 });
     expect(t.options.prepSeconds).toBe(20);
   });
+
+  it('switch room mixing and shared starts', () => {
+    const t = HideSeekTrainer.create(options());
+    t.applyDirective({ mixLayouts: false, sharedSeeds: true });
+    expect([t.options.mixLayouts, t.options.sharedSeeds]).toEqual([false, true]);
+    const plan = t.planGeneration();
+    for (const round of plan) expect(new Set(round.map((s) => `${s.layout} ${s.seed}`)).size).toBe(1);
+  });
 });
