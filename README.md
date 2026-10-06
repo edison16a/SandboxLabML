@@ -28,7 +28,7 @@ SandboxLabML is a hands-on lab for learning how machine learning actually behave
 
 * **Racing.** A hundred cars learn to drive a 3D circuit. The car model has a real grip limit, so braking and turning compete for the same tires and the cars have to discover braking points on their own. Ghosts of earlier champions drive alongside the live generation, with a speed trace and a brake map that show braking points moving later as they learn.
 * **Hide and Seek.** Hiders and seekers co-evolve in a physics arena with boxes they can grab and lock. Watch all 50 matches of a round at once, then click one to see it in a high quality showcase view, including what each agent sees.
-* **Script Studio.** The training loop is a small, safe language (SBL) that you can edit as blocks or as code. Both views edit one script, with docs, autocorrect and a test run built in. Guided lessons build a script step by step, and a benchmark scores any model against reference runs.
+* **Script Studio.** The training loop is a small, safe language (SBL) that you can edit as blocks or as code. Both views edit one script, with docs, autocorrect and a test run that plays one episode tick by tick. Thirteen guided lessons across both games build a script step by step beside a live preview, and a benchmark scores any model against reference runs.
 
 Everything runs locally. Training happens in Web Workers, runs are saved in your browser, and a run can be exported as a file to share.
 
