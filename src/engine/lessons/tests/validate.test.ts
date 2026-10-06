@@ -66,7 +66,7 @@ describe('validateLesson', () => {
   });
 
   it('applies the writing style to text and to script comments', () => {
-    const problems = validateLesson(lesson({ summary: 'Fast — and fun.', steps: [step('a', { starter: `// Go -> fast\n${STARTER}` }), step('b'), step('c')] }));
+    const problems = validateLesson(lesson({ summary: 'Fast \u2014 and fun.', steps: [step('a', { starter: `// Go -> fast\n${STARTER}` }), step('b'), step('c')] }));
     expect(problems).toContain('summary uses an em or en dash');
     expect(problems).toContain('a script comment uses an arrow in place of words');
   });
@@ -76,8 +76,8 @@ describe('styleProblems', () => {
   it('flags dashes, arrows and bullets used as punctuation', () => {
     expect(styleProblems('Brake first -- then turn.')).toEqual(['uses a double hyphen']);
     expect(styleProblems('Brake first - then turn.')).toEqual(['uses a dash as punctuation']);
-    expect(styleProblems('Speed → points')).toEqual(['uses an arrow in place of words']);
-    expect(styleProblems('Fast · clean')).toEqual(['uses a midline dot or bullet']);
+    expect(styleProblems('Speed \u2192 points')).toEqual(['uses an arrow in place of words']);
+    expect(styleProblems('Fast \u00b7 clean')).toEqual(['uses a midline dot or bullet']);
   });
 
   it('allows minus signs, ranges and hyphenated words', () => {

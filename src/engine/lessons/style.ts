@@ -5,11 +5,11 @@
  * slips one in fails before it ships.
  */
 const RULES: ReadonlyArray<{ pattern: RegExp; problem: string }> = [
-  { pattern: /[—–]/, problem: 'uses an em or en dash' },
+  { pattern: /[\u2014\u2013]/, problem: 'uses an em or en dash' },
   { pattern: /--/, problem: 'uses a double hyphen' },
   { pattern: /\s-\s/, problem: 'uses a dash as punctuation' },
-  { pattern: /[←-⇿]|->|=>/, problem: 'uses an arrow in place of words' },
-  { pattern: /[·•‧⋅]/, problem: 'uses a midline dot or bullet' },
+  { pattern: /[\u2190-\u21ff]|->|=>/, problem: 'uses an arrow in place of words' },
+  { pattern: /[\u00b7\u2022\u2027\u22c5]/, problem: 'uses a midline dot or bullet' },
 ];
 
 /** Problems with one piece of learner-facing text, as short phrases. Empty when it follows the rules. */
