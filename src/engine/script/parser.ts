@@ -57,9 +57,8 @@ function parseProgram(c: Cursor): Program {
       continue;
     }
     if (t.kind === 'ident' && t.text === 'brain' && !c.isPunct('.', 1)) {
-      const b = parseLine(c, true, true, () => parseBrain(c));
+      const b = parseLine(c, program.header === null, true, () => parseBrain(c));
       if (!b) continue;
-      b.blankBefore = false;
       if (program.brain) c.error('A script has one brain line.', b.span, 'duplicate-brain');
       else if (program.items.length > 0) c.error('Put the brain line right after the script line.', b.span, 'brain-position');
       program.brain = b;
