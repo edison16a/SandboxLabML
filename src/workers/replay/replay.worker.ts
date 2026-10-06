@@ -2,9 +2,8 @@
 import * as Comlink from 'comlink';
 import '@/workers/shared/loadScripts';
 import type { RacingSetup } from '@/engine/training/racingSetup';
-import type { Genome } from '@/engine/neat/types';
 import type { RunConfig } from '@/engine/training/runConfig';
-import { runBenchmark } from '@/engine/bench';
+import { loadReferences, runBenchmark, type BenchModel, type BenchReferences } from '@/engine/bench';
 import type { RoundReplay } from '@/engine/training/hideseekRecords';
 import { createArenaPool, type ArenaPool } from '@/engine/hideseek/world/pool';
 import { ArenaFrameWriter } from '../shared/arenaFrames';
@@ -23,8 +22,11 @@ let ghosts: GhostPlayer | null = null;
 let round: RoundPlayer | null = null;
 let sandbox: SandboxPlayer | null = null;
 let pool: Promise<ArenaPool> | null = null;
-/** One Rapier load and pool for the worker, shared by round replays and the Sandbox. */
+/** One Rapier load and pool for the worker, shared by round replays, the Sandbox and benchmarks. */
 const arenas = () => (pool ??= createArenaPool());
+let hsReferences: BenchReferences | null = null;
+/** The Hide and Seek reference champions, fetched once. A failed fetch is tried again next time. */
+const hideSeekReferences = async () => (hsReferences ??= await loadReferences('hideseek'));
 
 const api = {
   connect(streamPort: MessagePort) {
@@ -45,9 +47,14 @@ const api = {
   stopGhosts() {
     ghosts?.stop();
   },
-  /** Scores one champion on the benchmark at low priority, between ghost frames. */
-  async benchmark(config: RunConfig, genome: Genome) {
-    const result = await runBenchmark(config, genome);
+  /**
+   * Scores a Racing champion, or a Hide and Seek champion pair, on the
+   * benchmark at low priority: the exam pauses after every episode or game,
+   * so ghost frames and round replays keep playing in between.
+   */
+  async benchmark(config: RunConfig, model: BenchModel) {
+    const opts = config.env === 'hideseek' ? { pool: await arenas(), references: await hideSeekReferences() } : {};
+    const result = await runBenchmark(config, model, opts);
     return result ? { score: result.score, radar: result.radar } : null;
   },
   /** Hide and Seek: the round replay and the Sandbox share one arena stream, so starting one stops the other. */
