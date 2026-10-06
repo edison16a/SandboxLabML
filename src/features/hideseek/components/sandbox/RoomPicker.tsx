@@ -1,7 +1,7 @@
 'use client';
 
 import { Plus } from 'lucide-react';
-import { PRESET_ROOMS, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
+import { isPresetRoomId, PRESET_ROOMS, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import { cn } from '@/ui/cn';
 import { RoomThumb } from './RoomThumb';
 
@@ -11,6 +11,9 @@ interface Props {
   onPick: (id: string) => void;
   onNew: () => void;
 }
+
+/** A tile label: "Open room" fits as "Open". The user's own names stay exactly as typed. */
+const label = (room: SandboxRoom) => (isPresetRoomId(room.id) ? room.name.replace(/ room$/, '') : room.name);
 
 const tile = 'flex flex-col items-center gap-1 rounded-md border p-1 text-[11px] transition-colors focus-visible:outline-2 focus-visible:outline-accent';
 
@@ -49,7 +52,7 @@ export function RoomPicker({ rooms, value, onPick, onNew }: Props) {
             className={cn(tile, on ? 'border-accent/70 bg-accent/15 text-white' : 'border-white/10 bg-white/[0.03] text-white/65 hover:bg-white/10 hover:text-white')}
           >
             <RoomThumb room={room} size={52} />
-            <span className="w-full truncate text-center">{room.name.replace(' room', '')}</span>
+            <span className="w-full truncate text-center">{label(room)}</span>
           </button>
         );
       })}
