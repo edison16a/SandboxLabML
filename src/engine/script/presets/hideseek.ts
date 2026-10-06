@@ -26,7 +26,7 @@ export const HIDESEEK_PRESETS: readonly ScriptPreset[] = [
     name: 'Advanced',
     tier: 'advanced',
     env: 'hideseek',
-    description: 'Cover rewards, a shelter bonus, seeker approach shaping, a scripted sparring partner and a shrinking prep phase.',
+    description: 'Cover rewards for hiders, a shelter bonus, seeker approach shaping, a scripted sparring partner and a shrinking prep phase.',
     source: HIDESEEK_ADVANCED,
   },
 ];

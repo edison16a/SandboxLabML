@@ -1,8 +1,13 @@
 /**
- * Advanced Hide and Seek preset: the v2 training setup written out (cover
- * rewards, scripted sparring and mixed rooms), plus a shelter bonus,
- * seeker approach shaping, a hall of fame schedule that starts with two
- * sparring rounds, and a shrinking prep phase.
+ * Advanced Hide and Seek preset: cover rewards for hiders, scripted
+ * sparring and mixed rooms from the v2 setup, plus a shelter bonus, seeker
+ * approach shaping, a hall of fame schedule that starts with two sparring
+ * rounds, and a shrinking prep phase.
+ *
+ * Seekers keep the v1 rewards. Mirroring the cover rewards for them made a
+ * line of sight free, so turning to actually see the hider was worth half
+ * as much, and the benchmark showed those seekers learning to look far more
+ * slowly (see docs/benchmark.md).
  */
 export const HIDESEEK_ADVANCED = `// Advanced: real cover, shelters that stay built and a curriculum.
 script "Advanced: cover and shelters" for hideseek v1
@@ -25,9 +30,10 @@ each tick {
     // Shelter bonus: a little extra for every locked box while still hidden.
     reward +0.1 * dt * agent.boxesLocked when agent.hidden
   } else {
-    // The mirror image for seekers: a line of sight is worth 0, sight is worth +1.
+    // Seekers: +1 per second the hider is in sight, -1 per second it is not.
+    // Only actually seeing counts, so a seeker learns to turn and look.
     reward +1 * dt when agent.seesOpponent
-    reward -1 * dt when not agent.prep and not agent.exposed
+    reward -1 * dt when not agent.prep and not agent.seesOpponent
     // Approach shaping: before the first sighting, a little for getting close.
     reward +0.2 * dt when not agent.prep and agent.lastSeenAge > 30 s and agent.opponentDistance < 8 m
   }
