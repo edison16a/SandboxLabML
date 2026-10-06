@@ -1,33 +1,21 @@
 import { mixSeed, Rng } from '../../core/rng';
-import { makeTickIO, type AgentController, type TickIO } from '../../env/types';
-import type { Network } from '../../neat/network';
+import { makeTickIO, type TickIO } from '../../env/types';
 import { clearEvents, HIDER, SEEKER, type HideSeekAgent, type HideSeekTeam } from '../agents/agent';
-import { releaseBox, updateGrab } from '../agents/grab';
-import { setBoxLock, updateLock } from '../agents/lock';
+import { updateGrab } from '../agents/grab';
+import { updateLock } from '../agents/lock';
 import { driveAgent, updateFreeze } from '../agents/movement';
-import { HIDESEEK_OUTPUT_COUNT, hideSeekInputCount, type HideSeekInputConfig } from '../inputConfig';
+import { HIDESEEK_OUTPUT_COUNT, hideSeekInputCount } from '../inputConfig';
 import { sampleSetup, type MatchSetup } from '../layouts/spawn';
 import { HideSeekObserver } from '../sensing/observe';
 import { SensorRays } from '../sensing/rays';
 import { SightLines, updateVision } from '../sensing/vision';
+import { writeArenaSnapshot, writeRaySnapshot } from '../snapshot';
 import type { ArenaWorld } from '../world/arena';
 import { buildResult } from './result';
+import { sandboxMoveAgent, sandboxMoveBox, sandboxSetBoxLocked } from './sandbox';
 import { createMatchState, type MatchState } from './state';
 import { syncFromPhysics, updateClock, updateDerived } from './sync';
-import type { MatchResult } from './types';
-
-/** One team ready to play: a compiled brain, what it senses and how it is rewarded. */
-export interface HideSeekTeamSetup {
-  brain: Network;
-  inputs: HideSeekInputConfig;
-  controller: AgentController<HideSeekAgent>;
-}
-
-export interface HideSeekMatchOptions {
-  seed: number;
-  hider: HideSeekTeamSetup;
-  seeker: HideSeekTeamSetup;
-}
+import type { HideSeekMatchOptions, HideSeekTeamSetup, MatchResult } from './types';
 
 /**
  * One 1 v 1 match in one pooled world. Headless runs call `run`; watch
@@ -122,6 +110,16 @@ export class HideSeekMatch {
     return buildResult(this.state, this.state.arena.layout.id, this.seed);
   }
 
+  /** Writes this arena's 28 floats (see HIDESEEK_SNAPSHOT) into `out` at `offset`. */
+  snapshot(out: Float32Array, offset = 0): void {
+    writeArenaSnapshot(this.state, out, offset);
+  }
+
+  /** Writes the optional rays stream (see HIDESEEK_RAY_SNAPSHOT) into `out` at `offset`. */
+  snapshotRays(out: Float32Array, offset = 0): void {
+    writeRaySnapshot(this.state, this.rays, out, offset);
+  }
+
   /** The latest observation of agent `i` (0 hider, 1 seeker), for the inputs overlay. */
   observation(i: number): Float64Array {
     return this.obs[i];
@@ -129,32 +127,17 @@ export class HideSeekMatch {
 
   /** Sandbox: moves box `index` to (x, z) right away, keeping its yaw. A held box is dropped first. */
   moveBox(index: number, x: number, z: number): void {
-    const s = this.state;
-    const b = s.boxes[index];
-    if (b.heldBy >= 0) releaseBox(s, b.heldBy);
-    b.x = x;
-    b.z = z;
-    s.arena.teleport(s.arena.boxes[index], b);
-    updateDerived(s);
+    sandboxMoveBox(this.state, index, x, z);
   }
 
   /** Sandbox: locks a box for the hiders or frees it, whoever holds it. */
   setBoxLocked(index: number, locked: boolean): void {
-    setBoxLock(this.state, index, locked ? HIDER : -1);
-    updateDerived(this.state);
+    sandboxSetBoxLocked(this.state, index, locked);
   }
 
   /** Sandbox: moves an agent to a pose right away. It drops anything it carries. */
   moveAgent(team: HideSeekTeam, x: number, z: number, yaw: number): void {
-    const s = this.state;
-    const i = team === 'hider' ? HIDER : SEEKER;
-    const a = s.agents[i];
-    releaseBox(s, i);
-    a.x = x;
-    a.z = z;
-    a.yaw = yaw;
-    s.arena.teleport(s.arena.agents[i], a);
-    updateDerived(s);
+    sandboxMoveAgent(this.state, team, x, z, yaw);
   }
 
   /** Hands the world back to its pool. Call once the match is no longer needed. */

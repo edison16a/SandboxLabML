@@ -1,4 +1,5 @@
 import type { AgentController } from '../../env/types';
+import type { Network } from '../../neat/network';
 import type { Genome } from '../../neat/types';
 import type { HideSeekAgent } from '../agents/agent';
 import type { HideSeekInputConfig } from '../inputConfig';
@@ -72,4 +73,18 @@ export interface MatchResult {
   /** Why a controller stopped an agent, or null if it played to the end. */
   hiderStop: string | null;
   seekerStop: string | null;
+}
+
+/** One team ready to play: a compiled brain, what it senses and how it is rewarded. */
+export interface HideSeekTeamSetup {
+  brain: Network;
+  inputs: HideSeekInputConfig;
+  controller: AgentController<HideSeekAgent>;
+}
+
+/** What `HideSeekMatch` needs besides a world: the seed and both teams. */
+export interface HideSeekMatchOptions {
+  seed: number;
+  hider: HideSeekTeamSetup;
+  seeker: HideSeekTeamSetup;
 }
