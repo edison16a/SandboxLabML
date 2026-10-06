@@ -58,3 +58,13 @@ export function yawToQuat(yaw: number, out: Quat): Quat {
 export function quatToYaw(q: Quat): number {
   return Math.atan2(2 * (q.w * q.y - q.x * q.z), 1 - 2 * (q.y * q.y + q.z * q.z));
 }
+
+/** World x offset of a point `ahead` m in front of and `left` m to the left of a facing `yaw`. */
+export function offsetX(ahead: number, left: number, yaw: number): number {
+  return ahead * Math.cos(yaw) - left * Math.sin(yaw);
+}
+
+/** World z offset of a point `ahead` m in front of and `left` m to the left of a facing `yaw`. */
+export function offsetZ(ahead: number, left: number, yaw: number): number {
+  return -ahead * Math.sin(yaw) - left * Math.cos(yaw);
+}
