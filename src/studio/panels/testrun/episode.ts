@@ -55,7 +55,7 @@ function eventsOf(rc: RacingCar, wasOff: boolean): string[] {
 export function runTestEpisode(req: TestRunRequest): TestRunResult {
   const compiled = compileScript(req.source);
   const header = compiled.program.header;
-  if (header?.env === 'hideseek') return fail('Test runs for Hide and Seek scripts are not ready yet. The script still checks and saves as usual.');
+  if (header?.env === 'hideseek') return fail('This is a Hide and Seek script, so it plays a test match instead of a drive.');
   if (!compiled.script) {
     const first = compiled.diagnostics.find((d) => d.severity === 'error');
     return fail(first ? `Line ${lineOf(req.source, first.span.from)}: ${first.message}` : 'The script has errors. See the Problems tab.');

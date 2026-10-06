@@ -49,6 +49,6 @@ describe('test run episode', () => {
     expect(broken).toMatchObject({ ok: false });
     expect(!broken.ok && broken.message).toMatch(/^Line 3: /);
     const hs = runTestEpisode({ source: 'script "x" for hideseek v1\n', trackId: 'oval', brain: { kind: 'random', seed: 1 }, seed: 1 });
-    expect(!hs.ok && hs.message).toMatch(/Hide and Seek/);
+    expect(!hs.ok && hs.message).toMatch(/Hide and Seek script, so it plays a test match/);
   });
 });
