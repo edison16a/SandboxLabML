@@ -1,12 +1,19 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { Workspace } from '@/features/shell/Workspace';
+import { RacingLab } from '@/features/racing/components/RacingLab';
 
-export const metadata: Metadata = { title: 'Racing' };
+export const metadata: Metadata = {
+  title: 'Racing',
+  description: 'Watch a population of neural networks learn to drive, brake and lap a 3D circuit.',
+};
 
-export default function Page() {
+export default function RacingPage() {
   return (
     <Workspace>
-      <div className="p-8 text-muted">Racing</div>
+      <Suspense>
+        <RacingLab />
+      </Suspense>
     </Workspace>
   );
 }

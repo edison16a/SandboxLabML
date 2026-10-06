@@ -1,0 +1,96 @@
+'use client';
+
+import { Crosshair, ScanEye, Video } from 'lucide-react';
+import { Button } from '@/ui/primitives/Button';
+import { Segmented } from '@/ui/primitives/Segmented';
+import { Select } from '@/ui/primitives/Select';
+import { Tooltip } from '@/ui/primitives/Tooltip';
+import type { SnapshotStream } from '@/workers/client/snapshotStream';
+import { useRacingLab, type CameraMode, type QualitySetting, type ViewMode } from '../state/labStore';
+import { GhostMenu } from './GhostMenu';
+import { LiveStats } from './LiveStats';
+
+const glass = 'border-white/10 bg-black/45 text-white backdrop-blur-sm hover:bg-black/60';
+
+function FocusChip() {
+  const focus = useRacingLab((s) => s.focus);
+  const set = useRacingLab((s) => s.set);
+  if (focus.kind === 'champion') return null;
+  const label = focus.kind === 'car' ? `Car ${focus.index + 1}` : `Gen ${focus.generation + 1} ghost`;
+  return (
+    <Button size="sm" variant="secondary" className={glass} onClick={() => set({ focus: { kind: 'champion' } })}>
+      <Crosshair />
+      {label}
+      <span className="text-white/50">follow leader</span>
+    </Button>
+  );
+}
+
+/** Controls and stats layered over the viewport. */
+export function ViewportHud({ population }: { population: SnapshotStream | null }) {
+  const view = useRacingLab((s) => s.view);
+  const camera = useRacingLab((s) => s.camera);
+  const quality = useRacingLab((s) => s.quality);
+  const tier = useRacingLab((s) => s.activeTier);
+  const inputs = useRacingLab((s) => s.inputsOverlay);
+  const set = useRacingLab((s) => s.set);
+  return (
+    <>
+      <div className="pointer-events-none absolute top-3 left-3 flex max-w-[60%] flex-col gap-2">
+        <LiveStats stream={population} />
+        <div className="pointer-events-auto">
+          <FocusChip />
+        </div>
+      </div>
+      <div className="absolute top-3 right-3 flex flex-wrap items-center justify-end gap-1.5">
+        <Segmented<ViewMode>
+          label="What to show"
+          size="sm"
+          value={view}
+          onChange={(v) => set({ view: v })}
+          className="border-white/10 bg-black/45 backdrop-blur-sm"
+          overlay
+          options={[
+            { value: 'population', label: 'Population', title: 'The live generation' },
+            { value: 'overlay', label: 'Overlay', title: 'Ghosts of past champions' },
+            { value: 'both', label: 'Both' },
+          ]}
+        />
+        <GhostMenu />
+        <Tooltip content="Show what the car senses" shortcut="I">
+          <Button size="sm" variant="secondary" className={inputs ? 'border-accent/60 bg-accent/25 text-white' : glass} onClick={() => set({ inputsOverlay: !inputs })} aria-pressed={inputs}>
+            <ScanEye />
+            Inputs
+          </Button>
+        </Tooltip>
+        <Select<CameraMode>
+          label="Camera"
+          value={camera}
+          onChange={(v) => set({ camera: v })}
+          className={`h-7 w-28 ${glass}`}
+          options={[
+            { value: 'chase', label: 'Chase cam' },
+            { value: 'orbit', label: 'Orbit' },
+            { value: 'top', label: 'Top down' },
+            { value: 'free', label: 'Free' },
+          ]}
+        />
+        <Select<QualitySetting>
+          label="Quality"
+          value={quality}
+          onChange={(v) => set({ quality: v, activeTier: v === 'auto' ? tier : v })}
+          className={`h-7 w-32 ${glass}`}
+          options={[
+            { value: 'auto', label: `Auto (${tier})`, hint: 'Steps down if frames run long' },
+            { value: 'high', label: 'High', hint: 'Soft shadows, bloom, SMAA' },
+            { value: 'medium', label: 'Medium', hint: 'Shadows, no post-processing' },
+            { value: 'low', label: 'Low', hint: 'No shadows, fastest' },
+          ]}
+        />
+      </div>
+      <div className="pointer-events-none absolute right-3 bottom-3 hidden items-center gap-1 rounded-md bg-black/40 px-2 py-1 text-[11px] text-white/70 md:flex">
+        <Video className="size-3" /> Click a car to follow it
+      </div>
+    </>
+  );
+}
