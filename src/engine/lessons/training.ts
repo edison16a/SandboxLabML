@@ -6,6 +6,7 @@ import { envOptionsFor, TrackCache } from '../training/racingSetup';
 import { RacingTrainer } from '../training/racingTrainer';
 import { createRacingRunConfig } from '../training/runConfig';
 import { linkScriptCompiler } from './compilerLink';
+import { pause } from './pause';
 import type { PreparedRacing } from './prepare';
 
 /** Small and fixed, so a check trains in a few seconds and gives every learner the same answer. */
@@ -32,11 +33,6 @@ export const TRAINING_METRICS: readonly (keyof TrainingMetrics)[] = ['bestDistan
 export interface TrainingOptions {
   onProgress?: (fraction: number) => void;
   signal?: AbortSignal;
-}
-
-/** Lets the event loop run. Works the same in a browser tab, a worker and Node. */
-function pause(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 /**
