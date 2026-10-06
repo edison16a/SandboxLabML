@@ -16,6 +16,8 @@ import { NewRunDialog } from './NewRunDialog';
 import { SidePanel } from './SidePanel';
 import { ViewportHud } from './ViewportHud';
 import { InputsCard } from './InputsCard';
+import { SandboxPanel } from './SandboxPanel';
+import { TrackEditor } from '@/render/racing/TrackEditor';
 import { InputsTab } from './InputsTab';
 import { ModelTab } from './ModelTab';
 import { NetworkTab } from './NetworkTab';
@@ -26,6 +28,9 @@ export function RacingLab() {
   const ready = useRunBootstrap(params.get('run'));
   const run = useRacingLab((s) => s.run);
   const trackSpec = useRacingLab((s) => s.trackSpec);
+  const mode = useRacingLab((s) => s.mode);
+  const sandboxTrack = useRacingLab((s) => s.sandboxTrack);
+  const editing = useRacingLab((s) => s.editingTrack);
   const view = useRacingLab((s) => s.view);
   const hasTelemetry = useRacingLab((s) => s.telemetry.length > 0);
   const [newRun, setNewRun] = useState(false);
@@ -38,7 +43,7 @@ export function RacingLab() {
   }, [params]);
   useInspectSubscription(ready);
 
-  const spec = trackSpec ?? run?.racing?.track ?? null;
+  const spec = (mode === 'sandbox' ? sandboxTrack : null) ?? trackSpec ?? run?.racing?.track ?? null;
   const track = useMemo(() => (spec ? buildTrack(spec) : null), [spec]);
   const schema = useRunSchema();
   const streams = ready ? racingSession().streams : null;
@@ -48,12 +53,23 @@ export function RacingLab() {
       <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col">
         <div className="relative min-h-0 flex-1 bg-[#b9cfe6]">
           {track && streams ? (
-            <RacingCanvas track={track} population={streams.population} ghosts={streams.ghosts} schema={schema} />
+            <RacingCanvas track={track} population={streams.population} ghosts={streams.ghosts} schema={schema}>
+              {mode === 'sandbox' && editing && spec && (
+                <TrackEditor
+                  spec={spec}
+                  onChange={(next) => {
+                    useRacingLab.getState().set({ sandboxTrack: next });
+                    racingSession().sandboxChanged();
+                  }}
+                />
+              )}
+            </RacingCanvas>
           ) : (
             <div className="flex h-full items-center justify-center bg-bg text-[13px] text-muted">Starting the simulation workers...</div>
           )}
           {streams && <ViewportHud population={streams.population} />}
           <InputsCard />
+          <SandboxPanel />
         </div>
         {view !== 'population' && hasTelemetry && (
           <div className="h-36 shrink-0 border-t border-border bg-surface px-2 pt-1">

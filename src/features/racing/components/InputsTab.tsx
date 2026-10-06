@@ -17,6 +17,16 @@ export function InputsTab() {
   const hovered = useRacingLab((s) => s.hoveredInput);
   const focus = useRacingLab((s) => s.focus);
   const set = useRacingLab((s) => s.set);
+  const mode = useRacingLab((s) => s.mode);
+  const lesions = useRacingLab((s) => s.lesions);
+  const lesioned = new Set(Object.keys(lesions).map(Number));
+  const toggleLesion = (i: number) => {
+    const next = { ...lesions };
+    if (i in next) delete next[i];
+    else next[i] = 0;
+    set({ lesions: next });
+    racingSession().sandboxChanged();
+  };
   const schema = useRunSchema();
   const read = useCallback(() => {
     const streams = racingSession().streams;
@@ -45,10 +55,23 @@ export function InputsTab() {
           />
         </div>
       </div>
+      {mode === 'sandbox' && (
+        <p className="rounded-md border border-orange/30 bg-orange-soft px-3 py-2 text-[12px] text-orange">
+          Lesion test: click an input name to switch it off. The brain keeps acting without it, so you can see what it relies on. Training is never affected.
+        </p>
+      )}
       <p className="text-[12px] text-muted">
         {schema.length} inputs from the <span className="text-fg">{run?.blueprint.name}</span> blueprint. Hover a row to highlight that sensor in 3D and in the network.
       </p>
-      <InputBars schema={schema} outputs={RACING_OUTPUTS} read={read} hovered={hovered} onHover={(i) => set({ hoveredInput: i })} />
+      <InputBars
+        schema={schema}
+        outputs={RACING_OUTPUTS}
+        read={read}
+        hovered={hovered}
+        onHover={(i) => set({ hoveredInput: i })}
+        lesioned={lesioned}
+        onToggleLesion={mode === 'sandbox' ? toggleLesion : undefined}
+      />
     </div>
   );
 }

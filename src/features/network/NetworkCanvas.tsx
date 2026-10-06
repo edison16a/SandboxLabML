@@ -15,6 +15,7 @@ interface Props {
   hoveredInput: number | null;
   onHoverInput: (index: number | null) => void;
   showDisabled: boolean;
+  lesioned?: ReadonlySet<number>;
 }
 
 const MARGIN = { left: 128, right: 84, top: 16, bottom: 16 };
@@ -24,7 +25,7 @@ const MARGIN = { left: 128, right: 84, top: 16, bottom: 16 };
  * observation is run through a local copy of the network every frame so the
  * graph shows live activations. Hovering an input links to its ray in 3D.
  */
-export function NetworkCanvas({ genome, inputLabels, outputLabels, liveObservation, hoveredInput, onHoverInput, showDisabled }: Props) {
+export function NetworkCanvas({ genome, inputLabels, outputLabels, liveObservation, hoveredInput, onHoverInput, showDisabled, lesioned }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const nodes = useMemo(() => layoutGenome(genome), [genome]);
   const net = useMemo(() => new Network(genome), [genome]);
@@ -57,14 +58,14 @@ export function NetworkCanvas({ genome, inputLabels, outputLabels, liveObservati
         activity = new Map();
         for (let i = 0; i < net.nodeIds.length; i++) activity.set(net.nodeIds[i], net.values[i]);
       }
-      const o: DrawOptions = { width: size.w, height: size.h, inputLabels, outputLabels, activity, hoveredInput: hovered.current, showDisabled, margin: MARGIN };
+      const o: DrawOptions = { width: size.w, height: size.h, inputLabels, outputLabels, activity, hoveredInput: hovered.current, showDisabled, lesioned, margin: MARGIN };
       g.setTransform(dpr, 0, 0, dpr, 0, 0);
       drawNetwork(g, genome, nodes, o);
       raf = requestAnimationFrame(render);
     };
     raf = requestAnimationFrame(render);
     return () => cancelAnimationFrame(raf);
-  }, [genome, nodes, net, size, inputLabels, outputLabels, liveObservation, showDisabled]);
+  }, [genome, nodes, net, size, inputLabels, outputLabels, liveObservation, showDisabled, lesioned]);
 
   const onMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();

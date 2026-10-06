@@ -10,6 +10,8 @@ export interface DrawOptions {
   activity: Map<number, number> | null;
   hoveredInput: number | null;
   showDisabled: boolean;
+  /** Input slots switched off by a lesion test; their links are drawn as broken. */
+  lesioned?: ReadonlySet<number>;
   margin: { left: number; right: number; top: number; bottom: number };
 }
 
@@ -36,6 +38,7 @@ export function drawNetwork(g: CanvasRenderingContext2D, genome: Genome, nodes: 
   g.clearRect(0, 0, o.width, o.height);
   const pos = new Map(nodes.map((n) => [n.id, nodePoint(n, o)]));
   const hoveredId = o.hoveredInput !== null ? genome.inputs[o.hoveredInput] : null;
+  const cut = new Set([...(o.lesioned ?? [])].map((slot) => genome.inputs[slot]));
 
   for (const c of genome.connections) {
     const a = pos.get(c.from);
@@ -50,7 +53,11 @@ export function drawNetwork(g: CanvasRenderingContext2D, genome: Genome, nodes: 
     const dx = (b[0] - a[0]) * 0.45;
     g.moveTo(a[0], a[1]);
     g.bezierCurveTo(a[0] + dx, a[1], b[0] - dx, b[1], b[0], b[1]);
-    if (!c.enabled) {
+    if (cut.has(c.from)) {
+      g.setLineDash([2, 3]);
+      g.strokeStyle = 'rgba(255,95,95,0.75)';
+      g.lineWidth = 1.2;
+    } else if (!c.enabled) {
       g.setLineDash([3, 4]);
       g.strokeStyle = 'rgba(138,148,167,0.25)';
       g.lineWidth = 1;

@@ -52,6 +52,12 @@ export interface RacingLabState {
   /** Generation shown in the network view; null follows the latest. */
   networkGeneration: number | null;
   editingTrack: boolean;
+  /** Train runs the population; Sandbox replays champions on an editable track. */
+  mode: 'train' | 'sandbox';
+  sandboxTrack: TrackSpec | null;
+  /** Lesion test: input index mapped to the value it is forced to. Sandbox only. */
+  lesions: Record<number, number>;
+  selectedHandle: number | null;
 
   set: (patch: Partial<RacingLabState>) => void;
   addRecord: (record: GenerationRecord) => void;
@@ -84,6 +90,10 @@ export const useRacingLab = create<RacingLabState>((set, get) => ({
   panelTab: 'progress',
   networkGeneration: null,
   editingTrack: false,
+  mode: 'train',
+  sandboxTrack: null,
+  lesions: {},
+  selectedHandle: null,
 
   set: (patch) => set(patch),
   addRecord: (record) => {

@@ -46,6 +46,9 @@ export function NewRunDialog({ open, onOpenChange, initialTrack }: Props) {
   const [custom, setCustom] = useState<RacingBlueprint[]>([]);
   const [editing, setEditing] = useState(false);
   useEffect(() => {
+    if (open && initialTrack) setTrack(initialTrack);
+  }, [open, initialTrack]);
+  useEffect(() => {
     if (open) void listBlueprints('racing').then((list) => setCustom(list.filter((b): b is RacingBlueprint => b.env === 'racing')));
   }, [open]);
   const blueprints = [...RACING_BLUEPRINTS, ...custom];

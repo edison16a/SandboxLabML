@@ -12,6 +12,7 @@ import type { CoordinatorEvent } from '@/workers/coordinator/events';
 import { isWatchSpeed, WATCH_SPEEDS, type SpeedMode } from '@/workers/shared/protocol';
 import { useRacingLab } from '../state/labStore';
 import { selectGhosts } from './ghostSelection';
+import { scheduleSandboxScene, sendSandboxScene } from './sandbox';
 
 /**
  * Main-thread glue for the Racing lab: owns the workers, saves what the
@@ -115,11 +116,33 @@ export class RacingSession {
     if (state) await saveCheckpoint(run.id, state.population.generation, state);
   }
 
+  /** Switches to the Sandbox: champions replay on an editable copy of the track. Training keeps its own state. */
+  async enterSandbox(): Promise<void> {
+    const pool = await this.init();
+    const s = this.store;
+    if (!s.run?.racing) return;
+    if (s.status === 'running') await this.pause();
+    s.set({ mode: 'sandbox', sandboxTrack: structuredClone(s.trackSpec ?? s.run.racing.track), view: 'overlay', lesions: {}, focus: { kind: 'champion' } });
+    await sendSandboxScene(pool);
+  }
+
+  async exitSandbox(): Promise<void> {
+    this.store.set({ mode: 'train', editingTrack: false, lesions: {}, selectedHandle: null, view: 'both' });
+    this.ghostKey = '';
+    await this.refreshGhosts(true);
+  }
+
+  /** Call after any Sandbox change (track edit, lesion, ghost selection). */
+  sandboxChanged(): void {
+    if (this.pool) scheduleSandboxScene(this.pool);
+  }
+
   /** Rebuilds the ghost list from the current selection and restarts the replay if it changed. */
   async refreshGhosts(force = false): Promise<void> {
     const pool = this.pool;
-    const { run, records, ghostSelection, replayBlocked, speed } = this.store;
+    const { run, records, ghostSelection, replayBlocked, speed, mode } = this.store;
     if (!pool || !run || replayBlocked) return;
+    if (mode === 'sandbox') return this.sandboxChanged();
     const gens = selectGhosts(ghostSelection, records.length);
     const key = `${run.id}:${gens.join(',')}`;
     if (key === this.ghostKey && !force) return;
@@ -161,6 +184,7 @@ export class RacingSession {
         break;
       case 'live-start':
         this.store.set({ liveGeneration: e.generation });
+        if (this.store.mode === 'sandbox') break;
         // Ghosts restart with every live generation so they race the new cars from the same line.
         void this.playGhosts(e.speed, false);
         break;

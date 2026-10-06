@@ -24,6 +24,8 @@ export function NetworkTab() {
   const hoveredInput = useRacingLab((s) => s.hoveredInput);
   const set = useRacingLab((s) => s.set);
   const [showDisabled, setShowDisabled] = useState(false);
+  const lesions = useRacingLab((s) => s.lesions);
+  const lesioned = useMemo(() => new Set(Object.keys(lesions).map(Number)), [lesions]);
   const [playing, setPlaying] = useState(false);
 
   const followGen = focus.kind === 'ghost' ? focus.generation : records.length - 1;
@@ -79,6 +81,7 @@ export function NetworkTab() {
           hoveredInput={hoveredInput}
           onHoverInput={(i) => set({ hoveredInput: i })}
           showDisabled={showDisabled}
+          lesioned={lesioned}
         />
       </div>
       <div className="flex flex-col gap-2 border-t border-border px-4 py-3">

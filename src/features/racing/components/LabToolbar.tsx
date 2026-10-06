@@ -1,6 +1,6 @@
 'use client';
 
-import { Pause, Play, Plus, SkipForward } from 'lucide-react';
+import { FlaskConical, Pause, Play, Plus, SkipForward } from 'lucide-react';
 import { Button } from '@/ui/primitives/Button';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import { Badge } from '@/ui/primitives/Badge';
@@ -21,6 +21,7 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
   const run = useRacingLab((s) => s.run);
   const gen = useRacingLab((s) => s.liveGeneration);
   const records = useRacingLab((s) => s.records);
+  const mode = useRacingLab((s) => s.mode);
   const simSeconds = records.reduce((s, r) => s + r.simSeconds, 0);
   const running = status === 'running';
   const session = racingSession();
@@ -32,7 +33,7 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
           variant="primary"
           size="lg"
           className="w-28 justify-center"
-          onClick={() => void (running ? session.pause() : session.start())}
+          onClick={() => void (running ? session.pause() : mode === 'sandbox' ? session.exitSandbox().then(() => session.start()) : session.start())}
           disabled={!run}
           aria-label={running ? 'Pause' : 'Train'}
         >
@@ -63,6 +64,12 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
             {run.name}
           </span>
         )}
+        <Tooltip content="Replay champions on a track you can edit, and switch inputs off">
+          <Button variant={mode === 'sandbox' ? 'primary' : 'outline'} onClick={() => void (mode === 'sandbox' ? session.exitSandbox() : session.enterSandbox())} disabled={!records.length}>
+            <FlaskConical />
+            Sandbox
+          </Button>
+        </Tooltip>
         <Tooltip content="Start a new run" shortcut="N">
           <Button variant="outline" onClick={onNewRun}>
             <Plus />
