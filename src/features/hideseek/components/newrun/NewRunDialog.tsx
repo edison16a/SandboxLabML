@@ -6,6 +6,7 @@ import { blueprintInputCount } from '@/engine/blueprints/shape';
 import type { HideSeekBlueprint } from '@/engine/blueprints/types';
 import { HIDESEEK_LAYOUT_IDS, HIDESEEK_LAYOUTS } from '@/engine/hideseek/layouts/presets';
 import type { HideSeekLayoutId } from '@/engine/hideseek/layouts/types';
+import { presetRoom } from '@/engine/hideseek/sandbox/room';
 import { createHideSeekRunConfig } from '@/engine/training/hideseekRunConfig';
 import { ScriptPicker } from '@/features/scripts/ScriptPicker';
 import type { ScriptChoice } from '@/features/scripts/scriptChoice';
@@ -17,7 +18,7 @@ import { Field, TextInput } from '@/ui/primitives/Field';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { HS_LAST_RUN_KEY } from '../../hooks/useHideSeekBootstrap';
 import { hideSeekSession } from '../../session/HideSeekSession';
-import { LayoutThumb } from './LayoutThumb';
+import { RoomThumb } from '../RoomThumb';
 
 interface Props {
   open: boolean;
@@ -100,7 +101,7 @@ export function NewRunDialog({ open, onOpenChange, initialScript }: Props) {
               const on = layouts.includes(id);
               return (
                 <button key={id} type="button" onClick={() => toggleLayout(id)} className={cn(choice(on), 'flex flex-col items-center gap-1.5')} aria-pressed={on}>
-                  <LayoutThumb layout={HIDESEEK_LAYOUTS[id]} className={on ? 'text-fg' : 'text-muted'} />
+                  <RoomThumb room={presetRoom(id)} className={on ? 'text-fg' : 'text-muted'} />
                   <span className="text-[13px] font-medium">{HIDESEEK_LAYOUTS[id].name}</span>
                   <span className="text-center text-[11px] text-muted">{HIDESEEK_LAYOUTS[id].description}</span>
                 </button>

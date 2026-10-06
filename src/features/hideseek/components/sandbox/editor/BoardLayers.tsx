@@ -3,12 +3,23 @@ import type { Region } from '@/engine/hideseek/layouts/types';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import type { SandboxBox, SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import { boxRect } from '@/engine/hideseek/sandbox/roomEdit';
+import { HS_COLORS } from '@/render/hideseek/palette';
 
 export const HALF = DEFAULT_HIDESEEK_PHYSICS.arena.size / 2;
 const OUTER = DEFAULT_HIDESEEK_PHYSICS.arena.outerWallThickness;
 const LINES = Array.from({ length: 2 * HALF + 1 }, (_, i) => i - HALF);
 
-export const BOARD_COLORS = { hider: '#4c9aff', seeker: '#ff5f6d', wall: '#dfe3ea', cube: '#d2b080', plank: '#c09a6b', boxEdge: '#7d5f3c', accent: '#4c9aff', bad: '#ff5f5f' };
+/** Team and crate colors come from the 3D palette, so the board, the thumbnails and the arena agree. */
+export const BOARD_COLORS = {
+  hider: HS_COLORS.hider,
+  seeker: HS_COLORS.seeker,
+  wall: '#dfe3ea',
+  cube: HS_COLORS.cube,
+  plank: HS_COLORS.plank,
+  boxEdge: '#7d5f3c',
+  accent: HS_COLORS.hider,
+  bad: '#ff5f5f',
+};
 
 /** The floor grid: a line every meter, stronger every five, and the outer walls round it. */
 export const BoardGrid = memo(function BoardGrid() {
