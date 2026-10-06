@@ -20,6 +20,8 @@ export function SandboxRoomMesh({ walls, wallsKey }: { walls: Rect[]; wallsKey: 
   const skirting = useDisposable(() => skirtingGeometry(walls), [wallsKey]);
   const floor = useDisposable(() => floorGeometry(FLOOR_TILE_METERS), []);
   const strips = useDisposable(() => stripGeometry(), []);
+  // These materials match ArenaRoom's line for line. ArenaRoom is frozen until the Hide and Seek visual upgrade
+  // merges. That merge must move both onto one shared roomMaterials() factory, or the Sandbox keeps the old look.
   const mats = useDisposable(() => {
     const floorMaps = sharedFloorMaps();
     const plaster = sharedPlasterMaps();

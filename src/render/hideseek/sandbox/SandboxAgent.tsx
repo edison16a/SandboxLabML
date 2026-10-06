@@ -34,6 +34,9 @@ export function SandboxAgent({ slot, team, geometry }: Props) {
   const root = useRef<THREE.Group>(null);
   const body = useRef<THREE.Group>(null);
   const color = teamColor(team);
+  // These materials and BODY match ShowcaseAgent's line for line, so a player looks like the showcase agent.
+  // ShowcaseAgent is frozen until the Hide and Seek visual upgrade merges. That merge must move both onto one
+  // shared agentMaterials(team) factory, or the Sandbox keeps the old look.
   const mats = useDisposable(() => {
     const list = {
       body: new THREE.MeshStandardMaterial({ color: BODY[team], roughness: 0.26, metalness: 0.02, envMapIntensity: 1.1 }),

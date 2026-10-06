@@ -50,6 +50,9 @@ function SandboxBox({ index, kind, players, geo, onPointerDown, onDoubleClick }:
   const lock = useRef<THREE.Group>(null);
   const shackle = useRef<THREE.Mesh>(null);
   const base = kind === 'cube' ? HS.cube : HS.plank;
+  // These materials, LOCK_SECONDS and the lock animation below match ShowcaseBoxes line for line. ShowcaseBoxes is
+  // frozen until the Hide and Seek visual upgrade merges. That merge must move both onto one shared
+  // crateMaterials(kind) factory and lock animation, or the Sandbox keeps the old look.
   const mats = useDisposable(() => {
     const list = {
       crate: new THREE.MeshStandardMaterial({ color: base, roughness: 0.55, metalness: 0, envMapIntensity: 0.6 }),
