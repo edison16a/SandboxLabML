@@ -28,8 +28,9 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
   const session = hideSeekSession();
 
   return (
-    // On a phone the row scrolls sideways instead of making the whole page wider than the screen.
-    <div className="no-scrollbar flex h-14 shrink-0 items-center gap-3 overflow-x-auto border-t border-border bg-bg px-3 [&>*]:shrink-0">
+    // The row reads its own width, not the window's, since the side panel can be dragged wider. On a
+    // phone it scrolls sideways instead of making the whole page wider than the screen.
+    <div className="no-scrollbar @container flex h-14 shrink-0 items-center gap-3 overflow-x-auto border-t border-border bg-bg px-3 [&>*]:shrink-0">
       <Tooltip content={running ? 'Pause training' : 'Start training'} shortcut="Space">
         <Button variant="primary" size="lg" className="w-28 justify-center" onClick={() => void (running ? session.pause() : session.start())} disabled={!run} aria-label={running ? 'Pause' : 'Train'}>
           {running ? <Pause /> : <Play />}
@@ -42,12 +43,12 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
         </Button>
       </Tooltip>
       <HsSpeedBar value={speed} onChange={(v) => void session.setSpeed(v)} />
-      <div className="hidden min-w-0 items-center gap-4 pl-2 md:flex">
+      <div className="hidden min-w-0 items-center gap-4 pl-2 @min-[56rem]:flex">
         <div className="flex flex-col leading-tight">
           <span className="text-[11px] text-muted">Generation</span>
           <span className="tabular font-mono text-[15px] font-semibold">{gen + 1}</span>
         </div>
-        <div className="hidden flex-col leading-tight xl:flex">
+        <div className="hidden flex-col leading-tight @min-[60rem]:flex">
           <span className="text-[11px] text-muted">Simulated</span>
           <span className="tabular font-mono text-[13px]">{formatDuration(simSeconds)}</span>
         </div>
@@ -55,7 +56,7 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
       </div>
       <div className="ml-auto flex min-w-0 items-center gap-2">
         {run && (
-          <span className="hidden max-w-56 truncate text-[13px] text-muted 2xl:inline" title={run.name}>
+          <span className="hidden max-w-56 truncate text-[13px] text-muted @min-[72rem]:inline" title={run.name}>
             {run.name}
           </span>
         )}
@@ -68,13 +69,13 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
             aria-label="Sandbox"
           >
             <FlaskConical />
-            <span className="max-sm:hidden">Sandbox</span>
+            <span className="@max-[52rem]:hidden">Sandbox</span>
           </Button>
         </Tooltip>
         <Tooltip content="Start a new run" shortcut="N">
           <Button variant="outline" onClick={onNewRun} aria-label="New run">
             <Plus />
-            <span className="max-sm:hidden">New run</span>
+            <span className="@max-[52rem]:hidden">New run</span>
           </Button>
         </Tooltip>
       </div>

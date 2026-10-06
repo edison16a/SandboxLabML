@@ -54,8 +54,9 @@ export function ViewportHud({ population }: { population: SnapshotStream | null 
           <FocusChip />
         </div>
       </div>
-      {/* On a phone the controls become one row across the top that scrolls sideways, with the stats below it. */}
-      <div className="no-scrollbar absolute top-3 right-3 flex flex-wrap items-center justify-end gap-1.5 max-sm:left-3 max-sm:flex-nowrap max-sm:justify-start max-sm:overflow-x-auto max-sm:[&>*]:shrink-0">
+      {/* On a phone the controls become one row across the top that scrolls sideways, with the stats below it.
+          Wider up, they wrap before they would run into the stats on a narrow viewport. */}
+      <div className="no-scrollbar absolute top-3 right-3 flex flex-wrap items-center justify-end gap-1.5 max-sm:left-3 sm:max-w-[calc(100%-20rem)] max-sm:flex-nowrap max-sm:justify-start max-sm:overflow-x-auto max-sm:[&>*]:shrink-0">
         <Segmented<ViewMode>
           data-tour="view"
           label="What to show"

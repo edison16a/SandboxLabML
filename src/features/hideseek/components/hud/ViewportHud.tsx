@@ -47,7 +47,7 @@ export function ViewportHud({ viewport }: { viewport: React.RefObject<HTMLDivEle
         <ViewControls />
       </div>
       {overview && streaming && (
-        <div className="absolute top-[58px] left-1/2 -translate-x-1/2 max-xl:hidden">
+        <div className="absolute top-[58px] left-1/2 -translate-x-1/2 @max-[60rem]:hidden">
           <HiddenHistogram />
         </div>
       )}

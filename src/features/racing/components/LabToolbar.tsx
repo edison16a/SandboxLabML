@@ -29,8 +29,9 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
   const session = racingSession();
 
   return (
-    // On a phone the row scrolls sideways instead of making the whole page wider than the screen.
-    <div className="no-scrollbar flex h-14 shrink-0 items-center gap-3 overflow-x-auto border-t border-border bg-bg px-3 [&>*]:shrink-0">
+    // The row reads its own width, not the window's, since the side panel can be dragged wider. On a
+    // phone it scrolls sideways instead of making the whole page wider than the screen.
+    <div className="no-scrollbar @container flex h-14 shrink-0 items-center gap-3 overflow-x-auto border-t border-border bg-bg px-3 [&>*]:shrink-0">
       <Tooltip content={running ? 'Pause training' : 'Start training'} shortcut="Space">
         <Button
           variant="primary"
@@ -53,12 +54,12 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
       <span data-tour="speed">
         <SpeedBar value={speed} onChange={(v) => void session.setSpeed(v)} />
       </span>
-      <div className="hidden min-w-0 items-center gap-4 pl-2 md:flex">
+      <div className="hidden min-w-0 items-center gap-4 pl-2 @min-[56rem]:flex">
         <div className="flex flex-col leading-tight">
           <span className="text-[11px] text-muted">Generation</span>
           <span className="tabular font-mono text-[15px] font-semibold">{gen + 1}</span>
         </div>
-        <div className="hidden flex-col leading-tight xl:flex">
+        <div className="hidden flex-col leading-tight @min-[60rem]:flex">
           <span className="text-[11px] text-muted">Simulated</span>
           <span className="tabular font-mono text-[13px]">{formatDuration(simSeconds)}</span>
         </div>
@@ -69,14 +70,14 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
         <Tooltip content="Replay champions on a track you can edit, and switch inputs off">
           <Button data-tour="sandbox" variant={mode === 'sandbox' ? 'primary' : 'outline'} onClick={() => void (mode === 'sandbox' ? session.exitSandbox() : session.enterSandbox())} disabled={!records.length} aria-label="Sandbox">
             <FlaskConical />
-            <span className="max-sm:hidden">Sandbox</span>
+            <span className="@max-[52rem]:hidden">Sandbox</span>
           </Button>
         </Tooltip>
         <HelpMenu />
         <Tooltip content="Start a new run" shortcut="N">
           <Button variant="outline" onClick={onNewRun} aria-label="New run">
             <Plus />
-            <span className="max-sm:hidden">New run</span>
+            <span className="@max-[52rem]:hidden">New run</span>
           </Button>
         </Tooltip>
       </div>

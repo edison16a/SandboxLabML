@@ -46,7 +46,7 @@ export function HideSeekLab() {
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
       <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col lg:min-w-[700px]">
-        <div ref={viewport} className="relative min-h-0 flex-1 bg-bg" data-testid="hs-viewport">
+        <div ref={viewport} className="@container relative min-h-0 flex-1 bg-bg" data-testid="hs-viewport">
           {streams ? (
             <HideSeekCanvas getFeed={getFeed} feeds={feeds} schemas={schemas} onMoveBox={onMoveBox} onToggleLock={onToggleLock} />
           ) : (
