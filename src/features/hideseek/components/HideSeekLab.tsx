@@ -46,7 +46,7 @@ export function HideSeekLab() {
   const streams = ready ? session.streams : null;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
       <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col">
         <div ref={viewport} className="relative min-h-0 flex-1 bg-bg" data-testid="hs-viewport">
           {streams ? (

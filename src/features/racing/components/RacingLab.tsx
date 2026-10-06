@@ -53,7 +53,7 @@ export function RacingLab() {
   const streams = ready ? racingSession().streams : null;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
       <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col">
         <div className="relative min-h-0 flex-1 bg-[#b9cfe6]">
           {track && streams ? (
