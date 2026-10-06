@@ -20,8 +20,10 @@
  * v1|starter|cover, --opponents current,hallOfFame,scripted (like 2,1,1),
  * --mix true|false, --shared true|false, --prep seconds, --preset id (an
  * SBL preset drives both teams and its generation block, and its brain
- * wins over --inputs), --quiet (no per generation rows).
+ * wins over --inputs), --script file (the same for a script file),
+ * --quiet (no per generation rows).
  */
+import { readFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { HIDESEEK_BLUEPRINTS } from '../src/engine/blueprints/presets';
 import { HideSeekTrainer, type HideSeekGenerationStats, type HideSeekRewardId, type HideSeekSetupId, type HideSeekTrainerOptions } from '../src/engine/hideseek';
@@ -78,27 +80,35 @@ function bench(generation: number, y: Yardsticks, seconds: number): string {
   );
 }
 
+/** SBL source from --preset (a preset id) or --script (a file), or undefined for the built-in rewards. */
+function scriptSource(args: Record<string, string>): string | undefined {
+  if (args.script) return readFileSync(args.script, 'utf8');
+  if (!args.preset) return undefined;
+  const preset = findScriptPreset(args.preset);
+  if (!preset) throw new Error(`Unknown preset "${args.preset}".`);
+  return preset.source;
+}
+
 async function main(): Promise<void> {
   const args = parseArgs();
   const generations = Number(args.generations ?? 60);
   const every = Math.max(1, Number(args.every ?? 10));
   const ends = Math.max(1, Number(args.matches ?? 6));
   const between = Math.max(1, Number(args['curve-matches'] ?? 3));
-  const preset = args.preset ? findScriptPreset(args.preset) : undefined;
-  if (args.preset && !preset) throw new Error(`Unknown preset "${args.preset}".`);
-  const host = preset ? createScriptHost(preset.source) : undefined;
-  const brain = preset ? (compileScript(preset.source).script?.header.brain ?? null) : null;
+  const source = scriptSource(args);
+  const host = source ? createScriptHost(source) : undefined;
+  const brain = source ? (compileScript(source).script?.header.brain ?? null) : null;
   const trainer = HideSeekTrainer.create(optionsFrom(args, host?.customSensors.length ?? 0, brain), host);
   const farm = new Farm(Number(args.workers ?? Math.min(2, Math.max(0, availableParallelism() - 1))));
   const o = trainer.options;
   const opp = o.opponents;
   console.log(
     `Hide and Seek measurement: setup ${o.setup}, reward ${o.reward}, ${o.populationSize} per team, rounds ${opp.current} current + ${opp.hallOfFame} hall of fame + ` +
-      `${opp.scripted} scripted, mixed rooms ${o.mixLayouts}, shared seeds ${o.sharedSeeds}, prep ${o.prepSeconds ?? 'default'}, seed ${o.seed}${preset ? `, preset ${preset.id}` : ''}`,
+      `${opp.scripted} scripted, mixed rooms ${o.mixLayouts}, shared seeds ${o.sharedSeeds}, prep ${o.prepSeconds ?? 'default'}, seed ${o.seed}${source ? `, script ${args.preset ?? args.script}` : ''}`,
   );
   const timed = async (perGenome: number) => {
     const t0 = performance.now();
-    const y = await allYardsticks(farm, trainer, perGenome, preset?.source);
+    const y = await allYardsticks(farm, trainer, perGenome, source);
     console.log(bench(trainer.generation, y, (performance.now() - t0) / 1000));
     return y;
   };
@@ -107,7 +117,7 @@ async function main(): Promise<void> {
   const t0 = performance.now();
   while (trainer.generation < generations) {
     const g0 = performance.now();
-    const results = await farm.runPlan(trainer.planGeneration(), preset?.source);
+    const results = await farm.runPlan(trainer.planGeneration(), source);
     const stats = trainer.completeGeneration(results, {}, host);
     if (!args.quiet) console.log(row(stats, (performance.now() - g0) / 1000));
     if (trainer.generation === generations) last = await timed(ends);

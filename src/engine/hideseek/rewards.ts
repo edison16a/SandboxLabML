@@ -18,13 +18,17 @@ function winning(a: HideSeekAgent): boolean {
  * so each tick adds value times dt. Nothing is scored during prep. In the
  * seek phase the hider earns +1/s while hidden and -1/s while seen, and the
  * seeker earns +1/s while it sees the hider and -1/s while it does not, so
- * the game is zero sum. As a script:
+ * the game is zero sum. As a script (the Intermediate preset, which a test
+ * holds to exactly the same results):
  *
  *   act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)
- *   reward +1 per second when hidden (hiders)
- *   reward -1 per second when seen (hiders)
- *   reward +1 per second when seesOpponent (seekers)
- *   reward -1 per second when not seesOpponent (seekers)
+ *   if agent.isHider {
+ *     reward +1 * dt when agent.hidden
+ *     reward -1 * dt when agent.seen
+ *   } else {
+ *     reward +1 * dt when agent.seesOpponent
+ *     reward -1 * dt when not agent.prep and not agent.seesOpponent
+ *   }
  */
 export const v1HideSeekController: AgentController<HideSeekAgent> = {
   customSensorCount: 0,
