@@ -40,6 +40,11 @@ function useResults(): Map<number, Result> {
   }, [telemetry, spec]);
 }
 
+/** Header and rows share these, so each heading sits over its column. Copies matches the stepper, which is 78 px wide. */
+const rowPadding = 'pr-0.5 pl-2';
+const resultColumn = 'w-[92px]';
+const copiesColumn = 'w-[78px]';
+
 /** Dot color for each row: the ghost color of the row's front car, which the stream puts first among its copies. */
 function rowColors(field: readonly FieldEntry[]): Map<number, string> {
   const total = fieldSize(field);
@@ -79,21 +84,21 @@ export function FieldEditor() {
           {total} of {MAX_FIELD} cars
         </span>
       </div>
-      <div className="flex items-center gap-2 px-2 text-[10px] font-medium tracking-wide text-white/40 uppercase">
+      <div className={cn('flex items-center gap-2 text-[10px] font-medium tracking-wide text-white/40 uppercase', rowPadding)}>
         <span className="flex-1">Champion</span>
-        <span className="w-[92px] text-right">On this track</span>
-        <span className="w-[82px] text-center">Copies</span>
+        <span className={cn(resultColumn, 'text-right')}>On this track</span>
+        <span className={cn(copiesColumn, 'text-center')}>Copies</span>
       </div>
       <ul className="flex flex-col gap-1">
         {field.map((e) => {
           const result = results.get(e.generation);
           return (
-            <li key={e.generation} className="flex h-8 items-center gap-2 rounded-md bg-white/[0.04] pr-0.5 pl-2">
+            <li key={e.generation} className={cn('flex h-8 items-center gap-2 rounded-md bg-white/[0.04]', rowPadding)}>
               <span className="size-2 shrink-0 rounded-full" style={{ background: colors.get(e.generation) }} />
               <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-white">
                 Gen {e.generation + 1}
               </span>
-              <span className={cn('w-[92px] truncate text-right text-[11px]', result?.crashed ? 'text-danger' : 'text-white/60')}>{result?.text ?? 'Timing'}</span>
+              <span className={cn(resultColumn, 'truncate text-right text-[11px]', result?.crashed ? 'text-danger' : 'text-white/60')}>{result?.text ?? 'Timing'}</span>
               <CopiesStepper label={`Gen ${e.generation + 1}`} value={e.copies} max={e.copies + MAX_FIELD - total} canRemove={total > 1} onChange={(n) => change(e.generation, n)} />
             </li>
           );
