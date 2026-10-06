@@ -44,8 +44,8 @@ describe('co-evolution trainer', () => {
     expect(trainer.hallOfFame.hiders.size).toBe(3);
   });
 
-  it('plans four rounds: current pairings first, then the hall of fame for both teams', () => {
-    const trainer = HideSeekTrainer.create(options({ rounds: 4, layouts: ['open', 'corridor'] }));
+  it('plans the v1 rounds: current pairings first, then the hall of fame for both teams', () => {
+    const trainer = HideSeekTrainer.create(options({ setup: 'v1', rounds: 4, layouts: ['open', 'corridor'] }));
     trainer.runGeneration(pool);
     const plan = trainer.planGeneration();
     expect(plan.map((r) => r.length)).toEqual([10, 10, 20, 20]);

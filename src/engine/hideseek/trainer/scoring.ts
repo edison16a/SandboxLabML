@@ -30,6 +30,9 @@ export function scoreGeneration(plan: MatchSpec[][], results: MatchResult[][], h
   let locks = 0;
   let moved = 0;
   let grabs = 0;
+  let exposed = 0;
+  const vsSeeker = { n: 0, sum: 0 };
+  const vsHider = { n: 0, sum: 0 };
   plan.forEach((round, r) =>
     round.forEach((spec, k) => {
       const res = results[r][k];
@@ -47,6 +50,9 @@ export function scoreGeneration(plan: MatchSpec[][], results: MatchResult[][], h
         current++;
         currentHidden += res.hiddenShare;
       }
+      if (hs >= 0 && spec.seeker.scripted) tally(vsSeeker, res.hiddenShare);
+      if (ss >= 0 && spec.hider.scripted) tally(vsHider, res.seenShare);
+      exposed += res.exposedShare ?? 0;
       n++;
       hidden += res.hiddenShare;
       seen += res.seenShare;
@@ -68,6 +74,14 @@ export function scoreGeneration(plan: MatchSpec[][], results: MatchResult[][], h
       locksPerMatch: per(locks),
       boxesMovedPerMatch: per(moved),
       grabsPerMatch: per(grabs),
+      exposedShare: per(exposed),
+      ...(vsSeeker.n > 0 ? { scriptedHiddenShare: vsSeeker.sum / vsSeeker.n } : {}),
+      ...(vsHider.n > 0 ? { scriptedSeenShare: vsHider.sum / vsHider.n } : {}),
     },
   };
+}
+
+function tally(t: { n: number; sum: number }, v: number): void {
+  t.n++;
+  t.sum += v;
 }
