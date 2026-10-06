@@ -79,6 +79,8 @@ export class RacingSession {
   async start(generations?: number): Promise<void> {
     const pool = await this.init();
     if (!this.store.run) return;
+    // Training always runs with the Sandbox closed, whichever button started it.
+    if (this.store.mode === 'sandbox') await this.exitSandbox();
     await pool.coordinator.start(generations);
     if (this.store.speed === 'max') await pool.replay.stopGhosts();
     else await pool.replay.setGhostsPaused(false);
@@ -98,6 +100,8 @@ export class RacingSession {
     this.store.set({ speed: mode });
     await pool.coordinator.setSpeed(mode);
     if (isWatchSpeed(mode)) await pool.replay.setGhostSpeed(WATCH_SPEEDS[mode]);
+    // The Sandbox race carries on at real time under Turbo and Max; only training would use them.
+    else if (this.store.mode === 'sandbox') await pool.replay.setGhostSpeed(1);
     else if (viewportHeld(this.store)) await pool.replay.stopGhosts();
     else if (wasMax) await this.refreshGhosts(true);
     else if (wasWatch) await this.playGhosts(1, true);
