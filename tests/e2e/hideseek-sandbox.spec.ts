@@ -5,7 +5,7 @@ function instance(page: Page, key: string) {
   return async () => page.evaluate((k) => window.__sbl?.stats.instances[k] ?? -1, key);
 }
 
-/** The Sandbox card's status line, e.g. "Prep 0.0 s" or "Seek 4.2 s". */
+/** The Sandbox card's status line, a countdown like the HUD chip: "Prep 9.0 s left", then "Seek 20.8 s left". */
 function status(page: Page) {
   return page.getByTestId('sandbox-card').getByRole('status');
 }
@@ -87,7 +87,8 @@ test('the Sandbox plays a room built in the editor with many players, and keeps 
   await expect.poll(instance(page, 'sandboxBoxes'), { timeout: 30_000 }).toBe(1);
 
   await page.getByRole('button', { name: 'Run', exact: true }).click();
-  await expect(status(page)).toContainText(/Seek|Prep [1-9]/, { timeout: 90_000 });
+  // The 9 s prep counts down from the start, so any other reading means the match is running.
+  await expect(status(page)).toContainText(/Seek|Prep [0-8]\./, { timeout: 90_000 });
   await page.getByTestId('sandbox-card').getByRole('button', { name: 'Pause', exact: true }).click();
   // Let the last frames in flight land, then the clock must stand still.
   await page.waitForTimeout(1000);
@@ -95,7 +96,7 @@ test('the Sandbox plays a room built in the editor with many players, and keeps 
   await page.waitForTimeout(1500);
   await expect(status(page)).toHaveText(paused);
   await page.getByRole('button', { name: 'Restart', exact: true }).click();
-  await expect(status(page)).toContainText('Prep 0.0 s', { timeout: 30_000 });
+  await expect(status(page)).toContainText('Prep 9.0 s left', { timeout: 30_000 });
 
   // Lock the cube from above with a double click.
   await page.getByRole('combobox', { name: 'Camera' }).click();

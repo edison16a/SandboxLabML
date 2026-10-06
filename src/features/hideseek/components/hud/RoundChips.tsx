@@ -1,10 +1,8 @@
 'use client';
 
-import { hideSeekSettingsOf } from '@/engine/training/hideseekRunConfig';
-import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { HIDESEEK_LAYOUTS } from '@/engine/hideseek/layouts/presets';
 import { cn } from '@/ui/cn';
-import { useArenaPulse } from '../../hooks/useArenaPulse';
+import { useArenaPulse, usePhaseLeft } from '../../hooks/useArenaPulse';
 import { useHideSeekLab } from '../../state/hideSeekStore';
 
 /** One glass chip over the viewport: a small caps label above a value. */
@@ -24,15 +22,12 @@ export function Chip({ label, children, className }: { label: string; children: 
  */
 export function RoundChips() {
   const pulse = useArenaPulse();
-  const run = useHideSeekLab((s) => s.run);
+  const left = usePhaseLeft(pulse);
   const gen = useHideSeekLab((s) => s.liveGeneration);
   const round = useHideSeekLab((s) => s.round);
   const source = useHideSeekLab((s) => s.source);
   const replayOf = useHideSeekLab((s) => s.replayOf);
   const mode = useHideSeekLab((s) => s.mode);
-  const physics = run?.env === 'hideseek' ? hideSeekSettingsOf(run).physics : DEFAULT_HIDESEEK_PHYSICS;
-  const prepSeconds = physics.matchSeconds * physics.prepShare;
-  const left = pulse.prep ? prepSeconds - pulse.time : physics.matchSeconds - pulse.time;
   const shown = source === 'replay' && replayOf && mode === 'train' ? { ...replayOf, label: 'Replay' } : round ? { ...round, label: 'Round' } : null;
   const share = pulse.seeking > 0 ? Math.round((100 * pulse.hidden) / pulse.seeking) : null;
   return (
@@ -46,7 +41,7 @@ export function RoundChips() {
       )}
       {pulse.arenas > 0 && (
         <Chip label={pulse.prep ? 'Prep' : 'Seek'} className={pulse.prep ? '' : 'border-seeker/30'}>
-          {Math.max(0, left).toFixed(1)} s
+          {left.toFixed(1)} s
         </Chip>
       )}
       {pulse.arenas > 0 && (

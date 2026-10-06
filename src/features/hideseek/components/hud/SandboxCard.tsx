@@ -5,7 +5,7 @@ import { ChevronDown, Copy, Pencil } from 'lucide-react';
 import { emptyRoom, isPresetRoomId, roomById, SANDBOX_LIMITS, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import { cn } from '@/ui/cn';
 import { Slider } from '@/ui/primitives/Slider';
-import { useArenaPulse } from '../../hooks/useArenaPulse';
+import { useArenaPulse, usePhaseLeft } from '../../hooks/useArenaPulse';
 import { hideSeekSession } from '../../session/HideSeekSession';
 import { draftRoom } from '../../session/sandboxRooms';
 import { useHideSeekLab } from '../../state/hideSeekStore';
@@ -47,6 +47,7 @@ export function SandboxCard() {
   const inputsShown = useHideSeekLab((s) => s.inputsOverlay);
   const open = unfolded ?? !inputsShown;
   const pulse = useArenaPulse();
+  const left = usePhaseLeft(pulse);
   if (mode !== 'sandbox' || photo || !records.length) return null;
   const control = hideSeekSession().sandbox;
   const first = records[0].generation;
@@ -71,7 +72,7 @@ export function SandboxCard() {
           <ChevronDown className={cn('size-3.5 transition-transform', !open && '-rotate-90')} />
           Sandbox
         </button>
-        <SandboxStatus pulse={pulse} />
+        <SandboxStatus pulse={pulse} left={left} />
       </div>
       {open && (
         // The setup scrolls on short screens; the status above and the run controls below stay put.

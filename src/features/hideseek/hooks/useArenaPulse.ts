@@ -1,7 +1,9 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
+import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { sandboxHiderCount } from '@/engine/hideseek/sandbox/snapshot';
+import { hideSeekSettingsOf } from '@/engine/training/hideseekRunConfig';
 import { STRIDE } from '@/render/hideseek/frame/snapshotRead';
 import { hideSeekSession } from '../session/HideSeekSession';
 import { useHideSeekLab } from '../state/hideSeekStore';
@@ -90,4 +92,15 @@ function subscribe(listener: () => void): () => void {
  */
 export function useArenaPulse(): ArenaPulse {
   return useSyncExternalStore(subscribe, () => current, () => EMPTY);
+}
+
+/**
+ * Seconds left in the phase on screen: prep time left during prep, then
+ * match time left. Every HUD clock counts down with this, so they agree.
+ */
+export function usePhaseLeft(pulse: ArenaPulse): number {
+  const run = useHideSeekLab((s) => s.run);
+  const physics = run?.env === 'hideseek' ? hideSeekSettingsOf(run).physics : DEFAULT_HIDESEEK_PHYSICS;
+  const end = pulse.prep ? physics.matchSeconds * physics.prepShare : physics.matchSeconds;
+  return Math.max(0, end - pulse.time);
 }
