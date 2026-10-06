@@ -65,6 +65,20 @@ describe('validateLesson', () => {
     expect(problems).toContain('step 3 (c) pattern 1: unknown statement kind loop');
   });
 
+  it("checks Hide and Seek metrics against that course's own list", () => {
+    const problems = validateLesson(
+      lesson({
+        course: 'hideseek',
+        steps: [
+          step('a', { check: { kind: 'testRun', metric: 'distance', op: '>', value: 1, message: 'x' } }),
+          step('b', { check: { kind: 'metricAbove', generations: 10, metric: 'locksPerMatch', value: 0, message: 'x' } }),
+          step('c', { check: { kind: 'testRun', metric: 'hiderReward', op: '>', value: 0, message: 'x' } }),
+        ],
+      }),
+    );
+    expect(problems).toEqual(['step 1 (a): a test match cannot measure distance', 'step 2 (b): generations must be a whole number from 1 to 5']);
+  });
+
   it('applies the writing style to text and to script comments', () => {
     const problems = validateLesson(lesson({ summary: 'Fast \u2014 and fun.', steps: [step('a', { starter: `// Go -> fast\n${STARTER}` }), step('b'), step('c')] }));
     expect(problems).toContain('summary uses an em or en dash');
