@@ -38,12 +38,12 @@ export function LogoMark({ size = 28, pulse = false, className }: LogoMarkProps)
   );
 }
 
-/** Mark plus the "SandboxLab" + "ML" wordmark used in the header. */
-export function Logo({ pulse = false }: { pulse?: boolean }) {
+/** Mark plus the "SandboxLab" + "ML" wordmark used in the header. `wordmarkClassName` lets a tight header drop the words. */
+export function Logo({ pulse = false, wordmarkClassName }: { pulse?: boolean; wordmarkClassName?: string }) {
   return (
     <span className="flex items-center gap-2 select-none">
       <LogoMark pulse={pulse} />
-      <span className="text-[15px] font-semibold tracking-tight text-fg">
+      <span className={cn('text-[15px] font-semibold tracking-tight text-fg', wordmarkClassName)}>
         SandboxLab<span className="text-accent">ML</span>
       </span>
     </span>

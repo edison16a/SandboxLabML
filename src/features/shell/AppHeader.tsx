@@ -21,7 +21,8 @@ export function AppHeader({ right }: { right?: React.ReactNode }) {
   return (
     <header className="flex h-12 shrink-0 items-center gap-4 border-b border-border bg-bg px-4">
       <Link href="/" aria-label="SandboxLabML home" className="rounded-md">
-        <Logo />
+        {/* A phone keeps just the mark, so all four sections, GitHub and Settings fit on one row. */}
+        <Logo wordmarkClassName="max-sm:hidden" />
       </Link>
       <nav className="no-scrollbar flex min-w-0 items-center gap-0.5 overflow-x-auto" aria-label="Sections">
         {NAV.map(({ href, label, icon: Icon }) => {
