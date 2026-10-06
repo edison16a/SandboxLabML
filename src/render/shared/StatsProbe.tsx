@@ -1,7 +1,7 @@
 'use client';
 
 import { useFrame, useThree } from '@react-three/fiber';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 export interface RenderStats {
   fps: number;
@@ -22,15 +22,33 @@ declare global {
  * Publishes renderer counters on window.__sbl.stats twice a second. Browser
  * tests read these numbers instead of parsing pixels, and the dev overlay
  * shows them.
+ *
+ * three resets its counters at every render call, so with post-processing,
+ * shadow passes or picture in picture the numbers would only describe the
+ * last pass. With `wholeFrame` the probe takes over the reset and counts
+ * every pass of a frame together.
  */
-export function StatsProbe({ instances }: { instances?: () => Record<string, number> }) {
+export function StatsProbe({ instances, wholeFrame = false }: { instances?: () => Record<string, number>; wholeFrame?: boolean }) {
   const gl = useThree((s) => s.gl);
   const acc = useRef({ frames: 0, time: 0 });
+  const last = useRef({ calls: 0, triangles: 0 });
+  useEffect(() => {
+    if (!wholeFrame) return;
+    gl.info.autoReset = false;
+    return () => {
+      gl.info.autoReset = true;
+    };
+  }, [gl, wholeFrame]);
   useFrame((_, dt) => {
+    if (wholeFrame) {
+      // Runs before this frame renders, so the counters hold the whole previous frame.
+      last.current = { calls: gl.info.render.calls, triangles: gl.info.render.triangles };
+      gl.info.reset();
+    }
     acc.current.frames++;
     acc.current.time += dt;
     if (acc.current.time < 0.5) return;
-    const info = gl.info;
+    const info = wholeFrame ? { render: last.current } : gl.info;
     const mem = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory;
     window.__sbl = {
       stats: {

@@ -51,12 +51,32 @@ export class RayBuffer {
   add(x0: number, z0: number, x1: number, z1: number, y: number, closeness: number, highlighted: boolean, hit: boolean): void {
     if (this.n >= this.capacity) return;
     const i = this.n++;
-    this.pos.array.set([x0, y, z0, x1, y, z1], i * 6);
+    // Written element by element: thousands of rays a frame must not allocate.
+    const p = this.pos.array as Float32Array;
+    p[i * 6] = x0;
+    p[i * 6 + 1] = y;
+    p[i * 6 + 2] = z0;
+    p[i * 6 + 3] = x1;
+    p[i * 6 + 4] = y;
+    p[i * 6 + 5] = z1;
     if (highlighted) this.c.copy(HOT);
     else this.c.copy(FAR).lerp(NEAR, Math.min(1, Math.max(0, closeness)));
-    this.col.array.set([this.c.r * 0.6, this.c.g * 0.6, this.c.b * 0.6, this.c.r, this.c.g, this.c.b], i * 6);
-    this.dotPos.array.set(hit ? [x1, y, z1] : [x0, -1000, z0], i * 3);
-    this.dotCol.array.set([this.c.r, this.c.g, this.c.b], i * 3);
+    const { r, g, b } = this.c;
+    const c = this.col.array as Float32Array;
+    c[i * 6] = r * 0.6;
+    c[i * 6 + 1] = g * 0.6;
+    c[i * 6 + 2] = b * 0.6;
+    c[i * 6 + 3] = r;
+    c[i * 6 + 4] = g;
+    c[i * 6 + 5] = b;
+    const d = this.dotPos.array as Float32Array;
+    d[i * 3] = hit ? x1 : x0;
+    d[i * 3 + 1] = hit ? y : -1000;
+    d[i * 3 + 2] = hit ? z1 : z0;
+    const dc = this.dotCol.array as Float32Array;
+    dc[i * 3] = r;
+    dc[i * 3 + 1] = g;
+    dc[i * 3 + 2] = b;
   }
 
   end(): void {
