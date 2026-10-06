@@ -6,7 +6,7 @@ import { deleteTrack, listTracks, restoreTrack, saveTrack } from '@/storage/trac
 interface SavedTracksState {
   tracks: TrackSpec[];
   loaded: boolean;
-  /** Reads the list once per page load; later calls are free. A failed read is tried again next time. */
+  /** Reads the list once, and again after a reset; other calls are free. A failed read is tried again next time. */
   load: () => Promise<void>;
   save: (name: string, spec: TrackSpec) => Promise<TrackSpec>;
   /** Resolves to the deleted row, for Undo, or undefined when it was already gone. */
