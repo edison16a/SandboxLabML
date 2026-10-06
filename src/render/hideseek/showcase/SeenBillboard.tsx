@@ -3,11 +3,11 @@
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { configureTextBuilder } from 'troika-three-text';
 import { FLAG_SEEN } from '@/engine/hideseek/snapshot';
-import { useHsScene } from '../frame/sceneContext';
-import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
+import { useHsScene, type HsFrame } from '../frame/sceneContext';
+import { agentAt, blendFloorPose, hasFlag, type FloorPose } from '../frame/snapshotRead';
 import { GRID_LAYER } from '../grid/scratch';
 
 /**
@@ -26,23 +26,28 @@ configureTextBuilder({ useWorker: false, defaultFontURL: SDF_FONT });
 const RED = new THREE.Color('#ff5f6d').multiplyScalar(2.4);
 
 /**
- * "SEEN" floating over the hider whenever the seeker has it in sight. It
+ * Where a hider stands in the frame on screen, written into `out`, and
+ * whether a seeker has it in sight right now. Each scene reads its own
+ * stream: the showcase arena snapshot, or a Sandbox frame by slot.
+ */
+export type SeenReader = (frame: HsFrame, out: FloorPose) => boolean;
+
+/**
+ * "SEEN" floating over a hider whenever a seeker has it in sight. It
  * always faces the camera, pops in with a small overshoot and fades out.
  * It is drawn on the main camera's extra layer only, so the first person
- * views never show a word turned toward another camera.
+ * views never show a word turned toward another camera. `scale` shrinks
+ * it in a crowd.
  */
-export function SeenBillboard({ arena }: { arena: number }) {
+export function SeenWord({ read, scale = 1 }: { read: SeenReader; scale?: number }) {
   const { frame } = useHsScene();
   const group = useRef<THREE.Group>(null);
   const state = useMemo(() => ({ pose: { x: 0, z: 0, yaw: 0 }, show: 0, since: 0 }), []);
 
   useFrame((three, dt) => {
     const g = group.current;
-    const curr = frame.curr;
-    if (!g || !curr) return;
-    const o = agentAt(arena, 0);
-    const seen = hasFlag(curr[o + 3], FLAG_SEEN);
-    blendFloorPose(frame.prev, curr, o, frame.alpha, state.pose);
+    if (!g || !frame.curr) return;
+    const seen = read(frame, state.pose);
     state.since = seen ? state.since + dt : 0;
     state.show += ((seen ? 1 : 0) - state.show) * Math.min(1, dt * 14);
     g.visible = state.show > 0.02;
@@ -53,7 +58,7 @@ export function SeenBillboard({ arena }: { arena: number }) {
     const t = Math.min(1, state.since / 0.25);
     const pop = seen ? 0.7 + 0.3 * t + 0.42 * Math.sin(t * Math.PI) * (1 - t) : 1;
     g.position.set(state.pose.x, 2.3, state.pose.z);
-    g.scale.setScalar(pop * (0.5 + 0.5 * state.show));
+    g.scale.setScalar(pop * (0.5 + 0.5 * state.show) * scale);
   });
 
   return (
@@ -65,4 +70,19 @@ export function SeenBillboard({ arena }: { arena: number }) {
       </Billboard>
     </group>
   );
+}
+
+/** SEEN over the hider of one arena in the arena stream. */
+export function SeenBillboard({ arena }: { arena: number }) {
+  const read = useCallback<SeenReader>(
+    (frame, out) => {
+      const curr = frame.curr;
+      if (!curr) return false;
+      const o = agentAt(arena, 0);
+      blendFloorPose(frame.prev, curr, o, frame.alpha, out);
+      return hasFlag(curr[o + 3], FLAG_SEEN);
+    },
+    [arena],
+  );
+  return <SeenWord read={read} />;
 }
