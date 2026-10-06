@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { isTyping } from '@/ui/typing';
 import type { SpeedMode } from '@/workers/shared/protocol';
 import { racingSession } from '../session/RacingSession';
 import { useRacingLab, type CameraMode, type ViewMode } from '../state/labStore';
@@ -22,8 +23,7 @@ function next<T>(list: T[], current: T): T {
 export function useLabShortcuts(onNewRun: () => void) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const el = e.target as HTMLElement | null;
-      if (el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))) return;
+      if (isTyping(e.target)) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const s = useRacingLab.getState();
       const session = racingSession();

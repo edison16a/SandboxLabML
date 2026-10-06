@@ -5,6 +5,7 @@ import { useThree } from '@react-three/fiber';
 import { useEffect, useRef, useState } from 'react';
 import type { TrackSpec, Vec2 } from '@/engine/racing/track/types';
 import { useRacingLab } from '@/features/racing/state/labStore';
+import { isTyping } from '@/ui/typing';
 
 interface Props {
   spec: TrackSpec;
@@ -57,8 +58,7 @@ export function TrackEditor({ spec, onChange }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // Backspace in a text field, such as the track name, edits the text and leaves the track alone.
-      const el = e.target as HTMLElement | null;
-      if (el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))) return;
+      if (isTyping(e.target)) return;
       if ((e.key === 'Delete' || e.key === 'Backspace') && selected !== null && spec.points.length > 4) {
         const points = spec.points.filter((_, i) => i !== selected);
         set({ selectedHandle: null });
