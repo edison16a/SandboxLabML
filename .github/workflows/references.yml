@@ -1,0 +1,44 @@
+name: Benchmark references
+
+# Retrains the Racing reference scripts and rebuilds public/references/racing.json.
+# Training is deterministic, so the file only changes when the engine, the
+# benchmark or a preset changed. When it does, the new file is committed to the
+# references/update branch for review instead of straight to main.
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: references
+  cancel-in-progress: false
+
+jobs:
+  regenerate:
+    name: Regenerate Racing references
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Train the reference scripts
+        run: npm run refs -- --workers 2
+      - name: Commit to references/update if the file changed
+        run: |
+          if git diff --quiet -- public/references/racing.json; then
+            echo "The references did not change."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C references/update
+          git add public/references/racing.json
+          git commit -m "Regenerate benchmark references"
+          git push --force origin references/update
