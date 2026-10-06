@@ -31,7 +31,7 @@ const STEPS: TourStep[] = [
   {
     target: '[data-tour="sandbox"]',
     title: 'Experiment in the Sandbox',
-    body: 'Edit the track or switch inputs off and watch how trained champions cope. Training is never affected.',
+    body: 'Race up to 16 trained champions on any track or one you draw. Switch inputs off to see what they rely on. Training is never affected.',
   },
 ];
 
