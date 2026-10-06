@@ -9,6 +9,8 @@ test.describe('Racing lab', () => {
   test.setTimeout(240_000);
 
   test('trains to generation 3, shows ghosts, and the inputs overlay draws rays', async ({ page }) => {
+    // Skip the first-visit tour so it does not sit on top of the controls.
+    await page.addInitScript(() => window.localStorage.setItem('sandboxlab.tour.racing', '1'));
     await page.goto('/lab/racing?quality=low');
     await expect(page.getByRole('button', { name: 'Train' })).toBeEnabled({ timeout: 60_000 });
     // Turbo trains headless on every worker, so three generations take seconds.
