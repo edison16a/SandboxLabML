@@ -34,7 +34,8 @@ export function CameraRig({ mode, target }: { mode: CameraMode; target: React.Re
   }, [mode, camera, center, spring]);
 
   useFrame((_, rawDt) => {
-    const dt = Math.min(rawDt, 0.05);
+    // A generous clamp keeps the spring stable after a stall without leaving the camera behind on slow GPUs.
+    const dt = Math.min(rawDt, 0.25);
     const focus = frame.focusPos;
     if (mode === 'chase') {
       // Aim behind the car along its heading, smoothing heading separately so turns feel weighty.
@@ -44,8 +45,10 @@ export function CameraRig({ mode, target }: { mode: CameraMode; target: React.Re
       const tx = focus.x - Math.cos(spring.yaw) * back;
       const tz = focus.z + Math.sin(spring.yaw) * back;
       const ty = 3.3 + frame.focusSpeed * 0.035;
-      if (!spring.init) {
-        Object.assign(spring, { x: tx, y: ty, z: tz, vx: 0, vy: 0, vz: 0, init: true });
+      const far = (spring.x - tx) ** 2 + (spring.z - tz) ** 2 > 60 * 60;
+      if (!spring.init || far) {
+        // Jump instead of flying across the map when the focus changes to a distant car.
+        Object.assign(spring, { x: tx, y: ty, z: tz, vx: 0, vy: 0, vz: 0, init: true, yaw: frame.focusYaw });
       }
       [spring.x, spring.vx] = springStep(spring.x, spring.vx, tx, 6, dt);
       [spring.y, spring.vy] = springStep(spring.y, spring.vy, ty, 6, dt);

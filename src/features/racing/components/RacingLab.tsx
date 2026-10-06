@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { buildTrack } from '@/engine/racing/track/buildTrack';
 import { racingInputSchema } from '@/engine/racing/sensors/inputSchema';
@@ -31,6 +31,11 @@ export function RacingLab() {
   const [newRun, setNewRun] = useState(false);
   const openNewRun = useCallback(() => setNewRun(true), []);
   useLabShortcuts(openNewRun);
+  useEffect(() => {
+    // ?quality=low|medium|high pins the render tier, handy on slow machines and in browser tests.
+    const q = params.get('quality');
+    if (q === 'low' || q === 'medium' || q === 'high') useRacingLab.getState().set({ quality: q, activeTier: q });
+  }, [params]);
   useInspectSubscription(ready);
 
   const spec = trackSpec ?? run?.racing?.track ?? null;
