@@ -44,7 +44,7 @@ export class RacingSession {
 
   async openRun(runId: string): Promise<boolean> {
     const run = await getRun(runId);
-    if (!run || run.env !== 'racing') return false;
+    if (!run || run.env !== 'racing' || run.deletedAt) return false;
     const checkpoint = await latestCheckpoint(runId);
     let history = await loadHistory(runId);
     if (checkpoint) {
