@@ -1,0 +1,78 @@
+{
+  "id": "racing-02-reward-progress",
+  "course": "racing",
+  "order": 2,
+  "title": "Reward progress",
+  "summary": "Let a brain drive, then give it points for getting somewhere. Points are all evolution can see.",
+  "minutes": 6,
+  "steps": [
+    {
+      "id": "hand-over-the-wheel",
+      "title": "Hand the wheel to the brain",
+      "body": "The brain named on line 5 is a small neural network. It reads its inputs (three distance rays and the speed) and answers with two numbers: `brain.steer` and `brain.pedal`.\n\nPass them to `drive` so the brain controls the car. At first its connections have random weights, so it drives badly. Training is how it gets better.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-starter sees three distance rays (left, ahead, right) and its speed.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Hand the wheel to the brain here.\n  drive(steer: 0, pedal: 0)\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n",
+      "highlight": {
+        "lines": [9, 10]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "call",
+            "scope": "tick",
+            "callee": "drive",
+            "uses": ["brain.steer", "brain.pedal"]
+          }
+        ],
+        "message": "Call drive with brain.steer and brain.pedal."
+      },
+      "hints": [
+        "Swap the two zeros for what the brain says.",
+        "Write drive(steer: brain.steer, pedal: brain.pedal)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-starter sees three distance rays (left, ahead, right) and its speed.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n"
+    },
+    {
+      "id": "a-prize-for-laps",
+      "title": "A prize for each lap",
+      "body": "Training is evolution. Every car gets a score called fitness, and the brains with the best fitness become the parents of the next generation.\n\nFitness is the sum of the rewards a car collects. Right now there are no rewards, so every car scores 0.\n\nAdd a reward of 10 points when `lap.completed` is true. The test drive uses a simple fixed brain that steers away from walls, and it can finish one lap.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-starter sees three distance rays (left, ahead, right) and its speed.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // Add a reward for finishing a lap here.\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n",
+      "highlight": {
+        "lines": [12]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "totalReward",
+        "op": ">",
+        "value": 0,
+        "message": "The test drive should score some points."
+      },
+      "hints": [
+        "A reward line looks like this: reward +points when condition.",
+        "Replace the comment with reward +10 when lap.completed."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-starter sees three distance rays (left, ahead, right) and its speed.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n"
+    },
+    {
+      "id": "rewards-that-come-too-late",
+      "title": "Rewards that come too late",
+      "body": "Press Check. It trains 40 cars for 8 generations on 30 second runs and reports how far the best car got.\n\nUntrained cars almost never finish a lap, so they all score 0. Evolution cannot tell a car that drove 200 m from one that never moved, so it is picking parents at random. A reward that almost never happens is called a sparse reward.\n\nGive one point for each checkpoint as well. They sit every 10 m, so every bit of progress now counts, and evolution can tell better cars from worse ones.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-starter sees three distance rays (left, ahead, right) and its speed.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // Add a reward for checkpoints here.\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n",
+      "highlight": {
+        "lines": [12]
+      },
+      "check": {
+        "kind": "metricAbove",
+        "generations": 8,
+        "metric": "bestDistance",
+        "value": 300,
+        "message": "Training should get the best car past 300 m."
+      },
+      "hints": [
+        "The car passes a checkpoint every 10 m. checkpoint.passed is true on that tick.",
+        "Add reward +1 when checkpoint.passed above the lap reward."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-starter sees three distance rays (left, ahead, right) and its speed.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n"
+    }
+  ]
+}

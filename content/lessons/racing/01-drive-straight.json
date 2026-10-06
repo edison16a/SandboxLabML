@@ -1,0 +1,77 @@
+{
+  "id": "racing-01-drive-straight",
+  "course": "racing",
+  "order": 1,
+  "title": "Drive straight and crash",
+  "summary": "Write your first script: make a car move, then decide when its run ends.",
+  "minutes": 5,
+  "steps": [
+    {
+      "id": "press-the-pedal",
+      "title": "Press the pedal",
+      "body": "Every script has an `each tick` block. It runs for every car 30 times per second, and it decides what the car does next.\n\n`drive` sets the steering and the pedal. Right now both are 0, so the car sits on the start line forever.\n\nChange the pedal to 1 and press Check. The check takes the car for a one minute test drive on the Oval.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// The brain is a small neural network. This lesson does not use it yet.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // steer goes from -1 (right) to 1 (left). pedal goes from -1 (brake) to 1 (full throttle).\n  drive(steer: 0, pedal: 0)\n}\n",
+      "highlight": {
+        "lines": [10]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "distance",
+        "op": ">",
+        "value": 30,
+        "message": "The car should drive at least 30 m."
+      },
+      "hints": [
+        "The pedal is the second number inside drive(...). Positive numbers mean throttle.",
+        "Change the line to drive(steer: 0, pedal: 1)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// The brain is a small neural network. This lesson does not use it yet.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // steer goes from -1 (right) to 1 (left). pedal goes from -1 (brake) to 1 (full throttle).\n  drive(steer: 0, pedal: 1)\n}\n"
+    },
+    {
+      "id": "stop-at-the-line",
+      "title": "Stop at the white line",
+      "body": "Your car goes flat out in a perfectly straight line. Roads are never perfectly straight, so it drifts over the white edge line and hits the barrier.\n\nA stop rule ends a car's run the moment its condition is true. Training needs rules like this: a car that has left the road will not learn anything more in this run, and every second it keeps going is wasted time.\n\n`car.offTrack` is true while the car is past the white edge line. Add a rule that stops the car with the reason \"crash\" when it is.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// The brain is a small neural network. This lesson does not use it yet.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // steer goes from -1 (right) to 1 (left). pedal goes from -1 (brake) to 1 (full throttle).\n  drive(steer: 0, pedal: 1)\n\n  // Add a stop rule here.\n}\n",
+      "highlight": {
+        "lines": [12]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "stop",
+            "scope": "tick",
+            "uses": ["car.offTrack"]
+          }
+        ],
+        "message": "Add a stop rule inside each tick that uses car.offTrack."
+      },
+      "hints": [
+        "A stop rule looks like this: stop \"reason\" when condition.",
+        "Replace the comment with stop \"crash\" when car.offTrack."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// The brain is a small neural network. This lesson does not use it yet.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // steer goes from -1 (right) to 1 (left). pedal goes from -1 (brake) to 1 (full throttle).\n  drive(steer: 0, pedal: 1)\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n}\n"
+    },
+    {
+      "id": "stop-a-stuck-car",
+      "title": "Stop a stuck car",
+      "body": "Soon a brain will drive this car, and some brains learn to park. Parked cars never cross the white line, so your crash rule never ends their run. They just sit there until time runs out.\n\nThe starter parks the car so you can see this. Press Check: the test drive lasts the whole minute.\n\n`car.noProgress` counts the seconds since the car last got further along the road. Add a rule that stops the car with the reason \"stalled\" once it passes 5 seconds.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// The brain is a small neural network. This lesson does not use it yet.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // steer goes from -1 (right) to 1 (left). pedal goes from -1 (brake) to 1 (full throttle).\n  // A parked car, so you can test the next rule.\n  drive(steer: 0, pedal: 0)\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // Add a second stop rule here.\n}\n",
+      "highlight": {
+        "lines": [15]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "ticks",
+        "op": "<",
+        "value": 300,
+        "message": "The parked car should be stopped within 10 seconds (300 ticks)."
+      },
+      "hints": [
+        "Numbers can carry units. 5 s means five seconds.",
+        "Add stop \"stalled\" when car.noProgress > 5 s below the crash rule."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// The brain is a small neural network. This lesson does not use it yet.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // steer goes from -1 (right) to 1 (left). pedal goes from -1 (brake) to 1 (full throttle).\n  // A parked car, so you can test the next rule.\n  drive(steer: 0, pedal: 0)\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n"
+    }
+  ]
+}
