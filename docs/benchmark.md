@@ -1,8 +1,10 @@
+# Benchmarks
+
+A benchmark is a fixed exam for a trained model. Training fitness depends on the script's own rewards, so two runs with different scripts cannot be compared by fitness. The benchmark ignores the script's rewards, plays every model the same way and turns the result into a score from 0 to 100. It is a measuring stick, not a leaderboard: scores only compare within one environment and one benchmark version.
+
+The code lives in `src/engine/bench`. Call `runBenchmark(config, model)` with a run's config and its champion: a genome for Racing, or `{ hider, seeker }` for Hide and Seek. Both return the same `BenchResult` shape, with a score, a radar of four axes, raw metrics, a breakdown into parts and the score per 100 parameters.
+
 # The Racing benchmark
-
-The benchmark is a fixed exam for a trained brain. Training fitness depends on the script's own rewards, so two runs with different scripts cannot be compared by fitness. The benchmark ignores the script's rewards and drives every brain the same way, on roads no run ever trains on, and turns the result into a score from 0 to 100.
-
-The code lives in `src/engine/bench`. Call `runBenchmark(config, genome)` with a run's config and a champion genome.
 
 ## The exam
 
@@ -66,4 +68,49 @@ Advanced wins by training on a curriculum: it rotates through all five built-in 
 
 Random roads were too varied to learn from in 100 generations, and the bigger brain learned more slowly in the same time. Real circuits in rotation teach the brain to read the road with its rays instead of memorizing one shape. A related engine fix landed at the same time: when a script switches tracks, species stagnation now resets, since scores on a new road are not comparable with the old one.
 
-Regenerate the file with `npm run refs`. It uses two worker threads by default, and `npm run refs -- --workers 0` keeps it on one. A test fails when the file's versions do not match the current constants, so a version bump forces a regeneration. A nightly workflow, `.github/workflows/references.yml`, also regenerates it and commits any change to the `references/update` branch for review.
+Regenerate the file with `npm run refs -- --env racing` (plain `npm run refs` rebuilds both environments). It uses two worker threads by default, and `--workers 0` keeps it on one. A test fails when the file's versions do not match the current constants, so a version bump forces a regeneration. A nightly workflow, `.github/workflows/references.yml`, also regenerates it and commits any change to the `references/update` branch for review.
+
+# The Hide and Seek benchmark
+
+Hide and Seek has two roles, so the model being scored is a champion pair: the hider and seeker champions of one generation. Co-evolved fitness cannot show progress on its own, because both teams improve together. The benchmark plays the pair against fixed opponents instead: the reference champions of the three Hide and Seek presets, shipped in `public/references/hideseek.json`.
+
+## The exam
+
+A game is two matches from the same start. In the first the model's hider hides from the opponent's seeker. In the second the opponent's hider hides from the model's seeker. The same seed means the same spawn spots and the same box jitter in both, so whichever role a room favors, it favors both players equally.
+
+The pair plays one game from each of 10 fixed starts in each of the three rooms (open, shelter and corridor) against each of the three reference champions. That is 90 games, or 180 matches. Start seeds come from a fixed salt (`examStarts` in `src/engine/bench/hideseek/exam.ts`) and never match a training seed.
+
+Every match uses the standard physics and the standard 9 second prep phase, whatever rules or prep curriculum the run trained with. Each brain gets its own team's inputs plus its script's sensors, so brains of any shape can meet: a Starter seeker can play an Advanced hider. Brain outputs go straight to the agent. Nothing is rewarded and nothing is stopped, so a script's rewards never change a score, and a test checks this. The exam is deterministic: the same pair and the same reference file always give the same result.
+
+## Scoring
+
+A game is a win for the model when its hider stayed hidden longer than the opponent's hider did, by more than 5% of the seek phase (about one second). Closer games are draws and count half. This is the same as hidden share plus seen share above one, where hidden is the share of the seek phase the model's hider stayed out of sight and seen is the share its seeker had the other hider in sight.
+
+The radar has four axes, each from 0 to 1:
+
+| Axis | What it measures |
+| --- | --- |
+| Hiding | Mean hidden share of the model's hider against the reference seekers |
+| Seeking | Mean seen share of the model's seeker against the reference hiders |
+| Cover | Mean share of the seek phase the hider was out of range or behind a wall or box, so the seeker could not have seen it even by turning |
+| Generalization | Win rate in the weakest room |
+
+The score is a weighted sum:
+
+| Part | Weight |
+| --- | --- |
+| Win rate over all 90 games | 40% |
+| Hiding | 20% |
+| Seeking | 20% |
+| Cover | 10% |
+| Generalization | 10% |
+
+The win rate counts most because it is the one number that cancels out which role is easier. The result also lists the Elo-style rating, locks per match, a part per opponent (`vs:beginner` and so on) and a part per room (`room:open` and so on), and the score per 100 parameters, counting the weights of both brains.
+
+## The rating
+
+Each reference champion has a rating, fitted once when the reference file is built from a round robin between the three champions (their own exams), with the mean pinned at 1500. A model's rating is its performance rating against those fixed ratings: the rating whose expected points against the three champions equal the points it actually won. Both fits add one virtual draw per opponent, so a clean sweep gives a high but finite rating. A reference champion run through the exam gets its own rating back, and a test checks this.
+
+## Versions
+
+Scores only compare within one `HIDESEEK_BENCHMARK_VERSION` (in `src/engine/core/version.ts`). It is separate from the Racing version, so changing one exam never forces the other file to be rebuilt. Changing a room, the starts, the match count or anything in `src/engine/bench/hideseek/scoring.ts` changes scores, so it must bump the version. The reference champions are part of the exam too. Training is deterministic, so they only change when the engine, a Hide and Seek preset or the generator settings change. When a regenerated file ships different champions, bump the version in the same change.
