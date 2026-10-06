@@ -1,4 +1,4 @@
-import type { BenchRadar } from './types';
+import type { RacingRadar } from './types';
 import type { EpisodeResult } from './drive';
 import type { ExamCourse } from './exam';
 
@@ -64,9 +64,9 @@ export function trackScore(s: EpisodeScore): number {
  * the weakest road, so a brain that only learned how to drive one kind of
  * road scores low here even if it is brilliant on the others.
  */
-export function composite(perTrack: EpisodeScore[]): { radar: BenchRadar; score: number } {
+export function composite(perTrack: EpisodeScore[]): { radar: RacingRadar; score: number } {
   const all = averageScores(perTrack);
-  const radar: BenchRadar = {
+  const radar: RacingRadar = {
     completion: all.completion,
     speed: all.speed,
     smoothness: all.smoothness,

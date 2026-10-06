@@ -1,12 +1,30 @@
 import type { EnvId } from '../env/types';
 
-/** The four axes of the benchmark radar chart, each 0 to 1. */
-export interface BenchRadar {
+/** The four axes of the Racing radar chart, each 0 to 1. */
+export interface RacingRadar {
   speed: number;
   completion: number;
   smoothness: number;
   generalization: number;
 }
+
+/** The four axes of the Hide and Seek radar chart, each 0 to 1. See bench/hideseek/scoring.ts. */
+export interface HideSeekRadar {
+  hiding: number;
+  seeking: number;
+  cover: number;
+  generalization: number;
+}
+
+/**
+ * Radar values for one result. Each environment has its own axes, so the
+ * chart reads their keys and labels from RADAR_AXES instead of assuming
+ * Racing's four.
+ */
+export type BenchRadar = RacingRadar | HideSeekRadar;
+
+/** The preset tiers that have reference results. */
+export type ReferenceTier = 'beginner' | 'intermediate' | 'advanced';
 
 /** One reference script's result at a given generation, from the shipped reference files. */
 export interface ReferencePoint {
@@ -17,7 +35,7 @@ export interface ReferencePoint {
 }
 
 export interface ReferenceCurve {
-  tier: 'beginner' | 'intermediate' | 'advanced';
+  tier: ReferenceTier;
   /** The final reference champion's score, shown on the result card. */
   finalScore: number;
   curve: ReferencePoint[];

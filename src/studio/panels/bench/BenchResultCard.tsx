@@ -1,3 +1,4 @@
+import { radarValues } from '@/engine/bench/radar';
 import type { BenchReferences, BenchResult } from '@/engine/bench/types';
 import { Stat } from '@/ui/primitives/Panel';
 import { bandAt, percentileIn } from './percentile';
@@ -74,7 +75,7 @@ export function BenchResultCard({ result, references, generation }: Props) {
           </table>
         </section>
       )}
-      <Radar radar={result.radar} />
+      <Radar axes={radarValues(result.env, result.radar)} />
     </div>
   );
 }
