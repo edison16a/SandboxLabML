@@ -19,6 +19,9 @@ export interface GhostSpec {
 
 export interface GhostTelemetry {
   generation: number;
+  /** Grid slot the car started from; 0 is the start line. */
+  slot: number;
+  /** Progress along the road per tick. Negative until a car from a back slot reaches the line. */
   distance: Float32Array;
   speed: Float32Array;
   /** Brake pedal per tick, 0 to 1, for the brake map. */
@@ -116,18 +119,13 @@ export class GhostPlayer {
   }
 
   /**
-   * Speed against distance for every champion in the scene, computed
-   * headless in one pass. Copies of one champion share a line, taken from
-   * the copy nearest the front of the grid.
+   * Speed against distance for every ghost, computed headless in one pass.
+   * One line per car, in stream order, so a line's color matches its car
+   * even when a Sandbox grid holds several copies of one champion.
    */
   telemetry(): GhostTelemetry[] {
     if (!this.setup) return [];
-    const front = new Map<number, GhostSpec>();
-    for (const g of this.ghosts) {
-      const seen = front.get(g.generation);
-      if (!seen || (g.slot ?? 0) < (seen.slot ?? 0)) front.set(g.generation, g);
-    }
-    return [...front.values()].map((g) => {
+    return this.ghosts.map((g) => {
       const env = this.makeEnv([g]);
       const dist: number[] = [];
       const speed: number[] = [];
@@ -141,7 +139,7 @@ export class GhostPlayer {
       }
       const rc = env.cars[0];
       const crash = rc.status === STATUS_CRASHED ? { x: rc.crashX, y: rc.crashY } : null;
-      return { generation: g.generation, distance: Float32Array.from(dist), speed: Float32Array.from(speed), brake: Float32Array.from(brake), crash };
+      return { generation: g.generation, slot: g.slot ?? 0, distance: Float32Array.from(dist), speed: Float32Array.from(speed), brake: Float32Array.from(brake), crash };
     });
   }
 

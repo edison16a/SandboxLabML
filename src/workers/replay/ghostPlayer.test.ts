@@ -33,15 +33,16 @@ function scene() {
 }
 
 describe('ghost player grid', () => {
-  it('draws one telemetry line per champion, from the copy at the front', () => {
+  it('draws one telemetry line per car, in stream order, with its grid slot', () => {
     const { setup, ghost } = scene();
     const field = new GhostPlayer(capture().sender);
     field.setScene(setup, [ghost(1, 3), ghost(2, 2), ghost(2, 1), ghost(2, 0)]);
     const lone = new GhostPlayer(capture().sender);
     lone.setScene(setup, [ghost(2, 0)]);
     const lines = field.telemetry();
-    expect(lines.map((t) => t.generation)).toEqual([1, 2]);
-    expect(Array.from(lines[1].distance)).toEqual(Array.from(lone.telemetry()[0].distance));
+    expect(lines.map((t) => [t.generation, t.slot])).toEqual([[1, 3], [2, 2], [2, 1], [2, 0]]);
+    // The pole car drives exactly the lap it would drive alone, and back slots start behind the line.
+    expect(Array.from(lines[3].distance)).toEqual(Array.from(lone.telemetry()[0].distance));
     expect(lines[0].distance[0]).toBeLessThan(-10);
   });
 
@@ -51,7 +52,8 @@ describe('ghost player grid', () => {
     const player = new GhostPlayer(sender);
     player.setScene(setup, [ghost(3, 2), ghost(3, 1), ghost(3, 0)]);
     player.play(1, false);
-    await new Promise((r) => setTimeout(r, 120));
+    // The first frame waits for a timer slice; poll rather than guess how long a busy machine takes.
+    for (let waited = 0; frames.length === 0 && waited < 5000; waited += 20) await new Promise((r) => setTimeout(r, 20));
     player.stop();
     const first = frames[0];
     for (let a = 0; a < 3; a++) {

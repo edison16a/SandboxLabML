@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
-import { buildTrack } from '@/engine/racing/track/buildTrack';
 import { ghostCss } from '@/features/charts/ghostCss';
 import { cn } from '@/ui/cn';
 import { Button } from '@/ui/primitives/Button';
 import { Slider } from '@/ui/primitives/Slider';
 import { copiesOf, fieldSize, MAX_FIELD, setCopies, type FieldEntry } from '../../session/field';
 import { racingSession } from '../../session/RacingSession';
+import { drivenDistance, frontCopies } from '../../session/telemetry';
+import { trackFor } from '../../session/trackChoice';
 import { useRacingLab } from '../../state/labStore';
 import { CopiesStepper } from './CopiesStepper';
 import { overlayButton, sectionLabel } from './overlay';
@@ -20,24 +21,23 @@ interface Result {
 
 /**
  * How each champion did on the Sandbox track, from the headless telemetry
- * pass. Distances count from the car's own grid slot, so a car that starts
- * 30 m back and crashes 20 m later reads 20 m, not a negative number.
+ * pass, as its front copy drove it. Distances count from the car's own
+ * grid slot.
  */
 function useResults(): Map<number, Result> {
   const telemetry = useRacingLab((s) => s.telemetry);
   const spec = useRacingLab((s) => s.sandboxTrack);
-  const length = useMemo(() => (spec ? buildTrack(spec).length : 0), [spec]);
   return useMemo(() => {
+    const length = spec ? trackFor(spec).length : 0;
     const out = new Map<number, Result>();
-    for (const t of telemetry) {
-      const end = t.distance[t.distance.length - 1] ?? 0;
-      const driven = Math.max(0, Math.round(end - (t.distance[0] ?? 0)));
-      const laps = length > 0 ? Math.floor(end / length) : 0;
+    for (const [generation, t] of frontCopies(telemetry)) {
+      const driven = Math.round(drivenDistance(t));
+      const laps = length > 0 ? Math.floor((t.distance[t.distance.length - 1] ?? 0) / length) : 0;
       const text = t.crash ? `Crash at ${driven} m` : laps >= 1 ? `${laps} ${laps === 1 ? 'lap' : 'laps'}` : `${driven} m`;
-      out.set(t.generation, { text, crashed: !!t.crash });
+      out.set(generation, { text, crashed: !!t.crash });
     }
     return out;
-  }, [telemetry, length]);
+  }, [telemetry, spec]);
 }
 
 /** Dot color for each row: the ghost color of the row's front car, which is where the stream puts it. */
