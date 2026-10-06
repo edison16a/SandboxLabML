@@ -8,6 +8,7 @@ import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
 import { RayBuffer } from '@/render/shared/RayBuffer';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
+import { followedAgent } from '../frame/followedAgent';
 import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
 import { MAX_ARENAS } from '../grid/scratch';
@@ -81,9 +82,9 @@ export function RaysOverlay() {
       const arena = inspect ? inspect.index >> 1 : -1;
       const slot = arena - frame.first;
       const agent = inspect ? inspect.index & 1 : 0;
-      if (inspect && slot >= 0 && slot < frame.count && !hasFlag(curr[agentAt(arena, agent) + 3], FLAG_FROZEN)) {
+      const flags = inspect && slot >= 0 && slot < frame.count ? followedAgent(frame, slot, agent, t.s) : -1;
+      if (inspect && flags >= 0 && !hasFlag(flags, FLAG_FROZEN)) {
         arenaOrigin(slot, frame.lattice, t.o);
-        blendFloorPose(frame.prev, curr, agentAt(arena, agent), frame.alpha, t.s);
         const x = t.o.x + t.s.x;
         const z = t.o.z + t.s.z;
         // Distance labels only where they can be read: on the arena in the showcase.

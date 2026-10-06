@@ -6,7 +6,7 @@ import { OrbitControls } from '@react-three/drei';
 import { useMemo, useRef } from 'react';
 import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
 import { useHsScene } from '../frame/sceneContext';
-import { agentAt, blendFloorPose } from '../frame/snapshotRead';
+import { followedAgent } from '../frame/followedAgent';
 import { boxDrag } from '../interaction/useBoxDrag';
 import { arenaOrigin, ARENA_SPAN } from '../layout/gridLattice';
 import { cityEdgeFrom, farPlane, hazeRange } from '../scene/haze';
@@ -104,11 +104,9 @@ export function CameraRig() {
   }
 
   function firstPerson(agent: number): void {
-    const curr = frame.curr;
-    if (!curr) return;
     const slot = Math.max(0, frame.focusSlot);
+    if (followedAgent(frame, slot, agent, fly.pose) < 0) return;
     arenaOrigin(slot, frame.lattice, fly.o);
-    blendFloorPose(frame.prev, curr, agentAt(frame.first + slot, agent), frame.alpha, fly.pose);
     const fx = Math.cos(fly.pose.yaw);
     const fz = -Math.sin(fly.pose.yaw);
     camera.position.set(fly.o.x + fly.pose.x + fx * 0.5, EYE, fly.o.z + fly.pose.z + fz * 0.5);

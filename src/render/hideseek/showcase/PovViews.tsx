@@ -5,7 +5,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useMemo } from 'react';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
-import { agentAt, blendFloorPose } from '../frame/snapshotRead';
+import { followedAgent } from '../frame/followedAgent';
 import { arenaOrigin } from '../layout/gridLattice';
 import { HS_TONE_MAPPING } from '../palette';
 import { farPlane } from '../scene/haze';
@@ -69,7 +69,7 @@ export function PovViews() {
     const k = state.turn++ % 2;
     const cam = built.cameras[k];
     arenaOrigin(frame.focusSlot, frame.lattice, state.o);
-    blendFloorPose(frame.prev, curr, agentAt(frame.first + frame.focusSlot, PIP_AGENTS[k]), frame.alpha, state.pose);
+    followedAgent(frame, frame.focusSlot, PIP_AGENTS[k], state.pose);
     const fx = Math.cos(state.pose.yaw);
     const fz = -Math.sin(state.pose.yaw);
     cam.position.set(state.o.x + state.pose.x + fx * 0.45, EYE, state.o.z + state.pose.z + fz * 0.45);

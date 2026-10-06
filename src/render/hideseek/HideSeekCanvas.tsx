@@ -15,6 +15,7 @@ import { createHsFrame, HsSceneContext } from './frame/sceneContext';
 import { GridScene } from './grid/GridScene';
 import { GRID_LAYER } from './grid/scratch';
 import { overlayCounts, RaysOverlay } from './overlay/RaysOverlay';
+import { SandboxArena, sandboxStats } from './sandbox/SandboxArena';
 import { Backdrop } from './scene/Backdrop';
 import { InvalidateOnChange, MainPass, tierDpr, ToneMappingSync } from './scene/RenderHelpers';
 import { StudioLighting } from './scene/StudioLighting';
@@ -58,6 +59,8 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
       showcase: frame.focusSlot >= 0 ? 1 : 0,
       rays: overlayCounts.rays,
       sightLines: overlayCounts.sightLines,
+      sandboxAgents: sandboxStats.agents,
+      sandboxBoxes: sandboxStats.boxes,
     }),
     [frame],
   );
@@ -84,7 +87,8 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
         <StudioLighting tier={tier} shadows={showcase && tier !== 'low'} />
         <Backdrop />
         <GridScene />
-        {showcase && <ShowcaseArena tier={tier} sandbox={sandbox} aoPass={composer} />}
+        {showcase && !sandbox && <ShowcaseArena tier={tier} sandbox={false} aoPass={composer} />}
+        {sandbox && <SandboxArena tier={tier} />}
         <RaysOverlay />
         <CameraRig />
         {composer && <ShowcaseEffects tier={tier} photo={photo} />}
