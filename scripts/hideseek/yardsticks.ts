@@ -18,6 +18,8 @@ export interface Measure {
   se: number;
   genomes: number;
   matches: number;
+  /** Mean share per room, to see where a change comes from. */
+  rooms?: Record<string, number>;
 }
 
 /** Mean and standard error of per-genome means. */
@@ -37,6 +39,13 @@ export function zScore(before: Measure, after: Measure): number {
 
 export function formatMeasure(m: Measure): string {
   return `${m.mean.toFixed(3)} ± ${m.se.toFixed(3)}`;
+}
+
+/** Per room means, such as "open 0.21 shelter 0.25 corridor 0.70". */
+export function formatRooms(m: Measure): string {
+  return Object.entries(m.rooms ?? {})
+    .map(([id, v]) => `${id} ${v.toFixed(2)}`)
+    .join(' ');
 }
 
 /**
@@ -72,11 +81,14 @@ export function yardstickJobs(trainer: HideSeekTrainer, team: 'hiders' | 'seeker
 export async function benchmark(farm: Farm, trainer: HideSeekTrainer, team: 'hiders' | 'seekers', against: Yardstick, perGenome: number, script?: string): Promise<Measure> {
   const results = await farm.run(yardstickJobs(trainer, team, against, perGenome, script));
   const per: number[][] = [];
+  const rooms: Record<string, number[]> = {};
   results.forEach((r, k) => {
-    const i = Math.floor(k / perGenome);
-    (per[i] ??= []).push(team === 'hiders' ? r.hiddenShare : r.seenShare);
+    const share = team === 'hiders' ? r.hiddenShare : r.seenShare;
+    (per[Math.floor(k / perGenome)] ??= []).push(share);
+    (rooms[r.layout] ??= []).push(share);
   });
-  return measure(per);
+  const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  return { ...measure(per), rooms: Object.fromEntries(Object.entries(rooms).map(([id, xs]) => [id, mean(xs)])) };
 }
 
 /** The three yardsticks the measurement script tracks. */

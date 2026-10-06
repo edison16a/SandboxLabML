@@ -18,15 +18,16 @@
  * genome per yardstick at the start and the end), --curve-matches 3 (the
  * same in between), --inputs standard|starter|advanced, --reward
  * v1|starter|cover, --opponents current,hallOfFame,scripted (like 2,1,1),
- * --mix true|false, --shared true|false, --prep seconds, --preset id (an SBL preset drives
- * both teams and its generation block), --quiet (no per generation rows).
+ * --mix true|false, --shared true|false, --prep seconds, --preset id (an
+ * SBL preset drives both teams and its generation block, and its brain
+ * wins over --inputs), --quiet (no per generation rows).
  */
 import { availableParallelism } from 'node:os';
 import { HIDESEEK_BLUEPRINTS } from '../src/engine/blueprints/presets';
 import { HideSeekTrainer, type HideSeekGenerationStats, type HideSeekRewardId, type HideSeekSetupId, type HideSeekTrainerOptions } from '../src/engine/hideseek';
-import { createScriptHost, findScriptPreset } from '../src/engine/script';
+import { compileScript, createScriptHost, findScriptPreset } from '../src/engine/script';
 import { Farm } from './hideseek/farm';
-import { allYardsticks, formatMeasure, zScore, type Yardsticks } from './hideseek/yardsticks';
+import { allYardsticks, formatMeasure, formatRooms, zScore, type Yardsticks } from './hideseek/yardsticks';
 
 function parseArgs(): Record<string, string> {
   const out: Record<string, string> = {};
@@ -35,11 +36,11 @@ function parseArgs(): Record<string, string> {
   return out;
 }
 
-/** Trainer options from the command line. Anything not given comes from the setup. */
-function optionsFrom(args: Record<string, string>, customSensors: number): HideSeekTrainerOptions {
+/** Trainer options from the command line. A preset's own brain wins over --inputs. Anything not given comes from the setup. */
+function optionsFrom(args: Record<string, string>, customSensors: number, presetBrain: string | null): HideSeekTrainerOptions {
   const tier = args.inputs ?? 'standard';
-  const blueprint = HIDESEEK_BLUEPRINTS.find((b) => b.tier === tier);
-  if (!blueprint) throw new Error(`Unknown inputs "${tier}". Use starter, standard or advanced.`);
+  const blueprint = HIDESEEK_BLUEPRINTS.find((b) => (presetBrain ? b.id === presetBrain : b.tier === tier));
+  if (!blueprint) throw new Error(`Unknown inputs "${presetBrain ?? tier}". Use starter, standard or advanced.`);
   const o: HideSeekTrainerOptions = {
     seed: Number(args.seed ?? 1),
     setup: (args.setup ?? 'v2') as HideSeekSetupId,
@@ -86,7 +87,8 @@ async function main(): Promise<void> {
   const preset = args.preset ? findScriptPreset(args.preset) : undefined;
   if (args.preset && !preset) throw new Error(`Unknown preset "${args.preset}".`);
   const host = preset ? createScriptHost(preset.source) : undefined;
-  const trainer = HideSeekTrainer.create(optionsFrom(args, host?.customSensors.length ?? 0), host);
+  const brain = preset ? (compileScript(preset.source).script?.header.brain ?? null) : null;
+  const trainer = HideSeekTrainer.create(optionsFrom(args, host?.customSensors.length ?? 0, brain), host);
   const farm = new Farm(Number(args.workers ?? Math.min(2, Math.max(0, availableParallelism() - 1))));
   const o = trainer.options;
   const opp = o.opponents;
@@ -112,7 +114,8 @@ async function main(): Promise<void> {
     else if (trainer.generation % every === 0) await timed(between);
   }
   const minutes = (performance.now() - t0) / 60000;
-  const z = (k: keyof Yardsticks) => `${formatMeasure(start[k])} to ${formatMeasure(last[k])}, ${zScore(start[k], last[k]).toFixed(1)} SE`;
+  const z = (k: keyof Yardsticks) =>
+    `${formatMeasure(start[k])} to ${formatMeasure(last[k])}, ${zScore(start[k], last[k]).toFixed(1)} SE (by room: ${formatRooms(start[k])} to ${formatRooms(last[k])})`;
   console.log(`Summary after ${generations} generations (${minutes.toFixed(1)} min including benchmarks):`);
   console.log(`  hiders vs scripted seeker, hidden share: ${z('hidersVsScripted')}`);
   console.log(`  hiders vs held-out seeker, hidden share: ${z('hidersVsHeldOut')}`);
