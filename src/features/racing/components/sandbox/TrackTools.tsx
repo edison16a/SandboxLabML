@@ -2,13 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import { Check, Flag, PencilRuler } from 'lucide-react';
-import { buildTrack } from '@/engine/racing/track/buildTrack';
 import { checkTrack } from '@/engine/racing/track/validate';
 import { cn } from '@/ui/cn';
 import { Button } from '@/ui/primitives/Button';
 import { Slider } from '@/ui/primitives/Slider';
 import { racingSession } from '../../session/RacingSession';
-import { forTraining, sameRoad } from '../../session/trackChoice';
+import { forTraining, sameRoad, trackFor } from '../../session/trackChoice';
 import { useRacingLab } from '../../state/labStore';
 import { NewRunDialog } from '../NewRunDialog';
 import { overlayButton } from './overlay';
@@ -27,7 +26,7 @@ export function TrackTools() {
   const [train, setTrain] = useState(false);
   const info = useMemo(() => {
     if (!spec) return null;
-    const track = buildTrack(spec);
+    const track = trackFor(spec);
     return { length: track.length, problems: checkTrack(track) };
   }, [spec]);
   // Memoized so the dialog's prefill does not reset on every render while it is open.

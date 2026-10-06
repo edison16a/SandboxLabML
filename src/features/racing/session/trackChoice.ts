@@ -1,5 +1,15 @@
+import { buildTrack } from '@/engine/racing/track/buildTrack';
 import { circle } from '@/engine/racing/track/shapes';
-import type { TrackSpec } from '@/engine/racing/track/types';
+import type { Track, TrackSpec } from '@/engine/racing/track/types';
+
+const built = new WeakMap<TrackSpec, Track>();
+
+/** The built track for a spec, made once per spec object, since several Sandbox panels read the same one. */
+export function trackFor(spec: TrackSpec): Track {
+  let track = built.get(spec);
+  if (!track) built.set(spec, (track = buildTrack(spec)));
+  return track;
+}
 
 /** True when two specs describe the same road, whatever their ids and names say. */
 export function sameRoad(a: TrackSpec, b: TrackSpec): boolean {
