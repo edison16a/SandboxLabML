@@ -65,7 +65,7 @@ export function floorAoGeometry(rects: Rect[]): THREE.BufferGeometry {
   const alpha: number[] = [];
   const y = 0.004;
   const quad = (a: number[], b: number[], c: number[], d: number[]) => {
-    // Listed clockwise in x and z, which is counterclockwise seen from above.
+    // Each quad lists its corners clockwise seen from above, so the triangles take them in reverse to face up.
     for (const p of [a, c, b, a, d, c]) {
       pos.push(p[0], y, p[1]);
       alpha.push(p[2]);
