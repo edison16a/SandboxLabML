@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { Popover } from '@/ui/primitives/Popover';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { resolvedQuality, useSettings, type FrameRate, type Quality, type SettingsState } from './settingsStore';
+import { ensureGpuProbed } from './useLabQuality';
 
 const NAMES = { low: 'Low', medium: 'Medium', high: 'High', ultra: 'Ultra' } as const;
 
@@ -38,6 +39,8 @@ export function SettingsMenu() {
     <Popover
       align="end"
       label="Settings"
+      // Opened outside a lab, the GPU may not be probed yet, and the default quality depends on it.
+      onOpenChange={(open) => open && ensureGpuProbed()}
       className="w-80 p-0"
       trigger={
         <button

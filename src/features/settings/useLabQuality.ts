@@ -4,6 +4,12 @@ import { useLayoutEffect } from 'react';
 import { probeWeakGpu } from '@/render/shared/quality';
 import { parseQualityPin, resolvedQuality, useSettings, type QualityPin } from './settingsStore';
 
+/** Probes the GPU the first time anything needs the default quality. */
+export function ensureGpuProbed() {
+  const s = useSettings.getState();
+  if (s.weakGpu === null) s.setWeakGpu(probeWeakGpu());
+}
+
 /**
  * The quality a lab draws at. It probes the GPU once for the default and
  * pins the quality from ?quality= while the lab that carried it is open.
@@ -11,10 +17,7 @@ import { parseQualityPin, resolvedQuality, useSettings, type QualityPin } from '
  * canvas mounts.
  */
 export function useLabQuality(pinParam: string | null): QualityPin {
-  useLayoutEffect(() => {
-    const s = useSettings.getState();
-    if (s.weakGpu === null) s.setWeakGpu(probeWeakGpu());
-  }, []);
+  useLayoutEffect(ensureGpuProbed, []);
   useLayoutEffect(() => {
     useSettings.getState().setPinned(parseQualityPin(pinParam));
     return () => useSettings.getState().setPinned(null);
