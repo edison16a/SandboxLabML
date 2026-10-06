@@ -92,3 +92,19 @@ describe('headless training', () => {
     expect(lappedAt).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe('lesion test', () => {
+  it('forces the chosen input and changes nothing else', () => {
+    const pop = Population.create({ inputCount: 11, outputCount: 2, activation: 'tanh', wiring: 'direct' }, 2, { populationSize: 1 });
+    const plain = new RacingEnv(options());
+    const lesioned = new RacingEnv({ ...options(), lesion: [[4, 0]] });
+    plain.reset([new Network(pop.genomes[0])]);
+    lesioned.reset([new Network(pop.genomes[0])]);
+    plain.step();
+    lesioned.step();
+    const a = plain.lastObservation(0);
+    const b = lesioned.lastObservation(0);
+    expect(b[4]).toBe(0);
+    for (let i = 0; i < a.length; i++) if (i !== 4) expect(b[i]).toBe(a[i]);
+  });
+});

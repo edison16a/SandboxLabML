@@ -17,6 +17,11 @@ export interface RacingEnvOptions {
   /** Episode length in seconds. */
   maxTime: number;
   customSensors?: CustomSensorSpec[];
+  /**
+   * Lesion test: inputs forced to a fixed normalized value after sensing.
+   * Only the Sandbox sets this; training never does.
+   */
+  lesion?: ReadonlyArray<readonly [index: number, value: number]>;
 }
 
 /** 8 floats per car. Shared by the population stream and the ghost stream. */
@@ -105,6 +110,7 @@ export class RacingEnv {
     this.observer.castRays(rc, this.opts.track);
     const n = this.observer.write(rc, this.opts.track, out, this.noise[i]);
     if (this.opts.controller.customSensorCount > 0) this.opts.controller.sensors(rc, out, n);
+    if (this.opts.lesion) for (const [k, v] of this.opts.lesion) if (k < out.length) out[k] = v;
     return out;
   }
 

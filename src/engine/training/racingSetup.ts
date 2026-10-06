@@ -20,6 +20,8 @@ export interface RacingSetup {
   inputs: RacingInputConfig;
   maxTime: number;
   scriptSource: string | null;
+  /** Sandbox lesion test, as (input index, forced value) pairs. Never set for training. */
+  lesion?: Array<[number, number]>;
 }
 
 export function racingSetupFor(config: RunConfig, track: TrackSpec, scriptSource: string | null): RacingSetup {
@@ -41,6 +43,7 @@ export function envOptionsFor(setup: RacingSetup, track: Track, host: ScriptHost
     maxTime: setup.maxTime,
     controller: host.createRacingController(seed, track),
     customSensors: host.customSensors,
+    lesion: setup.lesion,
   };
 }
 
