@@ -45,6 +45,7 @@ export function ViewportHud({ population }: { population: SnapshotStream | null 
   const view = useRacingLab((s) => s.view);
   const camera = useRacingLab((s) => s.camera);
   const inputs = useRacingLab((s) => s.inputsOverlay);
+  const mode = useRacingLab((s) => s.mode);
   const set = useRacingLab((s) => s.set);
   return (
     <>
@@ -101,9 +102,12 @@ export function ViewportHud({ population }: { population: SnapshotStream | null 
         </div>
       </div>
       <HeldNote />
-      <div className="pointer-events-none absolute right-3 bottom-3 hidden items-center gap-1 rounded-md bg-black/40 px-2 py-1 text-[11px] text-white/70 md:flex">
-        <Video className="size-3" /> Click a car to follow it
-      </div>
+      {/* The Sandbox panel docks in this corner, so the hint would show through its glass. */}
+      {mode === 'train' && (
+        <div className="pointer-events-none absolute right-3 bottom-3 hidden items-center gap-1 rounded-md bg-black/40 px-2 py-1 text-[11px] text-white/70 md:flex">
+          <Video className="size-3" /> Click a car to follow it
+        </div>
+      )}
     </>
   );
 }
