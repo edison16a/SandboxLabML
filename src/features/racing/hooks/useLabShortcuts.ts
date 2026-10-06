@@ -16,7 +16,8 @@ function next<T>(list: T[], current: T): T {
 /**
  * Keyboard shortcuts for the lab: Space trains or pauses, S steps one
  * generation, 1 to 5 pick a speed, I toggles the inputs overlay, C cycles
- * cameras, V cycles views, N opens a new run. Ignored while typing.
+ * cameras, V cycles views, N opens a new run. In the Sandbox, Space plays
+ * or pauses the race and R restarts it. Ignored while typing.
  */
 export function useLabShortcuts(onNewRun: () => void) {
   useEffect(() => {
@@ -29,8 +30,11 @@ export function useLabShortcuts(onNewRun: () => void) {
       const key = e.key.toLowerCase();
       if (key === ' ') {
         e.preventDefault();
-        void (s.status === 'running' ? session.pause() : session.start());
-      } else if (key === 's' && s.status !== 'running') void session.start(1);
+        // In the Sandbox, Space plays and pauses the race. Training stays paused until the user goes back.
+        if (s.mode === 'sandbox') void session.sandbox?.setPaused(!s.sandboxPaused);
+        else void (s.status === 'running' ? session.pause() : session.start());
+      } else if (key === 'r' && s.mode === 'sandbox') void session.sandbox?.restart();
+      else if (key === 's' && s.status !== 'running' && s.mode === 'train') void session.start(1);
       else if (key >= '1' && key <= '5') void session.setSpeed(SPEEDS[Number(key) - 1]);
       else if (key === 'i') s.set({ inputsOverlay: !s.inputsOverlay });
       else if (key === 'c') s.set({ camera: next(CAMERAS, s.camera) });

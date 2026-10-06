@@ -7,7 +7,8 @@ import { Popover } from '@/ui/primitives/Popover';
 import { useRacingLab } from '../state/labStore';
 
 const SHORTCUTS: Array<[string, string]> = [
-  ['Space', 'Train or pause'],
+  ['Space', 'Train or pause. In the Sandbox, play or pause the race'],
+  ['R', 'Restart the Sandbox race'],
   ['S', 'Run one generation'],
   ['1 to 5', 'Speed: 1x, 2x, 4x, Turbo, Max'],
   ['I', 'Inputs overlay'],
