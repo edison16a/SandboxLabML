@@ -1,21 +1,23 @@
-import { findPresetBlueprint } from '../../src/engine/blueprints/presets';
-import type { RacingBlueprint } from '../../src/engine/blueprints/types';
-import { runBenchmark } from '../../src/engine/bench';
-import type { ReferenceCurve } from '../../src/engine/bench/types';
-import { mixSeed } from '../../src/engine/core/rng';
-import type { Genome } from '../../src/engine/neat/types';
-import { linkScriptCompiler } from '../../src/engine/lessons/compilerLink';
-import { evaluateRacing } from '../../src/engine/racing/episode';
-import { BUILT_IN_TRACKS } from '../../src/engine/racing/track/presets';
-import { compileScript } from '../../src/engine/script/compiler';
-import { RACING_PRESETS } from '../../src/engine/script/presets/racing';
-import { envOptionsFor, TrackCache } from '../../src/engine/training/racingSetup';
-import { RacingTrainer } from '../../src/engine/training/racingTrainer';
-import { createRacingRunConfig, type RunConfig } from '../../src/engine/training/runConfig';
+import { findPresetBlueprint } from '../../../src/engine/blueprints/presets';
+import type { RacingBlueprint } from '../../../src/engine/blueprints/types';
+import { runBenchmark } from '../../../src/engine/bench';
+import type { ReferenceTier } from '../../../src/engine/bench/types';
+import { mixSeed } from '../../../src/engine/core/rng';
+import type { Genome } from '../../../src/engine/neat/types';
+import { linkScriptCompiler } from '../../../src/engine/lessons/compilerLink';
+import { evaluateRacing } from '../../../src/engine/racing/episode';
+import { BUILT_IN_TRACKS } from '../../../src/engine/racing/track/presets';
+import { compileScript } from '../../../src/engine/script/compiler';
+import { RACING_PRESETS } from '../../../src/engine/script/presets/racing';
+import { envOptionsFor, TrackCache } from '../../../src/engine/training/racingSetup';
+import { RacingTrainer } from '../../../src/engine/training/racingTrainer';
+import { createRacingRunConfig, type RunConfig } from '../../../src/engine/training/runConfig';
+import { checkpoints } from '../checkpoints';
 
-/** One reference training run: a preset tier and a seed. */
-export interface ReferenceJob {
-  tier: ReferenceCurve['tier'];
+/** One Racing reference training run: a preset tier and a seed. */
+export interface RacingReferenceJob {
+  kind: 'racing';
+  tier: ReferenceTier;
   seed: number;
   /** Last generation trained. Generations 0 to this are all evaluated. */
   generations: number;
@@ -27,18 +29,11 @@ export interface ReferenceJob {
 }
 
 /** Benchmark score at each checkpoint generation, in order. */
-export interface ReferenceRunResult {
-  job: ReferenceJob;
+export interface RacingReferenceResult {
+  job: RacingReferenceJob;
   scores: number[];
   genomes?: Genome[];
   seconds: number;
-}
-
-/** Generations where the champion is benchmarked: 0, every, 2 * every and so on, up to the last one. */
-export function checkpoints(generations: number, every: number): number[] {
-  const out: number[] = [];
-  for (let g = 0; g <= generations; g += every) out.push(g);
-  return out;
 }
 
 /**
@@ -46,7 +41,7 @@ export function checkpoints(generations: number, every: number): number[] {
  * Oval, the track a new run starts on. Presets that pick their own track
  * (Beginner) or switch tracks (Advanced) do so from their script.
  */
-export function referenceConfig(job: ReferenceJob): RunConfig {
+export function racingReferenceConfig(job: RacingReferenceJob): RunConfig {
   const preset = RACING_PRESETS.find((p) => p.tier === job.tier);
   const script = preset ? compileScript(preset.source).script : null;
   const blueprint = script ? findPresetBlueprint(script.header.brain ?? 'racing-standard') : undefined;
@@ -68,10 +63,10 @@ export function referenceConfig(job: ReferenceJob): RunConfig {
  * sim worker's, so a reference run is the same run a user would get with
  * that preset and seed.
  */
-export async function runReference(job: ReferenceJob): Promise<ReferenceRunResult> {
+export async function trainRacingReference(job: RacingReferenceJob): Promise<RacingReferenceResult> {
   linkScriptCompiler();
   const started = performance.now();
-  const config = referenceConfig(job);
+  const config = racingReferenceConfig(job);
   const trainer = new RacingTrainer(config);
   const cache = new TrackCache();
   const marks = new Set(checkpoints(job.generations, job.every));
