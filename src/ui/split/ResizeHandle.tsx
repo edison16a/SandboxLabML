@@ -18,6 +18,11 @@ const STEP = 16;
 /** Pixels the pointer must travel before a press counts as a drag, so a click that wobbles a little is still a click. */
 const SLOP = 3;
 
+/** The pane a handle sizes: its sibling on the given side. */
+function sizedPane(handle: HTMLElement | null, pane: 'before' | 'after') {
+  return pane === 'before' ? handle?.previousElementSibling : handle?.nextElementSibling;
+}
+
 /**
  * A draggable divider between two side by side panes, from the lg
  * breakpoint up. It takes no width of its own: a thin line and a grip fade
@@ -38,10 +43,18 @@ export function ResizeHandle({ pane, label, className, ...options }: ResizeHandl
   const sign = pane === 'before' ? 1 : -1;
 
   /** The width the pane really has. Flexbox may hold it under the requested size when the window is narrow. */
-  const measured = () => {
-    const el = pane === 'before' ? ref.current?.previousElementSibling : ref.current?.nextElementSibling;
-    return el ? el.getBoundingClientRect().width : size;
-  };
+  const measured = () => sizedPane(ref.current, pane)?.getBoundingClientRect().width ?? size;
+
+  // A screen reader should hear the width on screen, so follow the pane as the window or a drag resizes it.
+  const [shown, setShown] = useState<number | null>(null);
+  useEffect(() => {
+    const el = sizedPane(ref.current, pane);
+    if (!el) return;
+    const observer = new ResizeObserver(() => setShown(Math.round(el.getBoundingClientRect().width)));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [pane]);
+  const now = shown ?? size;
 
   // Keep the resize cursor and stop text selection while the pointer is anywhere on the page.
   useEffect(() => {
@@ -90,10 +103,10 @@ export function ResizeHandle({ pane, label, className, ...options }: ResizeHandl
       role="separator"
       aria-orientation="vertical"
       aria-label={label}
-      aria-valuenow={size}
+      aria-valuenow={now}
       aria-valuemin={options.min}
       aria-valuemax={options.max}
-      aria-valuetext={`${size} pixels wide`}
+      aria-valuetext={`${now} pixels wide`}
       tabIndex={0}
       data-dragging={dragging || undefined}
       onPointerDown={onPointerDown}
