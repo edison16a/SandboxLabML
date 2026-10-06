@@ -65,6 +65,7 @@ export class RacingSession {
     pool.population.clear();
     pool.ghosts.clear();
     await pool.replay.stopGhosts();
+    this.store.set({ trackSpec: null });
     const generation = await pool.coordinator.loadRacing(config, state);
     this.ghostKey = '';
     this.store.set({
@@ -128,7 +129,7 @@ export class RacingSession {
       .map((g) => byGen.get(g))
       .filter((r) => r !== undefined)
       .map((r) => ({ generation: r.generation, genome: r.genome, seed: r.replaySeed, scriptSource: scriptAt(run, r.generation)?.source ?? null }));
-    const track = run.racing!.track;
+    const track = this.store.trackSpec ?? run.racing!.track;
     await pool.replay.setGhostScene(racingSetupFor(run, track, null), specs);
     this.store.set({ ghostGenerations: gens });
     if (!isWatchSpeed(speed) || this.store.status !== 'running') await this.playGhosts(isWatchSpeed(speed) ? WATCH_SPEEDS[speed] : 1, true);
@@ -153,6 +154,10 @@ export class RacingSession {
         break;
       case 'checkpoint':
         if (run) void saveCheckpoint(run.id, e.generation, e.state);
+        break;
+      case 'track':
+        this.store.set({ trackSpec: e.spec });
+        void this.refreshGhosts(true);
         break;
       case 'live-start':
         this.store.set({ liveGeneration: e.generation });

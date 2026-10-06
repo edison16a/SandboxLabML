@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
+import type { TrackSpec } from '@/engine/racing/track/types';
 import type { TrainingStatus } from '@/workers/coordinator/events';
 import type { SpeedMode } from '@/workers/shared/protocol';
 import type { GhostTelemetry } from '@/workers/replay/ghostPlayer';
@@ -23,6 +24,8 @@ export type PanelTab = 'progress' | 'network' | 'species' | 'inputs' | 'model';
  */
 export interface RacingLabState {
   run: RunConfig | null;
+  /** Track the cars currently drive on. Usually the run's track; scripts can switch it. */
+  trackSpec: TrackSpec | null;
   status: TrainingStatus;
   speed: SpeedMode;
   records: GenerationRecord[];
@@ -56,6 +59,7 @@ export interface RacingLabState {
 
 export const useRacingLab = create<RacingLabState>((set, get) => ({
   run: null,
+  trackSpec: null,
   status: 'idle',
   speed: '1x',
   records: [],

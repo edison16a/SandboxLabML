@@ -8,6 +8,20 @@ import { hostFor, type ScriptHost } from '@/engine/training/scriptHost';
 import { Pacer } from '../shared/pacer';
 import type { StreamSender } from '../shared/streamPort';
 
+/** Car furthest along the road among those still driving, or overall if all stopped. */
+function leaderIndex(env: RacingEnv): number {
+  let best = 0;
+  let bestScore = -Infinity;
+  env.cars.forEach((c, i) => {
+    const score = c.progress + (c.status === 0 ? 1e6 : 0);
+    if (score > bestScore) {
+      bestScore = score;
+      best = i;
+    }
+  });
+  return best;
+}
+
 export interface LiveRacingRequest {
   setup: RacingSetup;
   genomes: Genome[];
@@ -80,7 +94,8 @@ export class RacingSim {
     if (!buffer) return;
     env.snapshot(buffer);
     const msg = { kind: 'frame' as const, stream: 'population' as const, generation, tick: env.tick, count: env.cars.length, buffer };
-    const i = stream.inspect;
+    // -1 means "whoever leads", so the overlay can follow the champion without a round trip.
+    const i = stream.inspect === -1 ? leaderIndex(env) : stream.inspect;
     let inspect;
     if (i !== null && i >= 0 && i < env.cars.length) {
       const obs = Float32Array.from(env.lastObservation(i));

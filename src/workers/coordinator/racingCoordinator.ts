@@ -28,6 +28,7 @@ export class RacingCoordinator {
     this.trainer = new RacingTrainer(config, state);
     this.sims = sims;
     this.emit = emit;
+    emit({ type: 'track', spec: this.trainer.setup().track });
   }
 
   get generation(): number {
@@ -104,8 +105,10 @@ export class RacingCoordinator {
       results = parts.flat();
     }
     if (results.length !== genomes.length) return; // live run was stopped part way
+    const trackBefore = t.track.hash;
     const record = t.complete(results, performance.now() - started);
     this.emit({ type: 'generation', record });
+    if (t.track.hash !== trackBefore) this.emit({ type: 'track', spec: t.setup().track });
     if (t.generation % CHECKPOINT_EVERY === 0) this.emit({ type: 'checkpoint', generation: t.generation, state: t.toState() });
   }
 }

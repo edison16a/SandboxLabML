@@ -141,6 +141,19 @@ export class GhostPlayer {
       order.forEach((ghostIndex, k) => buffer.set(tmp.subarray(k * stride, (k + 1) * stride), ghostIndex * stride));
       tick = Math.max(tick, env.tick);
     }
-    this.stream.send({ kind: 'frame', stream: 'ghosts', generation: 0, tick, count: this.ghosts.length, buffer });
+    this.stream.send({ kind: 'frame', stream: 'ghosts', generation: 0, tick, count: this.ghosts.length, buffer, inspect: this.inspected() });
+  }
+
+  /** Observation and outputs of the inspected ghost, for the inputs overlay. */
+  private inspected() {
+    const index = this.stream.inspect;
+    if (index === null) return undefined;
+    for (const { env, order } of this.envs) {
+      const k = order.indexOf(index);
+      if (k < 0) continue;
+      const car = env.cars[k].car;
+      return { index, obs: Float32Array.from(env.lastObservation(k)), out: Float32Array.from([car.steerCmd, car.pedal]) };
+    }
+    return undefined;
   }
 }
