@@ -3,8 +3,13 @@ import type { Track } from '../track/types';
 /** Distance along the road from one grid slot to the next, m. Cars alternate sides, so a side's slots are twice this apart. */
 export const GRID_SPACING = 6;
 
-/** Share of the half width a grid car sits off the centerline. Keeps it well inside the white lines on the narrowest road. */
-const LANE_OFFSET = 0.42;
+/**
+ * Share of the half width a grid car sits off the centerline. Slots are
+ * already 6 m apart along the road, so the offset only has to read as a
+ * staggered grid. Kept small because brains only ever started on the
+ * centerline, and a big offset sends some of them into the wall.
+ */
+const LANE_OFFSET = 0.3;
 
 /** Where a car lines up before the start. */
 export interface GridSlot {
