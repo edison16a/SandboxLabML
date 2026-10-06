@@ -13,6 +13,7 @@ interface ResizeHandleProps extends SplitSizeOptions {
   className?: string;
 }
 
+/** Pixels an arrow key moves the divider. Shift moves four times as far. */
 const STEP = 16;
 
 /**
