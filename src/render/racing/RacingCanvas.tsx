@@ -16,6 +16,7 @@ import { ChampionCar } from './ChampionCar';
 import { BrakeMap } from './BrakeMap';
 import { CrashRings } from './CrashRings';
 import { FrameDriver } from './FrameDriver';
+import { Grandstand } from './Grandstand';
 import { GhostCars } from './GhostCars';
 import { PopulationCars } from './PopulationCars';
 import { RacingEnvironment } from './RacingEnvironment';
@@ -79,6 +80,7 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
         <RacingEnvironment tier={tier} focus={target} />
         <TrackMesh track={track} />
         <Scenery track={track} count={tier === 'low' ? 140 : 320} />
+        <Grandstand track={track} />
         <PopulationCars castShadow={tier === 'high'} />
         <GhostCars />
         <ChampionCar />
