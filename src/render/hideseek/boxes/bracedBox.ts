@@ -44,7 +44,8 @@ export function crateFaces(s: BoxSize): CrateFace[] {
 /** A bar of square ends from a to b, `w` wide across the face and `d` deep along the face normal. */
 function bar(a: THREE.Vector3, b: THREE.Vector3, normal: THREE.Vector3, w: number, d: number): THREE.BufferGeometry {
   const len = a.distanceTo(b);
-  const g = new RoundedBoxGeometry(len + w * 0.6, w, d, 2, Math.min(w, d) * 0.32);
+  // One bevel segment: a crisp chamfer that catches the light, at a third of the triangles of a round bevel.
+  const g = new RoundedBoxGeometry(len + w * 0.6, w, d, 1, Math.min(w, d) * 0.3);
   const x = b.clone().sub(a).normalize();
   const z = normal.clone().sub(x.clone().multiplyScalar(normal.dot(x))).normalize();
   const y = z.clone().cross(x);

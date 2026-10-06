@@ -34,7 +34,9 @@ export interface HsBoxProps {
 /** The lock animation: braces, hologram and shackle all settle in 200 ms. */
 const LOCK_SECONDS = 0.2;
 /** Height of the padlock hologram over the crate top, m. */
-const HOVER = 0.5;
+const HOVER = 0.55;
+/** The padlock is drawn larger than life so it reads from the default camera, 25 m away. */
+const HOLO_SCALE = 1.35;
 
 /**
  * One braced crate. Locking it turns the braces to the hider color and
@@ -72,7 +74,7 @@ export function HsBox({ kind, size, read, full = true, shadows = false, blob = f
       h.visible = k > 0.001;
       // A little overshoot as it appears, then a slow bob and turn.
       const pop = 0.55 + 0.45 * e + 0.18 * Math.sin(e * Math.PI) * (1 - e);
-      h.scale.setScalar(pop);
+      h.scale.setScalar(pop * HOLO_SCALE);
       h.position.y = size.height + HOVER + Math.sin(t * 1.9 + state.seed) * 0.035;
       h.rotation.y = t * 0.7 + state.seed - d.yaw;
     }

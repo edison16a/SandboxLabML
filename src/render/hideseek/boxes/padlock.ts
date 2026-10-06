@@ -59,10 +59,10 @@ void main() {
   vec2 k = vLocal.xy - vec2(0.0, 0.016);
   float hole = step(length(k), 0.038) + step(abs(k.x), 0.015) * step(k.y, 0.0) * step(-0.09, k.y);
   hole *= uKeyhole * step(0.045, abs(vLocal.z));
-  vec3 color = mix(uColor, vec3(1.0), 0.55 + 0.4 * rim);
-  float a = (0.72 + 0.28 * rim) * scan * (1.0 - 0.6 * min(hole, 1.0));
-  color = mix(color, uColor * 0.7, min(hole, 1.0));
-  gl_FragColor = vec4(color * (1.35 + 0.9 * rim), a * uOpacity);
+  vec3 color = mix(uColor, vec3(1.0), 0.3 + 0.6 * rim);
+  float a = (0.78 + 0.22 * rim) * scan * (1.0 - 0.55 * min(hole, 1.0));
+  color = mix(color, uColor * 0.6, min(hole, 1.0));
+  gl_FragColor = vec4(color * (1.2 + 0.9 * rim), a * uOpacity);
   #include <colorspace_fragment>
 }
 `;
