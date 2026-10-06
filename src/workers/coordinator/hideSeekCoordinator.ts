@@ -29,7 +29,8 @@ export class HideSeekCoordinator {
   private loopPromise: Promise<void> | null = null;
   private live: LiveRound | null = null;
   private done: MatchResult[][] = [];
-  private epoch = 0;
+  /** Shared by every coordinator in this worker, so a new run never reuses an epoch the main thread has seen. */
+  private static epochs = 0;
 
   constructor(
     private readonly config: RunConfig,
@@ -111,7 +112,7 @@ export class HideSeekCoordinator {
       const r = this.done.length;
       const round = plan[r];
       const live = isWatchSpeed(this.speed);
-      const epoch = ++this.epoch;
+      const epoch = ++HideSeekCoordinator.epochs;
       this.emit({ type: 'round', generation, round: r, rounds: plan.length, layout: round[0].layout, matches: round.length, live, epoch });
       let results: MatchResult[] | null;
       if (live) {
