@@ -15,6 +15,8 @@ interface ResizeHandleProps extends SplitSizeOptions {
 
 /** Pixels an arrow key moves the divider. Shift moves four times as far. */
 const STEP = 16;
+/** Pixels the pointer must travel before a press counts as a drag, so a click that wobbles a little is still a click. */
+const SLOP = 3;
 
 /**
  * A draggable divider between two side by side panes, from the lg
@@ -29,7 +31,8 @@ const STEP = 16;
 export function ResizeHandle({ pane, label, className, ...options }: ResizeHandleProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { size, preview, commit, reset } = useSplitSize(ref, options);
-  const drag = useRef<{ x: number; size: number } | null>(null);
+  // Where the drag started, and whether the pointer has moved since. A click that never moves saves nothing.
+  const drag = useRef<{ x: number; size: number; moved: boolean } | null>(null);
   const [dragging, setDragging] = useState(false);
   // Dragging right grows a pane before the handle and shrinks one after it.
   const sign = pane === 'before' ? 1 : -1;
@@ -56,17 +59,22 @@ export function ResizeHandle({ pane, label, className, ...options }: ResizeHandl
     if (e.button !== 0) return;
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
-    drag.current = { x: e.clientX, size: measured() };
+    drag.current = { x: e.clientX, size: measured(), moved: false };
     setDragging(true);
   };
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
-    if (drag.current) preview(drag.current.size + sign * (e.clientX - drag.current.x));
+    const d = drag.current;
+    if (!d || (!d.moved && Math.abs(e.clientX - d.x) < SLOP)) return;
+    d.moved = true;
+    preview(d.size + sign * (e.clientX - d.x));
   };
+  // Saves only after a real drag. A plain click on a pane the window squeezes would otherwise save the squeezed width over the one the person chose.
   const onPointerEnd = () => {
-    if (!drag.current) return;
+    const d = drag.current;
+    if (!d) return;
     drag.current = null;
     setDragging(false);
-    commit(measured());
+    if (d.moved) commit(measured());
   };
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
