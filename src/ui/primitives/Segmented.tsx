@@ -19,16 +19,18 @@ interface SegmentedProps<V extends string> {
   className?: string;
   /** Use light text, for controls drawn over the 3D viewport. */
   overlay?: boolean;
+  'data-tour'?: string;
 }
 
 /** A row of mutually exclusive buttons, like the speed bar and view switch. */
-export function Segmented<V extends string>({ value, options, onChange, label, size = 'md', className, overlay = false }: SegmentedProps<V>) {
+export function Segmented<V extends string>({ value, options, onChange, label, size = 'md', className, overlay = false, ...rest }: SegmentedProps<V>) {
   return (
     <ToggleGroup.Root
       type="single"
       value={value}
       onValueChange={(v) => v && onChange(v as V)}
       aria-label={label}
+      data-tour={rest['data-tour']}
       className={cn('inline-flex items-center gap-0.5 rounded-md border border-border bg-surface-2 p-0.5', className)}
     >
       {options.map((o) => (
