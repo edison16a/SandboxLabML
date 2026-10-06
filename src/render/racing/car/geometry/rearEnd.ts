@@ -7,7 +7,7 @@ import type { Detail, PartBin } from './parts';
 /**
  * The tail: a wide black mesh across the back, Y shaped tail lamps at the
  * upper corners, a pair of hexagonal exhausts set high in the middle and a
- * carbon diffuser under it all.
+ * dark diffuser under it all.
  */
 export function addRear(bin: PartBin, detail: Detail): void {
   const { shape, strip } = capDecals(-1, detail.fine);
@@ -65,10 +65,9 @@ function addDiffuser(bin: PartBin, detail: Detail): void {
   const y0 = 0.115;
   const y1 = 0.31;
   const half = 0.7;
-  // The ramp: a slab, so it reads from above as well as below.
+  // The ramp: a slab, so it reads from above as well as below. Matte black, so the tunnel reads as a deep shadow between the strakes.
   const ramp = new THREE.BoxGeometry(Math.hypot(x1 - x0, y1 - y0), 0.012, half * 2);
   ramp.rotateZ(-Math.atan2(y1 - y0, x0 - x1)).translate((x0 + x1) / 2, (y0 + y1) / 2, 0);
-  // Matte black, so the tunnel reads as a deep shadow between the carbon strakes.
   bin.add('trim', ramp);
   // Strakes split the flow; the outer pair doubles as side walls that close the tunnel from the side.
   const strakes = detail.fine ? [0, 0.36, half] : [0, half];
