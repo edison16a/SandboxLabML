@@ -40,7 +40,7 @@ void main() {
   // Depth fade: thins out close to the camera so a camera inside the cone sees no hard plane.
   float near = smoothstep(0.4, 3.0, eyeDistance);
   float shell = (0.06 + 0.75 * fresnel) * top * (1.0 - vFloor);
-  float pool = vFloor * 0.34 * pow(1.0 - vRadial, 1.3);
+  float pool = vFloor * 0.26 * pow(1.0 - vRadial, 1.3);
   float a = (shell + pool) * radial * near * uOpacity;
   gl_FragColor = vec4(uColor, min(a, 0.85));
   #include <colorspace_fragment>
