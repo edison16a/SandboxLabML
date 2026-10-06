@@ -108,7 +108,9 @@ export class GhostPlayer {
     if (paused) this.setPaused(true);
   }
 
+  /** Stops the replay, including a loop restart still waiting out the gap between runs. */
   stop(): void {
+    this.run++;
     this.pacer?.stop();
     this.pacer = null;
   }
