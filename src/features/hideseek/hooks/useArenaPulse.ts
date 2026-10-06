@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { sandboxCounts } from '@/engine/hideseek/sandbox/snapshot';
 import { STRIDE } from '@/render/hideseek/frame/snapshotRead';
 import { hideSeekSession } from '../session/HideSeekSession';
 import { useHideSeekLab } from '../state/hideSeekStore';
@@ -19,6 +20,16 @@ export interface ArenaPulse {
 const EMPTY: ArenaPulse = { arenas: 0, time: 0, prep: true, seeking: 0, hidden: 0 };
 
 /**
+ * The Sandbox is one arena with many hiders, so "hidden now" counts hiders:
+ * its frame header holds how many there are and how many are in sight.
+ */
+function sandboxPulse(buf: Float32Array): ArenaPulse {
+  const prep = buf[1] === 1;
+  const hiders = sandboxCounts(buf).hiders;
+  return { arenas: 1, time: buf[0], prep, seeking: prep ? 0 : hiders, hidden: prep ? 0 : hiders - (buf[7] | 0) };
+}
+
+/**
  * Samples the feed the viewport shows four times a second. The HUD does
  * not need 60 updates a second, and reading the latest buffer here keeps
  * React out of the render loop entirely.
@@ -31,7 +42,8 @@ export function useArenaPulse(): ArenaPulse {
       const buf = feed?.curr?.buffer;
       if (!feed || !buf || feed.count === 0) return setPulse(EMPTY);
       const s = useHideSeekLab.getState();
-      const n = s.mode === 'sandbox' ? 1 : Math.min(feed.count, s.gridSize === 1 ? feed.count : s.gridSize);
+      if (s.mode === 'sandbox') return setPulse(sandboxPulse(buf));
+      const n = Math.min(feed.count, s.gridSize === 1 ? feed.count : s.gridSize);
       let seeking = 0;
       let hidden = 0;
       for (let i = 0; i < n; i++) {
