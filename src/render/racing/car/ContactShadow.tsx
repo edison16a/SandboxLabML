@@ -29,9 +29,11 @@ export function ContactShadow() {
     map.minFilter = THREE.LinearFilter;
     map.needsUpdate = true;
     // Black texels with the falloff in alpha: the map darkens, its alpha decides how much.
-    const material = new THREE.MeshBasicMaterial({ map, transparent: true, opacity: 0.62, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 });
+    // The units term keeps it in front of the road even looking straight down, where the slope term is zero.
+    const material = new THREE.MeshBasicMaterial({ map, transparent: true, opacity: 0.62, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 });
     const geometry = new THREE.PlaneGeometry(CAR.width + 0.5, CAR.length + 0.6).rotateX(-Math.PI / 2).rotateY(Math.PI / 2);
     return { material, geometry, dispose: () => (map.dispose(), material.dispose(), geometry.dispose()) };
   }, []);
-  return <mesh geometry={built.geometry} material={built.material} position={[0, 0.012, 0]} renderOrder={-1} />;
+  // Just above the road surface (0.012) and below the tire marks (0.035).
+  return <mesh geometry={built.geometry} material={built.material} position={[0, 0.018, 0]} renderOrder={-1} />;
 }
