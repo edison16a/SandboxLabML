@@ -37,6 +37,7 @@ export class GhostPlayer {
   private envs: Array<{ env: RacingEnv; order: number[] }> = [];
   private pacer: Pacer | null = null;
   private loop = true;
+  private paused = false;
   private run = 0;
   private scratch = new Float32Array(RACING_SNAPSHOT.stride * 64);
 
@@ -50,6 +51,7 @@ export class GhostPlayer {
   /** Restarts every ghost from the start line at `speed` times real time. */
   play(speed: number, loop: boolean): void {
     this.stop();
+    this.paused = false;
     if (!this.setup || this.ghosts.length === 0) return;
     this.loop = loop;
     this.build();
@@ -74,7 +76,7 @@ export class GhostPlayer {
       () => this.sendFrame(),
       () => {
         this.sendFrame();
-        if (this.loop && runId === this.run) setTimeout(() => runId === this.run && this.play(speed, true), 1200);
+        if (this.loop && runId === this.run) setTimeout(() => runId === this.run && this.replay(speed), 1200);
       },
     );
     this.pacer = pacer;
@@ -86,7 +88,15 @@ export class GhostPlayer {
   }
 
   setPaused(paused: boolean): void {
+    this.paused = paused;
     this.pacer?.setPaused(paused);
+  }
+
+  /** The loop's own restart. A pause pressed during the gap between laps still holds once the next one starts. */
+  private replay(speed: number): void {
+    const paused = this.paused;
+    this.play(speed, true);
+    if (paused) this.setPaused(true);
   }
 
   stop(): void {
