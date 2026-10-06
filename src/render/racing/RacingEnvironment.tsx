@@ -21,6 +21,11 @@ interface Props {
  * Sky, image based lighting, the sun and the grass. The environment map is
  * rendered from the procedural sky itself, so reflections match the sky with
  * no HDR download.
+ *
+ * The sky shader works out light scattering for every pixel it covers, and
+ * the camera mostly looks at the horizon. On Low that cost goes away: the
+ * sky is drawn once into the environment cube, which then doubles as the
+ * background. A cube that small softens the sun's disk, which Low can afford.
  */
 export function RacingEnvironment({ tier, focus }: Props) {
   const light = useRef<THREE.DirectionalLight>(null);
@@ -43,8 +48,8 @@ export function RacingEnvironment({ tier, focus }: Props) {
     <>
       <color attach="background" args={[HORIZON]} />
       <fog attach="fog" args={[HORIZON, 320, 1500]} />
-      <Sky distance={4000} sunPosition={SUN.clone().multiplyScalar(100)} turbidity={2.6} rayleigh={1.6} mieCoefficient={0.003} mieDirectionalG={0.82} />
-      <Environment resolution={tier === 'low' ? 64 : 256} frames={1} environmentIntensity={0.45}>
+      {tier !== 'low' && <Sky distance={4000} sunPosition={SUN.clone().multiplyScalar(100)} turbidity={2.6} rayleigh={1.6} mieCoefficient={0.003} mieDirectionalG={0.82} />}
+      <Environment resolution={tier === 'low' ? 128 : 256} frames={1} environmentIntensity={0.45} background={tier === 'low'}>
         <Sky distance={4000} sunPosition={SUN.clone().multiplyScalar(100)} turbidity={2.6} rayleigh={1.6} />
       </Environment>
       <hemisphereLight args={['#dbe8ff', '#4d6b3a', 0.35]} />
