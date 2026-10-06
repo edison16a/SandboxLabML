@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { FLAG_FROZEN, FLAG_SEEING, FLAG_SEEN } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
-import { TEAM_LOOK } from '../characters/characterMaterials';
+import { TEAM_BODY } from '../characters/characterMaterials';
 import { instancedCharacterGeometry } from '../characters/instancedCharacter';
 import { useHsScene } from '../frame/sceneContext';
 import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
@@ -14,7 +14,7 @@ import { HS } from '../palette';
 import { commit, GRID_LAYER, makeScratch, MAX_ARENAS } from './scratch';
 import { tintMaskMaterial } from '../shared/tintMask';
 
-const BODY = [new THREE.Color(TEAM_LOOK.hider.body), new THREE.Color(TEAM_LOOK.seeker.body)];
+const BODY = [TEAM_BODY.hider, TEAM_BODY.seeker];
 const WHITE = new THREE.Color('#ffffff');
 /** Snapshots arrive at 30 Hz, so a step between two of them over this gives a speed. */
 const SNAPSHOT_SECONDS = 1 / 30;

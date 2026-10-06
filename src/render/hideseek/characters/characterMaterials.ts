@@ -3,11 +3,14 @@ import { HS, HS_COLORS } from '../palette';
 import type { CharacterPose } from './characterMotion';
 import type { CharacterDetail, CharacterTeam } from './types';
 
-/** Body tint and the color of the light inside it, per team. Blue hides, red seeks. */
-export const TEAM_LOOK: Record<CharacterTeam, { body: string; glow: string }> = {
-  hider: { body: '#5fbdfb', glow: '#b3e4ff' },
-  seeker: { body: '#ff6b62', glow: '#ffae9c' },
-};
+/**
+ * Body color per team: the theme's own hider blue and seeker red, so the
+ * body, its trail, the padlock and the panels all show one color per team.
+ */
+export const TEAM_BODY: Record<CharacterTeam, THREE.Color> = { hider: HS.hider, seeker: HS.seeker };
+/** The light inside a body is its team color washed this far toward white. */
+const GLOW_WASH = 0.6;
+const WHITE = new THREE.Color('#ffffff');
 
 /**
  * Adds a soft light inside the body: a core glow strongest where the
@@ -44,13 +47,10 @@ export class CharacterMaterials {
   readonly blob: THREE.MeshBasicMaterial;
   private readonly tint: THREE.Color;
   private readonly uniforms = { uGlowColor: { value: new THREE.Color() }, uGlow: { value: 1 } };
-  private readonly glowColor: THREE.Color;
 
   constructor(team: CharacterTeam, detail: CharacterDetail, blobMap: THREE.Texture) {
-    const look = TEAM_LOOK[team];
-    this.tint = new THREE.Color(look.body);
-    this.glowColor = new THREE.Color(look.glow);
-    this.uniforms.uGlowColor.value.copy(this.glowColor);
+    this.tint = TEAM_BODY[team].clone();
+    this.uniforms.uGlowColor.value.copy(this.tint).lerp(WHITE, GLOW_WASH);
     this.body =
       detail === 'full'
         ? new THREE.MeshPhysicalMaterial({ color: this.tint, roughness: 0.32, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.09, sheen: 0.4, sheenRoughness: 0.5, sheenColor: new THREE.Color('#ffffff'), envMapIntensity: 1 })
