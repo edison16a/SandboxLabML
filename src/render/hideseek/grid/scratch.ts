@@ -1,0 +1,57 @@
+import * as THREE from 'three';
+import type { FloorPose } from '../frame/snapshotRead';
+
+/** Most arenas the grid ever draws. */
+export const MAX_ARENAS = 50;
+
+/**
+ * The grid draws on layer 1. The main camera sees it; cameras that should
+ * only see the focused room (first person views, contact shadows) do not.
+ */
+export const GRID_LAYER = 1;
+
+/**
+ * Reusable math objects for one instanced component, so filling hundreds
+ * of instances every frame allocates nothing.
+ */
+export interface Scratch {
+  m: THREE.Matrix4;
+  p: THREE.Vector3;
+  q: THREE.Quaternion;
+  s: THREE.Vector3;
+  c: THREE.Color;
+  up: THREE.Vector3;
+  o: { x: number; z: number };
+  pose: FloorPose;
+  version: number;
+}
+
+export function makeScratch(): Scratch {
+  return {
+    m: new THREE.Matrix4(),
+    p: new THREE.Vector3(),
+    q: new THREE.Quaternion(),
+    s: new THREE.Vector3(1, 1, 1),
+    c: new THREE.Color(),
+    up: new THREE.Vector3(0, 1, 0),
+    o: { x: 0, z: 0 },
+    pose: { x: 0, z: 0, yaw: 0 },
+    version: -1,
+  };
+}
+
+/** Writes one instance transform: a floor position, a yaw and a scale. */
+export function placeInstance(mesh: THREE.InstancedMesh, i: number, t: Scratch, x: number, y: number, z: number, yaw: number, sx: number, sy: number, sz: number): void {
+  t.p.set(x, y, z);
+  t.q.setFromAxisAngle(t.up, yaw);
+  t.s.set(sx, sy, sz);
+  t.m.compose(t.p, t.q, t.s);
+  mesh.setMatrixAt(i, t.m);
+}
+
+/** Marks instance buffers dirty after a fill. */
+export function commit(mesh: THREE.InstancedMesh, count: number): void {
+  mesh.count = count;
+  mesh.instanceMatrix.needsUpdate = true;
+  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+}
