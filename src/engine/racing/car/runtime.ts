@@ -19,6 +19,12 @@ export const RUNOFF = 2;
  */
 export interface RacingCar {
   index: number;
+  /**
+   * Per-car seed (from run seed, generation and genome id). Sensor noise and
+   * script rand() derive from it rather than from the car's index, so a ghost
+   * replayed alone draws the same numbers it drew in its generation.
+   */
+  seed: number;
   car: CarState;
   pos: TrackPosition;
   /** Meters driven along the centerline since the start, negative if backwards. */
@@ -48,12 +54,13 @@ export interface RacingCar {
   crashY: number;
 }
 
-export function createRacingCar(index: number, track: Track, rayCount: number): RacingCar {
+export function createRacingCar(index: number, track: Track, rayCount: number, seed = index): RacingCar {
   const heading = trackHeading(track, 0);
   const car = createCar(track.cx[0], track.cy[0], heading);
   const pos: TrackPosition = { index: 0, s: 0, lateral: 0 };
   return {
     index,
+    seed,
     car,
     pos,
     progress: 0,

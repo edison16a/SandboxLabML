@@ -58,7 +58,7 @@ export class RacingEnv {
   reset(brains: Network[], seeds: number[] = []): void {
     const { track, inputs } = this.opts;
     this.brains = brains;
-    this.cars = brains.map((_, i) => createRacingCar(i, track, inputs.rays.count));
+    this.cars = brains.map((_, i) => createRacingCar(i, track, inputs.rays.count, seeds[i] ?? i));
     this.obs = brains.map(() => new Float64Array(this.inputCount));
     this.actions = brains.map(() => new Float64Array(2));
     this.noise = brains.map((_, i) => (inputs.noise > 0 ? new Rng(seeds[i] ?? i) : null));
