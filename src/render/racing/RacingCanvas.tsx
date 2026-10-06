@@ -6,7 +6,7 @@ import { PerformanceMonitor } from '@react-three/drei';
 import { useMemo, useRef } from 'react';
 import type { InputSpec } from '@/engine/env/types';
 import type { Track } from '@/engine/racing/track/types';
-import { useRacingLab } from '@/features/racing/state/labStore';
+import { useRacingLab, viewportHeld } from '@/features/racing/state/labStore';
 import { Effects } from '@/render/shared/Effects';
 import { lowerTier, raiseTier, tierDpr } from '@/render/shared/quality';
 import { StatsProbe } from '@/render/shared/StatsProbe';
@@ -43,6 +43,8 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
   const camera = useCameraMode();
   // While a watch-speed run is paused nothing moves (ghosts pause too), so only redraw on demand.
   const idle = useRacingLab((s) => s.status === 'paused' && s.mode === 'train' && s.speed !== 'turbo' && s.speed !== 'max');
+  // Max hands the whole machine to training, so the last frame simply stays up.
+  const held = useRacingLab(viewportHeld);
   const frame = useMemo(() => createFrame(), []);
   const target = useRef(new THREE.Vector3());
   const value = useMemo(() => ({ track, population, ghosts, frame }), [track, population, ghosts, frame]);
@@ -62,13 +64,13 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
     <Canvas
       shadows={tier !== 'low'}
       dpr={tierDpr(tier)}
-      gl={{ antialias: tier !== 'high', powerPreference: 'high-performance', toneMapping: tier === 'high' ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping, preserveDrawingBuffer: true }}
+      gl={{ antialias: tier === 'medium', powerPreference: 'high-performance', toneMapping: tier === 'high' ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping, preserveDrawingBuffer: true }}
       camera={{ fov: 50, near: 0.5, far: 6000, position: [0, 60, 80] }}
       onCreated={({ gl }) => {
         gl.outputColorSpace = THREE.SRGBColorSpace;
         gl.toneMappingExposure = 0.92;
       }}
-      frameloop={idle ? 'demand' : 'always'}
+      frameloop={held ? 'never' : idle ? 'demand' : 'always'}
       className="touch-none"
     >
       {quality === 'auto' && <PerformanceMonitor bounds={(r) => [Math.min(50, r * 0.8), r]} onDecline={() => step(-1)} onIncline={() => step(1)} />}

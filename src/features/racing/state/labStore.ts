@@ -18,6 +18,15 @@ export type Focus = { kind: 'champion' } | { kind: 'car'; index: number } | { ki
 export type PanelTab = 'progress' | 'network' | 'species' | 'inputs' | 'model';
 
 /**
+ * Max trades the picture for training speed: while it trains, the viewport
+ * stops drawing and the ghost replay stands still, so every core goes to
+ * the sim workers. Pausing or picking another speed brings both back.
+ */
+export function viewportHeld(s: { speed: SpeedMode; status: TrainingStatus; mode: 'train' | 'sandbox' }): boolean {
+  return s.speed === 'max' && s.status === 'running' && s.mode === 'train';
+}
+
+/**
  * UI state for the Racing lab. High-frequency data (snapshots) never goes
  * through here; it flows from the workers straight to the renderer. This
  * store only holds things React needs to re-render for.

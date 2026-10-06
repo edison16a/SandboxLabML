@@ -1,12 +1,12 @@
 'use client';
 
-import { Crosshair, ScanEye, Video } from 'lucide-react';
+import { Crosshair, Gauge, ScanEye, Video } from 'lucide-react';
 import { Button } from '@/ui/primitives/Button';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Select } from '@/ui/primitives/Select';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
-import { useRacingLab, type CameraMode, type QualitySetting, type ViewMode } from '../state/labStore';
+import { useRacingLab, viewportHeld, type CameraMode, type QualitySetting, type ViewMode } from '../state/labStore';
 import { GhostMenu } from './GhostMenu';
 import { LiveStats } from './LiveStats';
 
@@ -23,6 +23,20 @@ function FocusChip() {
       {label}
       <span className="text-white/50">follow leader</span>
     </Button>
+  );
+}
+
+/** Says why the picture stopped moving while Max trains, and how to get it back. */
+function HeldNote() {
+  const held = useRacingLab(viewportHeld);
+  if (!held) return null;
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-14 flex justify-center px-4">
+      <div className="flex items-center gap-2 rounded-md border border-white/10 bg-black/60 px-3 py-2 text-[12px] text-white/85 backdrop-blur-sm">
+        <Gauge className="size-3.5 text-accent" />
+        The viewport is paused so Max can use every core. Pause or pick Turbo to watch again.
+      </div>
+    </div>
   );
 }
 
@@ -89,6 +103,7 @@ export function ViewportHud({ population }: { population: SnapshotStream | null 
           ]}
         />
       </div>
+      <HeldNote />
       <div className="pointer-events-none absolute right-3 bottom-3 hidden items-center gap-1 rounded-md bg-black/40 px-2 py-1 text-[11px] text-white/70 md:flex">
         <Video className="size-3" /> Click a car to follow it
       </div>

@@ -10,7 +10,7 @@ import { toast } from '@/ui/toast/toastStore';
 import { createWorkerPool, type WorkerPool } from '@/workers/client/workerPool';
 import type { CoordinatorEvent } from '@/workers/coordinator/events';
 import { isWatchSpeed, WATCH_SPEEDS, type SpeedMode } from '@/workers/shared/protocol';
-import { useRacingLab } from '../state/labStore';
+import { useRacingLab, viewportHeld } from '../state/labStore';
 import { selectGhosts } from './ghostSelection';
 import { enterSandbox, scheduleSandboxScene } from './sandbox';
 import { maybeBenchmark } from './backgroundBench';
@@ -89,7 +89,8 @@ export class RacingSession {
     const pool = await this.init();
     if (!this.store.run) return;
     await pool.coordinator.start(generations);
-    await pool.replay.setGhostsPaused(false);
+    if (this.store.speed === 'max') await pool.replay.stopGhosts();
+    else await pool.replay.setGhostsPaused(false);
   }
 
   async pause(): Promise<void> {
@@ -102,9 +103,12 @@ export class RacingSession {
   async setSpeed(mode: SpeedMode): Promise<void> {
     const pool = await this.init();
     const wasWatch = isWatchSpeed(this.store.speed);
+    const wasMax = this.store.speed === 'max';
     this.store.set({ speed: mode });
     await pool.coordinator.setSpeed(mode);
     if (isWatchSpeed(mode)) await pool.replay.setGhostSpeed(WATCH_SPEEDS[mode]);
+    else if (viewportHeld(this.store)) await pool.replay.stopGhosts();
+    else if (wasMax) await this.refreshGhosts(true);
     else if (wasWatch) await this.playGhosts(1, true);
   }
 
@@ -137,7 +141,7 @@ export class RacingSession {
   async refreshGhosts(force = false): Promise<void> {
     const pool = this.pool;
     const { run, records, ghostSelection, replayBlocked, speed, mode } = this.store;
-    if (!pool || !run || replayBlocked) return;
+    if (!pool || !run || replayBlocked || viewportHeld(this.store)) return;
     if (mode === 'sandbox') return this.sandboxChanged();
     const gens = selectGhosts(ghostSelection, records.length);
     const key = `${run.id}:${gens.join(',')}`;
@@ -163,9 +167,13 @@ export class RacingSession {
   private onEvent(e: CoordinatorEvent): void {
     const run = this.store.run;
     switch (e.type) {
-      case 'status':
+      case 'status': {
+        const held = viewportHeld(this.store);
         this.store.set({ status: e.status });
+        // Max held the ghosts while it trained. Once it stops, the viewport wakes and they come back.
+        if (held && !viewportHeld(this.store)) void this.refreshGhosts(true);
         break;
+      }
       case 'generation':
         this.store.addRecord(e.record);
         void saveGeneration(e.record);
