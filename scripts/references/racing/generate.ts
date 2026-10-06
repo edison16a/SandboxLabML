@@ -38,7 +38,11 @@ export async function generateRacing(args: Args, pool: JobPool): Promise<void> {
   const gens = checkpoints(generations, every);
   const references = tiers.map((tier) => {
     const runs = results.filter((r) => r.job.tier === tier).sort((a, b) => a.job.seed - b.job.seed);
-    return summarizeCurve(tier, gens, runs.map((r) => r.scores));
+    return summarizeCurve(
+      tier,
+      gens,
+      runs.map((r) => r.scores),
+    );
   });
   writeReferences(out, {
     env: 'racing',

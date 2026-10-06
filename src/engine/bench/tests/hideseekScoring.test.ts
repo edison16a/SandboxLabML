@@ -17,7 +17,12 @@ describe('gamePoints', () => {
 
   it('gives the two sides of the same game points that add up to one', () => {
     // The opponent's view of a game swaps the legs: its hidden is 1 - seen and its seen is 1 - hidden.
-    for (const [hidden, seen] of [[0.9, 0.2], [0.6, 0.1], [0.7, 0.32], [1, 0]]) {
+    for (const [hidden, seen] of [
+      [0.9, 0.2],
+      [0.6, 0.1],
+      [0.7, 0.32],
+      [1, 0],
+    ]) {
       expect(gamePoints(game({ hidden, seen })) + gamePoints(game({ hidden: 1 - seen, seen: 1 - hidden }))).toBe(1);
     }
   });

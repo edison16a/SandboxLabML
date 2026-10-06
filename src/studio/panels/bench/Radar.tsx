@@ -19,7 +19,12 @@ export function Radar({ axes }: { axes: ReadonlyArray<RadarAxis & { value: numbe
   const n = axes.length;
   const shape = axes.map((a, i) => point(i, n, a.value).join(',')).join(' ');
   return (
-    <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="mx-auto h-auto w-full max-w-[240px]" role="img" aria-label={axes.map((a) => `${a.label} ${Math.round(a.value * 100)}%`).join(', ')}>
+    <svg
+      viewBox={`0 0 ${SIZE} ${SIZE}`}
+      className="mx-auto h-auto w-full max-w-[240px]"
+      role="img"
+      aria-label={axes.map((a) => `${a.label} ${Math.round(a.value * 100)}%`).join(', ')}
+    >
       {[0.25, 0.5, 0.75, 1].map((ring) => (
         <polygon key={ring} points={axes.map((_, i) => point(i, n, ring).join(',')).join(' ')} fill="none" stroke="var(--color-border)" strokeWidth={1} />
       ))}

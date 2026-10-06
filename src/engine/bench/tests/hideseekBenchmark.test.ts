@@ -57,7 +57,9 @@ function config(source: string) {
 }
 
 const intermediate = config(HIDESEEK_INTERMEDIATE);
-const otherRewards = config(HIDESEEK_INTERMEDIATE.replace('reward +1 * dt when agent.hidden', 'reward +5 * dt when agent.hidden').replace('reward -1 * dt when agent.seen', 'reward -3 * dt when agent.seen'));
+const otherRewards = config(
+  HIDESEEK_INTERMEDIATE.replace('reward +1 * dt when agent.hidden', 'reward +5 * dt when agent.hidden').replace('reward -1 * dt when agent.seen', 'reward -3 * dt when agent.seen'),
+);
 const model = { hider: brain(standard.inputs, 7), seeker: brain(starter.inputs, 8) };
 
 let pool: ArenaPool;

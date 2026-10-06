@@ -34,7 +34,10 @@ export function hideSeekResult(games: readonly GameResult[], opponents: readonly
   const all = summarize(games);
   const rooms = HIDESEEK_LAYOUT_IDS.map((id) => ({ id, s: summarize(games.filter((g) => g.layout === id)) })).filter((r) => r.s.games > 0);
   const versus = opponents.map((o) => ({ tier: o.tier, s: summarize(games.filter((g) => g.opponent === o.tier)) }));
-  const { radar, score } = composite(all, rooms.map((r) => r.s));
+  const { radar, score } = composite(
+    all,
+    rooms.map((r) => r.s),
+  );
   return {
     env: 'hideseek',
     benchmarkVersion: HIDESEEK_BENCHMARK_VERSION,

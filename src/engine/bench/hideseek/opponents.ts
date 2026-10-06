@@ -25,7 +25,12 @@ export function opponentOf(c: ReferenceChampion): ExamOpponent {
  */
 export function opponentsFrom(refs: BenchReferences): ExamOpponent[] {
   const champions = refs.env === 'hideseek' ? (refs.champions ?? []) : [];
-  const out = REFERENCE_TIERS.flatMap((tier) => champions.filter((c) => c.tier === tier).slice(0, 1).map(opponentOf));
+  const out = REFERENCE_TIERS.flatMap((tier) =>
+    champions
+      .filter((c) => c.tier === tier)
+      .slice(0, 1)
+      .map(opponentOf),
+  );
   if (out.length === 0) throw new Error('The reference file has no Hide and Seek champions to play against.');
   return out;
 }

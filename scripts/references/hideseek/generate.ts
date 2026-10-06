@@ -40,13 +40,20 @@ export async function generateHideSeek(args: Args, pool: JobPool): Promise<void>
   const started = performance.now();
   console.log(`Hide and Seek reference runs: ${tiers.length} tiers x ${seeds} seeds, ${generations} generations, ${population} per team.`);
 
-  const trainJobs: HideSeekTrainJob[] = tiers.flatMap((tier) => Array.from({ length: seeds }, (_, i) => ({ kind: 'hideseek-train' as const, tier, seed: firstSeed + i, generations, every, population })));
+  const trainJobs: HideSeekTrainJob[] = tiers.flatMap((tier) =>
+    Array.from({ length: seeds }, (_, i) => ({ kind: 'hideseek-train' as const, tier, seed: firstSeed + i, generations, every, population })),
+  );
   const runs = await pool.run<HideSeekTrainResult>(trainJobs, (r) => console.log(`${r.job.tier} seed ${r.job.seed}: trained in ${r.seconds.toFixed(0)} s`));
 
   const brains = (run: HideSeekTrainResult) => hideSeekBlueprints(run.config);
   const yardJobs: HideSeekYardstickJob[] = runs.map((r) => {
     const last = r.pairs[r.pairs.length - 1];
-    return { kind: 'hideseek-yardstick', id: `${r.job.tier}:${r.job.seed}`, hider: { genome: last.hider, inputs: brains(r).hider.inputs }, seeker: { genome: last.seeker, inputs: brains(r).seeker.inputs } };
+    return {
+      kind: 'hideseek-yardstick',
+      id: `${r.job.tier}:${r.job.seed}`,
+      hider: { genome: last.hider, inputs: brains(r).hider.inputs },
+      seeker: { genome: last.seeker, inputs: brains(r).seeker.inputs },
+    };
   });
   const yardsticks = new Map((await pool.run<HideSeekYardstickResult>(yardJobs)).map((y) => [y.id, y]));
   const picked = pickChampions(runs, yardsticks, tiers);
@@ -76,7 +83,11 @@ export async function generateHideSeek(args: Args, pool: JobPool): Promise<void>
   const gens = checkpoints(generations, every);
   const references = tiers.map((tier) => {
     const tierRuns = runs.filter((r) => r.job.tier === tier).sort((a, b) => a.job.seed - b.job.seed);
-    return summarizeCurve(tier, gens, tierRuns.map((r) => gens.map((g) => scoreOf(`${tier}:${r.job.seed}:${g}`))));
+    return summarizeCurve(
+      tier,
+      gens,
+      tierRuns.map((r) => gens.map((g) => scoreOf(`${tier}:${r.job.seed}:${g}`))),
+    );
   });
   writeReferences(out, {
     env: 'hideseek',
@@ -88,7 +99,10 @@ export async function generateHideSeek(args: Args, pool: JobPool): Promise<void>
     champions,
   });
   if (args.raw) writeFileSync(args.raw, JSON.stringify({ champions, yardsticks: [...yardsticks.values()], exams: [...exams.values()] }));
-  for (const r of references) console.log(`${r.tier}: final median ${r.finalScore}, rating ${champions.find((c) => c.tier === r.tier)?.rating}, reference pair scores ${scoreOf(`ref:${r.tier}`).toFixed(1)}`);
+  for (const r of references)
+    console.log(
+      `${r.tier}: final median ${r.finalScore}, rating ${champions.find((c) => c.tier === r.tier)?.rating}, reference pair scores ${scoreOf(`ref:${r.tier}`).toFixed(1)}`,
+    );
   console.log(`Wrote ${out} in ${secondsSince(started)} s.`);
 }
 
