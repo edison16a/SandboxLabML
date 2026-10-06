@@ -2,7 +2,7 @@ import { ENGINE_VERSION } from '@/engine/core/version';
 import type { RacingTrainerState } from '@/engine/training/racingTrainer';
 import type { GenerationRecord } from '@/engine/training/records';
 import { racingSetupFor } from '@/engine/training/racingSetup';
-import { scriptAt, type RunConfig } from '@/engine/training/runConfig';
+import type { RunConfig } from '@/engine/training/runConfig';
 import { saveCheckpoint } from '@/storage/checkpoints';
 import { saveGeneration } from '@/storage/generations';
 import { createRun, getRun } from '@/storage/runs';
@@ -11,9 +11,10 @@ import { createWorkerPool, type WorkerPool } from '@/workers/client/workerPool';
 import type { CoordinatorEvent } from '@/workers/coordinator/events';
 import { isWatchSpeed, WATCH_SPEEDS, type SpeedMode } from '@/workers/shared/protocol';
 import { useRacingLab, viewportHeld } from '../state/labStore';
-import { selectGhosts } from './ghostSelection';
+import { ghostSpecs, selectGhosts } from './ghostSelection';
 import { enterSandbox, scheduleSandboxScene } from './sandbox';
 import { maybeBenchmark } from './backgroundBench';
+import { RecordBatcher } from './recordBatcher';
 import { restoreRacingHistory } from './restoreRun';
 
 /**
@@ -26,6 +27,12 @@ export class RacingSession {
   private pool: WorkerPool | null = null;
   private ready: Promise<WorkerPool> | null = null;
   private ghostKey = '';
+  private readonly batcher = new RecordBatcher((batch) => {
+    this.store.addRecords(batch);
+    // Benchmark once the records are in the store, so each score has a row to land on.
+    if (this.pool) for (const r of batch) maybeBenchmark(this.pool, r);
+    void this.refreshGhosts();
+  });
 
   async init(): Promise<WorkerPool> {
     if (!this.ready) this.ready = createWorkerPool((e) => this.onEvent(e)).then((p) => (this.pool = p));
@@ -56,6 +63,7 @@ export class RacingSession {
   private async load(config: RunConfig, history: GenerationRecord[], state?: RacingTrainerState) {
     const pool = await this.init();
     await pool.coordinator.pause();
+    this.batcher.clear();
     pool.population.clear();
     pool.ghosts.clear();
     await pool.replay.stopGhosts();
@@ -139,13 +147,8 @@ export class RacingSession {
     const key = `${run.id}:${gens.join(',')}`;
     if (key === this.ghostKey && !force) return;
     this.ghostKey = key;
-    const byGen = new Map(records.map((r) => [r.generation, r]));
-    const specs = gens
-      .map((g) => byGen.get(g))
-      .filter((r) => r !== undefined)
-      .map((r) => ({ generation: r.generation, genome: r.genome, seed: r.replaySeed, scriptSource: scriptAt(run, r.generation)?.source ?? null }));
     const track = this.store.trackSpec ?? run.racing!.track;
-    await pool.replay.setGhostScene(racingSetupFor(run, track, null), specs);
+    await pool.replay.setGhostScene(racingSetupFor(run, track, null), ghostSpecs(run, records, gens));
     this.store.set({ ghostGenerations: gens });
     if (!isWatchSpeed(speed) || this.store.status !== 'running') await this.playGhosts(isWatchSpeed(speed) ? WATCH_SPEEDS[speed] : 1, true);
     const telemetry = await pool.replay.ghostTelemetry();
@@ -160,6 +163,7 @@ export class RacingSession {
     const run = this.store.run;
     switch (e.type) {
       case 'status': {
+        this.batcher.flush();
         const held = viewportHeld(this.store);
         this.store.set({ status: e.status });
         // Max held the ghosts while it trained. Once it stops, the viewport wakes and they come back.
@@ -167,10 +171,8 @@ export class RacingSession {
         break;
       }
       case 'generation':
-        this.store.addRecord(e.record);
+        this.batcher.push(e.record);
         void saveGeneration(e.record);
-        if (this.pool) maybeBenchmark(this.pool, e.record);
-        void this.refreshGhosts();
         break;
       case 'checkpoint':
         if (run) void saveCheckpoint(run.id, e.generation, e.state);

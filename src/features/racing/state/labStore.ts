@@ -72,7 +72,8 @@ export interface RacingLabState {
   tourSignal: number;
 
   set: (patch: Partial<RacingLabState>) => void;
-  addRecord: (record: GenerationRecord) => void;
+  /** Appends finished generations, oldest first, in one update. */
+  addRecords: (batch: GenerationRecord[]) => void;
 }
 
 export const useRacingLab = create<RacingLabState>((set, get) => ({
@@ -110,12 +111,12 @@ export const useRacingLab = create<RacingLabState>((set, get) => ({
   tourSignal: 0,
 
   set: (patch) => set(patch),
-  addRecord: (record) => {
+  addRecords: (batch) => {
+    if (!batch.length) return;
+    const first = batch[0].generation;
     const records = get().records;
-    // Records can arrive again after a resume from an older checkpoint; replace in place.
-    const next = records.length && records[records.length - 1].generation >= record.generation
-      ? [...records.filter((r) => r.generation < record.generation), record]
-      : [...records, record];
-    set({ records: next, liveGeneration: record.generation + 1 });
+    // Records can arrive again after a resume from an older checkpoint; they replace the old ones from there on.
+    const kept = records.length && records[records.length - 1].generation >= first ? records.filter((r) => r.generation < first) : records;
+    set({ records: [...kept, ...batch], liveGeneration: batch[batch.length - 1].generation + 1 });
   },
 }));
