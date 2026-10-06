@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie';
 import type { Blueprint } from '@/engine/blueprints/types';
 import type { EnvId } from '@/engine/env/types';
+import type { TrackSpec } from '@/engine/racing/track/types';
 import type { GenerationStats } from '@/engine/neat/stats';
 import type { ChampionRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
@@ -119,6 +120,14 @@ export interface SettingRow {
   value: unknown;
 }
 
+/** A track the user drew in the Racing Sandbox and saved under a name. */
+export interface TrackRow {
+  id: string;
+  name: string;
+  spec: TrackSpec;
+  updatedAt: number;
+}
+
 /**
  * The only IndexedDB code in the app. Everything else goes through the
  * repository functions in this folder.
@@ -134,6 +143,7 @@ export class SandboxDb extends Dexie {
   benchmarks!: Table<BenchmarkRow, [string, number]>;
   settings!: Table<SettingRow, string>;
   hsGenerations!: Table<HideSeekGenerationRow, [string, number]>;
+  tracks!: Table<TrackRow, string>;
 
   constructor(name = 'sandboxlab') {
     super(name);
@@ -149,6 +159,8 @@ export class SandboxDb extends Dexie {
       settings: 'key',
     });
     this.version(2).stores({ hsGenerations: '[runId+generation], runId' });
+    // Version 3 only adds a table, so existing rows carry over untouched.
+    this.version(3).stores({ tracks: 'id, updatedAt' });
   }
 }
 
