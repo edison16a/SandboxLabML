@@ -25,18 +25,38 @@ interface Props {
   rig?: HeroRig;
 }
 
+interface HeroGeometry {
+  body: Array<[Slot, THREE.BufferGeometry]>;
+  wheel: Array<[Slot, THREE.BufferGeometry]>;
+  caliper: THREE.BufferGeometry;
+}
+
+/**
+ * Built geometry by tier. The design never changes, so a quality step back
+ * to a tier seen before skips the build. Leaving a tier frees only the GPU
+ * copies, and three uploads them again if the tier comes back.
+ */
+const built = new Map<QualityTier, HeroGeometry>();
+
+function heroGeometry(tier: QualityTier): HeroGeometry {
+  let geo = built.get(tier);
+  if (!geo) {
+    geo = { body: [...buildBody(DETAIL[tier])], wheel: [...buildWheel(DETAIL[tier])], caliper: caliper(DETAIL[tier]) };
+    built.set(tier, geo);
+  }
+  return geo;
+}
+
 /**
  * The full detail car: the body by material slot, and four wheels with
  * spokes, brake discs and calipers. Wheels on the left are mirrored so
- * their faces point out. Geometry is rebuilt only when the tier changes.
+ * their faces point out.
  */
 export function HeroCar({ tier, materials, rig }: Props) {
   const geo = useDisposable(() => {
-    const body = buildBody(DETAIL[tier]);
-    const wheel = buildWheel(DETAIL[tier]);
-    const clamp = caliper(DETAIL[tier]);
-    const all = [...body.values(), ...wheel.values(), clamp];
-    return { body: [...body], wheel: [...wheel], caliper: clamp, dispose: () => all.forEach((g) => g.dispose()) };
+    const g = heroGeometry(tier);
+    const all = [...g.body, ...g.wheel].map(([, part]) => part).concat(g.caliper);
+    return { ...g, dispose: () => all.forEach((part) => part.dispose()) };
   }, [tier]);
 
   return (
