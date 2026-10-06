@@ -51,6 +51,8 @@ export class RoundPlayer {
       () => this.frames.send(matches, tick),
       () => {
         this.frames.send(matches, tick);
+        // The session listens for the end to swap in a newer round between loops.
+        this.frames.end();
         if (loop && runId === this.run) setTimeout(() => runId === this.run && void this.play(replay, speed, loop), LOOP_GAP_MS);
       },
     );
