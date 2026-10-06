@@ -36,8 +36,9 @@ function findLeader(buf: Float32Array, count: number): number {
 export function FrameDriver() {
   const { population, ghosts, frame, track } = useRacingScene();
   useFrame(() => {
-    const { focus, view } = useRacingLab.getState();
-    const showPop = view !== 'overlay' && population?.curr && population.count > 0;
+    const { focus, view, mode } = useRacingLab.getState();
+    // In the Sandbox the population stream holds the last training frame, so the camera only ever follows ghosts.
+    const showPop = mode !== 'sandbox' && view !== 'overlay' && population?.curr && population.count > 0;
     const showGhosts = view !== 'population' && ghosts?.curr && ghosts.count > 0;
     frame.leader = population?.curr ? findLeader(population.curr.buffer, population.count) : -1;
 
