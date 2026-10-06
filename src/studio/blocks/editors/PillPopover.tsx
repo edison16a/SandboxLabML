@@ -7,7 +7,7 @@ import { TextInput } from '@/ui/primitives/Field';
 import { useBlocks } from '../BlocksContext';
 import type { PaletteScope } from '../model/palette';
 import { fillSlot, type Slot } from '../model/slots';
-import { boolBlock, callValueBlock, isEmptySlot, nameBlock, opFamily } from '../model/valueBlocks';
+import { boolBlock, callValueBlock, isEmptySlot, nameBlock, opFamily, signedNumber, signedNumberBlock } from '../model/valueBlocks';
 import { FunctionPicker } from './FunctionPicker';
 import { NamePicker } from './NamePicker';
 import { NumberEditor } from './NumberEditor';
@@ -70,9 +70,12 @@ export function PillPopover({ block, slot, scope, onDone }: Props) {
   if (mode === 'function') return <FunctionPicker env={env} scope={scope} onPick={(e) => put(callValueBlock(e, keep))} />;
 
   let editor: React.ReactNode = null;
-  if (block && !isEmptySlot(block)) {
+  const signed = signedNumber(block);
+  if (signed) {
+    editor = <NumberEditor value={signed.value} unit={signed.unit} onApply={(v, u) => put(signedNumberBlock(v, u, signed.plus))} />;
+  } else if (block && !isEmptySlot(block)) {
     const f = block.fields;
-    if (block.type === 'number') editor = <NumberEditor value={Number(f.value)} unit={String(f.unit) as UnitName} onApply={(v, u) => put({ ...block, fields: { value: v, unit: u } })} />;
+    if (block.type === 'number') editor = <NumberEditor value={Number(f.value)} unit={String(f.unit) as UnitName} onApply={(v, u) => put(signedNumberBlock(v, u, false))} />;
     else if (block.type === 'text') editor = <TextEditor value={String(f.value)} choices={slot.choices} onApply={(v) => put({ ...block, fields: { value: v } })} />;
     else if (block.type === 'boolean') {
       editor = (

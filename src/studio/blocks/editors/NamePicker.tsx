@@ -25,8 +25,10 @@ interface Choice {
 export function NamePicker({ env, scope, locals, onPick }: Props) {
   const [query, setQuery] = useState('');
   const choices = useMemo<Choice[]>(() => {
+    // Sensors first: they are what a slot usually reads. Constants such as pi go last.
     const registry = entriesFor(env, scope === 'generation' ? 'generation' : 'tick')
       .filter((e) => e.kind === 'sensor' || e.kind === 'constant')
+      .sort((a, b) => Number(a.kind === 'constant') - Number(b.kind === 'constant'))
       .map((e) => ({ name: e.name, label: e.block.label, detail: e.type === 'bool' ? 'true or false' : e.unit === '' ? 'number' : e.unit, group: e.block.category }));
     const own = locals.map((n) => ({ name: n, label: n, detail: 'yours', group: 'your names' }));
     return [...own, ...registry];

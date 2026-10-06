@@ -10,7 +10,7 @@ import { PillPopover } from './editors/PillPopover';
 import { currentDrag, endDrag, isValueBlock } from './model/drag';
 import type { PaletteScope } from './model/palette';
 import { fillSlot, slotPath, type Slot } from './model/slots';
-import { isEmptySlot } from './model/valueBlocks';
+import { isEmptySlot, signedNumber } from './model/valueBlocks';
 
 interface Props {
   block: ScriptBlock | null;
@@ -86,6 +86,16 @@ export function ValuePill({ block, slot, scope }: Props) {
     return (
       <span {...drop} className={cn('inline-flex rounded-full', ring)}>
         {trigger(slot.hint, cn(LEAF, 'border-dashed border-border-strong bg-transparent font-sans text-subtle italic'))}
+      </span>
+    );
+  }
+
+  const signed = signedNumber(block);
+  if (signed) {
+    const unit = signed.unit === '%' ? '%' : signed.unit ? ` ${signed.unit}` : '';
+    return (
+      <span {...drop} className={cn('inline-flex rounded-full', ring)}>
+        {trigger(`${signed.value < 0 ? '-' : signed.plus ? '+' : ''}${formatNumber(Math.abs(signed.value))}${unit}`, cn(LEAF, 'border-border bg-surface-3 text-orange'))}
       </span>
     );
   }

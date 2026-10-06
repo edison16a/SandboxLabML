@@ -34,7 +34,7 @@ export function InlineField({ value, label, onCommit, readOnly, quoted, pattern,
       <input
         aria-label={label}
         value={text}
-        size={Math.max(2, text.length)}
+        style={{ width: `calc(${Math.max(2, text.length)}ch + 10px)` }}
         inputMode={numeric ? 'numeric' : undefined}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}

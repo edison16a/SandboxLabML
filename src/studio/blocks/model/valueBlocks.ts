@@ -37,6 +37,24 @@ export function callValueBlock(e: RegistryEntry, first: ScriptBlock | null = nul
   return value('callValue', { name: e.name }, inputs);
 }
 
+/**
+ * `+1` and `-0.5` parse as a sign applied to a number. The block view shows
+ * and edits them as one signed number, which is how people read them.
+ */
+export function signedNumber(b: ScriptBlock | null): { value: number; unit: UnitName; plus: boolean } | null {
+  if (!b || b.type !== 'unary' || (b.fields.op !== '-' && b.fields.op !== '+')) return null;
+  const inner = b.inputs[0]?.block;
+  if (inner?.type !== 'number') return null;
+  const n = Number(inner.fields.value);
+  return { value: b.fields.op === '-' ? -n : n, unit: String(inner.fields.unit) as UnitName, plus: b.fields.op === '+' };
+}
+
+/** A number as the parser would build it: a negative value becomes a minus sign on a positive literal. */
+export function signedNumberBlock(value: number, unit: UnitName, keepPlus: boolean): ScriptBlock {
+  if (value < 0) return unaryBlock('-', numberBlock(-value, unit));
+  return keepPlus ? unaryBlock('+', numberBlock(value, unit)) : numberBlock(value, unit);
+}
+
 /** An empty slot, or one holding the `_` placeholder the printer writes for empty slots. */
 export function isEmptySlot(b: ScriptBlock | null): boolean {
   return b === null || (b.type === 'name' && b.fields.name === HOLE);

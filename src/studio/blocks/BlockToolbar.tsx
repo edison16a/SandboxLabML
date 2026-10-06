@@ -20,7 +20,7 @@ const ICON = 'inline-flex size-6 items-center justify-center rounded text-subtle
  */
 export function BlockToolbar({ onDragStart, onDragEnd, onNote, onDuplicate, onDelete }: Props) {
   return (
-    <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+    <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
       {onNote && (
         <Tooltip content="Add a note">
           <button type="button" className={ICON} onClick={onNote} aria-label="Add a note">

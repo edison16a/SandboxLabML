@@ -93,8 +93,10 @@ export function StatementBlock({ block, path, scope }: Props) {
         className={cn('group rounded-md border bg-surface-2 outline-none', isSelected ? 'border-accent/60' : 'border-border', 'focus-visible:ring-2 focus-visible:ring-accent/50')}
         style={{ borderLeftWidth: 3, borderLeftColor: color }}
       >
-        <div className="flex flex-wrap items-center gap-1.5 py-1.5 pr-1.5 pl-2.5">
-          <BlockHead block={block} path={path} scope={scope} />
+        <div className="flex items-start gap-1 py-1.5 pr-1.5 pl-2.5">
+          <div className="flex min-h-6 min-w-0 flex-1 flex-wrap items-center gap-1.5">
+            <BlockHead block={block} path={path} scope={scope} />
+          </div>
           {!readOnly && (
             <BlockToolbar
               onDragStart={(e) => {
