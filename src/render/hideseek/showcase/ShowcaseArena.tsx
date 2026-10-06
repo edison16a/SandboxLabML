@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { Suspense, useRef, useState } from 'react';
+import { Suspense, useMemo, useRef, useState } from 'react';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useHsScene } from '../frame/sceneContext';
 import { arenaOrigin } from '../layout/gridLattice';
@@ -25,6 +25,7 @@ export function ShowcaseArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO 
   const { frame } = useHsScene();
   const group = useRef<THREE.Group>(null);
   const [shown, setShown] = useState<{ arena: number; layout: number } | null>(null);
+  const origin = useMemo(() => ({ x: 0, z: 0 }), []);
 
   useFrame(() => {
     const g = group.current;
