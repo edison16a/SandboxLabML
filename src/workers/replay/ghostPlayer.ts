@@ -12,6 +12,8 @@ export interface GhostSpec {
   genome: Genome;
   seed: number;
   scriptSource: string | null;
+  /** Start grid slot. Left out, the ghost starts on the line where it trained. */
+  slot?: number;
 }
 
 export interface GhostTelemetry {
@@ -92,10 +94,19 @@ export class GhostPlayer {
     this.pacer = null;
   }
 
-  /** Speed against distance for every ghost, computed headless in one pass. */
+  /**
+   * Speed against distance for every champion in the scene, computed
+   * headless in one pass. Copies of one champion share a line, taken from
+   * the copy nearest the front of the grid.
+   */
   telemetry(): GhostTelemetry[] {
     if (!this.setup) return [];
-    return this.ghosts.map((g) => {
+    const front = new Map<number, GhostSpec>();
+    for (const g of this.ghosts) {
+      const seen = front.get(g.generation);
+      if (!seen || (g.slot ?? 0) < (seen.slot ?? 0)) front.set(g.generation, g);
+    }
+    return [...front.values()].map((g) => {
       const env = this.makeEnv([g]);
       const dist: number[] = [];
       const speed: number[] = [];
@@ -119,6 +130,7 @@ export class GhostPlayer {
     env.reset(
       ghosts.map((g) => new Network(g.genome)),
       ghosts.map((g) => g.seed),
+      ghosts.map((g) => g.slot ?? 0),
     );
     return env;
   }
