@@ -11,7 +11,11 @@ export function GitHubMark({ size = 16 }: { size?: number }) {
   );
 }
 
-/** "View on GitHub" link styled as a quiet outline button. */
+/**
+ * "View on GitHub" link styled as a quiet outline button. Compact is the
+ * mark alone, a square in the same size and tone as the Settings gear it
+ * sits beside in the header.
+ */
 export function GitHubButton({ compact = false, className }: { compact?: boolean; className?: string }) {
   return (
     <a
@@ -19,7 +23,8 @@ export function GitHubButton({ compact = false, className }: { compact?: boolean
       target="_blank"
       rel="noreferrer"
       className={cn(
-        'inline-flex h-8 items-center gap-2 rounded-md border border-border bg-surface px-3 text-[13px] font-medium text-fg transition-colors hover:border-border-strong hover:bg-surface-2',
+        'inline-flex h-8 shrink-0 items-center rounded-md border border-border bg-surface transition-colors hover:border-border-strong hover:bg-surface-2',
+        compact ? 'w-8 justify-center text-muted hover:text-fg' : 'gap-2 px-3 text-[13px] font-medium text-fg',
         className,
       )}
       aria-label="View on GitHub"
