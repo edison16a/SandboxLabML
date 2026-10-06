@@ -2,8 +2,8 @@ import { ENGINE_VERSION } from '@/engine/core/version';
 import type { HideSeekTrainerState } from '@/engine/hideseek/trainer/types';
 import type { HideSeekRecord, RoundReplay } from '@/engine/training/hideseekRecords';
 import type { RunConfig } from '@/engine/training/runConfig';
-import { latestCheckpoint } from '@/storage/checkpoints';
 import { deleteHideSeekGenerationsFrom, loadHideSeekHistory } from '@/storage/hideSeekGenerations';
+import { alignHistory } from '@/storage/resume';
 import { getRun } from '@/storage/runs';
 
 /** A stored run, ready to hand to the coordinator. */
@@ -16,23 +16,16 @@ export interface LoadedRun {
 }
 
 /**
- * Opens a run the way Racing does: resume from the newest checkpoint and
- * drop any generations recorded after it, since training is deterministic
- * and will produce them again. With no checkpoint the run restarts from
- * scratch. Returns null for a missing run or one of another environment.
+ * Opens a run the way Racing does: resume from the newest checkpoint the
+ * stored history reaches and drop any generations recorded after it, since
+ * training is deterministic and will produce them again. With no usable
+ * checkpoint the run restarts from scratch. Returns null for a missing run
+ * or one of another environment.
  */
 export async function loadHideSeekRun(runId: string): Promise<LoadedRun | null> {
   const run = await getRun(runId);
   if (!run || run.env !== 'hideseek') return null;
-  const checkpoint = await latestCheckpoint(runId);
-  let history = await loadHideSeekHistory(runId);
-  if (checkpoint) {
-    await deleteHideSeekGenerationsFrom(runId, checkpoint.generation);
-    history = history.filter((r) => r.generation < checkpoint.generation);
-  } else if (history.length) {
-    await deleteHideSeekGenerationsFrom(runId, 0);
-    history = [];
-  }
+  const { history, checkpoint } = await alignHistory(runId, await loadHideSeekHistory(runId), deleteHideSeekGenerationsFrom);
   const split = splitReplays(history);
   return { config: run.config, history: split.records, latestReplay: split.latest, state: checkpoint?.state as HideSeekTrainerState | undefined };
 }
