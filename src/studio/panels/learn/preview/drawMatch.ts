@@ -10,14 +10,14 @@ import { fitView, px, py, type View } from './view';
 const P = DEFAULT_HIDESEEK_PHYSICS;
 const STRIDE = HIDESEEK_SNAPSHOT.stride;
 
-/** The 3D scene's colors on a dark floor: team blue and red, wood boxes, amber once locked. */
+/** The 3D scene's colors on a dark floor: team blue and red, wood boxes, and a locked box edged in hider blue like its 3D braces. */
 const C = {
   floor: '#151a24',
   grid: '#1b212d',
   wall: '#8a94a7',
   cube: '#b89a70',
   plank: '#a6865f',
-  locked: '#ffb547',
+  locked: '#4c9aff',
   hider: '#4c9aff',
   seeker: '#ff5f6d',
   cone: 'rgba(255, 95, 109, 0.09)',
@@ -47,7 +47,7 @@ function drawRoom(g: CanvasRenderingContext2D, v: View, p: MatchPreview): void {
   for (const r of arenaWallRects(getLayout(p.layout), P)) g.fillRect(px(v, r.x - r.hx), py(v, r.z - r.hz), 2 * r.hx * v.scale, 2 * r.hz * v.scale);
 }
 
-/** A box turned to its yaw. Its local x runs along its length; locked boxes are amber with a bright edge. */
+/** A box turned to its yaw. Its local x runs along its length; a locked box keeps its fill and gets a blue edge. */
 function drawBox(g: CanvasRenderingContext2D, v: View, index: number, at: { x: number; z: number; yaw: number }, locked: boolean): void {
   const size = boxSize(P, index);
   const l = size.length * v.scale;
@@ -56,11 +56,11 @@ function drawBox(g: CanvasRenderingContext2D, v: View, index: number, at: { x: n
   g.translate(px(v, at.x), py(v, at.z));
   // Yaw turns counterclockwise seen from above, and the canvas turns clockwise, hence the minus.
   g.rotate(-at.yaw);
-  g.fillStyle = locked ? C.locked : index < 2 ? C.cube : C.plank;
+  g.fillStyle = index < 2 ? C.cube : C.plank;
   g.fillRect(-l / 2, -w / 2, l, w);
   if (locked) {
-    g.strokeStyle = '#fff4dc';
-    g.lineWidth = 1.5;
+    g.strokeStyle = C.locked;
+    g.lineWidth = 2;
     g.strokeRect(-l / 2, -w / 2, l, w);
   }
   g.restore();
@@ -103,7 +103,7 @@ function drawAgent(g: CanvasRenderingContext2D, v: View, at: { x: number; z: num
 
 /**
  * Draws the test match at a playhead, in ticks: walls, boxes (locked ones
- * in amber), the seeker's view cone once it is loose, a red sight line
+ * edged in blue), the seeker's view cone once it is loose, a red sight line
  * while it sees the hider, and both players.
  */
 export function drawMatch(g: CanvasRenderingContext2D, w: number, h: number, p: MatchPreview, pos: number): void {

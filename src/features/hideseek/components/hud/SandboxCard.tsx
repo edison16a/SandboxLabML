@@ -96,7 +96,7 @@ export function SandboxCard() {
             key={name}
             type="button"
             onClick={() => control?.setBoxLocked(b, !locks[b])}
-            className={`flex h-7 items-center justify-between rounded-md border px-2 text-[12px] transition-colors ${locks[b] ? 'border-[#ffb547]/60 bg-[#ffb547]/20 text-[#ffd79a]' : 'border-white/10 bg-white/5 text-white/80 hover:bg-white/10'}`}
+            className={`flex h-7 items-center justify-between rounded-md border px-2 text-[12px] transition-colors ${locks[b] ? 'border-hider/60 bg-hider/20 text-white' : 'border-white/10 bg-white/5 text-white/80 hover:bg-white/10'}`}
           >
             {name}
             {locks[b] ? <Lock className="size-3.5" /> : <LockOpen className="size-3.5 text-white/50" />}

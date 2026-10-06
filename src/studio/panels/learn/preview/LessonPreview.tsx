@@ -11,7 +11,7 @@ import { usePreview } from './usePreview';
 
 const CAPTION: Record<EnvId, string> = {
   racing: "One test drive on the script's track with the fixed test brain, not a trained one. It is the drive a check runs.",
-  hideseek: "One test match in the script's first room with the fixed test players, not trained brains. Hider in blue, seeker in red, locked boxes in amber. It is the match a check plays.",
+  hideseek: "One test match in the script's first room with the fixed test players, not trained brains. Hider in blue, seeker in red, and a locked box gets a blue edge. It is the match a check plays.",
 };
 
 const GAME: Record<EnvId, string> = { racing: 'racing', hideseek: 'Hide and Seek' };
