@@ -9,3 +9,9 @@ export async function listGenerationNumbers(runId: string): Promise<number[]> {
   const keys = await db().generations.where('runId').equals(runId).primaryKeys();
   return keys.map((k) => k[1]).sort((a, b) => a - b);
 }
+
+/** The same for a Hide and Seek run, whose generations live in their own table. */
+export async function listHideSeekGenerationNumbers(runId: string): Promise<number[]> {
+  const keys = await db().hsGenerations.where('runId').equals(runId).primaryKeys();
+  return keys.map((k) => k[1]).sort((a, b) => a - b);
+}

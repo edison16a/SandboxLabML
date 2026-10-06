@@ -55,6 +55,8 @@ export interface HideSeekRecord {
   /** Seconds of play across every match of the generation. */
   simSeconds: number;
   wallMs: number;
+  /** Benchmark score of the champion pair, 0 to 100, on the generations that were benchmarked. */
+  benchmark?: number;
 }
 
 export interface ReplayInfo {

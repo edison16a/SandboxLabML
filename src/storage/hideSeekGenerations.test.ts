@@ -10,7 +10,8 @@ import { createHideSeekRunConfig } from '@/engine/training/hideseekRunConfig';
 import { hideSeekTrainerOptions } from '@/engine/training/hideseekSetup';
 import { latestCheckpoint, saveCheckpoint } from './checkpoints';
 import { SandboxDb, setDb } from './db';
-import { deleteHideSeekGenerationsFrom, KEEP_REPLAYS, loadHideSeekChampions, loadHideSeekHistory, saveHideSeekGeneration } from './hideSeekGenerations';
+import { listHideSeekGenerationNumbers } from './generationIndex';
+import { deleteHideSeekGenerationsFrom, KEEP_REPLAYS, loadHideSeekChampions, loadHideSeekHistory, saveHideSeekGeneration, setHideSeekGenerationBenchmark } from './hideSeekGenerations';
 import { createRun, getRun, listRuns, trashRun } from './runs';
 
 let n = 0;
@@ -59,6 +60,16 @@ describe('Hide and Seek generations', () => {
     const runs = await listRuns();
     expect(runs.find((r) => r.id === config.id)?.env).toBe('hideseek');
     expect((await getRun(config.id))?.generation).toBe(2);
+  });
+
+  it('stores a benchmark score on a generation and lists generation numbers', async () => {
+    const { config } = await trained(2);
+    expect((await loadHideSeekHistory(config.id)).some((r) => r.benchmark !== undefined)).toBe(false);
+    await setHideSeekGenerationBenchmark(config.id, 0, 42.5);
+    await setHideSeekGenerationBenchmark(config.id, 9, 99);
+    const history = await loadHideSeekHistory(config.id);
+    expect(history.map((r) => r.benchmark)).toEqual([42.5, undefined]);
+    expect(await listHideSeekGenerationNumbers(config.id)).toEqual([0, 1]);
   });
 
   it('keeps replays only on the newest generations', async () => {

@@ -26,6 +26,7 @@ export function toHideSeekRow(r: HideSeekRecord): HideSeekGenerationRow {
     replay,
     simSeconds: r.simSeconds,
     wallMs: r.wallMs,
+    ...(r.benchmark !== undefined ? { benchmark: r.benchmark } : {}),
   };
 }
 
@@ -40,6 +41,7 @@ export function fromHideSeekRow(row: HideSeekGenerationRow): HideSeekRecord {
     replay: stored ? { ...stored, genomes: stored.genomes.map(decodeGenome) } : undefined,
     simSeconds: row.simSeconds,
     wallMs: row.wallMs,
+    ...(row.benchmark !== undefined ? { benchmark: row.benchmark } : {}),
   };
 }
 
@@ -68,6 +70,11 @@ export async function loadHideSeekHistory(runId: string): Promise<HideSeekRecord
 export async function loadHideSeekChampions(runId: string, generation: number): Promise<{ hider: Genome; seeker: Genome } | null> {
   const row = await db().hsGenerations.get([runId, generation]);
   return row ? { hider: decodeGenome(row.hiderChampion), seeker: decodeGenome(row.seekerChampion) } : null;
+}
+
+/** Stores the benchmark score of a generation's champion pair. A missing generation is left alone. */
+export async function setHideSeekGenerationBenchmark(runId: string, generation: number, score: number): Promise<void> {
+  await db().hsGenerations.update([runId, generation], { benchmark: score });
 }
 
 /** Drops generations at or after `generation`, used when resuming from an older checkpoint. */
