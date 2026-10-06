@@ -48,7 +48,7 @@ export const DEFAULT_NEAT: NeatConfig = {
   interspeciesRate: 0.001,
   survivalThreshold: 0.2,
   targetSpecies: 8,
-  compatibility: { excess: 1, disjoint: 1, weight: 0.4, threshold: 3, step: 0.3, min: 0.3 },
+  compatibility: { excess: 1, disjoint: 1, weight: 0.4, threshold: 2, step: 0.1, min: 0.3 },
   stagnationLimit: 15,
   eliteMinSpeciesSize: 5,
   weightRange: 8,
