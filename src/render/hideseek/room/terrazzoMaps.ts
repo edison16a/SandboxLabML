@@ -15,11 +15,11 @@ const SEAM = 1.6;
  * mostly pale and warm grey stone, a few blush and charcoal ones for life.
  */
 const CHIPS: Array<[number, number, number, number]> = [
-  [240, 239, 235, 0.42],
-  [206, 203, 197, 0.3],
-  [190, 187, 181, 0.14],
-  [222, 208, 197, 0.1],
-  [152, 150, 147, 0.04],
+  [238, 237, 233, 0.44],
+  [211, 208, 202, 0.3],
+  [198, 195, 189, 0.14],
+  [224, 212, 202, 0.08],
+  [168, 166, 162, 0.04],
 ];
 const BASE: [number, number, number] = [226, 224, 220];
 
@@ -43,7 +43,9 @@ function seamDistance(x: number, y: number): number {
  * Polished warm terrazzo in 2 m slabs. The base is a pale cement with soft
  * clouding; thousands of small irregular stone chips are scattered through
  * it, a few larger ones among many tiny; thin seams split the slabs. The
- * surface is polished, so roughness is low everywhere but the seams.
+ * surface is honed, a soft satin, and rougher in the seams. Chips stay
+ * close to the cement in tone, so from across the room the floor reads as
+ * one calm surface rather than grain.
  * Everything wraps, so the texture tiles without a visible edge.
  */
 export function terrazzoMaps(seed = 17): SurfaceMaps {
@@ -59,7 +61,7 @@ export function terrazzoMaps(seed = 17): SurfaceMaps {
       albedo[i * 3] = BASE[0] * v;
       albedo[i * 3 + 1] = BASE[1] * v;
       albedo[i * 3 + 2] = BASE[2] * v;
-      rough[i] = 0.3 + (cloud(x, y) - 0.5) * 0.08;
+      rough[i] = 0.42 + (cloud(x, y) - 0.5) * 0.08;
     }
   }
   scatterChips(rng, albedo, rough, 20000);

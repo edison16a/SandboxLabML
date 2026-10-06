@@ -30,9 +30,9 @@ export function ArenaRoom({ layout, ao = 0.5 }: { layout: number; /** Strength o
       roughnessMap: maps.roughnessMap,
       roughness: 1,
       metalness: 0,
-      // Polished, so it mirrors a little of the sky. Kept faint, or the floor turns to glare in
+      // Honed, so it mirrors a little of the sky. Kept faint, or the floor turns to glare in
       // the first person views, which see it at a grazing angle.
-      envMapIntensity: 0.3,
+      envMapIntensity: 0.22,
     });
   }, []);
   const wallMat = useDisposable(() => {
