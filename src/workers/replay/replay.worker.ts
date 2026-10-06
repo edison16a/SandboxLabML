@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import * as Comlink from 'comlink';
+import '@/workers/shared/loadScripts';
 import type { RacingSetup } from '@/engine/training/racingSetup';
 import { StreamSender } from '../shared/streamPort';
 import { GhostPlayer, type GhostSpec } from './ghostPlayer';

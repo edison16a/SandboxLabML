@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import * as Comlink from 'comlink';
+import '@/workers/shared/loadScripts';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { RacingTrainerState } from '@/engine/training/racingTrainer';
 import type { SpeedMode } from '../shared/protocol';
