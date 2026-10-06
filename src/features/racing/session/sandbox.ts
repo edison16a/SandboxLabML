@@ -4,6 +4,20 @@ import type { WorkerPool } from '@/workers/client/workerPool';
 import { selectGhosts } from './ghostSelection';
 import { useRacingLab } from '../state/labStore';
 
+/** The parts of the session the Sandbox needs, kept narrow to avoid an import cycle. */
+interface SandboxHost {
+  pause(): Promise<void>;
+}
+
+/** Pauses training and sends a copy of the current track to the replay worker. */
+export async function enterSandbox(session: SandboxHost, pool: WorkerPool): Promise<void> {
+  const s = useRacingLab.getState();
+  if (!s.run?.racing) return;
+  if (s.status === 'running') await session.pause();
+  s.set({ mode: 'sandbox', sandboxTrack: structuredClone(s.trackSpec ?? s.run.racing.track), view: 'overlay', lesions: {}, focus: { kind: 'champion' } });
+  await sendSandboxScene(pool);
+}
+
 let timer: ReturnType<typeof setTimeout> | null = null;
 
 /**

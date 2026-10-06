@@ -12,7 +12,7 @@ import type { CoordinatorEvent } from '@/workers/coordinator/events';
 import { isWatchSpeed, WATCH_SPEEDS, type SpeedMode } from '@/workers/shared/protocol';
 import { useRacingLab } from '../state/labStore';
 import { selectGhosts } from './ghostSelection';
-import { scheduleSandboxScene, sendSandboxScene } from './sandbox';
+import { enterSandbox, scheduleSandboxScene } from './sandbox';
 
 /**
  * Main-thread glue for the Racing lab: owns the workers, saves what the
@@ -116,14 +116,9 @@ export class RacingSession {
     if (state) await saveCheckpoint(run.id, state.population.generation, state);
   }
 
-  /** Switches to the Sandbox: champions replay on an editable copy of the track. Training keeps its own state. */
+  /** Switches to the Sandbox: champions replay on an editable copy of the track. */
   async enterSandbox(): Promise<void> {
-    const pool = await this.init();
-    const s = this.store;
-    if (!s.run?.racing) return;
-    if (s.status === 'running') await this.pause();
-    s.set({ mode: 'sandbox', sandboxTrack: structuredClone(s.trackSpec ?? s.run.racing.track), view: 'overlay', lesions: {}, focus: { kind: 'champion' } });
-    await sendSandboxScene(pool);
+    await enterSandbox(this, await this.init());
   }
 
   async exitSandbox(): Promise<void> {

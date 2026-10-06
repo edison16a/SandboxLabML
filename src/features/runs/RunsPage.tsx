@@ -4,36 +4,26 @@ import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { Car, FileUp, Trash2, Users } from 'lucide-react';
 import { importRun } from '@/storage/exportImport';
-import { deleteAllData, destroyRun, emptyTrash, restoreRun } from '@/storage/runs';
+import { destroyRun, emptyTrash, restoreRun } from '@/storage/runs';
 import type { RunRow } from '@/storage/db';
 import { Button } from '@/ui/primitives/Button';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { toast } from '@/ui/toast/toastStore';
 import { RunCard, type RunAction } from './RunCard';
-import {
-  BranchDialog,
-  ConfirmDialog,
-  DeleteAllDialog,
-  RenameDialog,
-  RewindDialog,
-} from './RunDialogs';
+import { RunsDialogs, type OpenDialog } from './RunsDialogs';
 import { StorageMeter } from './StorageMeter';
 import { TrashList } from './TrashList';
 import { useRunActions } from './useRunActions';
 import { useRuns } from './useRuns';
 
 type Filter = 'all' | 'racing' | 'hideseek';
-type Open =
-  | { kind: 'rename' | 'branch' | 'rewind' | 'reset'; run: RunRow }
-  | { kind: 'deleteAll' }
-  | null;
 
 /** Every saved run, the storage they take, Trash, import and the destructive actions. */
 export function RunsPage() {
   const { runs, trash, reload } = useRuns();
   const actions = useRunActions(reload);
   const [filter, setFilter] = useState<Filter>('all');
-  const [open, setOpen] = useState<Open>(null);
+  const [open, setOpen] = useState<OpenDialog>(null);
   const file = useRef<HTMLInputElement>(null);
   const shown = runs?.filter((r) => filter === 'all' || r.row.env === filter) ?? [];
   const trashBytes = trash.reduce((s, r) => s + r.generation * 1600, 0);
@@ -162,48 +152,7 @@ export function RunsPage() {
           </div>
         </section>
 
-        {open?.kind === 'rename' && (
-          <RenameDialog
-            run={open.run}
-            onClose={() => setOpen(null)}
-            onSave={(n) => void actions.rename(open.run, n).then(() => setOpen(null))}
-          />
-        )}
-        {open?.kind === 'branch' && (
-          <BranchDialog
-            run={open.run}
-            onClose={() => setOpen(null)}
-            onBranch={(g) => void actions.branch(open.run, g).then(() => setOpen(null))}
-          />
-        )}
-        {open?.kind === 'rewind' && (
-          <RewindDialog
-            run={open.run}
-            onClose={() => setOpen(null)}
-            onRewind={(g) => void actions.rewind(open.run, g).then(() => setOpen(null))}
-          />
-        )}
-        {open?.kind === 'reset' && (
-          <ConfirmDialog
-            title="Start over?"
-            body="A fresh run starts with the same blueprint, script and seed. The current run moves to Trash for 7 days."
-            action="Start over"
-            onClose={() => setOpen(null)}
-            onConfirm={() => void actions.reset(open.run).then(() => setOpen(null))}
-          />
-        )}
-        {open?.kind === 'deleteAll' && (
-          <DeleteAllDialog
-            onClose={() => setOpen(null)}
-            onConfirm={() =>
-              void deleteAllData().then(() => {
-                setOpen(null);
-                toast.success('All data deleted');
-                void reload();
-              })
-            }
-          />
-        )}
+        <RunsDialogs open={open} setOpen={setOpen} actions={actions} reload={reload} />
       </div>
     </div>
   );
