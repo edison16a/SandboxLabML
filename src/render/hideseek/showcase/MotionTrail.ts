@@ -32,7 +32,8 @@ export class MotionTrail {
     for (let i = 0; i < SAMPLES - 1; i++) index.push(2 * i, 2 * i + 1, 2 * i + 2, 2 * i + 1, 2 * i + 3, 2 * i + 2);
     g.setIndex(index);
     g.setDrawRange(0, 0);
-    const material = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, toneMapped: false });
+    // Plain alpha blending, not additive: added light would vanish on the pale floor.
+    const material = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
     this.mesh = new THREE.Mesh(g, material);
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 2;
@@ -86,7 +87,7 @@ export class MotionTrail {
       p[o + 3] = this.xs[i] + dz * w;
       p[o + 4] = Y;
       p[o + 5] = this.zs[i] - dx * w;
-      const alpha = (1 - age) ** 1.6 * 0.55 * brightness;
+      const alpha = (1 - age) ** 1.6 * 0.38 * brightness;
       for (let side = 0; side < 2; side++) {
         const q = i * 8 + side * 4;
         c[q] = this.color.r;

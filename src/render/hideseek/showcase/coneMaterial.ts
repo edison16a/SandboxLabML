@@ -42,16 +42,16 @@ void main() {
   float shell = (0.06 + 0.75 * fresnel) * top * (1.0 - vFloor);
   float pool = vFloor * 0.34 * pow(1.0 - vRadial, 1.3);
   float a = (shell + pool) * radial * near * uOpacity;
-  gl_FragColor = vec4(uColor * a, a);
+  gl_FragColor = vec4(uColor, min(a, 0.85));
   #include <colorspace_fragment>
 }
 `;
 
 /**
- * The seeker's vision cone material: an additive shell with a fresnel edge,
- * a soft pool of light on the floor and fades toward the range limit and
- * near the camera. Colors are in linear space and skip tone mapping, so
- * bloom can pick up the brighter edges.
+ * The seeker's vision cone material: a see through shell with a fresnel
+ * edge, a soft pool of color on the floor and fades toward the range limit
+ * and near the camera. Plain alpha blending, since added light would vanish
+ * on the pale floor; colors skip tone mapping so the red stays true.
  */
 export function createConeMaterial(color: THREE.Color, height: number): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
@@ -60,7 +60,6 @@ export function createConeMaterial(color: THREE.Color, height: number): THREE.Sh
     uniforms: { uColor: { value: color.clone() }, uOpacity: { value: 1 }, uHeight: { value: height } },
     transparent: true,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
     side: THREE.DoubleSide,
     toneMapped: false,
   });

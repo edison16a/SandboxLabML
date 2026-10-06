@@ -12,7 +12,7 @@ import { useBoxDrag } from '../interaction/useBoxDrag';
 import { arenaOrigin } from '../layout/gridLattice';
 import { ArenaRoom } from './ArenaRoom';
 import { SeenBillboard } from './SeenBillboard';
-import { ShowcaseAgent, useAgentGeometry } from './ShowcaseAgent';
+import { ShowcaseAgent } from './ShowcaseAgent';
 import { ShowcaseBoxes } from './ShowcaseBoxes';
 import { SightLines } from './SightLines';
 import { VisionCone } from './VisionCone';
@@ -45,7 +45,6 @@ export function ShowcaseArena({ tier, sandbox }: { tier: HsQualityTier; sandbox:
   const group = useRef<THREE.Group>(null);
   const [shown, setShown] = useState<{ arena: number; layout: number } | null>(null);
   const origin = useMemo(() => ({ x: 0, z: 0 }), []);
-  const agentGeometry = useAgentGeometry();
   const getOrigin = useCallback(() => origin, [origin]);
   const drag = useBoxDrag(getOrigin, sandbox ? onMoveBox : undefined);
   /** A double click on a crate locks or frees it; a press and drag moves it. */
@@ -76,17 +75,17 @@ export function ShowcaseArena({ tier, sandbox }: { tier: HsQualityTier; sandbox:
     <group ref={group} visible={false}>
       {shown && (
         <>
-          <ArenaRoom layout={shown.layout} />
-          <ShowcaseBoxes arena={shown.arena} onBoxPointerDown={sandbox ? drag : undefined} onBoxDoubleClick={sandbox ? toggleLock : undefined} />
-          <ShowcaseAgent arena={shown.arena} agent={0} geometry={agentGeometry} />
-          <ShowcaseAgent arena={shown.arena} agent={1} geometry={agentGeometry} />
+          <ArenaRoom layout={shown.layout} ao={tier === 'high' || tier === 'ultra' ? 0.3 : 0.5} />
+          <ShowcaseBoxes arena={shown.arena} tier={tier} onBoxPointerDown={sandbox ? drag : undefined} onBoxDoubleClick={sandbox ? toggleLock : undefined} />
+          <ShowcaseAgent arena={shown.arena} agent={0} tier={tier} />
+          <ShowcaseAgent arena={shown.arena} agent={1} tier={tier} />
           <VisionCone arena={shown.arena} layout={shown.layout} />
           <SightLines arena={shown.arena} layout={shown.layout} />
           <Suspense fallback={null}>
             <SeenBillboard arena={shown.arena} />
           </Suspense>
           {tier !== 'low' && (
-            <ContactShadows ref={lowerShadowCamera} position={[0, 0.004, 0]} scale={SIZE} resolution={tier === 'ultra' ? 1024 : 512} far={1.8} blur={2.2} opacity={0.7} color="#04060a" frames={Infinity} />
+            <ContactShadows ref={lowerShadowCamera} position={[0, 0.004, 0]} scale={SIZE} resolution={tier === 'ultra' ? 1024 : 512} far={1.8} blur={2.2} opacity={0.5} color="#2a2219" frames={Infinity} />
           )}
         </>
       )}
