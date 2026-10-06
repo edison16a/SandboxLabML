@@ -7,7 +7,8 @@ import { Popover } from '@/ui/primitives/Popover';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Switch } from '@/ui/primitives/Switch';
 import { racingSession } from '../session/RacingSession';
-import type { GhostSelection } from '../session/ghostSelection';
+import { fieldFromGenerations } from '../session/field';
+import { selectGhosts, type GhostSelection } from '../session/ghostSelection';
 import { useRacingLab } from '../state/labStore';
 
 type Mode = GhostSelection['mode'];
@@ -18,17 +19,22 @@ export function GhostMenu() {
   const trails = useRacingLab((s) => s.ghostTrails);
   const rings = useRacingLab((s) => s.ghostCrashRings);
   const brakes = useRacingLab((s) => s.brakeMap);
+  // A Sandbox grid can hold several copies of one champion; the menu lists each generation once.
   const gens = useRacingLab((s) => s.ghostGenerations);
+  const shown = [...new Set(gens)];
   const set = useRacingLab((s) => s.set);
   const apply = (next: GhostSelection) => {
     set({ ghostSelection: next });
-    void racingSession().refreshGhosts();
+    const s = useRacingLab.getState();
+    // In the Sandbox the picks become the grid, one car each.
+    if (s.mode === 'sandbox') racingSession().sandbox?.setField(fieldFromGenerations(selectGhosts(next, s.records.length)));
+    else void racingSession().refreshGhosts();
   };
   const changeMode = (mode: Mode) => {
     if (mode === 'auto') apply({ mode });
     else if (mode === 'every') apply({ mode, n: 5 });
     else if (mode === 'range') apply({ mode, from: 0, to: 20 });
-    else apply({ mode, generations: gens });
+    else apply({ mode, generations: shown });
   };
   return (
     <Popover
@@ -36,7 +42,7 @@ export function GhostMenu() {
       trigger={
         <Button size="sm" variant="secondary" className="border-white/10 bg-black/45 text-white backdrop-blur-sm hover:bg-black/60">
           <Ghost />
-          Ghosts {gens.length > 0 && <span className="text-white/60">{gens.length}</span>}
+          Ghosts {shown.length > 0 && <span className="text-white/60">{shown.length}</span>}
         </Button>
       }
     >
@@ -79,7 +85,7 @@ export function GhostMenu() {
           </Field>
         )}
         <p className="text-[12px] text-muted">
-          Showing {gens.length ? gens.map((g) => g + 1).join(', ') : 'none yet'}. Ghosts are re-simulated from stored champions, so they cost almost no storage.
+          Showing {shown.length ? shown.map((g) => g + 1).join(', ') : 'none yet'}. Ghosts are re-simulated from stored champions, so they cost almost no storage.
         </p>
         <label className="flex items-center justify-between text-[13px]">
           Fading trails
