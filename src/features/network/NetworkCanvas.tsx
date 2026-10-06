@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Network } from '@/engine/neat/network';
 import type { Genome } from '@/engine/neat/types';
 import { drawNetwork, nodePoint, type DrawOptions } from './drawNetwork';
@@ -32,10 +32,13 @@ export function NetworkCanvas({ genome, inputLabels, outputLabels, liveObservati
   const net = useMemo(() => new Network(genome), [genome]);
   const [size, setSize] = useState({ w: 360, h: 420 });
 
-  useEffect(() => {
+  // Measured before the first paint, so the first drawing already has the real size instead of a stretched default.
+  useLayoutEffect(() => {
     const el = canvas.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => setSize({ w: el.clientWidth, h: el.clientHeight }));
+    const measure = () => setSize((s) => (s.w === el.clientWidth && s.h === el.clientHeight ? s : { w: el.clientWidth, h: el.clientHeight }));
+    measure();
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
