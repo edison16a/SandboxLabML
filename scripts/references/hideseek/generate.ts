@@ -22,8 +22,8 @@ const secondsSince = (t: number) => ((performance.now() - t) / 1000).toFixed(0);
  * champion of every run against them for the curves.
  *
  * The defaults are the nightly numbers: 5 seeds of 60 generations at 50
- * per team, about 50 minutes on four cores. A shared machine can pass
- * fewer, as the shipped file documents in docs/benchmark.md.
+ * per team, about an hour on four cores. A shared machine can pass fewer,
+ * as the shipped file does (see docs/benchmark.md).
  *
  * Options: --seeds 5, --first-seed 1, --generations 60, --every 10,
  * --population 50 (per team), --out public/references/hideseek.json,
