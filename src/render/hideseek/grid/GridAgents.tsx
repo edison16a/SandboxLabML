@@ -55,7 +55,7 @@ export function GridAgents({ onPick }: { onPick: (slot: number) => void }) {
         const speed = step < 1 ? step / SNAPSHOT_SECONDS : 0;
         const run = Math.min(1, speed / 3);
         const phase = time * 2.1 + k * 1.3 + a * 2;
-        const bob = frozen ? 0 : (1 - run) * (0.018 + Math.sin(phase) * 0.016) + run * Math.abs(Math.sin(time * 9 + k)) * 0.05;
+        const bob = frozen ? 0 : (1 - run) * (0.006 + Math.sin(phase) * 0.006) + run * Math.abs(Math.sin(time * 9 + k)) * 0.05;
         t.e.set(0, t.pose.yaw, -run * 0.2);
         t.q.setFromEuler(t.e);
         t.p.set(t.o.x + t.pose.x, bob, t.o.z + t.pose.z);

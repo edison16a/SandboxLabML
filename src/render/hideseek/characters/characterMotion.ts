@@ -113,8 +113,9 @@ export class CharacterMotion {
     const idle = Math.sin(time * 2.1 + this.seed * 2.3);
     const breathe = Math.sin(time * 1.15 + this.seed);
     const waddle = Math.abs(Math.sin(this.phase));
-    p.bob = (1 - moving) * (0.018 + idle * 0.016) * p.awake + moving * waddle * 0.05 + (1 - p.awake) * breathe * 0.008 + hop;
-    p.squash = 1 + (1 - moving) * idle * 0.012 * p.awake - moving * (1 - waddle) * 0.04 + (1 - p.awake) * (breathe * 0.012 - 0.03);
+    // Standing still the base stays on the floor and the body breathes by squashing; walking lifts it a little each step.
+    p.bob = (1 - moving) * (0.006 + idle * 0.006) * p.awake + moving * waddle * 0.05 + hop;
+    p.squash = 1 + (1 - moving) * idle * 0.018 * p.awake - moving * (1 - waddle) * 0.04 + (1 - p.awake) * (breathe * 0.015 - 0.03);
     p.lean = clamp(this.forward * 0.075, -0.18, 0.26) + (1 - p.awake) * 0.05;
     p.roll = clamp(-this.turn * this.speed * 0.035, -0.22, 0.22) + Math.cos(this.phase) * 0.05 * moving;
     p.headYaw = clamp(this.turn * 0.09, -0.35, 0.35);

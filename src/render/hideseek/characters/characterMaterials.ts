@@ -4,8 +4,8 @@ import type { CharacterDetail, CharacterTeam } from './types';
 
 /** Body tint and the color of the light inside it, per team. Blue hides, red seeks. */
 export const TEAM_LOOK: Record<CharacterTeam, { body: string; glow: string }> = {
-  hider: { body: '#57b7fb', glow: '#9fdcff' },
-  seeker: { body: '#ff6a66', glow: '#ff9c8a' },
+  hider: { body: '#5fbdfb', glow: '#b3e4ff' },
+  seeker: { body: '#ff6b62', glow: '#ffae9c' },
 };
 
 /** A sleeping character fades toward this, so a frozen seeker reads as switched off. */
@@ -28,7 +28,7 @@ function addInnerGlow(material: THREE.MeshStandardMaterial, uniforms: { uGlowCol
       {
         float facing = clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);
         float rim = pow(1.0 - facing, 2.6);
-        totalEmissiveRadiance += uGlowColor * uGlow * (0.22 * facing + 0.85 * rim);
+        totalEmissiveRadiance += uGlowColor * uGlow * (0.3 * facing + 0.9 * rim);
       }`,
     );
   };
