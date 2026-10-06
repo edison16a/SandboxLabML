@@ -1,0 +1,85 @@
+{
+  "id": "racing-04-brake-for-corners",
+  "course": "racing",
+  "order": 4,
+  "title": "Brake for corners",
+  "summary": "Reward speed without rewarding crashes, and give the brain a way to see a bend before it arrives.",
+  "minutes": 7,
+  "steps": [
+    {
+      "id": "reward-speed",
+      "title": "A little reward for speed",
+      "body": "Checkpoints already favor cars that get further in the time they have. A small reward for speed, paid every tick, adds a push toward driving fast.\n\nKeep it small. At 20 m/s, `0.002 * car.speed` pays about 1.2 points per second, close to what the checkpoints pay. Make it much bigger and cars learn to floor it into the first wall, because speed alone pays more than getting round the bend.\n\nSmall extra rewards that hint at what good driving looks like are called reward shaping.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // Add a small reward for speed here.\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n",
+      "highlight": {
+        "lines": [12]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "reward",
+            "scope": "tick",
+            "uses": ["car.speed"]
+          }
+        ],
+        "message": "Add a reward inside each tick that uses car.speed."
+      },
+      "hints": [
+        "A reward can be a number times a sensor, with no when part.",
+        "Replace the comment with reward +0.002 * car.speed."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n"
+    },
+    {
+      "id": "see-the-bend",
+      "title": "See the bend coming",
+      "body": "Rays see walls. They cannot see that the road turns hard 40 m ahead, and a car at 25 m/s needs about 25 m to brake.\n\n`track.curvatureAhead(distance: 40 m)` says how sharply the road bends that far ahead. Curvature is 1 divided by the bend's radius, so a 20 m radius bend reads 0.05 per meter. Left bends are positive and right bends negative.\n\nAdd a sensor for it with the range `-0.05 1/m .. 0.05 1/m`. Now the brain can learn to brake before the bend instead of in it.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// Add a sensor for the bend ahead here.\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n",
+      "highlight": {
+        "lines": [7]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "sensor",
+            "scope": "top",
+            "uses": ["track.curvatureAhead"]
+          }
+        ],
+        "message": "Add a sensor that reads track.curvatureAhead."
+      },
+      "hints": [
+        "You built a sensor in lesson 3. The value this time is a call with a distance.",
+        "Add sensor bendFar \"Bend 40 m ahead\" in -0.05 1/m .. 0.05 1/m = track.curvatureAhead(distance: 40 m)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// How sharply the road bends 40 m ahead. A tight right bend reads 0, a straight 0.5 and a tight left bend 1.\nsensor bendFar \"Bend 40 m ahead\" in -0.05 1/m .. 0.05 1/m = track.curvatureAhead(distance: 40 m)\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n"
+    },
+    {
+      "id": "do-not-slide",
+      "title": "Do not slide",
+      "body": "When a car asks for more grip than its tires have, it slides. `car.slip` goes from 0 (full grip) to 1 (a full slide). Braking and turning share the same grip, so the fast way through a bend is to brake first, then turn.\n\nAdd a small penalty for sliding. A penalty is a reward with a minus sign.\n\nGive the limit a name with `let slipLimit = 0.3` at the top, then use it in the reward. Named numbers make a rule read like a sentence, and you can tune them in one place.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// How sharply the road bends 40 m ahead. A tight right bend reads 0, a straight 0.5 and a tight left bend 1.\nsensor bendFar \"Bend 40 m ahead\" in -0.05 1/m .. 0.05 1/m = track.curvatureAhead(distance: 40 m)\n\n// Name the slip limit here.\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n  // Add a penalty for sliding here.\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n",
+      "highlight": {
+        "lines": [10, 23]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "reward",
+            "scope": "tick",
+            "uses": ["car.slip"]
+          }
+        ],
+        "message": "Add a penalty inside each tick that uses car.slip."
+      },
+      "hints": [
+        "A let line at the top looks like let name = value. Rewards can compare a sensor with that name.",
+        "Add let slipLimit = 0.3 at the top and reward -0.05 when car.slip > slipLimit in each tick."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// How sharply the road bends 40 m ahead. A tight right bend reads 0, a straight 0.5 and a tight left bend 1.\nsensor bendFar \"Bend 40 m ahead\" in -0.05 1/m .. 0.05 1/m = track.curvatureAhead(distance: 40 m)\n\n// How much tire slide is fine before it costs points. 0 is full grip, 1 is a full slide.\nlet slipLimit = 0.3\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n  // Sliding means the car asked the tires for more grip than they have.\n  reward -0.05 when car.slip > slipLimit\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n"
+    }
+  ]
+}

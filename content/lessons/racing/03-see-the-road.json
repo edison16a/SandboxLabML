@@ -1,0 +1,98 @@
+{
+  "id": "racing-03-see-the-road",
+  "course": "racing",
+  "order": 3,
+  "title": "See the road with rays",
+  "summary": "A brain only knows what its inputs tell it. Give it better eyes and watch what changes.",
+  "minutes": 8,
+  "steps": [
+    {
+      "id": "pick-a-harder-road",
+      "title": "Pick a harder road",
+      "body": "The Oval is gentle, so almost any brain gets round it. To see what inputs are worth, train on the Hairpin instead.\n\nAdd an `each generation` block at the bottom. It runs once between generations, after every car has stopped. Inside it, `useTrack(id: \"hairpin\")` picks the road.\n\nThe editor will note that some evolution settings now use their defaults. That is fine. Lesson 5 is all about them.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-starter sees three distance rays (left, ahead, right) and its speed.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// Pick the training track here.\n",
+      "highlight": {
+        "lines": [23]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "call",
+            "scope": "generation",
+            "callee": "useTrack"
+          }
+        ],
+        "message": "Add an each generation block that calls useTrack(id: \"hairpin\")."
+      },
+      "hints": [
+        "Blocks look like each tick { ... }. This one is each generation { ... }.",
+        "At the bottom, write each generation { useTrack(id: \"hairpin\") } on three lines."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-starter sees three distance rays (left, ahead, right) and its speed.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n"
+    },
+    {
+      "id": "one-eye-is-not-enough",
+      "title": "One eye is not enough",
+      "body": "The starter swapped in `racing-tiny`. It has two inputs: one ray straight ahead and the speed.\n\nPress Check to train it for 10 generations. With a single ray the brain cannot tell which way the road bends or how close it is to either edge, and the Hairpin catches it every time.\n\nInputs are numbers from sensors, and they are everything a brain knows about the world. Switch back to `racing-starter` and check again.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-tiny sees one ray straight ahead and its speed.\nbrain racing-tiny\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n",
+      "highlight": {
+        "lines": [4, 5]
+      },
+      "check": {
+        "kind": "metricAbove",
+        "generations": 10,
+        "metric": "bestDistance",
+        "value": 300,
+        "message": "Training should get the best car past 300 m on the Hairpin."
+      },
+      "hints": [
+        "The brain line picks which inputs the network gets.",
+        "Change brain racing-tiny to brain racing-starter."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-starter sees three distance rays (left, ahead, right) and its speed.\nbrain racing-starter\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n"
+    },
+    {
+      "id": "build-a-sensor",
+      "title": "Build your own sensor",
+      "body": "A `sensor` line adds one more input to the brain. Give it a name, a label, a range and a value.\n\nBrains work best with inputs between 0 and 1, so the range tells the app how to squeeze the value. With `-90 deg .. 90 deg`, a car pointing 90 degrees right reads 0, a car pointing straight down the road reads 0.5, and 90 degrees left reads 1.\n\nAdd a sensor that reads `car.headingError`, the angle between the car and the road. A sensor changes the shape of the brain, so a run that is already training has to start a new branch.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-starter sees three distance rays (left, ahead, right) and its speed.\nbrain racing-starter\n\n// Add a sensor here.\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n",
+      "highlight": {
+        "lines": [7]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "inputs",
+        "op": "==",
+        "value": 5,
+        "message": "The brain should have 5 inputs: three rays, the speed and your sensor."
+      },
+      "hints": [
+        "The pattern is sensor name \"Label\" in low .. high = value.",
+        "Add sensor heading \"Heading error\" in -90 deg .. 90 deg = car.headingError below the brain line."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-starter sees three distance rays (left, ahead, right) and its speed.\nbrain racing-starter\n\n// One extra brain input: the angle between the car and the road.\nsensor heading \"Heading error\" in -90 deg .. 90 deg = car.headingError\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n"
+    },
+    {
+      "id": "nine-rays",
+      "title": "Nine rays and a compass",
+      "body": "`racing-standard` has nine rays, the speed and the heading error built in. With it, your sensor would be a copy of an input the brain already has, so remove it.\n\nMore inputs let a brain see more, but each one adds weights that evolution has to tune. Bigger brains often need more generations before they pay off.\n\nSwitch to `racing-standard` and delete your sensor.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-starter sees three distance rays (left, ahead, right) and its speed.\nbrain racing-starter\n\n// One extra brain input: the angle between the car and the road.\nsensor heading \"Heading error\" in -90 deg .. 90 deg = car.headingError\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n",
+      "highlight": {
+        "lines": [4, 5, 7, 8]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "inputs",
+        "op": "==",
+        "value": 11,
+        "message": "The brain should have 11 inputs: nine rays, the speed and the heading error."
+      },
+      "hints": [
+        "Two changes: the brain line, and the sensor lines go away.",
+        "Use brain racing-standard and delete the sensor heading line and its comment."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n"
+    }
+  ]
+}
