@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { ResizeHandle } from '@/ui/split/ResizeHandle';
 import { EditorPane } from './editor/EditorPane';
 import { StudioPanels } from './panels/StudioPanels';
 import { ConfirmDialog } from './shell/ConfirmDialog';
@@ -33,9 +34,11 @@ export function StudioApp() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
-      <ScriptSidebar className="max-h-[45vh] shrink-0 border-b border-border lg:max-h-none lg:w-64 lg:border-r lg:border-b-0" />
-      <EditorPane className="h-[75vh] shrink-0 lg:h-auto lg:flex-1 lg:shrink" />
-      <StudioPanels className="h-[80vh] shrink-0 border-t border-border lg:h-auto lg:w-[400px] lg:border-t-0 lg:border-l xl:w-[440px]" />
+      <ScriptSidebar className="max-h-[45vh] shrink-0 border-b border-border lg:max-h-none lg:w-[var(--scripts-w,256px)] lg:min-w-[200px] lg:shrink lg:border-r lg:border-b-0" />
+      <ResizeHandle id="studio.scripts" cssVar="--scripts-w" pane="before" defaultSize={256} min={200} max={420} label="Resize the script list" />
+      <EditorPane className="h-[75vh] shrink-0 lg:h-auto lg:min-w-[440px] lg:flex-1 lg:shrink" />
+      <ResizeHandle id="studio.panels" cssVar="--panels-w" pane="after" defaultSize={440} min={340} max={820} label="Resize the panels" />
+      <StudioPanels className="h-[80vh] shrink-0 border-t border-border lg:h-auto lg:w-[var(--panels-w,440px)] lg:min-w-[340px] lg:shrink lg:border-t-0 lg:border-l" />
       <ConfirmDialog />
     </div>
   );

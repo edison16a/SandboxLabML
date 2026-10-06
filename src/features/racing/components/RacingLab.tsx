@@ -16,6 +16,7 @@ import { LabToolbar } from './LabToolbar';
 import { NewRunDialog } from './NewRunDialog';
 import { RacingTour } from './RacingTour';
 import { useTrainScriptParam } from '@/features/scripts/useTrainScriptParam';
+import { ResizeHandle } from '@/ui/split/ResizeHandle';
 import { SidePanel } from './SidePanel';
 import { ViewportHud } from './ViewportHud';
 import { InputsCard } from './InputsCard';
@@ -52,7 +53,7 @@ export function RacingLab() {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
-      <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col">
+      <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col lg:min-w-[700px]">
         <div className="relative min-h-0 flex-1 bg-[#b9cfe6]">
           {track && streams ? (
             <RacingCanvas track={track} population={streams.population} ghosts={streams.ghosts} schema={schema}>
@@ -80,7 +81,8 @@ export function RacingLab() {
         )}
         <LabToolbar onNewRun={openNewRun} />
       </div>
-      <aside data-tour="panel" className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[400px] lg:border-t-0 lg:border-l">
+      <ResizeHandle id="racing" cssVar="--panel-w" pane="after" defaultSize={400} min={340} max={900} label="Resize the side panel" />
+      <aside data-tour="panel" className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[var(--panel-w,400px)] lg:min-w-[340px] lg:shrink lg:border-t-0 lg:border-l">
         <SidePanel network={<NetworkTab />} inputs={<InputsTab />} model={<ModelTab />} />
       </aside>
       <NewRunDialog open={newRun} onOpenChange={setNewRun} initialScript={pendingScript} />

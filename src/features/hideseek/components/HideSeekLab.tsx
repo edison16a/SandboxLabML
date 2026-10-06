@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTrainScriptParam } from '@/features/scripts/useTrainScriptParam';
 import { HideSeekCanvas } from '@/render/hideseek/HideSeekCanvas';
+import { ResizeHandle } from '@/ui/split/ResizeHandle';
 import { useHideSeekBootstrap } from '../hooks/useHideSeekBootstrap';
 import { useHideSeekInspect } from '../hooks/useHideSeekInspect';
 import { useHideSeekQuality } from '../hooks/useHideSeekQuality';
@@ -44,7 +45,7 @@ export function HideSeekLab() {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
-      <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col">
+      <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col lg:min-w-[700px]">
         <div ref={viewport} className="relative min-h-0 flex-1 bg-bg" data-testid="hs-viewport">
           {streams ? (
             <HideSeekCanvas getFeed={getFeed} feeds={feeds} schemas={schemas} onMoveBox={onMoveBox} onToggleLock={onToggleLock} />
@@ -59,7 +60,8 @@ export function HideSeekLab() {
         </div>
         <HideSeekToolbar onNewRun={openNewRun} />
       </div>
-      <aside className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[400px] lg:border-t-0 lg:border-l">
+      <ResizeHandle id="hideseek" cssVar="--panel-w" pane="after" defaultSize={400} min={340} max={900} label="Resize the side panel" />
+      <aside className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[var(--panel-w,400px)] lg:min-w-[340px] lg:shrink lg:border-t-0 lg:border-l">
         <SidePanel />
       </aside>
       <NewRunDialog open={newRun} onOpenChange={setNewRun} initialScript={pendingScript} />
