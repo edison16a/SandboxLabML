@@ -3,7 +3,8 @@ export type CharacterTeam = 'hider' | 'seeker';
 
 /**
  * How much a character costs to draw. Low uses a plain standard material
- * and coarser meshes; full adds the clear coat and the rim glow.
+ * and coarser meshes; full adds the clear coat and sheen. Both get the
+ * inner glow.
  */
 export type CharacterDetail = 'low' | 'full';
 
