@@ -3,7 +3,7 @@ import * as THREE from 'three';
 /**
  * Darkens the floor under the baked occlusion bands. The shade eases out
  * on a curve rather than a straight ramp, which is how light really falls
- * off into a corner.
+ * off into a corner. Works on a plain mesh and on an instanced one.
  */
 export function floorAoMaterial(strength: number): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
@@ -12,7 +12,11 @@ export function floorAoMaterial(strength: number): THREE.ShaderMaterial {
       varying float vShade;
       void main() {
         vShade = aShade;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        vec4 p = vec4(position, 1.0);
+        #ifdef USE_INSTANCING
+          p = instanceMatrix * p;
+        #endif
+        gl_Position = projectionMatrix * modelViewMatrix * p;
       }
     `,
     fragmentShader: /* glsl */ `

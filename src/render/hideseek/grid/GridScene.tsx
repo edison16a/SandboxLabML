@@ -11,6 +11,7 @@ import { GridCones } from './GridCones';
 import { GridLabels } from './GridLabels';
 import { GridShadows } from './GridShadows';
 import { GridWalls } from './GridWalls';
+import { GridWallShade } from './GridWallShade';
 
 /**
  * The arena grid: every arena drawn from shared instanced meshes, so the
@@ -31,6 +32,7 @@ export function GridScene() {
   return (
     <group>
       <GridWalls onPick={pick} />
+      <GridWallShade />
       <GridBoxes onPick={pick} />
       <GridAgents onPick={pick} />
       <GridShadows />
