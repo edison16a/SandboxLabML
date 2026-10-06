@@ -9,10 +9,7 @@ import { InlineField } from './editors/InlineField';
 
 const NO_BRAIN = '__none__';
 
-/**
- * The `script` and `brain` lines as a card above the sections: the
- * script's name, its environment and the brain blueprint it trains.
- */
+/** The `script` and `brain` lines as a card above the sections. */
 export function HeaderCard() {
   const { ws, env, readOnly, apply } = useBlocks();
   const header = ws.header;

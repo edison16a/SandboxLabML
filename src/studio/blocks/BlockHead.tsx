@@ -18,7 +18,7 @@ function Keyword({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * The first line of a statement block: its words, fields and value pills.
+ * The first line of a statement block, with a pill for each value.
  * Each statement kind lays itself out like the line of SBL it stands for,
  * so reading the blocks teaches the text.
  */

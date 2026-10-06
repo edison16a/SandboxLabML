@@ -25,7 +25,7 @@ interface Props {
   onDelete?: () => void;
 }
 
-/** One script in the sidebar: name, environment and age, with its actions in a menu. */
+/** One script in the sidebar, with its actions in a menu. */
 export function ScriptRow({ entry, active, onOpen, onDuplicate, onRename, onDelete }: Props) {
   const items: MenuItem[] = [{ label: 'Duplicate', icon: <Copy />, onSelect: onDuplicate }];
   if (onRename) items.push({ label: 'Rename', icon: <Pencil />, onSelect: onRename });

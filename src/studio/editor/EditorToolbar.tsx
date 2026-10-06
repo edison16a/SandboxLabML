@@ -21,7 +21,7 @@ function SaveState() {
   return dirty ? <span className="text-[12px] text-warn">Unsaved changes</span> : <span className="text-[12px] text-subtle">Saved</span>;
 }
 
-/** Above the editor: what is open, the Code and Blocks switch, and the document commands. */
+/** Above the editor: what is open and the commands that act on it. */
 export function EditorToolbar() {
   const script = useStudio((s) => s.script);
   const mode = useStudio((s) => s.mode);
