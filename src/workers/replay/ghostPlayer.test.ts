@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RACING_BLUEPRINTS } from '@/engine/blueprints/presets';
 import { RACING_SNAPSHOT } from '@/engine/racing/env';
 import { BUILT_IN_TRACKS } from '@/engine/racing/track/presets';
@@ -13,16 +13,20 @@ const STRIDE = RACING_SNAPSHOT.stride;
 /** A stream whose frames are copied out and whose buffers go straight back, like the main thread does. */
 function capture() {
   const frames: Float32Array[] = [];
+  const ticks: number[] = [];
+  const starts = { count: 0 };
   const port = {
     onmessage: null as unknown,
     postMessage(msg: StreamOut) {
+      if (msg.kind === 'start') starts.count++;
       if (msg.kind !== 'frame') return;
       frames.push(msg.buffer.slice());
+      ticks.push(msg.tick);
       sender.ring.give(msg.buffer.buffer as ArrayBuffer);
     },
   };
   const sender = new StreamSender(port as unknown as MessagePort, 'ghosts');
-  return { sender, frames };
+  return { sender, frames, ticks, starts };
 }
 
 function scene() {
@@ -66,5 +70,51 @@ describe('ghost player grid', () => {
         expect(d).toBeGreaterThan(4.5);
       }
     }
+  });
+});
+
+describe('ghost player loop', () => {
+  afterEach(() => vi.useRealTimers());
+
+  /** One ghost that loops. Its first run goes flat out, so it ends within a few fake milliseconds and the 1200 ms gap starts. */
+  function finishedFirstRun() {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
+    const { setup, ghost } = scene();
+    const out = capture();
+    const player = new GhostPlayer(out.sender);
+    player.setScene(setup, [ghost(4, 0)]);
+    player.play(Infinity, true);
+    vi.advanceTimersByTime(100);
+    expect(out.starts.count).toBe(1);
+    expect(out.ticks.length).toBeGreaterThan(0);
+    return { player, out, length: player.telemetry()[0].distance.length };
+  }
+
+  it('cancels a loop restart still waiting out the gap when the replay stops', () => {
+    const { player, out } = finishedFirstRun();
+    vi.advanceTimersByTime(500);
+    player.stop();
+    vi.advanceTimersByTime(5000);
+    expect(out.starts.count).toBe(1);
+  });
+
+  it('keeps a pause and a new speed pressed during the gap', () => {
+    const { player, out, length } = finishedFirstRun();
+    vi.advanceTimersByTime(500);
+    player.setPaused(true);
+    player.setSpeed(2);
+    vi.advanceTimersByTime(800);
+    expect(out.starts.count).toBe(2);
+    const framesBefore = out.ticks.length;
+    vi.advanceTimersByTime(2000);
+    expect(out.ticks.length).toBe(framesBefore);
+
+    // Unpaused, it drives at the speed picked during the gap: about 15 ticks in a quarter second at 2x.
+    expect(length).toBeGreaterThan(20);
+    player.setPaused(false);
+    vi.advanceTimersByTime(250);
+    expect(out.ticks[out.ticks.length - 1]).toBeGreaterThanOrEqual(13);
+    expect(out.ticks[out.ticks.length - 1]).toBeLessThanOrEqual(16);
+    player.stop();
   });
 });
