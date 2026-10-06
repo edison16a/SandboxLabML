@@ -1,4 +1,4 @@
-import type { SandboxRoom } from '@/engine/hideseek/sandbox/room';
+import { roomById, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import { hideSeekBlueprints, hideSeekSettingsOf } from '@/engine/training/hideseekRunConfig';
 import { hideSeekScriptSource } from '@/engine/training/hideseekSetup';
 import type { HideSeekPool } from '@/workers/client/hideSeekPool';
@@ -6,7 +6,7 @@ import type { SandboxScene } from '@/workers/replay/sandboxPlayer';
 import { toast } from '@/ui/toast/toastStore';
 import { useHideSeekLab } from '../state/hideSeekStore';
 import type { AgentSlot, SandboxSettings } from '../state/types';
-import { dropRoom, loadSandboxRooms, rememberSandboxSetup, roomById, storeRoom } from './sandboxRooms';
+import { dropRoom, loadSandboxRooms, rememberSandboxSetup, storeRoom } from './sandboxRooms';
 
 /**
  * The Sandbox side of the session: trained champions, as many of each as

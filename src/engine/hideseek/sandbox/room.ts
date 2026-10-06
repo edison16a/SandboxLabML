@@ -55,6 +55,19 @@ export function isPresetRoomId(id: string): id is HideSeekLayoutId {
   return (HIDESEEK_LAYOUT_IDS as readonly string[]).includes(id);
 }
 
+/** The room the Sandbox starts in, and falls back to when the picked room is gone. */
+export const DEFAULT_ROOM_ID: HideSeekLayoutId = 'shelter';
+
+/**
+ * The room with this id: a preset, one of the user's rooms, or the default
+ * when it is gone. The match and the renderer both call this, so the walls
+ * on screen are always the walls being simulated.
+ */
+export function roomById(id: string, rooms: readonly SandboxRoom[]): SandboxRoom {
+  if (isPresetRoomId(id)) return presetRoom(id);
+  return rooms.find((r) => r.id === id) ?? presetRoom(DEFAULT_ROOM_ID);
+}
+
 /** Every wall of a room as floor rectangles, outer walls first, like arenaWallRects for a layout. */
 export function roomWallRects(room: SandboxRoom, p: HideSeekPhysics): Rect[] {
   return [...outerWallRects(p), ...room.walls.map((w) => segmentRect(w, p.arena.innerWallThickness))];

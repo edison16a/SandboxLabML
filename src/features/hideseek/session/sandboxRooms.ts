@@ -1,4 +1,4 @@
-import { isPresetRoomId, presetRoom, SANDBOX_LIMITS, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
+import { DEFAULT_ROOM_ID, isPresetRoomId, SANDBOX_LIMITS, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import { deleteSandboxRoom, listSandboxRooms, newRoomId, saveSandboxRoom } from '@/storage/sandboxRooms';
 import { getSetting, setSetting } from '@/storage/settings';
 import { useHideSeekLab } from '../state/hideSeekStore';
@@ -15,12 +15,6 @@ interface SandboxPrefs {
 const store = () => useHideSeekLab.getState();
 
 let loaded: Promise<void> | null = null;
-
-/** The room with this id: a preset, one of the user's rooms, or Shelter when it is gone. */
-export function roomById(id: string, rooms: readonly SandboxRoom[]): SandboxRoom {
-  if (isPresetRoomId(id)) return presetRoom(id);
-  return rooms.find((r) => r.id === id) ?? presetRoom('shelter');
-}
 
 const count = (n: unknown, fallback: number) => (typeof n === 'number' && Number.isFinite(n) ? Math.max(1, Math.min(SANDBOX_LIMITS.playersPerTeam, Math.round(n))) : fallback);
 
@@ -66,12 +60,12 @@ export async function storeRoom(room: SandboxRoom): Promise<SandboxRoom> {
   return saved;
 }
 
-/** Deletes a room. If it was in play, Shelter takes its place. Returns whether the room in play changed. */
+/** Deletes a room. If it was in play, the default room takes its place. Returns whether the room in play changed. */
 export async function dropRoom(id: string): Promise<boolean> {
   await deleteSandboxRoom(id);
   const s = store().sandbox;
   const inPlay = s.roomId === id;
-  store().setSandbox({ rooms: s.rooms.filter((r) => r.id !== id), ...(inPlay ? { roomId: 'shelter' } : {}) });
+  store().setSandbox({ rooms: s.rooms.filter((r) => r.id !== id), ...(inPlay ? { roomId: DEFAULT_ROOM_ID } : {}) });
   if (inPlay) rememberSandboxSetup();
   return inPlay;
 }

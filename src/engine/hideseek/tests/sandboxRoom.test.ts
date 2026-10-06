@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { distanceToBox, distanceToRect } from '../layouts/geometry';
 import { HIDESEEK_LAYOUTS } from '../layouts/presets';
 import { boxKindSize, DEFAULT_HIDESEEK_PHYSICS } from '../physics';
-import { emptyRoom, PRESET_ROOMS, presetRoom, roomWallRects, SANDBOX_LIMITS } from '../sandbox/room';
+import { DEFAULT_ROOM_ID, emptyRoom, PRESET_ROOMS, presetRoom, roomById, roomWallRects, SANDBOX_LIMITS } from '../sandbox/room';
 import { sandboxSetup } from '../sandbox/spawn';
 import { sanitizeRoom } from '../sandbox/validate';
 import { DRAWN_ROOM } from './sandboxHelpers';
@@ -16,6 +16,12 @@ describe('Sandbox rooms', () => {
     expect(shelter.walls).toEqual(HIDESEEK_LAYOUTS.shelter.walls);
     expect(shelter.boxes.map((b) => b.kind)).toEqual(['cube', 'cube', 'plank', 'plank']);
     expect(shelter.hiderSpawn).toEqual(HIDESEEK_LAYOUTS.shelter.hiderSpawn);
+  });
+
+  it('finds a room by id: a preset, a room the user drew, or the default room when it is gone', () => {
+    expect(roomById('corridor', [DRAWN_ROOM])).toEqual(presetRoom('corridor'));
+    expect(roomById(DRAWN_ROOM.id, [DRAWN_ROOM])).toBe(DRAWN_ROOM);
+    expect(roomById('deleted', [DRAWN_ROOM])).toEqual(presetRoom(DEFAULT_ROOM_ID));
   });
 
   it('cleans a stored room: no slanted walls, boxes inside, spawn areas big enough, lists capped', () => {

@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { ChevronDown, Copy, Pencil } from 'lucide-react';
-import { emptyRoom, isPresetRoomId, SANDBOX_LIMITS, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
+import { emptyRoom, isPresetRoomId, roomById, SANDBOX_LIMITS, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import { cn } from '@/ui/cn';
 import { Slider } from '@/ui/primitives/Slider';
 import { hideSeekSession } from '../../session/HideSeekSession';
-import { draftRoom, roomById } from '../../session/sandboxRooms';
+import { draftRoom } from '../../session/sandboxRooms';
 import { useHideSeekLab } from '../../state/hideSeekStore';
 import { CountStepper } from '../sandbox/CountStepper';
 import { RoomEditorDialog } from '../sandbox/editor/RoomEditorDialog';
