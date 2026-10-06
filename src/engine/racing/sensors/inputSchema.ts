@@ -24,9 +24,10 @@ function rayLabel(angle: number): string {
  */
 export function racingInputSchema(cfg: RacingInputConfig, car: CarParams, custom: CustomSensorSpec[] = []): InputSpec[] {
   const specs: Omit<InputSpec, 'index'>[] = [];
-  for (const [i, angle] of rayAngles(cfg.rays.count, cfg.rays.fov).entries()) {
+  for (const angle of rayAngles(cfg.rays.count, cfg.rays.fov)) {
+    // Keyed by angle, not position, so a fork that changes the ray count keeps the rays that did not move.
     specs.push({
-      key: `ray:${i}`,
+      key: `ray:${Math.round((angle * 1800) / Math.PI) / 10}`,
       label: rayLabel(angle),
       group: 'ray',
       unit: 'm',
