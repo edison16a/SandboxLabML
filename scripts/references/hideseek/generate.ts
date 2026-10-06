@@ -3,7 +3,7 @@ import { opponentOf } from '../../../src/engine/bench/hideseek/opponents';
 import { hideSeekResult } from '../../../src/engine/bench/hideseek/result';
 import { REFERENCE_TIERS, summarizeCurve } from '../../../src/engine/bench/references';
 import type { ReferenceTier } from '../../../src/engine/bench/types';
-import { ENGINE_VERSION, HIDESEEK_BENCHMARK_VERSION } from '../../../src/engine/core/version';
+import { HIDESEEK_BENCHMARK_VERSION, HIDESEEK_ENGINE_VERSION } from '../../../src/engine/core/version';
 import { hideSeekBlueprints } from '../../../src/engine/training/hideseekRunConfig';
 import { checkpoints } from '../checkpoints';
 import { numberArg, writeReferences, type Args } from '../file';
@@ -92,7 +92,7 @@ export async function generateHideSeek(args: Args, pool: JobPool): Promise<void>
   writeReferences(out, {
     env: 'hideseek',
     benchmarkVersion: HIDESEEK_BENCHMARK_VERSION,
-    engineVersion: ENGINE_VERSION,
+    engineVersion: HIDESEEK_ENGINE_VERSION,
     generatedAt: new Date().toISOString().slice(0, 10),
     seeds,
     references,

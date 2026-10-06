@@ -2,7 +2,7 @@ import type { HideSeekBlueprint } from '../blueprints/types';
 import { DEFAULT_HIDESEEK_SETUP, HIDESEEK_SETUPS } from '../hideseek/trainer/setups';
 import type { HideSeekSetupId } from '../hideseek/trainer/types';
 import { hashObject } from '../core/hash';
-import { ENGINE_VERSION } from '../core/version';
+import { HIDESEEK_ENGINE_VERSION } from '../core/version';
 import { HIDESEEK_LAYOUT_IDS } from '../hideseek/layouts/presets';
 import type { HideSeekLayoutId } from '../hideseek/layouts/types';
 import { DEFAULT_HIDESEEK_PHYSICS, hideSeekPhysicsHash, type HideSeekPhysics } from '../hideseek/physics';
@@ -81,7 +81,7 @@ export function createHideSeekRunConfig(input: NewHideSeekRun): RunConfig {
     env: 'hideseek',
     seed: input.seed >>> 0,
     createdAt: Date.now(),
-    engineVersion: ENGINE_VERSION,
+    engineVersion: HIDESEEK_ENGINE_VERSION,
     physicsHash: hideSeekRunHash(physics, bp, seekerBp),
     blueprint: bp,
     scripts: input.script ? [{ fromGeneration: 0, source: input.script.source, hash: input.script.hash }] : [],

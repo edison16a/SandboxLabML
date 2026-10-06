@@ -1,4 +1,4 @@
-import { ENGINE_VERSION, HIDESEEK_BENCHMARK_VERSION } from '../../core/version';
+import { HIDESEEK_BENCHMARK_VERSION, HIDESEEK_ENGINE_VERSION } from '../../core/version';
 import { HIDESEEK_LAYOUTS, HIDESEEK_LAYOUT_IDS } from '../../hideseek/layouts/presets';
 import type { BenchResult, ReferenceTier } from '../types';
 import { performanceRating } from './elo';
@@ -41,7 +41,7 @@ export function hideSeekResult(games: readonly GameResult[], opponents: readonly
   return {
     env: 'hideseek',
     benchmarkVersion: HIDESEEK_BENCHMARK_VERSION,
-    engineVersion: ENGINE_VERSION,
+    engineVersion: HIDESEEK_ENGINE_VERSION,
     score,
     radar,
     metrics: { ...metricsOf(all), elo: examRating(games, opponents) },

@@ -1,4 +1,4 @@
-import { ENGINE_VERSION } from '@/engine/core/version';
+import { engineVersionOf } from '@/engine/core/version';
 import { base64ToBytes, bytesToBase64 } from '@/engine/neat/serialize';
 import { newRunId, type RunConfig } from '@/engine/training/runConfig';
 import { db, type GenerationRow, type HideSeekGenerationRow } from './db';
@@ -31,7 +31,7 @@ export async function exportRun(runId: string): Promise<RunExport> {
     format: EXPORT_FORMAT,
     version: 1,
     exportedAt: new Date().toISOString(),
-    engineVersion: ENGINE_VERSION,
+    engineVersion: engineVersionOf(run.config.env),
     config: run.config,
     generations: gens.map((g) => ({ ...g, genome: bytesToBase64(g.genome) })),
     hsGenerations: hs.map(({ replay: _replay, ...g }) => ({ ...g, hiderChampion: bytesToBase64(g.hiderChampion), seekerChampion: bytesToBase64(g.seekerChampion) })),

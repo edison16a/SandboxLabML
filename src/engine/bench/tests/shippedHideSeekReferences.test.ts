@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ENGINE_VERSION, HIDESEEK_BENCHMARK_VERSION } from '../../core/version';
+import { HIDESEEK_BENCHMARK_VERSION, HIDESEEK_ENGINE_VERSION } from '../../core/version';
 import { ELO_ANCHOR } from '../hideseek/elo';
 import { opponentsFrom } from '../hideseek/opponents';
 import { readReferences } from '../nodeReferences';
@@ -17,7 +17,7 @@ describe('public/references/hideseek.json', () => {
     const refs = await readReferences('hideseek');
     expect(refs, 'Run npm run refs -- --env hideseek to generate the file.').not.toBeNull();
     expect(refs?.env).toBe('hideseek');
-    expect(refs?.engineVersion).toBe(ENGINE_VERSION);
+    expect(refs?.engineVersion).toBe(HIDESEEK_ENGINE_VERSION);
     expect(refs?.benchmarkVersion).toBe(HIDESEEK_BENCHMARK_VERSION);
     expect(refs?.seeds).toBeGreaterThanOrEqual(3);
   });

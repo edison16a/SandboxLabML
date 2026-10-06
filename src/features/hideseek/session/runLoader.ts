@@ -1,4 +1,4 @@
-import { ENGINE_VERSION } from '@/engine/core/version';
+import { HIDESEEK_ENGINE_VERSION } from '@/engine/core/version';
 import type { HideSeekTrainerState } from '@/engine/hideseek/trainer/types';
 import type { HideSeekRecord, RoundReplay } from '@/engine/training/hideseekRecords';
 import type { RunConfig } from '@/engine/training/runConfig';
@@ -48,5 +48,5 @@ export function splitReplays(records: HideSeekRecord[]): { records: HideSeekReco
 
 /** Why stored brains of this run cannot be replayed, or null when they can. */
 export function replayBlockedReason(config: RunConfig): string | null {
-  return config.engineVersion === ENGINE_VERSION ? null : 'This run was trained on an older engine, so its rounds cannot be replayed.';
+  return config.engineVersion === HIDESEEK_ENGINE_VERSION ? null : 'This run was trained on an older engine, so its rounds cannot be replayed.';
 }
