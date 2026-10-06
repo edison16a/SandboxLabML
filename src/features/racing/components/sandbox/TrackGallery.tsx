@@ -33,8 +33,12 @@ export function TrackGallery() {
 
   const current = picked && sameRoad(spec, picked) ? picked.id : null;
   const runTrack = run?.racing?.track;
-  const ownTile = runTrack && !BUILT_IN_TRACKS.some((t) => sameRoad(t, runTrack)) ? runTrack : null;
+  // The run's own track gets a tile only when no built in or saved tile already shows that road.
+  const ownTile = runTrack && ![...BUILT_IN_TRACKS, ...saved].some((t) => sameRoad(t, runTrack)) ? runTrack : null;
   const tag = (t: TrackSpec) => (runTrack && sameRoad(t, runTrack) ? 'Trained' : undefined);
+  // One tile lights at a time: a tile with the track's exact id, or else the Random or Draw tile that made it.
+  const exact = current && [...BUILT_IN_TRACKS, ...saved, ...(ownTile ? [ownTile] : [])].some((t) => t.id === current) ? current : null;
+  const made = exact ? null : current?.startsWith('random-') ? 'random' : current?.startsWith('custom-') ? 'draw' : null;
   const pick = (t: TrackSpec) => {
     set({ editingTrack: false });
     racingSession().sandbox?.setTrack(structuredClone(t));
@@ -48,20 +52,20 @@ export function TrackGallery() {
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-4 gap-1.5">
         {BUILT_IN_TRACKS.map((t) => (
-          <TrackTile key={t.id} label={t.name} spec={t} tag={tag(t)} selected={current === t.id} onSelect={() => pick(t)} />
+          <TrackTile key={t.id} label={t.name} spec={t} tag={tag(t)} selected={exact === t.id} onSelect={() => pick(t)} />
         ))}
-        {ownTile && <TrackTile label={ownTile.name} spec={ownTile} tag="Trained" selected={current === ownTile.id} onSelect={() => pick(ownTile)} />}
+        {ownTile && <TrackTile label={ownTile.name} spec={ownTile} tag="Trained" selected={exact === ownTile.id} onSelect={() => pick(ownTile)} />}
         <TrackTile
           label="Random"
           icon={<Dices />}
-          spec={current?.startsWith('random-') ? spec : undefined}
-          selected={!!current?.startsWith('random-')}
+          spec={made === 'random' ? spec : undefined}
+          selected={made === 'random'}
           onSelect={() => pick(randomTrackSpec(Math.floor(Math.random() * 1e6), spec.width))}
         />
         <TrackTile
           label="Draw"
           icon={<PencilRuler />}
-          selected={!!current?.startsWith('custom-')}
+          selected={made === 'draw'}
           onSelect={() => {
             racingSession().sandbox?.setTrack(blankLoop(spec.width));
             set({ editingTrack: true });
@@ -73,7 +77,7 @@ export function TrackGallery() {
         {saved.length ? (
           <div className="grid grid-cols-4 gap-1.5">
             {saved.map((t) => (
-              <TrackTile key={t.id} label={t.name} spec={t} selected={current === t.id} onSelect={() => pick(t)} onRemove={() => void onRemove(t)} />
+              <TrackTile key={t.id} label={t.name} spec={t} tag={tag(t)} selected={exact === t.id} onSelect={() => pick(t)} onRemove={() => void onRemove(t)} />
             ))}
           </div>
         ) : (
