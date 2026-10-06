@@ -74,8 +74,3 @@ export function createSandboxState(
     tick: 0,
   };
 }
-
-/** Whether slot `slot` holds a hider. */
-export function isHiderSlot(s: SandboxState, slot: number): boolean {
-  return slot < s.hiders;
-}

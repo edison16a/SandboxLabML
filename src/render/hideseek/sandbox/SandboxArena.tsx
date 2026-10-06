@@ -22,7 +22,7 @@ import { SeenMarkers } from './SeenMarkers';
 const P = DEFAULT_HIDESEEK_PHYSICS;
 
 /** What is on the field, published with the render stats for tests. */
-export const sandboxStats = { agents: 0, boxes: 0, locked: 0, walls: 0 };
+export const sandboxStats = { agents: 0, boxes: 0, locked: 0 };
 
 interface Shape {
   hiders: number;
@@ -80,7 +80,6 @@ export function SandboxArena({ tier }: { tier: HsQualityTier }) {
     sandboxStats.agents = c.hiders + c.seekers;
     sandboxStats.boxes = c.boxes;
     sandboxStats.locked = locked;
-    sandboxStats.walls = room.walls.length;
   }, -1);
 
   useEffect(() => {
@@ -97,7 +96,7 @@ export function SandboxArena({ tier }: { tier: HsQualityTier }) {
     return () => {
       frame.agentPose = null;
       off?.();
-      Object.assign(sandboxStats, { agents: 0, boxes: 0, locked: 0, walls: 0 });
+      Object.assign(sandboxStats, { agents: 0, boxes: 0, locked: 0 });
     };
   }, [frame, getFeed, invalidate]);
 
