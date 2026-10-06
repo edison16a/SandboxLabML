@@ -1,3 +1,4 @@
+import type { HideSeekDirective } from '../hideseek/trainer/types';
 import type { GenerationPlan } from '../neat/plan';
 
 /**
@@ -20,8 +21,8 @@ export type TrackDirective = { kind: 'builtin'; id: string } | { kind: 'random';
 export interface GenerationDirectives {
   plan: GenerationPlan;
   racing?: { track?: TrackDirective };
-  /** Filled by hide and seek operators once that slice exists. */
-  hideseek?: Record<string, unknown>;
+  /** Match rules from the Hide and Seek operators, such as prepTime and opponents. */
+  hideseek?: HideSeekDirective;
 }
 
 /**

@@ -1,6 +1,7 @@
 import type { EnvId } from '../../env/types';
 import { CORE_SLICE } from './core';
 import { GENERATION_SLICE } from './generation';
+import { HIDESEEK_SLICE } from './hideseek';
 import { RACING_SLICE } from './racing';
 import type { RegistryEntry, RegistrySlice, Scope } from './types';
 
@@ -12,7 +13,7 @@ export * from './types';
  * autocomplete all read it. A new environment is one slice file plus one
  * line here.
  */
-export const SLICES: readonly RegistrySlice[] = [CORE_SLICE, GENERATION_SLICE, RACING_SLICE];
+export const SLICES: readonly RegistrySlice[] = [CORE_SLICE, GENERATION_SLICE, RACING_SLICE, HIDESEEK_SLICE];
 
 export const REGISTRY: readonly RegistryEntry[] = SLICES.flatMap((s) => s.entries);
 

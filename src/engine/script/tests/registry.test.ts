@@ -9,7 +9,7 @@ import { TICK_DT } from '../registry/core';
 import { check } from '../checker';
 import { parse } from '../parser';
 import { RACING_PRESETS } from '../presets/racing';
-import { errors, inGeneration, inTick, problems } from './helpers';
+import { errors, inGeneration, inHideSeekGeneration, inHideSeekTick, inTick, problems } from './helpers';
 
 const CATEGORIES = ['sensors', 'actions', 'rewards', 'logic', 'math', 'evolution', 'environment'];
 const TIERS = ['beginner', 'intermediate', 'advanced'];
@@ -17,12 +17,23 @@ const TIERS = ['beginner', 'intermediate', 'advanced'];
 const sentences = (text: string) => text.split(/[.!?](?:\s|$)/).filter((s) => s.trim().length > 0).length;
 const holes = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]);
 
-/** Wraps an example in the block its scope needs, or in both for entries usable anywhere. */
+/**
+ * Wraps an example in the block its scope needs, or in both for entries
+ * usable anywhere, in a script for the entry's environment. Core entries
+ * are tried in every environment.
+ */
 function exampleScripts(e: RegistryEntry): string[] {
-  if (e.scope === 'generation') return [inGeneration(`  ${e.example.replace(/\n/g, '\n  ')}`)];
-  const tick = inTick(`  drive(steer: brain.steer, pedal: brain.pedal)\n  ${e.example.replace(/\n/g, '\n  ')}`);
-  if (e.scope === 'tick') return [tick];
-  return [tick, inGeneration(`  ${e.example.replace(/\n/g, '\n  ')}`)];
+  const body = `  ${e.example.replace(/\n/g, '\n  ')}`;
+  const out: string[] = [];
+  if (e.env !== 'hideseek') {
+    if (e.scope !== 'generation') out.push(inTick(`  drive(steer: brain.steer, pedal: brain.pedal)\n${body}`));
+    if (e.scope !== 'tick') out.push(inGeneration(body));
+  }
+  if (e.env !== 'racing') {
+    if (e.scope !== 'generation') out.push(inHideSeekTick(body));
+    if (e.scope !== 'tick') out.push(inHideSeekGeneration(body));
+  }
+  return out;
 }
 
 describe('registry entries', () => {
@@ -49,15 +60,22 @@ describe('registry entries', () => {
     });
   }
 
+  /** Registry entries a preset reads or calls. */
+  function usedBy(source: string): RegistryEntry[] {
+    const checked = check(parse(source).program);
+    const used = new Set<RegistryEntry>([...checked.calls.values()].map((c) => c.entry));
+    for (const info of checked.exprs.values()) if (info.ref?.kind === 'entry') used.add(info.ref.entry);
+    return [...used];
+  }
+
   it('presets lists exactly the tiers whose preset script uses the entry', () => {
     for (const preset of RACING_PRESETS) {
-      const checked = check(parse(preset.source).program);
-      const used = new Set<string>([...checked.calls.values()].map((c) => c.entry.name));
-      for (const info of checked.exprs.values()) if (info.ref?.kind === 'entry') used.add(info.ref.entry.name);
+      const used = usedBy(preset.source).map((e) => e.name);
       const tagged = REGISTRY.filter((e) => e.env !== 'hideseek' && e.presets.includes(preset.tier)).map((e) => e.name);
-      expect([...used].sort(), preset.id).toEqual(tagged.sort());
+      expect(used.sort(), preset.id).toEqual(tagged.sort());
     }
   });
+
 
   it('names are unique within each environment', () => {
     for (const env of ['racing', 'hideseek'] as const) {

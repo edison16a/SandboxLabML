@@ -18,6 +18,7 @@ export { explainExpr, explainStmt } from './explain';
 export { estimateCost, costToMicros, HIGH_COST, NS_PER_UNIT } from './cost';
 export { compileScript, classifyChange, type CompiledScript, type CompileResult, type ChangeKind, type ScriptHeader } from './compiler';
 export type { GenerationContext, GenerationDirectives, GenerationView, TrackDirective } from './generationTypes';
+export type { HideSeekDirective } from '../hideseek/trainer/types';
 export { createScriptHost, ScriptCompileError, type ScriptHostAdapter } from './host';
 export * from './autocorrect';
 export * from './registry';

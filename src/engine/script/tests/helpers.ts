@@ -26,3 +26,15 @@ export function inTick(lines: string, extra = ''): string {
 export function inGeneration(lines: string): string {
   return `script "t" for racing v1\neach tick {\n  drive(steer: brain.steer, pedal: brain.pedal)\n}\n\neach generation {\n${lines}\n}\n`;
 }
+
+/** The line that makes a Hide and Seek agent follow its brain. */
+export const HIDESEEK_ACT = 'act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)';
+
+/** Wraps lines in a Hide and Seek script with one each tick block. */
+export function inHideSeekTick(lines: string): string {
+  return `script "t" for hideseek v1\nbrain hideseek-standard\n\neach tick {\n  ${HIDESEEK_ACT}\n${lines}\n}\n`;
+}
+
+export function inHideSeekGeneration(lines: string): string {
+  return `script "t" for hideseek v1\neach tick {\n  ${HIDESEEK_ACT}\n}\n\neach generation {\n${lines}\n}\n`;
+}
