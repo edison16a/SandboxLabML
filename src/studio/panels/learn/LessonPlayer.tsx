@@ -13,6 +13,7 @@ import { HintLadder } from './HintLadder';
 import { applySolution, loadStarter } from './lessonActions';
 import { Markdown } from './Markdown';
 import { openPlayer, reducePlayer, type PlayerAction, type PlayerState } from './player';
+import { LessonPreview } from './preview/LessonPreview';
 
 interface Props {
   lesson: Lesson;
@@ -21,7 +22,7 @@ interface Props {
   onProgress: () => void;
 }
 
-/** One lesson, a step at a time: the text, a starter, a check, and hints that end in the solution. */
+/** One lesson, a step at a time: the text, a starter, a live preview, a check, and hints that end in the solution. */
 export function LessonPlayer({ lesson, saved, onBack, onProgress }: Props) {
   const text = useStudio(selectText);
   const [state, dispatch] = useReducer((s: PlayerState, a: PlayerAction) => reducePlayer(s, a, lesson), saved, (p) => openPlayer(lesson, p));
@@ -95,6 +96,7 @@ export function LessonPlayer({ lesson, saved, onBack, onProgress }: Props) {
           Load starter
         </Button>
       </section>
+      <LessonPreview lesson={lesson} step={step} text={text} />
       <CheckBox check={state.check} onCheck={() => void check()} onCancel={cancel} onNext={passed && hasNext ? () => dispatch({ type: 'goto', step: state.step + 1 }) : null} />
       <HintLadder step={step} rung={state.hints} current={text} onNext={() => dispatch({ type: 'hint' })} onApply={() => applySolution(step.solution)} />
     </div>
