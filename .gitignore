@@ -1,0 +1,25 @@
+# dependencies (no trailing slash so a symlinked node_modules is ignored too)
+node_modules
+.pnp
+.pnp.js
+
+# builds
+.next
+out
+build
+dist
+*.tsbuildinfo
+next-env.d.ts
+
+# tests
+coverage
+playwright-report
+test-results
+blob-report
+
+# misc
+.DS_Store
+*.pem
+.env*.local
+.vercel
+npm-debug.log*
