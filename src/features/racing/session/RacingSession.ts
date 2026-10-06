@@ -3,8 +3,8 @@ import type { RacingTrainerState } from '@/engine/training/racingTrainer';
 import type { GenerationRecord } from '@/engine/training/records';
 import { racingSetupFor } from '@/engine/training/racingSetup';
 import { scriptAt, type RunConfig } from '@/engine/training/runConfig';
-import { saveCheckpoint, latestCheckpoint } from '@/storage/checkpoints';
-import { deleteGenerationsFrom, loadHistory, saveGeneration } from '@/storage/generations';
+import { saveCheckpoint } from '@/storage/checkpoints';
+import { saveGeneration } from '@/storage/generations';
 import { createRun, getRun } from '@/storage/runs';
 import { toast } from '@/ui/toast/toastStore';
 import { createWorkerPool, type WorkerPool } from '@/workers/client/workerPool';
@@ -14,6 +14,7 @@ import { useRacingLab, viewportHeld } from '../state/labStore';
 import { selectGhosts } from './ghostSelection';
 import { enterSandbox, scheduleSandboxScene } from './sandbox';
 import { maybeBenchmark } from './backgroundBench';
+import { restoreRacingHistory } from './restoreRun';
 
 /**
  * Main-thread glue for the Racing lab: owns the workers, saves what the
@@ -47,17 +48,8 @@ export class RacingSession {
   async openRun(runId: string): Promise<boolean> {
     const run = await getRun(runId);
     if (!run || run.env !== 'racing' || run.deletedAt) return false;
-    const checkpoint = await latestCheckpoint(runId);
-    let history = await loadHistory(runId);
-    if (checkpoint) {
-      await deleteGenerationsFrom(runId, checkpoint.generation);
-      history = history.filter((r) => r.generation < checkpoint.generation);
-    } else if (history.length) {
-      // No checkpoint yet: restart from scratch; training is deterministic so the same generations come back.
-      await deleteGenerationsFrom(runId, 0);
-      history = [];
-    }
-    await this.load(run.config, history, checkpoint?.state as RacingTrainerState | undefined);
+    const { history, state } = await restoreRacingHistory(runId);
+    await this.load(run.config, history, state);
     return true;
   }
 
