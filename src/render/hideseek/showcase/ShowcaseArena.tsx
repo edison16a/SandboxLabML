@@ -1,7 +1,7 @@
 'use client';
 
 import * as THREE from 'three';
-import { useFrame, type ThreeEvent } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import { ContactShadows } from '@react-three/drei';
 import { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
@@ -48,17 +48,13 @@ export function ShowcaseArena({ tier, sandbox }: { tier: HsQualityTier; sandbox:
   const agentGeometry = useAgentGeometry();
   const getOrigin = useCallback(() => origin, [origin]);
   const drag = useBoxDrag(getOrigin, sandbox ? onMoveBox : undefined);
-  const onBox = useCallback(
-    (index: number, e: ThreeEvent<PointerEvent>) => {
-      // A double press on a crate locks or frees it; a single press drags it.
-      if (sandbox && e.nativeEvent.detail >= 2 && frame.curr && onToggleLock) {
-        e.stopPropagation();
-        onToggleLock(index, frame.curr[boxAt(frame.first + Math.max(0, frame.focusSlot), index) + 3] !== 1);
-        return;
-      }
-      drag(index, e);
+  /** A double click on a crate locks or frees it; a press and drag moves it. */
+  const toggleLock = useCallback(
+    (index: number) => {
+      if (!frame.curr || !onToggleLock) return;
+      onToggleLock(index, frame.curr[boxAt(frame.first + Math.max(0, frame.focusSlot), index) + 3] !== 1);
     },
-    [sandbox, frame, onToggleLock, drag],
+    [frame, onToggleLock],
   );
 
   useFrame(() => {
@@ -81,7 +77,7 @@ export function ShowcaseArena({ tier, sandbox }: { tier: HsQualityTier; sandbox:
       {shown && (
         <>
           <ArenaRoom layout={shown.layout} />
-          <ShowcaseBoxes arena={shown.arena} onBoxPointerDown={sandbox ? onBox : undefined} />
+          <ShowcaseBoxes arena={shown.arena} onBoxPointerDown={sandbox ? drag : undefined} onBoxDoubleClick={sandbox ? toggleLock : undefined} />
           <ShowcaseAgent arena={shown.arena} agent={0} geometry={agentGeometry} />
           <ShowcaseAgent arena={shown.arena} agent={1} geometry={agentGeometry} />
           <VisionCone arena={shown.arena} layout={shown.layout} />

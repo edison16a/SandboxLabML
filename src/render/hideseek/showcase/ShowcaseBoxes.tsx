@@ -29,7 +29,7 @@ export type BoxPointerHandler = (index: number, e: ThreeEvent<PointerEvent>) => 
  * 200 ms, lights its edges and snaps a padlock shut on top, so a fort being
  * sealed is visible from across the room.
  */
-export function ShowcaseBoxes({ arena, onBoxPointerDown }: { arena: number; onBoxPointerDown?: BoxPointerHandler }) {
+export function ShowcaseBoxes({ arena, onBoxPointerDown, onBoxDoubleClick }: { arena: number; onBoxPointerDown?: BoxPointerHandler; onBoxDoubleClick?: (index: number) => void }) {
   const { frame } = useHsScene();
   const parts = useRef<BoxParts[]>(Array.from({ length: BOX_COUNT }, () => ({ root: null, edge: null, lock: null, shackle: null })));
   const geo = useDisposable(() => {
@@ -89,6 +89,14 @@ export function ShowcaseBoxes({ arena, onBoxPointerDown }: { arena: number; onBo
             castShadow
             receiveShadow
             onPointerDown={onBoxPointerDown ? (e) => onBoxPointerDown(b, e) : undefined}
+            onDoubleClick={
+              onBoxDoubleClick
+                ? (e) => {
+                    e.stopPropagation();
+                    onBoxDoubleClick(b);
+                  }
+                : undefined
+            }
           />
           <mesh ref={(el) => void (parts.current[b].edge = el)} geometry={geo.edges[b]} material={mats.edge[b]} visible={false} raycast={() => null} />
           <group ref={(el) => void (parts.current[b].lock = el)} position={[0, size.height + 0.002, 0]} visible={false}>
