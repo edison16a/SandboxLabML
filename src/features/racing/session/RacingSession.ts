@@ -1,0 +1,175 @@
+import { ENGINE_VERSION } from '@/engine/core/version';
+import type { RacingTrainerState } from '@/engine/training/racingTrainer';
+import type { GenerationRecord } from '@/engine/training/records';
+import { racingSetupFor } from '@/engine/training/racingSetup';
+import { scriptAt, type RunConfig } from '@/engine/training/runConfig';
+import { saveCheckpoint, latestCheckpoint } from '@/storage/checkpoints';
+import { deleteGenerationsFrom, loadHistory, saveGeneration } from '@/storage/generations';
+import { createRun, getRun } from '@/storage/runs';
+import { toast } from '@/ui/toast/toastStore';
+import { createWorkerPool, type WorkerPool } from '@/workers/client/workerPool';
+import type { CoordinatorEvent } from '@/workers/coordinator/events';
+import { isWatchSpeed, WATCH_SPEEDS, type SpeedMode } from '@/workers/shared/protocol';
+import { useRacingLab } from '../state/labStore';
+import { selectGhosts } from './ghostSelection';
+
+/**
+ * Main-thread glue for the Racing lab: owns the workers, saves what the
+ * coordinator produces, and keeps the ghost replay in step with training.
+ * One instance lives for the whole browser session, so training keeps going
+ * while the user looks at other pages.
+ */
+export class RacingSession {
+  private pool: WorkerPool | null = null;
+  private ready: Promise<WorkerPool> | null = null;
+  private ghostKey = '';
+
+  async init(): Promise<WorkerPool> {
+    if (!this.ready) this.ready = createWorkerPool((e) => this.onEvent(e)).then((p) => (this.pool = p));
+    return this.ready;
+  }
+
+  get streams() {
+    return this.pool ? { population: this.pool.population, ghosts: this.pool.ghosts } : null;
+  }
+
+  private get store() {
+    return useRacingLab.getState();
+  }
+
+  async newRun(config: RunConfig): Promise<void> {
+    await createRun(config);
+    await this.load(config, [], undefined);
+  }
+
+  async openRun(runId: string): Promise<boolean> {
+    const run = await getRun(runId);
+    if (!run || run.env !== 'racing') return false;
+    const checkpoint = await latestCheckpoint(runId);
+    let history = await loadHistory(runId);
+    if (checkpoint) {
+      await deleteGenerationsFrom(runId, checkpoint.generation);
+      history = history.filter((r) => r.generation < checkpoint.generation);
+    } else if (history.length) {
+      // No checkpoint yet: restart from scratch; training is deterministic so the same generations come back.
+      await deleteGenerationsFrom(runId, 0);
+      history = [];
+    }
+    await this.load(run.config, history, checkpoint?.state as RacingTrainerState | undefined);
+    return true;
+  }
+
+  private async load(config: RunConfig, history: GenerationRecord[], state?: RacingTrainerState) {
+    const pool = await this.init();
+    await pool.coordinator.pause();
+    pool.population.clear();
+    pool.ghosts.clear();
+    await pool.replay.stopGhosts();
+    const generation = await pool.coordinator.loadRacing(config, state);
+    this.ghostKey = '';
+    this.store.set({
+      run: config,
+      records: history,
+      liveGeneration: generation,
+      status: 'idle',
+      replayBlocked: config.engineVersion === ENGINE_VERSION ? null : 'This run was trained on an older engine, so its generations cannot be replayed.',
+      focus: { kind: 'champion' },
+      networkGeneration: null,
+      telemetry: [],
+      ghostGenerations: [],
+    });
+    await pool.coordinator.setSpeed(this.store.speed);
+    await this.refreshGhosts();
+  }
+
+  async start(generations?: number): Promise<void> {
+    const pool = await this.init();
+    if (!this.store.run) return;
+    await pool.coordinator.start(generations);
+    await pool.replay.setGhostsPaused(false);
+  }
+
+  async pause(): Promise<void> {
+    const pool = await this.init();
+    await pool.coordinator.pause();
+    if (isWatchSpeed(this.store.speed)) await pool.replay.setGhostsPaused(true);
+    await this.saveNow();
+  }
+
+  async setSpeed(mode: SpeedMode): Promise<void> {
+    const pool = await this.init();
+    const wasWatch = isWatchSpeed(this.store.speed);
+    this.store.set({ speed: mode });
+    await pool.coordinator.setSpeed(mode);
+    if (isWatchSpeed(mode)) await pool.replay.setGhostSpeed(WATCH_SPEEDS[mode]);
+    else if (wasWatch) await this.playGhosts(1, true);
+  }
+
+  /** Saves a checkpoint right now, e.g. on pause or when the tab is hidden. */
+  async saveNow(): Promise<void> {
+    const pool = this.pool;
+    const run = this.store.run;
+    if (!pool || !run) return;
+    const state = await pool.coordinator.checkpoint();
+    if (state) await saveCheckpoint(run.id, state.population.generation, state);
+  }
+
+  /** Rebuilds the ghost list from the current selection and restarts the replay if it changed. */
+  async refreshGhosts(force = false): Promise<void> {
+    const pool = this.pool;
+    const { run, records, ghostSelection, replayBlocked, speed } = this.store;
+    if (!pool || !run || replayBlocked) return;
+    const gens = selectGhosts(ghostSelection, records.length);
+    const key = `${run.id}:${gens.join(',')}`;
+    if (key === this.ghostKey && !force) return;
+    this.ghostKey = key;
+    const byGen = new Map(records.map((r) => [r.generation, r]));
+    const specs = gens
+      .map((g) => byGen.get(g))
+      .filter((r) => r !== undefined)
+      .map((r) => ({ generation: r.generation, genome: r.genome, seed: r.replaySeed, scriptSource: scriptAt(run, r.generation)?.source ?? null }));
+    const track = run.racing!.track;
+    await pool.replay.setGhostScene(racingSetupFor(run, track, null), specs);
+    this.store.set({ ghostGenerations: gens });
+    if (!isWatchSpeed(speed) || this.store.status !== 'running') await this.playGhosts(isWatchSpeed(speed) ? WATCH_SPEEDS[speed] : 1, true);
+    const telemetry = await pool.replay.ghostTelemetry();
+    this.store.set({ telemetry });
+  }
+
+  private async playGhosts(speed: number, loop: boolean): Promise<void> {
+    await this.pool?.replay.playGhosts(speed, loop);
+  }
+
+  private onEvent(e: CoordinatorEvent): void {
+    const run = this.store.run;
+    switch (e.type) {
+      case 'status':
+        this.store.set({ status: e.status });
+        break;
+      case 'generation':
+        this.store.addRecord(e.record);
+        void saveGeneration(e.record);
+        void this.refreshGhosts();
+        break;
+      case 'checkpoint':
+        if (run) void saveCheckpoint(run.id, e.generation, e.state);
+        break;
+      case 'live-start':
+        this.store.set({ liveGeneration: e.generation });
+        // Ghosts restart with every live generation so they race the new cars from the same line.
+        void this.playGhosts(e.speed, false);
+        break;
+      case 'error':
+        this.store.set({ status: 'error' });
+        toast.error('Training stopped', e.message);
+        break;
+    }
+  }
+}
+
+let session: RacingSession | null = null;
+
+export function racingSession(): RacingSession {
+  if (!session) session = new RacingSession();
+  return session;
+}
