@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { BoxKind, BoxSize } from '@/engine/hideseek/physics';
 import { BOX_LOOK } from './boxMaterials';
+import { setTintMask } from '../shared/tintMask';
 import { crateFaces, MIN_BRACED } from './bracedBox';
 
 /** Brace width on the far away crates, m: a touch wider than up close, so the pattern survives the distance. */
@@ -64,7 +65,7 @@ export function instancedCrateGeometry(kind: BoxKind, s: BoxSize): THREE.BufferG
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-  g.setAttribute('aTint', new THREE.Float32BufferAttribute(tint, 1));
+  setTintMask(g, tint);
   g.computeVertexNormals();
   return g;
 }

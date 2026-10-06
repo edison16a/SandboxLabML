@@ -8,7 +8,8 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
 import { agentAt, blendFloorPose, boxAt } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
-import { blobTexture, floorQuad } from './gridGeometry';
+import { floorQuad } from '../shared/basicGeometry';
+import { blobTexture } from '../shared/blobShadow';
 import { commit, makeScratch, MAX_ARENAS, placeInstance, GRID_LAYER } from './scratch';
 
 const PER_ARENA = 2 + BOX_COUNT;

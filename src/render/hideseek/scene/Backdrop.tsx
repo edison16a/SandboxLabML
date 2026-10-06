@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
-import { standingUnitBox } from '../grid/gridGeometry';
+import { standingUnitBox } from '../shared/basicGeometry';
 import { commit, makeScratch, placeInstance } from '../grid/scratch';
 import { HS_COLORS } from '../palette';
 import { backdropBlocks, distanceToClear, heightRamp } from './backdropBlocks';

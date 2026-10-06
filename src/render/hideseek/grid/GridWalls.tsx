@@ -9,7 +9,7 @@ import { useHsScene } from '../frame/sceneContext';
 import { arenaOrigin, ARENA_SPAN } from '../layout/gridLattice';
 import { MAX_WALLS_PER_ARENA, wallsOfLayout } from '../layout/arenaWalls';
 import { HS } from '../palette';
-import { floorQuad, standingUnitBox } from './gridGeometry';
+import { floorQuad, standingUnitBox } from '../shared/basicGeometry';
 import { commit, makeScratch, MAX_ARENAS, placeInstance, GRID_LAYER } from './scratch';
 
 const WALL_HEIGHT = DEFAULT_HIDESEEK_PHYSICS.arena.wallHeight;

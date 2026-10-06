@@ -11,7 +11,7 @@ import { useHsScene } from '../frame/sceneContext';
 import { blendFloorPose, boxAt } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
 import { commit, GRID_LAYER, makeScratch, MAX_ARENAS, placeInstance } from './scratch';
-import { tintMaskMaterial } from './tintMaskMaterial';
+import { tintMaskMaterial } from '../shared/tintMask';
 
 const BRACE = new THREE.Color(BOX_LOOK.brace);
 /** Pushed past 1 so a locked crate's braces read as lit even from far away. */

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { setTintMask } from '../grid/tintMaskMaterial';
+import { setTintMask } from '../shared/tintMask';
 import { faceGeometry } from './characterFace';
 import { armGeometry, bodyGeometry, headGeometry, RIG } from './characterGeometry';
 

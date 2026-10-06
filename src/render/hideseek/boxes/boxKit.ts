@@ -1,6 +1,7 @@
 import type * as THREE from 'three';
 import type { BoxSize } from '@/engine/hideseek/physics';
-import { floorQuad, sharedBlobTexture } from '../grid/gridGeometry';
+import { floorQuad } from '../shared/basicGeometry';
+import { sharedBlobTexture } from '../shared/blobShadow';
 import { bracedBox, type BracedBoxParts } from './bracedBox';
 import { padlockBodyGeometry, padlockShackleGeometry } from './padlock';
 

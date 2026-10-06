@@ -11,7 +11,7 @@ import { useHsScene } from '../frame/sceneContext';
 import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
 import { commit, GRID_LAYER, makeScratch, MAX_ARENAS } from './scratch';
-import { tintMaskMaterial } from './tintMaskMaterial';
+import { tintMaskMaterial } from '../shared/tintMask';
 
 const BODY = [new THREE.Color(TEAM_LOOK.hider.body), new THREE.Color(TEAM_LOOK.seeker.body)];
 const WHITE = new THREE.Color('#ffffff');

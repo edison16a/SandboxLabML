@@ -1,5 +1,5 @@
 import type * as THREE from 'three';
-import { sharedBlobTexture } from '../grid/gridGeometry';
+import { sharedBlobTexture } from '../shared/blobShadow';
 import { FACES, faceGeometry, type FaceKey } from './characterFace';
 import { armGeometry, blobGeometry, bodyGeometry, headGeometry } from './characterGeometry';
 import type { CharacterDetail } from './types';
