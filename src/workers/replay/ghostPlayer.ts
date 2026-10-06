@@ -1,6 +1,7 @@
 import { mixSeed } from '@/engine/core/rng';
 import { Network } from '@/engine/neat/network';
 import type { Genome } from '@/engine/neat/types';
+import { STATUS_CRASHED } from '@/engine/racing/car/runtime';
 import { RacingEnv, RACING_SNAPSHOT } from '@/engine/racing/env';
 import { envOptionsFor, TrackCache, type RacingSetup } from '@/engine/training/racingSetup';
 import { hostFor } from '@/engine/training/scriptHost';
@@ -22,6 +23,8 @@ export interface GhostTelemetry {
   speed: Float32Array;
   /** Brake pedal per tick, 0 to 1, for the brake map. */
   brake: Float32Array;
+  /** Where the replay left the road, if it did. The Sandbox draws crash rings from this, since its track is not the one the records were made on. */
+  crash: { x: number; y: number } | null;
 }
 
 /**
@@ -128,7 +131,9 @@ export class GhostPlayer {
         speed.push(rc.car.speed);
         brake.push(Math.max(0, -rc.car.pedal));
       }
-      return { generation: g.generation, distance: Float32Array.from(dist), speed: Float32Array.from(speed), brake: Float32Array.from(brake) };
+      const rc = env.cars[0];
+      const crash = rc.status === STATUS_CRASHED ? { x: rc.crashX, y: rc.crashY } : null;
+      return { generation: g.generation, distance: Float32Array.from(dist), speed: Float32Array.from(speed), brake: Float32Array.from(brake), crash };
     });
   }
 
