@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { BoxKind, BoxSize } from '@/engine/hideseek/physics';
 import { BOX_LOOK } from './boxMaterials';
 import { setTintMask } from '../shared/tintMask';
-import { crateFaces, MIN_BRACED } from './bracedBox';
+import { crateFaces, facePanels, panelCorner } from './bracedBox';
 
 /** Brace width on the far away crates, m: a touch wider than up close, so the pattern survives the distance. */
 const W = 0.085;
@@ -37,20 +37,13 @@ export function instancedCrateGeometry(kind: BoxKind, s: BoxSize): THREE.BufferG
     tri(p0, p3, p2, white, 1);
   };
   for (const f of crateFaces(s)) {
-    const along = f.hu >= f.hv;
-    const narrow = Math.min(f.hu, f.hv) * 2 < MIN_BRACED;
-    const count = narrow ? 1 : Math.max(1, Math.round(along ? f.hu / f.hv : f.hv / f.hu));
-    const pu = along ? f.hu / count : f.hu;
-    const pv = along ? f.hv : f.hv / count;
-    for (let k = 0; k < count; k++) {
-      const off = (k - (count - 1) / 2) * 2 * (along ? pu : pv);
-      const c = f.c.clone().addScaledVector(along ? f.u : f.v, off);
-      const corner = (su: number, sv: number) => c.clone().addScaledVector(f.u, su * pu).addScaledVector(f.v, sv * pv);
-      const [a, b, cc, d] = [corner(-1, -1), corner(1, -1), corner(1, 1), corner(-1, 1)];
+    const { narrow, panels } = facePanels(f);
+    for (const p of panels) {
+      const [a, b, cc, d] = [panelCorner(f, p, -1, -1), panelCorner(f, p, 1, -1), panelCorner(f, p, 1, 1), panelCorner(f, p, -1, 1)];
       tri(a, b, cc, gold, 0);
       tri(a, cc, d, gold, 0);
       // The frame, inset by half a brace so neighboring faces meet at the edge.
-      const inset = (p: THREE.Vector3, su: number, sv: number) => p.clone().addScaledVector(f.u, -su * W * 0.5).addScaledVector(f.v, -sv * W * 0.5);
+      const inset = (q: THREE.Vector3, su: number, sv: number) => q.clone().addScaledVector(f.u, -su * W * 0.5).addScaledVector(f.v, -sv * W * 0.5);
       const [ia, ib, ic, id] = [inset(a, -1, -1), inset(b, 1, -1), inset(cc, 1, 1), inset(d, -1, 1)];
       strip(ia, ib, f.n);
       strip(ib, ic, f.n);

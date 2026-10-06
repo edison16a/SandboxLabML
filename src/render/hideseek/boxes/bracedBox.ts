@@ -14,7 +14,7 @@ const EDGE = 0.07;
 const BRACE = 0.052;
 const BRACE_DEPTH = 0.026;
 /** Faces narrower than this get no X brace, m. */
-export const MIN_BRACED = 0.6;
+const MIN_BRACED = 0.6;
 
 /** One face of a box: its center, outward normal and the two in plane axes with half extents. */
 export interface CrateFace {
@@ -39,6 +39,41 @@ export function crateFaces(s: BoxSize): CrateFace[] {
     { c: v3(0, H, -W), n: v3(0, 0, -1), u: v3(-1, 0, 0), v: v3(0, 1, 0), hu: L, hv: H },
     { c: v3(0, 2 * H, 0), n: v3(0, 1, 0), u: v3(1, 0, 0), v: v3(0, 0, -1), hu: L, hv: W },
   ];
+}
+
+/** One panel of a face: its center on the face and its half sizes along the face's u and v. */
+export interface FacePanel {
+  c: THREE.Vector3;
+  pu: number;
+  pv: number;
+}
+
+/** How a face is split: into square-ish panels along its long side, with no X braces if it is narrow. */
+export interface FaceSplit {
+  narrow: boolean;
+  /** True when the panels run along u, false along v. */
+  along: boolean;
+  panels: FacePanel[];
+}
+
+/**
+ * Splits a face into panels, shared by the close up crate and the grid
+ * crate so both draw the same pattern. A narrow face (a plank's top and
+ * ends) stays one plain panel: X braces that small would only look busy.
+ */
+export function facePanels(f: CrateFace): FaceSplit {
+  const narrow = Math.min(f.hu, f.hv) * 2 < MIN_BRACED;
+  const along = f.hu >= f.hv;
+  const count = narrow ? 1 : Math.max(1, Math.round(along ? f.hu / f.hv : f.hv / f.hu));
+  const pu = along ? f.hu / count : f.hu;
+  const pv = along ? f.hv : f.hv / count;
+  const panels = Array.from({ length: count }, (_, k) => ({ c: f.c.clone().addScaledVector(along ? f.u : f.v, (k - (count - 1) / 2) * 2 * (along ? pu : pv)), pu, pv }));
+  return { narrow, along, panels };
+}
+
+/** A corner of a panel, `su` and `sv` each -1 or 1. */
+export function panelCorner(f: CrateFace, p: FacePanel, su: number, sv: number): THREE.Vector3 {
+  return p.c.clone().addScaledVector(f.u, su * p.pu).addScaledVector(f.v, sv * p.pv);
 }
 
 /** A bar of square ends from a to b, `w` wide across the face and `d` deep along the face normal. */
@@ -66,26 +101,18 @@ export function bracedBox(s: BoxSize): BracedBoxParts {
   const braces: THREE.BufferGeometry[] = [];
   const push = (...ps: THREE.Vector3[]) => ps.forEach((p) => tris.push(p.x, p.y, p.z));
   for (const f of crateFaces(s)) {
-    // A narrow face (a plank's top and ends) stays a plain panel: X braces that small would only look busy.
-    const narrow = Math.min(f.hu, f.hv) * 2 < MIN_BRACED;
-    const along = f.hu >= f.hv;
-    const count = narrow ? 1 : Math.max(1, Math.round(along ? f.hu / f.hv : f.hv / f.hu));
-    const pu = along ? f.hu / count : f.hu;
-    const pv = along ? f.hv : f.hv / count;
-    const bulge = narrow ? 0 : Math.min(pu, pv) * 0.16;
-    for (let k = 0; k < count; k++) {
-      const off = (k - (count - 1) / 2) * 2 * (along ? pu : pv);
-      const c = f.c.clone().addScaledVector(along ? f.u : f.v, off);
-      const corner = (su: number, sv: number) => c.clone().addScaledVector(f.u, su * pu).addScaledVector(f.v, sv * pv);
+    const { narrow, along, panels } = facePanels(f);
+    panels.forEach((p, k) => {
+      const corner = (su: number, sv: number) => panelCorner(f, p, su, sv);
       const ring = [corner(-1, -1), corner(1, -1), corner(1, 1), corner(-1, 1)];
-      const apex = c.clone().addScaledVector(f.n, bulge);
+      const apex = p.c.clone().addScaledVector(f.n, narrow ? 0 : Math.min(p.pu, p.pv) * 0.16);
       for (let i = 0; i < 4; i++) {
         push(ring[i], ring[(i + 1) % 4], apex);
         if (!narrow) braces.push(bar(ring[i], apex, f.n, BRACE, BRACE_DEPTH));
       }
       // A post between neighboring panels on a long face.
       if (k > 0) braces.push(bar(corner(-1, -1), along ? corner(-1, 1) : corner(1, -1), f.n, BRACE, BRACE_DEPTH));
-    }
+    });
   }
   const L = s.length / 2;
   const W = s.width / 2;
