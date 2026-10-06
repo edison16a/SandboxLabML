@@ -60,5 +60,4 @@ export function addSplitter(bin: PartBin, detail: Detail): void {
   // The plan is drawn in (x, z); turning it flat makes the extrusion run downward from y = 0.
   g.rotateX(Math.PI / 2).translate(0, 0.118 - bevel, 0);
   bin.add('carbon', g);
-
 }
