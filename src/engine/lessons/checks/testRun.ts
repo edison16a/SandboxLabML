@@ -20,11 +20,13 @@ export type TestDriveMetrics = Record<'totalReward' | 'distance' | 'laps' | 'tic
 export const TEST_DRIVE_METRICS: readonly (keyof TestDriveMetrics)[] = ['totalReward', 'distance', 'laps', 'ticks', 'crashed', 'checkpoints', 'inputs'];
 
 /**
- * One car, one episode, on the script's track, driven by the fixed test
- * brain. The script's own controller runs every tick, so its drive call,
- * rewards and stop rules are exactly what the car lives by.
+ * The test drive set up and ready to step: one car on the script's track,
+ * driven by the fixed test brain. The script's own controller runs every
+ * tick, so its drive call, rewards and stop rules are exactly what the car
+ * lives by. Checks drive it to the end and the lesson preview records it,
+ * so both show the same drive.
  */
-export function testDrive(prepared: PreparedRacing): TestDriveMetrics {
+export function startTestDrive(prepared: PreparedRacing): RacingEnv {
   const blueprint = prepared.blueprint;
   if (!blueprint) throw new Error('Test drives need a racing brain.');
   const track = buildTrack(prepared.track);
@@ -39,6 +41,12 @@ export function testDrive(prepared: PreparedRacing): TestDriveMetrics {
   });
   const genome = testDriverGenome(blueprintShape(blueprint, sensors.length), env.inputSchema());
   env.reset([new Network(genome)], [TEST_BRAIN_SEED]);
+  return env;
+}
+
+/** One car, one episode, on the script's track, driven to the end by the fixed test brain. */
+export function testDrive(prepared: PreparedRacing): TestDriveMetrics {
+  const env = startTestDrive(prepared);
   while (!env.done) env.step();
   const rc = env.cars[0];
   return {
