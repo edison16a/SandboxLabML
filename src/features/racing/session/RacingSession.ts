@@ -116,7 +116,7 @@ export class RacingSession {
     if (state) await this.writes.push(() => saveCheckpoint(run.id, state.population.generation, state));
   }
 
-  /** Switches to the Sandbox: champions replay on an editable copy of the track. */
+  /** Switches to the Sandbox, back to the track and field last set up there. */
   async enterSandbox(): Promise<void> {
     await enterSandbox(this, await this.init());
   }
@@ -127,7 +127,7 @@ export class RacingSession {
     await this.refreshGhosts(true);
   }
 
-  /** Call after any Sandbox change (track edit, lesion, ghost selection). */
+  /** Call after a track edit or lesion in the Sandbox. Field and gallery changes go through `sandbox`. */
   sandboxChanged(): void {
     if (this.pool) scheduleSandboxScene(this.pool);
   }

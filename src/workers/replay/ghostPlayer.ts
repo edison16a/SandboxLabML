@@ -55,7 +55,7 @@ export class GhostPlayer {
     this.ghosts = ghosts;
   }
 
-  /** Restarts every ghost from the start line at `speed` times real time. */
+  /** Restarts every ghost from its grid slot at `speed` times real time. */
   play(speed: number, loop: boolean): void {
     this.stop();
     this.paused = false;
