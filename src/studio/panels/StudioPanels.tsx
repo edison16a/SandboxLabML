@@ -32,24 +32,24 @@ export function StudioPanels({ className }: { className?: string }) {
     <aside className={cn('flex min-h-0 flex-col bg-surface', className)} aria-label="Studio panels">
       <Tabs value={tab} onValueChange={(v) => useStudio.setState({ panel: v as PanelTab })} className="flex h-full min-h-0 flex-col">
         <TabsList className="no-scrollbar overflow-x-auto">
-          <TabsTrigger value="reference">
+          <TabsTrigger className="px-2 whitespace-nowrap" value="reference">
             <BookOpen />
             Reference
           </TabsTrigger>
-          <TabsTrigger value="problems">
+          <TabsTrigger className="px-2 whitespace-nowrap" value="problems">
             <CircleAlert />
             Problems
             <ProblemCount />
           </TabsTrigger>
-          <TabsTrigger value="test">
+          <TabsTrigger className="px-2 whitespace-nowrap" value="test">
             <Play />
             Test run
           </TabsTrigger>
-          <TabsTrigger value="learn">
+          <TabsTrigger className="px-2 whitespace-nowrap" value="learn">
             <GraduationCap />
             Learn
           </TabsTrigger>
-          <TabsTrigger value="bench">
+          <TabsTrigger className="px-2 whitespace-nowrap" value="bench">
             <Gauge />
             Bench
           </TabsTrigger>

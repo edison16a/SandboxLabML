@@ -20,8 +20,22 @@ interface Props {
   className?: string;
 }
 
-/** Turns a label template such as "aim for {target} species" into words with blanks. */
-const readable = (label: string) => label.replace(/\{(\w+)\}/g, '_');
+/** Shows a label template such as "aim for {target} species" as words with small empty slots named after the parameters. */
+function Label({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/\{(\w+)\}/).map((part, i) =>
+        i % 2 === 1 ? (
+          <span key={i} className="mx-0.5 rounded border border-dashed border-border-strong px-1 text-[11px] text-subtle">
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
 
 function Item({ item, color, onAdd, disabled }: { item: PaletteItem; color: string; onAdd: Props['onAdd']; disabled: boolean }) {
   const value = isValueBlock(item.template);
@@ -42,7 +56,9 @@ function Item({ item, color, onAdd, disabled }: { item: PaletteItem; color: stri
       style={value ? undefined : { borderLeftWidth: 3, borderLeftColor: color }}
     >
       {value && <span className="size-2 shrink-0 rounded-full" style={{ background: color }} />}
-      <span className="min-w-0 truncate">{readable(item.label)}</span>
+      <span className="min-w-0 truncate">
+        <Label text={item.label} />
+      </span>
     </button>
   );
 }

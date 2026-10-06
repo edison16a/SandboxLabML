@@ -16,6 +16,9 @@ const KIND_ORDER: ReadonlyArray<[EntryKind, string]> = [
   ['constant', 'Constants'],
 ];
 
+/** Categories in palette order, so racing sensors come before the generation counters. */
+const CATEGORY_ORDER = ['sensors', 'actions', 'rewards', 'logic', 'math', 'evolution', 'environment'];
+
 /** Registry entries grouped by kind, then by block category, filtered by a search over names and summaries. */
 export function groupEntries(entries: readonly RegistryEntry[], query: string): Array<{ kind: string; categories: Array<{ category: string; entries: RegistryEntry[] }> }> {
   const q = query.trim().toLowerCase();
@@ -28,7 +31,8 @@ export function groupEntries(entries: readonly RegistryEntry[], query: string): 
       list.push(e);
       byCategory.set(e.block.category, list);
     }
-    return { kind: label, categories: [...byCategory].map(([category, list]) => ({ category, entries: list })) };
+    const categories = [...byCategory].sort((a, b) => CATEGORY_ORDER.indexOf(a[0]) - CATEGORY_ORDER.indexOf(b[0]));
+    return { kind: label, categories: categories.map(([category, list]) => ({ category, entries: list })) };
   }).filter((g) => g.categories.length > 0);
 }
 
