@@ -9,6 +9,7 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
 import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
+import { clipToArenas, createArenaClip, updateArenaClip } from './arenaClip';
 import { HS } from '../palette';
 import { fanGeometry } from './gridGeometry';
 import { commit, makeScratch, MAX_ARENAS, placeInstance, GRID_LAYER } from './scratch';
@@ -22,16 +23,18 @@ const WHITE = new THREE.Color('#ffffff');
 
 /**
  * Seeker vision cones for the grid, one instanced draw call, alpha blended
- * so they still show on the pale floors: off during prep, a soft pink while
- * searching, full red once the hider is in sight.
+ * so they still show on the pale floors and clipped to each arena's floor:
+ * off during prep, a soft pink while searching, full red once the hider is
+ * in sight.
  */
 export function GridCones() {
   const { frame } = useHsScene();
   const mesh = useRef<THREE.InstancedMesh>(null);
   const geometry = useDisposable(() => fanGeometry(CONE_RADIUS, DEFAULT_HIDESEEK_PHYSICS.vision.fov, 18), []);
+  const clip = useMemo(() => createArenaClip(), []);
   const material = useDisposable(
-    () => new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }),
-    [],
+    () => clipToArenas(new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }), clip),
+    [clip],
   );
   const t = useMemo(() => makeScratch(), []);
 
@@ -40,6 +43,7 @@ export function GridCones() {
     if (!m) return;
     const curr = frame.curr;
     if (!curr || frame.count <= 1) return commit(m, 0);
+    updateArenaClip(clip, frame.lattice);
     for (let k = 0; k < frame.count; k++) {
       const arena = frame.first + k;
       const o = agentAt(arena, 1);
