@@ -50,13 +50,14 @@ export function ViewportHud({ population }: { population: SnapshotStream | null 
   const set = useRacingLab((s) => s.set);
   return (
     <>
-      <div className="pointer-events-none absolute top-3 left-3 flex max-w-[60%] flex-col gap-2">
+      <div className="pointer-events-none absolute top-3 left-3 flex max-w-[60%] flex-col gap-2 max-sm:top-13 max-sm:max-w-[calc(100%-1.5rem)]">
         <LiveStats stream={population} />
         <div className="pointer-events-auto">
           <FocusChip />
         </div>
       </div>
-      <div className="absolute top-3 right-3 flex flex-wrap items-center justify-end gap-1.5">
+      {/* On a phone the controls become one row across the top that scrolls sideways, with the stats below it. */}
+      <div className="no-scrollbar absolute top-3 right-3 flex flex-wrap items-center justify-end gap-1.5 max-sm:left-3 max-sm:flex-nowrap max-sm:justify-start max-sm:overflow-x-auto max-sm:[&>*]:shrink-0">
         <Segmented<ViewMode>
           data-tour="view"
           label="What to show"
