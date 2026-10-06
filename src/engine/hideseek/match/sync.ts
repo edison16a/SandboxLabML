@@ -1,12 +1,12 @@
 import type { RigidBody } from '@dimforge/rapier3d-compat';
 import { localAhead, localLeft, type Pose } from '../frame';
-import type { MatchState } from './state';
+import type { MatchState, PlayState } from './state';
 
 /**
  * Copies the world after a physics step into the match state: agent and
  * box poses, agent speeds in the agent frame and how far each box moved.
  */
-export function syncFromPhysics(s: MatchState): void {
+export function syncFromPhysics(s: PlayState): void {
   const arena = s.arena;
   for (let i = 0; i < s.agents.length; i++) {
     const a = s.agents[i];
@@ -31,12 +31,12 @@ export function syncFromPhysics(s: MatchState): void {
  * wall: anything outside the room is put back just inside and stopped.
  * Deterministic like everything else, so replays still match.
  */
-function keepInside(s: MatchState): void {
+function keepInside(s: PlayState): void {
   for (let i = 0; i < s.agents.length; i++) putInside(s, s.arena.agents[i], s.agents[i], s.physics.agent.radius);
   for (let i = 0; i < s.boxes.length; i++) putInside(s, s.arena.boxes[i], s.boxes[i], s.physics.box.plank.length / 2);
 }
 
-function putInside(s: MatchState, body: RigidBody, pose: Pose, margin: number): void {
+function putInside(s: PlayState, body: RigidBody, pose: Pose, margin: number): void {
   const half = s.physics.arena.size / 2;
   if (Math.abs(pose.x) <= half && Math.abs(pose.z) <= half) return;
   const lim = half - margin;
@@ -45,8 +45,8 @@ function putInside(s: MatchState, body: RigidBody, pose: Pose, margin: number): 
   s.arena.teleport(body, pose);
 }
 
-/** Clock fields on both agents for the tick that just finished. */
-export function updateClock(s: MatchState): void {
+/** Clock fields on every agent for the tick that just finished. */
+export function updateClock(s: PlayState): void {
   const dt = s.physics.dt;
   const prep = s.tick <= s.prepTicks;
   for (const a of s.agents) {
@@ -56,7 +56,7 @@ export function updateClock(s: MatchState): void {
   }
 }
 
-/** Distances and counts that scripts read directly. */
+/** Distances and counts that scripts read directly, for a 1 v 1 match. The Sandbox has its own. */
 export function updateDerived(s: MatchState): void {
   const [h, k] = s.agents;
   const d = Math.hypot(h.x - k.x, h.z - k.z);

@@ -2,8 +2,8 @@ import type { Rng } from '../../core/rng';
 import { HIT_AGENT, HIT_BOX, NEVER_SEEN_AGE } from '../agents/agent';
 import { bearing, localAhead, localLeft } from '../frame';
 import type { HideSeekInputConfig } from '../inputConfig';
-import type { MatchState } from '../match/state';
-import { BOX_COUNT, type HideSeekPhysics } from '../physics';
+import type { PlayState } from '../match/state';
+import type { HideSeekPhysics } from '../physics';
 
 /**
  * Writes one agent's built-in inputs, normalized, in the exact order of
@@ -13,8 +13,9 @@ import { BOX_COUNT, type HideSeekPhysics } from '../physics';
 export class HideSeekObserver {
   readonly cfg: HideSeekInputConfig;
   readonly physics: HideSeekPhysics;
-  private readonly distances = new Float64Array(BOX_COUNT);
-  private readonly order = new Int32Array(BOX_COUNT);
+  /** Scratch for sorting boxes by distance. Grows to the number of boxes, which the Sandbox lets vary. */
+  private distances = new Float64Array(4);
+  private order = new Int32Array(4);
 
   constructor(cfg: HideSeekInputConfig, physics: HideSeekPhysics) {
     this.cfg = cfg;
@@ -26,7 +27,7 @@ export class HideSeekObserver {
    * Rays must have been cast for this tick. Noise, when enabled, comes from
    * the agent's own seeded Rng so a replay sees the same noise as training.
    */
-  write(s: MatchState, i: number, out: Float64Array, noise: Rng | null): number {
+  write(s: PlayState, i: number, out: Float64Array, noise: Rng | null): number {
     const cfg = this.cfg;
     const p = this.physics;
     const a = s.agents[i];
@@ -63,14 +64,19 @@ export class HideSeekObserver {
    * right in the agent frame, the distance, all over the room size, and a
    * locked flag. Slots past the number of boxes read as far away.
    */
-  private writeBoxes(s: MatchState, i: number, out: Float64Array, n: number): number {
+  private writeBoxes(s: PlayState, i: number, out: Float64Array, n: number): number {
     const a = s.agents[i];
     const size = this.physics.arena.size;
+    const count = s.boxes.length;
+    if (this.distances.length < count) {
+      this.distances = new Float64Array(count);
+      this.order = new Int32Array(count);
+    }
     const d = this.distances;
     const order = this.order;
-    for (let b = 0; b < BOX_COUNT; b++) {
+    for (let b = 0; b < count; b++) {
       d[b] = Math.hypot(s.boxes[b].x - a.x, s.boxes[b].z - a.z);
-      // Insertion sort: stable and allocation free for four items.
+      // Insertion sort: stable and allocation free, and the lists are short.
       let j = b;
       while (j > 0 && d[order[j - 1]] > d[b]) {
         order[j] = order[j - 1];
@@ -79,7 +85,7 @@ export class HideSeekObserver {
       order[j] = b;
     }
     for (let k = 0; k < this.cfg.nearestBoxes; k++) {
-      if (k >= BOX_COUNT) {
+      if (k >= count) {
         out[n++] = 0;
         out[n++] = 0;
         out[n++] = 1;

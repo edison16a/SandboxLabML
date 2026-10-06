@@ -2,7 +2,7 @@ import type { Ray } from '@dimforge/rapier3d-compat';
 import { NEVER_SEEN_AGE } from '../agents/agent';
 import { bearing, type Pose } from '../frame';
 import type { MatchState } from '../match/state';
-import type { ArenaWorld } from '../world/arena';
+import type { RoomWorld } from '../world/room';
 import { SIGHT_GROUPS } from '../world/groups';
 
 /**
@@ -12,10 +12,10 @@ import { SIGHT_GROUPS } from '../world/groups';
  * tops, which is what lets a box hide an agent.
  */
 export class SightLines {
-  private readonly arena: ArenaWorld;
+  private readonly arena: RoomWorld;
   private readonly ray: Ray;
 
-  constructor(arena: ArenaWorld) {
+  constructor(arena: RoomWorld) {
     this.arena = arena;
     const h = arena.physics.rayHeight;
     this.ray = new arena.rapier.Ray({ x: 0, y: h, z: 0 }, { x: 1, y: 0, z: 0 });
@@ -67,7 +67,7 @@ export class SightLines {
 }
 
 /**
- * Updates who sees whom after a step. The seeker is blind during prep.
+ * Updates who sees whom after a 1 v 1 step. The seeker is blind during prep.
  * Also works out whether the hider is exposed, records the last sighting (for the opponentLastSeen input and
  * scripts) and counts seek phase ticks for the match result.
  */

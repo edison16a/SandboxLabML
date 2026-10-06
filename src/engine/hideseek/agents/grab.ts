@@ -1,6 +1,6 @@
 import { clamp, wrapAngle } from '../../core/math';
 import { localAhead, localLeft, offsetX, offsetZ } from '../frame';
-import type { MatchState } from '../match/state';
+import type { PlayState } from '../match/state';
 import { canGrab, findBoxInFront } from './reach';
 
 /**
@@ -10,7 +10,7 @@ import { canGrab, findBoxInFront } from './reach';
  * box in front of it, then carries it at the pose it had when picked up.
  * Letting the output drop to zero or below drops the box.
  */
-export function updateGrab(s: MatchState, i: number): void {
+export function updateGrab(s: PlayState, i: number): void {
   const a = s.agents[i];
   const c = s.controls[i];
   if (a.heldBox >= 0) {
@@ -42,7 +42,7 @@ export function updateGrab(s: MatchState, i: number): void {
  * correction. Returns false when the box is too far from its hold point
  * to keep, which drops it.
  */
-function carry(s: MatchState, i: number): boolean {
+function carry(s: PlayState, i: number): boolean {
   const a = s.agents[i];
   const c = s.controls[i];
   const b = s.boxes[a.heldBox];
@@ -69,7 +69,7 @@ function carry(s: MatchState, i: number): boolean {
 }
 
 /** Drops whatever agent `i` holds. The box keeps its momentum and damping brings it to rest. */
-export function releaseBox(s: MatchState, i: number): void {
+export function releaseBox(s: PlayState, i: number): void {
   const a = s.agents[i];
   if (a.heldBox < 0) return;
   s.boxes[a.heldBox].heldBy = -1;

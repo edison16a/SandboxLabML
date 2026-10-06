@@ -1,5 +1,5 @@
 import { clamp } from '../../core/math';
-import type { MatchState } from '../match/state';
+import type { PlayState } from '../match/state';
 import { SEEKER } from './agent';
 
 /**
@@ -9,7 +9,7 @@ import { SEEKER } from './agent';
  * which is what lets agents push boxes and each other. Backing up is
  * capped at a share of the forward speed.
  */
-export function driveAgent(s: MatchState, i: number): void {
+export function driveAgent(s: PlayState, i: number): void {
   const a = s.agents[i];
   const c = s.controls[i];
   const cmd = c.command;
@@ -34,9 +34,9 @@ export function driveAgent(s: MatchState, i: number): void {
  * every prep step, and an agent its controller stopped stays frozen for
  * the rest of the match. Only touches the body when the state changes.
  */
-export function updateFreeze(s: MatchState, i: number, nextTick: number): void {
+export function updateFreeze(s: PlayState, i: number, nextTick: number): void {
   const a = s.agents[i];
-  const frozen = a.stopReason !== null || (i === SEEKER && nextTick <= s.prepTicks);
+  const frozen = a.stopReason !== null || (a.index === SEEKER && nextTick <= s.prepTicks);
   if (frozen === a.frozen) return;
   a.frozen = frozen;
   s.arena.setFrozen(i, frozen);

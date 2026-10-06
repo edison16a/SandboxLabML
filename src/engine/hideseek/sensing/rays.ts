@@ -1,6 +1,6 @@
 import { HIT_AGENT, HIT_BOX, HIT_NONE, HIT_WALL } from '../agents/agent';
-import type { MatchState } from '../match/state';
-import { BOX_COUNT, boxSize, type HideSeekPhysics } from '../physics';
+import type { PlayState } from '../match/state';
+import { boxKindSize, type HideSeekPhysics } from '../physics';
 import { rayAabb, rayBox, rayCircle } from './raycast2d';
 
 /**
@@ -17,52 +17,59 @@ export function hideSeekRayAngles(count: number): number[] {
 }
 
 /**
- * The sensor rays of one agent. Ray directions are stored as cos and sin
- * so a tick costs one cos and one sin per agent, not per ray, and box
- * rotations are computed once per cast instead of once per ray.
+ * The sensor rays of one team's agents. Ray directions are stored as cos
+ * and sin so a tick costs one cos and one sin per agent, not per ray, and
+ * box rotations and sizes are worked out once per cast instead of once per
+ * ray. Scratch arrays grow to the number of boxes, so the Sandbox can hold
+ * any mix of cubes and planks.
  */
 export class SensorRays {
   readonly count: number;
   readonly range: number;
   readonly angles: Float64Array;
+  private readonly physics: HideSeekPhysics;
   private readonly cosA: Float64Array;
   private readonly sinA: Float64Array;
-  private readonly boxCos = new Float64Array(BOX_COUNT);
-  private readonly boxSin = new Float64Array(BOX_COUNT);
-  private readonly boxHx = new Float64Array(BOX_COUNT);
-  private readonly boxHz = new Float64Array(BOX_COUNT);
+  private boxCos = new Float64Array(4);
+  private boxSin = new Float64Array(4);
+  private boxHx = new Float64Array(4);
+  private boxHz = new Float64Array(4);
 
   constructor(count: number, range: number, physics: HideSeekPhysics) {
     this.count = count;
     this.range = range;
+    this.physics = physics;
     this.angles = Float64Array.from(hideSeekRayAngles(count));
     this.cosA = this.angles.map(Math.cos);
     this.sinA = this.angles.map(Math.sin);
-    for (let i = 0; i < BOX_COUNT; i++) {
-      const size = boxSize(physics, i);
-      this.boxHx[i] = size.length / 2;
-      this.boxHz[i] = size.width / 2;
-    }
   }
 
   /**
    * Casts every ray of agent `i` from its center and stores the distances
    * (m, capped at the range) and what each ray hit on the agent. A blind
    * agent, the seeker during prep, gets rays that hit nothing.
+   *
+   * Rays stop at agents of the other team only. In a 1 v 1 match that is
+   * just the opponent; in the Sandbox teammates are passed through, so the
+   * "agent on ray" input keeps the meaning it had in training: an opponent.
    */
-  cast(s: MatchState, i: number, blind: boolean): void {
+  cast(s: PlayState, i: number, blind: boolean): void {
     const a = s.agents[i];
     if (blind) {
       a.rays.fill(this.range);
       a.rayHits.fill(HIT_NONE);
       return;
     }
-    const other = s.agents[1 - i];
     const walls = s.arena.walls;
     const boxes = s.boxes;
-    for (let b = 0; b < BOX_COUNT; b++) {
+    const boxCount = boxes.length;
+    if (this.boxCos.length < boxCount) this.grow(boxCount);
+    for (let b = 0; b < boxCount; b++) {
+      const size = boxKindSize(this.physics, boxes[b].kind);
       this.boxCos[b] = Math.cos(boxes[b].yaw);
       this.boxSin[b] = Math.sin(boxes[b].yaw);
+      this.boxHx[b] = size.length / 2;
+      this.boxHz[b] = size.width / 2;
     }
     const cy = Math.cos(a.yaw);
     const sy = Math.sin(a.yaw);
@@ -81,7 +88,7 @@ export class SensorRays {
           hit = HIT_WALL;
         }
       }
-      for (let b = 0; b < BOX_COUNT; b++) {
+      for (let b = 0; b < boxCount; b++) {
         const box = boxes[b];
         const t = rayBox(a.x, a.z, dx, dz, box.x, box.z, this.boxHx[b], this.boxHz[b], this.boxCos[b], this.boxSin[b]);
         if (t < best) {
@@ -89,13 +96,24 @@ export class SensorRays {
           hit = HIT_BOX;
         }
       }
-      const t = rayCircle(a.x, a.z, dx, dz, other.x, other.z, radius);
-      if (t < best) {
-        best = t;
-        hit = HIT_AGENT;
+      for (let j = 0; j < s.agents.length; j++) {
+        const other = s.agents[j];
+        if (other.index === a.index) continue;
+        const t = rayCircle(a.x, a.z, dx, dz, other.x, other.z, radius);
+        if (t < best) {
+          best = t;
+          hit = HIT_AGENT;
+        }
       }
       a.rays[k] = best;
       a.rayHits[k] = hit;
     }
+  }
+
+  private grow(n: number): void {
+    this.boxCos = new Float64Array(n);
+    this.boxSin = new Float64Array(n);
+    this.boxHx = new Float64Array(n);
+    this.boxHz = new Float64Array(n);
   }
 }
