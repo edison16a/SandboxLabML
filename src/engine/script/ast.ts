@@ -23,8 +23,6 @@ export interface Trivia {
   blankBefore: boolean;
 }
 
-// Expressions
-
 export interface NumberExpr {
   kind: 'number';
   /** The number as written, before units are applied (45 for `45 deg`, 20 for `20%`). */
@@ -33,17 +31,8 @@ export interface NumberExpr {
   span: Span;
 }
 
-export interface StringExpr {
-  kind: 'string';
-  value: string;
-  span: Span;
-}
-
-export interface BoolExpr {
-  kind: 'bool';
-  value: boolean;
-  span: Span;
-}
+export type StringExpr = { kind: 'string'; value: string; span: Span };
+export type BoolExpr = { kind: 'bool'; value: boolean; span: Span };
 
 /** A name, possibly dotted: `car.speed` is one node with path ["car", "speed"]. */
 export interface NameExpr {
@@ -94,8 +83,6 @@ export interface RecordExpr {
 }
 
 export type Expr = NumberExpr | StringExpr | BoolExpr | NameExpr | UnaryExpr | BinaryExpr | CallExpr | RecordExpr;
-
-// Statements
 
 export interface Block {
   stmts: Stmt[];
@@ -161,8 +148,6 @@ export interface ExprStmt extends Base {
 }
 
 export type Stmt = LetStmt | RewardStmt | StopStmt | IfStmt | RepeatStmt | ForEachStmt | ExprStmt;
-
-// Top level
 
 export interface SensorItem extends Base {
   kind: 'sensor';
