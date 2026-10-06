@@ -34,7 +34,7 @@ export function HideSeekDetails({ result, references }: { result: BenchResult; r
         <tbody className="tabular font-mono">
           {versus.map((p) => (
             <tr key={p.id} className="border-t border-border">
-              <td className="py-1.5 font-sans">{p.label.replace(/^Against /, '')}</td>
+              <td className="py-1.5 font-sans">{TIER_LABEL[p.id.slice('vs:'.length) as keyof typeof TIER_LABEL] ?? p.label}</td>
               <td className="py-1.5 text-right">{pct(p.metrics.winRate)}</td>
               <td className="py-1.5 text-right">{pct(p.metrics.hiddenShare)}</td>
               <td className="py-1.5 text-right">{pct(p.metrics.seenShare)}</td>
