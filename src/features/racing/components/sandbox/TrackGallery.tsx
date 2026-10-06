@@ -27,7 +27,7 @@ export function TrackGallery() {
   const saved = useSavedTracks((s) => s.tracks);
   const load = useSavedTracks((s) => s.load);
   const remove = useSavedTracks((s) => s.remove);
-  const save = useSavedTracks((s) => s.save);
+  const restore = useSavedTracks((s) => s.restore);
   useEffect(() => void load(), [load]);
   if (!spec) return null;
 
@@ -44,8 +44,8 @@ export function TrackGallery() {
     racingSession().sandbox?.setTrack(structuredClone(t));
   };
   const onRemove = async (t: TrackSpec) => {
-    await remove(t.id);
-    toast.withAction(`Deleted ${t.name}`, { label: 'Undo', onClick: () => void save(t.name, t) });
+    const row = await remove(t.id);
+    if (row) toast.withAction(`Deleted ${t.name}`, { label: 'Undo', onClick: () => void restore(row) });
   };
 
   return (

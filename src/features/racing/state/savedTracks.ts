@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { TrackSpec } from '@/engine/racing/track/types';
-import { deleteTrack, listTracks, saveTrack } from '@/storage/tracks';
+import type { TrackRow } from '@/storage/db';
+import { deleteTrack, listTracks, restoreTrack, saveTrack } from '@/storage/tracks';
 
 interface SavedTracksState {
   tracks: TrackSpec[];
@@ -8,7 +9,9 @@ interface SavedTracksState {
   /** Reads the list once per page load; later calls are free. A failed read is tried again next time. */
   load: () => Promise<void>;
   save: (name: string, spec: TrackSpec) => Promise<TrackSpec>;
-  remove: (id: string) => Promise<void>;
+  /** Resolves to the deleted row, for Undo, or undefined when it was already gone. */
+  remove: (id: string) => Promise<TrackRow | undefined>;
+  restore: (row: TrackRow) => Promise<void>;
 }
 
 let reading: Promise<void> | null = null;
@@ -35,7 +38,13 @@ export const useSavedTracks = create<SavedTracksState>((set, get) => ({
     return saved;
   },
   remove: async (id) => {
-    await deleteTrack(id);
+    const row = await deleteTrack(id);
     set({ tracks: get().tracks.filter((t) => t.id !== id) });
+    return row;
+  },
+  restore: async (row) => {
+    await restoreTrack(row);
+    // Read the list back so the track lands where its save time puts it.
+    set({ tracks: await listTracks() });
   },
 }));

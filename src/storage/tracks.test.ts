@@ -3,7 +3,7 @@ import Dexie from 'dexie';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { RING_TRACK } from '@/engine/racing/track/presets';
 import { SandboxDb, setDb } from './db';
-import { deleteTrack, listTracks, saveTrack, SAVED_TRACK_PREFIX } from './tracks';
+import { deleteTrack, listTracks, restoreTrack, saveTrack, SAVED_TRACK_PREFIX } from './tracks';
 
 let n = 0;
 beforeEach(() => setDb(new SandboxDb(`tracks-${n++}`)));
@@ -28,6 +28,18 @@ describe('saved tracks', () => {
     const list = await listTracks();
     expect(list).toHaveLength(1);
     expect(list[0].width).toBe(8);
+  });
+
+  it('puts a deleted track back with its id and place in the list', async () => {
+    const older = await saveTrack('Older', RING_TRACK);
+    await new Promise((r) => setTimeout(r, 5));
+    const newer = await saveTrack('Newer', RING_TRACK);
+    const row = await deleteTrack(older.id);
+    expect(row?.spec).toEqual(older);
+    expect(await deleteTrack(older.id)).toBeUndefined();
+    await new Promise((r) => setTimeout(r, 5));
+    if (row) await restoreTrack(row);
+    expect((await listTracks()).map((t) => t.id)).toEqual([newer.id, older.id]);
   });
 
   it('upgrades a database made before the tracks table existed and keeps its rows', async () => {

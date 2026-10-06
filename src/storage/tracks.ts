@@ -1,5 +1,5 @@
 import type { TrackSpec } from '@/engine/racing/track/types';
-import { db } from './db';
+import { db, type TrackRow } from './db';
 
 /** Saved tracks carry this id prefix, so the gallery can tell them from built ins and random ones. */
 export const SAVED_TRACK_PREFIX = 'saved-';
@@ -24,6 +24,17 @@ export async function saveTrack(name: string, spec: TrackSpec): Promise<TrackSpe
   return saved;
 }
 
-export async function deleteTrack(id: string): Promise<void> {
-  await db().tracks.delete(id);
+/** Deletes a saved track and hands back its row, so Undo can put it back as it was. */
+export async function deleteTrack(id: string): Promise<TrackRow | undefined> {
+  const d = db();
+  return d.transaction('rw', d.tracks, async () => {
+    const row = await d.tracks.get(id);
+    await d.tracks.delete(id);
+    return row;
+  });
+}
+
+/** Puts a deleted track back with its own id and save time, so it returns to its old place in the list. */
+export async function restoreTrack(row: TrackRow): Promise<void> {
+  await db().tracks.put(row);
 }
