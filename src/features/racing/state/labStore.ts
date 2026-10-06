@@ -18,9 +18,14 @@ export type Focus = { kind: 'champion' } | { kind: 'car'; index: number } | { ki
 
 export type PanelTab = 'progress' | 'network' | 'species' | 'inputs' | 'model';
 
-/** Lab state for a run that was just opened: its history, a clean focus and nothing cached from the run before. */
-export function openedRunState(run: RunConfig, records: GenerationRecord[], liveGeneration: number): Partial<RacingLabState> {
+/**
+ * Lab state for a run that was just opened: its history, a clean focus and
+ * nothing cached from the run before. `leaving` is the mode the lab was in;
+ * coming out of the Sandbox also brings the population back into view.
+ */
+export function openedRunState(run: RunConfig, records: GenerationRecord[], liveGeneration: number, leaving: RacingLabState['mode'] = 'train'): Partial<RacingLabState> {
   return {
+    ...(leaving === 'sandbox' && { view: 'both' as const }),
     run,
     records,
     liveGeneration,

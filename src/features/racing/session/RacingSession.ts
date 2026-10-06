@@ -71,7 +71,7 @@ export class RacingSession {
     this.store.set({ trackSpec: null });
     const generation = await pool.coordinator.loadRacing(config, state);
     this.ghostKey = '';
-    this.store.set(openedRunState(config, history, generation));
+    this.store.set(openedRunState(config, history, generation, this.store.mode));
     await pool.coordinator.setSpeed(this.store.speed);
     await this.refreshGhosts();
   }
