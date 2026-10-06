@@ -18,7 +18,7 @@ export function discMap(size: number): THREE.DataTexture {
   ];
   const rx = 0.07;
   const ry = 0.045;
-  return pixelTexture(size, true, (x, y, out) => {
+  return pixelTexture('disc', size, true, (x, y, out) => {
     const u = (x + 0.5) / size;
     const v = (y + 0.5) / size;
     // Coarse and fine noise mixed, for the mottled look of the ceramic matrix.

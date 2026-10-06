@@ -1,11 +1,15 @@
 import * as THREE from 'three';
 
+type Fill = (x: number, y: number, out: [number, number, number, number]) => void;
+
 /**
- * Builds a tiling RGBA texture from a per pixel function. Car textures are
- * computed, not downloaded, and DataTexture keeps them free of canvas and
- * DOM, so they can be made anywhere.
+ * Pixels already computed, by texture name and size. Every map is
+ * deterministic, so the hero car rebuilt for a new quality tier, or a lab
+ * opened again, reuses them instead of stalling a frame to recompute.
  */
-export function pixelTexture(size: number, srgb: boolean, fill: (x: number, y: number, out: [number, number, number, number]) => void): THREE.DataTexture {
+const computed = new Map<string, Uint8Array>();
+
+function fillPixels(size: number, fill: Fill): Uint8Array {
   const data = new Uint8Array(size * size * 4);
   const px: [number, number, number, number] = [0, 0, 0, 255];
   for (let y = 0; y < size; y++) {
@@ -18,6 +22,22 @@ export function pixelTexture(size: number, srgb: boolean, fill: (x: number, y: n
       data[k + 2] = px[2];
       data[k + 3] = px[3];
     }
+  }
+  return data;
+}
+
+/**
+ * Builds a tiling RGBA texture from a per pixel function. Car textures are
+ * computed, not downloaded, and DataTexture keeps them free of canvas and
+ * DOM, so they can be made anywhere. `name` keys the pixel cache. Each call
+ * still returns its own texture, so whoever builds it can dispose it.
+ */
+export function pixelTexture(name: string, size: number, srgb: boolean, fill: Fill): THREE.DataTexture {
+  const key = `${name}@${size}`;
+  let data = computed.get(key);
+  if (!data) {
+    data = fillPixels(size, fill);
+    computed.set(key, data);
   }
   const t = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;

@@ -32,7 +32,7 @@ function twill(x: number, y: number, size: number): { along: 0 | 1; across: numb
  * direction map so the highlight streaks along the fibers.
  */
 export function carbonMaps(size: number): CarbonMaps {
-  const color = pixelTexture(size, true, (x, y, out) => {
+  const color = pixelTexture('carbon-color', size, true, (x, y, out) => {
     const w = twill(x, y, size);
     const crown = Math.sin(w.across * Math.PI);
     const fiber = hash(w.along ? x : y, 7) * 0.5 + hash(x, y, 9) * 0.5;
@@ -41,14 +41,14 @@ export function carbonMaps(size: number): CarbonMaps {
     out[1] = v + 1;
     out[2] = v + 3;
   });
-  const normal = pixelTexture(size, false, (x, y, out) => {
+  const normal = pixelTexture('carbon-normal', size, false, (x, y, out) => {
     const w = twill(x, y, size);
     const side = -Math.cos(w.across * Math.PI) * 0.45;
     const dip = Math.sin(w.run * Math.PI * 2) * 0.12;
     if (w.along) packNormal(side, dip, out);
     else packNormal(dip, side, out);
   });
-  const anisotropy = pixelTexture(size, false, (x, y, out) => {
+  const anisotropy = pixelTexture('carbon-fibers', size, false, (x, y, out) => {
     const w = twill(x, y, size);
     out[0] = w.along ? 128 : 255;
     out[1] = w.along ? 255 : 128;

@@ -33,13 +33,13 @@ export function honeycombMaps(size: number): { color: THREE.DataTexture; normal:
   };
   // 0 inside a hole, 1 on top of a wall, with a short slope between.
   const height = (d: number) => Math.min(1, Math.max(0, (d - (a - wall)) / (wall * 0.5)));
-  const color = pixelTexture(size, true, (x, y, out) => {
+  const color = pixelTexture('honeycomb-color', size, true, (x, y, out) => {
     const v = 5 + height(cellAt(x + 0.5, y + 0.5).d) * 36;
     out[0] = v;
     out[1] = v;
     out[2] = v + 2;
   });
-  const normal = pixelTexture(size, false, (x, y, out) => {
+  const normal = pixelTexture('honeycomb-normal', size, false, (x, y, out) => {
     const c = cellAt(x + 0.5, y + 0.5);
     const h = height(c.d);
     const len = Math.hypot(c.dx, c.dy) || 1;

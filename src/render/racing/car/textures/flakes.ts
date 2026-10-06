@@ -12,7 +12,7 @@ export function flakeNormalMap(size: number): THREE.DataTexture {
   const cell = 3;
   const cells = Math.floor(size / cell);
   const tilt = 0.32;
-  return pixelTexture(size, false, (x, y, out) => {
+  return pixelTexture('flakes', size, false, (x, y, out) => {
     const cx = Math.floor(x / cell);
     const cy = Math.floor(y / cell);
     let best = Infinity;
