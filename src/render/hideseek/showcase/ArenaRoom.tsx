@@ -1,6 +1,8 @@
 'use client';
 
 import * as THREE from 'three';
+import { useMemo } from 'react';
+import type { Rect } from '@/engine/hideseek/layouts/types';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { wallsOfLayout } from '../layout/arenaWalls';
 import { HS_COLORS } from '../palette';
@@ -9,15 +11,26 @@ import { sharedPlasterMaps } from '../room/plasterMaps';
 import { floorAoGeometry, floorGeometry, wallGeometry } from '../room/roomGeometry';
 import { FLOOR_TILE_METERS, sharedFloorMaps } from '../room/terrazzoMaps';
 
+interface RoomProps {
+  walls: Rect[];
+  /** Changes when the walls do. The array itself may be new every render. */
+  wallsKey: string | number;
+  /** Strength of the baked floor shade, lower where screen space occlusion runs too. */
+  ao?: number;
+}
+
 /**
- * The showcase room: a polished warm terrazzo floor in 2 m slabs, soft
- * matte plaster walls with round caps, and a baked band of shade along the
- * foot of every wall so the walls sit on the floor even without screen
- * space occlusion. Three draw calls whatever the layout.
+ * A room built from any list of walls: a polished warm terrazzo floor in
+ * 2 m slabs, soft matte plaster walls with round caps, and a baked band of
+ * shade along the foot of every wall so the walls sit on the floor even
+ * without screen space occlusion. Three draw calls whatever the walls.
+ * The showcase arenas and the Sandbox rooms both use it, so a room the
+ * user drew looks like a built in one.
  */
-export function ArenaRoom({ layout, ao = 0.5 }: { layout: number; /** Strength of the baked floor shade, lower where screen space occlusion runs too. */ ao?: number }) {
-  const walls = useDisposable(() => wallGeometry(wallsOfLayout(layout)), [layout]);
-  const shade = useDisposable(() => floorAoGeometry(wallsOfLayout(layout)), [layout]);
+export function RoomMesh({ walls, wallsKey, ao = 0.5 }: RoomProps) {
+  // Rebuilt only when wallsKey changes; the walls array can be new on every render.
+  const wallGeo = useDisposable(() => wallGeometry(walls), [wallsKey]);
+  const shade = useDisposable(() => floorAoGeometry(walls), [wallsKey]);
   const shadeMat = useDisposable(() => floorAoMaterial(ao), [ao]);
   const floor = useDisposable(() => floorGeometry(FLOOR_TILE_METERS), []);
   const floorMat = useDisposable(() => {
@@ -44,7 +57,13 @@ export function ArenaRoom({ layout, ao = 0.5 }: { layout: number; /** Strength o
     <group>
       <mesh geometry={floor} material={floorMat} receiveShadow />
       <mesh geometry={shade} material={shadeMat} renderOrder={1} raycast={() => null} />
-      <mesh geometry={walls} material={wallMat} castShadow receiveShadow />
+      <mesh geometry={wallGeo} material={wallMat} castShadow receiveShadow />
     </group>
   );
+}
+
+/** The showcase room for one of the training layouts. */
+export function ArenaRoom({ layout, ao }: { layout: number; ao?: number }) {
+  const walls = useMemo(() => wallsOfLayout(layout), [layout]);
+  return <RoomMesh walls={walls} wallsKey={layout} ao={ao} />;
 }

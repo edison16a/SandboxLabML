@@ -9,11 +9,11 @@ import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useHsScene } from '../frame/sceneContext';
 import { useBoxDrag } from '../interaction/useBoxDrag';
 import { ArenaContactShadows } from '../showcase/ArenaContactShadows';
+import { RoomMesh } from '../showcase/ArenaRoom';
 import { useAgentGeometry } from '../showcase/ShowcaseAgent';
 import { SandboxAgent } from './SandboxAgent';
 import { SandboxBoxes } from './SandboxBoxes';
 import { SandboxCones } from './SandboxCones';
-import { SandboxRoomMesh } from './SandboxRoomMesh';
 import { isLocked, isPlank, readPlayer, sandboxFrame, sandboxPlayerCount } from './sandboxRead';
 import { useSandboxRoom } from './useSandboxRoom';
 import { SeenMarkers } from './SeenMarkers';
@@ -46,11 +46,12 @@ function sameShape(shape: Shape | null, curr: Float32Array): boolean {
  * boxes come from the Sandbox stream, whose header says how many there
  * are; React re-renders only when those counts or the room change.
  */
-export function SandboxArena({ tier }: { tier: HsQualityTier }) {
+export function SandboxArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO runs over the frame, so the baked wall foot shade can be lighter. */ aoPass: boolean }) {
   const { frame, getFeed, onMoveBox, onToggleLock } = useHsScene();
   const invalidate = useThree((s) => s.invalidate);
   const room = useSandboxRoom();
   const walls = useMemo(() => roomWallRects(room, P), [room]);
+  const wallsKey = useMemo(() => JSON.stringify(room.walls), [room]);
   const [shape, setShape] = useState<Shape | null>(null);
   const agentGeometry = useAgentGeometry();
   const origin = useMemo(() => ({ x: 0, z: 0 }), []);
@@ -104,7 +105,7 @@ export function SandboxArena({ tier }: { tier: HsQualityTier }) {
 
   return (
     <group>
-      <SandboxRoomMesh walls={walls} wallsKey={JSON.stringify(room.walls)} />
+      <RoomMesh walls={walls} wallsKey={wallsKey} ao={aoPass ? 0.3 : 0.5} />
       {shape && (
         <>
           <SandboxBoxes kinds={shape.kinds} players={players} onPointerDown={onMoveBox ? drag : undefined} onDoubleClick={onToggleLock ? toggleLock : undefined} />
