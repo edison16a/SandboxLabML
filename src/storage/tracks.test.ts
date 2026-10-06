@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import Dexie from 'dexie';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RING_TRACK } from '@/engine/racing/track/presets';
 import { SandboxDb, setDb } from './db';
 import { deleteTrack, listTracks, restoreTrack, saveTrack, SAVED_TRACK_PREFIX } from './tracks';
@@ -42,16 +42,39 @@ describe('saved tracks', () => {
     expect((await listTracks()).map((t) => t.id)).toEqual([newer.id, older.id]);
   });
 
-  it('upgrades a database made before the tracks table existed and keeps its rows', async () => {
+  /**
+   * A database left by an older build, with one row to keep. `withV3` builds
+   * one that already reached version 3 with none of today's version 3 tables,
+   * like a build of a branch that added a different one.
+   */
+  async function oldDatabase(withV3: boolean): Promise<string> {
     const name = `old-${n++}`;
     const old = new Dexie(name);
     old.version(1).stores({ runs: 'id, env, updatedAt, deletedAt', settings: 'key' });
     old.version(2).stores({ hsGenerations: '[runId+generation], runId' });
+    if (withV3) old.version(3).stores({});
     await old.table('settings').put({ key: 'kept', value: 1 });
     old.close();
+    return name;
+  }
+
+  /** Opens the old database with today's schema and checks every declared table exists and the row survived. */
+  async function expectUpgraded(name: string) {
     const upgraded = new SandboxDb(name);
     setDb(upgraded);
     expect(await listTracks()).toEqual([]);
+    expect([...upgraded.backendDB().objectStoreNames].sort()).toEqual(upgraded.tables.map((t) => t.name).sort());
     expect(await upgraded.settings.get('kept')).toEqual({ key: 'kept', value: 1 });
+  }
+
+  it('upgrades a version 2 database to every table and keeps its rows', async () => {
+    await expectUpgraded(await oldDatabase(false));
+  });
+
+  it('adds missing tables to a version 3 database made without them', async () => {
+    // Dexie warns that the schema grew without a version bump, then adds the tables.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    await expectUpgraded(await oldDatabase(true));
+    warn.mockRestore();
   });
 });
