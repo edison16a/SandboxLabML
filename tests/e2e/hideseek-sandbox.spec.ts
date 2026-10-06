@@ -38,6 +38,8 @@ test('the Sandbox plays a room built in the editor with many players, and keeps 
   test.setTimeout(420_000);
   await page.addInitScript(() => window.localStorage.setItem('sandboxlab.tour.hideseek', '1'));
   await page.goto('/lab/hide-seek?quality=low');
+  // Wait for the first visit's default run to open, or it could replace the run created below.
+  await expect.poll(instance(page, 'arenas'), { timeout: 120_000 }).toBe(50);
   await page.getByRole('button', { name: 'New run' }).click();
   await page.getByRole('radio', { name: '20' }).click();
   await page.getByRole('group', { name: 'Rounds per generation' }).getByRole('radio', { name: '1' }).click();
