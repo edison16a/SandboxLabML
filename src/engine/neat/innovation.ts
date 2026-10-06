@@ -62,6 +62,13 @@ export class InnovationTracker {
     return id;
   }
 
+  /** Records an existing link's number, used when rebuilding a tracker from stored genomes. */
+  registerConnection(from: number, to: number, innovation: number): void {
+    const key = `${from}>${to}`;
+    if (!this.connections.has(key)) this.connections.set(key, innovation);
+    this.nextInnovation = Math.max(this.nextInnovation, innovation + 1);
+  }
+
   newNodeId(): number {
     return this.nextNodeId++;
   }
