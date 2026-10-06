@@ -13,6 +13,7 @@ import { racingSession } from '../session/RacingSession';
 import { useRacingLab } from '../state/labStore';
 import { LabToolbar } from './LabToolbar';
 import { NewRunDialog } from './NewRunDialog';
+import { RacingTour } from './RacingTour';
 import { SidePanel } from './SidePanel';
 import { ViewportHud } from './ViewportHud';
 import { InputsCard } from './InputsCard';
@@ -34,6 +35,7 @@ export function RacingLab() {
   const view = useRacingLab((s) => s.view);
   const hasTelemetry = useRacingLab((s) => s.telemetry.length > 0);
   const [newRun, setNewRun] = useState(false);
+  const tourSignal = useRacingLab((s) => s.tourSignal);
   const openNewRun = useCallback(() => setNewRun(true), []);
   useLabShortcuts(openNewRun);
   useEffect(() => {
@@ -78,10 +80,11 @@ export function RacingLab() {
         )}
         <LabToolbar onNewRun={openNewRun} />
       </div>
-      <aside className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[400px] lg:border-t-0 lg:border-l">
+      <aside data-tour="panel" className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[400px] lg:border-t-0 lg:border-l">
         <SidePanel network={<NetworkTab />} inputs={<InputsTab />} model={<ModelTab />} />
       </aside>
       <NewRunDialog open={newRun} onOpenChange={setNewRun} />
+      {ready && <RacingTour openSignal={tourSignal} />}
     </div>
   );
 }

@@ -44,6 +44,7 @@ export function ViewportHud({ population }: { population: SnapshotStream | null 
       </div>
       <div className="absolute top-3 right-3 flex flex-wrap items-center justify-end gap-1.5">
         <Segmented<ViewMode>
+          data-tour="view"
           label="What to show"
           size="sm"
           value={view}
@@ -58,7 +59,7 @@ export function ViewportHud({ population }: { population: SnapshotStream | null 
         />
         <GhostMenu />
         <Tooltip content="Show what the car senses" shortcut="I">
-          <Button size="sm" variant="secondary" className={inputs ? 'border-accent/60 bg-accent/25 text-white' : glass} onClick={() => set({ inputsOverlay: !inputs })} aria-pressed={inputs}>
+          <Button data-tour="inputs" size="sm" variant="secondary" className={inputs ? 'border-accent/60 bg-accent/25 text-white' : glass} onClick={() => set({ inputsOverlay: !inputs })} aria-pressed={inputs}>
             <ScanEye />
             Inputs
           </Button>

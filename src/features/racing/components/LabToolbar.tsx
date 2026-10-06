@@ -7,6 +7,7 @@ import { Badge } from '@/ui/primitives/Badge';
 import { racingSession } from '../session/RacingSession';
 import { useRacingLab } from '../state/labStore';
 import { SpeedBar } from './SpeedBar';
+import { HelpMenu } from './HelpMenu';
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds.toFixed(0)} s`;
@@ -33,6 +34,7 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
           variant="primary"
           size="lg"
           className="w-28 justify-center"
+          data-tour="train"
           onClick={() => void (running ? session.pause() : mode === 'sandbox' ? session.exitSandbox().then(() => session.start()) : session.start())}
           disabled={!run}
           aria-label={running ? 'Pause' : 'Train'}
@@ -46,7 +48,9 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
           <SkipForward />
         </Button>
       </Tooltip>
-      <SpeedBar value={speed} onChange={(v) => void session.setSpeed(v)} />
+      <span data-tour="speed">
+        <SpeedBar value={speed} onChange={(v) => void session.setSpeed(v)} />
+      </span>
       <div className="hidden min-w-0 items-center gap-4 pl-2 md:flex">
         <div className="flex flex-col leading-tight">
           <span className="text-[11px] text-muted">Generation</span>
@@ -65,11 +69,12 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
           </span>
         )}
         <Tooltip content="Replay champions on a track you can edit, and switch inputs off">
-          <Button variant={mode === 'sandbox' ? 'primary' : 'outline'} onClick={() => void (mode === 'sandbox' ? session.exitSandbox() : session.enterSandbox())} disabled={!records.length}>
+          <Button data-tour="sandbox" variant={mode === 'sandbox' ? 'primary' : 'outline'} onClick={() => void (mode === 'sandbox' ? session.exitSandbox() : session.enterSandbox())} disabled={!records.length}>
             <FlaskConical />
             Sandbox
           </Button>
         </Tooltip>
+        <HelpMenu />
         <Tooltip content="Start a new run" shortcut="N">
           <Button variant="outline" onClick={onNewRun}>
             <Plus />

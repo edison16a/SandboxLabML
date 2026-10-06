@@ -59,6 +59,8 @@ export interface RacingLabState {
   /** Lesion test: input index mapped to the value it is forced to. Sandbox only. */
   lesions: Record<number, number>;
   selectedHandle: number | null;
+  /** Bumped by the help menu to replay the tour. */
+  tourSignal: number;
 
   set: (patch: Partial<RacingLabState>) => void;
   addRecord: (record: GenerationRecord) => void;
@@ -96,6 +98,7 @@ export const useRacingLab = create<RacingLabState>((set, get) => ({
   sandboxTrack: null,
   lesions: {},
   selectedHandle: null,
+  tourSignal: 0,
 
   set: (patch) => set(patch),
   addRecord: (record) => {
