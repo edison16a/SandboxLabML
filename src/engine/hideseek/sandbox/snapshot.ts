@@ -34,9 +34,14 @@ export function sandboxBoxAt(agents: number, index: number): number {
   return SANDBOX_HEADER + (agents + index) * SANDBOX_ENTRY;
 }
 
-/** Counts from a frame's header. */
+/** Header counts one at a time, for render loops that run every frame and must not allocate. */
+export const sandboxHiderCount = (buf: Float32Array): number => buf[4] | 0;
+export const sandboxSeekerCount = (buf: Float32Array): number => buf[5] | 0;
+export const sandboxBoxCount = (buf: Float32Array): number => buf[6] | 0;
+
+/** All counts from a frame's header as one object. Allocates, so it is for tests and slow paths. */
 export function sandboxCounts(buf: Float32Array): { hiders: number; seekers: number; boxes: number } {
-  return { hiders: buf[4] | 0, seekers: buf[5] | 0, boxes: buf[6] | 0 };
+  return { hiders: sandboxHiderCount(buf), seekers: sandboxSeekerCount(buf), boxes: sandboxBoxCount(buf) };
 }
 
 /** Writes one frame into a caller-owned buffer of sandboxSnapshotLength floats. Allocates nothing. */

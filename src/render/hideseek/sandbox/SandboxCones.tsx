@@ -12,7 +12,7 @@ import { hasFlag } from '../frame/snapshotRead';
 import { HS } from '../palette';
 import { createConeMaterial } from '../showcase/coneMaterial';
 import { VisionWedge, WEDGE_SEGMENTS } from '../showcase/VisionWedge';
-import { readPlayer, sandboxFrame, sandboxSight, seekerIdle } from './sandboxRead';
+import { readPlayer, sandboxFrame, sandboxSight, seekerIdle, SightBoxes } from './sandboxRead';
 
 const VISION = DEFAULT_HIDESEEK_PHYSICS.vision;
 const HEIGHT = 1.05;
@@ -22,7 +22,7 @@ const HEIGHT = 1.05;
  * boxes, like the showcase cone. Hidden during prep, when seekers are
  * blind; brighter while it has a hider in sight.
  */
-function SeekerCone({ slot, walls, fade }: { slot: number; walls: Rect[]; fade: number }) {
+function SeekerCone({ slot, walls, boxes, fade }: { slot: number; walls: Rect[]; boxes: SightBoxes; fade: number }) {
   const { frame } = useHsScene();
   const mesh = useRef<THREE.Mesh>(null);
   const wedge = useDisposable(() => new VisionWedge(VISION.fov, VISION.range, HEIGHT), []);
@@ -39,7 +39,7 @@ function SeekerCone({ slot, walls, fade }: { slot: number; walls: Rect[]; fade: 
     const { x, z, yaw } = state.pose;
     for (let k = 0; k <= WEDGE_SEGMENTS; k++) {
       const a = yaw + wedge.angle(k);
-      state.d[k] = sandboxSight(walls, curr, x, z, Math.cos(a), -Math.sin(a), VISION.range);
+      state.d[k] = sandboxSight(walls, boxes, x, z, Math.cos(a), -Math.sin(a), VISION.range);
     }
     wedge.update(state.d);
     m.position.set(x, 0, z);
@@ -58,11 +58,18 @@ function SeekerCone({ slot, walls, fade }: { slot: number; walls: Rect[]; fade: 
  * overlapping cones tint the floor instead of flooding it.
  */
 export function SandboxCones({ first, count, walls }: { first: number; count: number; walls: Rect[] }) {
+  const { frame } = useHsScene();
+  const boxes = useMemo(() => new SightBoxes(), []);
   const fade = Math.min(1, 2 / Math.sqrt(Math.max(1, count)));
+  // Box shapes are read once a frame for every cone, before the cones cast their rays.
+  useFrame(() => {
+    const curr = sandboxFrame(frame);
+    if (curr) boxes.read(curr);
+  }, -1);
   return (
     <group>
       {Array.from({ length: count }, (_, i) => (
-        <SeekerCone key={first + i} slot={first + i} walls={walls} fade={fade} />
+        <SeekerCone key={first + i} slot={first + i} walls={walls} boxes={boxes} fade={fade} />
       ))}
     </group>
   );

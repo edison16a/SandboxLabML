@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { ContactShadows } from '@react-three/drei';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BOX_PLANK, sandboxBoxAt, sandboxCounts } from '@/engine/hideseek/sandbox/snapshot';
+import { sandboxBoxAt, sandboxBoxCount, sandboxHiderCount, sandboxSeekerCount } from '@/engine/hideseek/sandbox/snapshot';
 import { DEFAULT_HIDESEEK_PHYSICS, type BoxKind } from '@/engine/hideseek/physics';
 import { roomWallRects } from '@/engine/hideseek/sandbox/room';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
@@ -15,7 +15,7 @@ import { SandboxAgent } from './SandboxAgent';
 import { SandboxBoxes } from './SandboxBoxes';
 import { SandboxCones } from './SandboxCones';
 import { SandboxRoomMesh } from './SandboxRoomMesh';
-import { isLocked, readPlayer, sandboxFrame } from './sandboxRead';
+import { isLocked, isPlank, readPlayer, sandboxFrame, sandboxPlayerCount } from './sandboxRead';
 import { useSandboxRoom } from './useSandboxRoom';
 import { SeenMarkers } from './SeenMarkers';
 
@@ -28,6 +28,16 @@ interface Shape {
   hiders: number;
   seekers: number;
   kinds: BoxKind[];
+}
+
+const kindOf = (bits: number): BoxKind => (isPlank(bits) ? 'plank' : 'cube');
+
+/** Whether a frame still has the players and box kinds React last drew. Checked every frame, so it allocates nothing. */
+function sameShape(shape: Shape | null, curr: Float32Array): boolean {
+  if (!shape || shape.hiders !== sandboxHiderCount(curr) || shape.seekers !== sandboxSeekerCount(curr) || shape.kinds.length !== sandboxBoxCount(curr)) return false;
+  const players = shape.hiders + shape.seekers;
+  for (let b = 0; b < shape.kinds.length; b++) if (kindOf(curr[sandboxBoxAt(players, b) + 3]) !== shape.kinds[b]) return false;
+  return true;
 }
 
 /** Same as the showcase: drop the contact shadow camera below the floor so it sees crate and agent bottoms. */
@@ -59,8 +69,7 @@ export function SandboxArena({ tier }: { tier: HsQualityTier }) {
     (index: number) => {
       const curr = sandboxFrame(frame);
       if (!curr || !onToggleLock) return;
-      const c = sandboxCounts(curr);
-      onToggleLock(index, !isLocked(curr[sandboxBoxAt(c.hiders + c.seekers, index) + 3]));
+      onToggleLock(index, !isLocked(curr[sandboxBoxAt(sandboxPlayerCount(curr), index) + 3]));
     },
     [frame, onToggleLock],
   );
@@ -68,17 +77,17 @@ export function SandboxArena({ tier }: { tier: HsQualityTier }) {
   useFrame(() => {
     const curr = sandboxFrame(frame);
     if (!curr) return;
-    const c = sandboxCounts(curr);
-    const kinds: BoxKind[] = [];
-    let locked = 0;
-    for (let b = 0; b < c.boxes; b++) {
-      const bits = curr[sandboxBoxAt(c.hiders + c.seekers, b) + 3];
-      kinds.push(bits & BOX_PLANK ? 'plank' : 'cube');
-      if (isLocked(bits)) locked++;
+    const players = sandboxPlayerCount(curr);
+    const boxes = sandboxBoxCount(curr);
+    // A new shape is built only when the players or boxes change, which is when React must re-render.
+    if (!sameShape(shape, curr)) {
+      const kinds = Array.from({ length: boxes }, (_, b) => kindOf(curr[sandboxBoxAt(players, b) + 3]));
+      setShape({ hiders: sandboxHiderCount(curr), seekers: sandboxSeekerCount(curr), kinds });
     }
-    if (!shape || shape.hiders !== c.hiders || shape.seekers !== c.seekers || shape.kinds.join() !== kinds.join()) setShape({ hiders: c.hiders, seekers: c.seekers, kinds });
-    sandboxStats.agents = c.hiders + c.seekers;
-    sandboxStats.boxes = c.boxes;
+    let locked = 0;
+    for (let b = 0; b < boxes; b++) if (isLocked(curr[sandboxBoxAt(players, b) + 3])) locked++;
+    sandboxStats.agents = players;
+    sandboxStats.boxes = boxes;
     sandboxStats.locked = locked;
   }, -1);
 
@@ -87,9 +96,9 @@ export function SandboxArena({ tier }: { tier: HsQualityTier }) {
     frame.agentPose = (agent, out) => {
       const curr = sandboxFrame(frame);
       if (!curr) return -1;
-      const c = sandboxCounts(curr);
-      if (agent === 0 ? c.hiders === 0 : c.seekers === 0) return -1;
-      return readPlayer(frame, curr, agent === 0 ? 0 : c.hiders, out);
+      const hiders = sandboxHiderCount(curr);
+      if (agent === 0 ? hiders === 0 : sandboxSeekerCount(curr) === 0) return -1;
+      return readPlayer(frame, curr, agent === 0 ? 0 : hiders, out);
     };
     // While paused the canvas draws on demand: a box dragged or locked must still show.
     const off = getFeed()?.on(() => invalidate());

@@ -1,7 +1,17 @@
 import type { Rect } from '@/engine/hideseek/layouts/types';
 import { boxKindSize, DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { FLAG_FROZEN } from '@/engine/hideseek/snapshot';
-import { BOX_LOCKED, BOX_PLANK, sandboxAgentAt, sandboxBoxAt, sandboxCounts, sandboxSnapshotLength } from '@/engine/hideseek/sandbox/snapshot';
+import { SANDBOX_LIMITS } from '@/engine/hideseek/sandbox/room';
+import {
+  BOX_LOCKED,
+  BOX_PLANK,
+  sandboxAgentAt,
+  sandboxBoxAt,
+  sandboxBoxCount,
+  sandboxHiderCount,
+  sandboxSeekerCount,
+  sandboxSnapshotLength,
+} from '@/engine/hideseek/sandbox/snapshot';
 import { rayAabb, rayBox } from '@/engine/hideseek/sensing/raycast2d';
 import type { HsFrame } from '../frame/sceneContext';
 import { blendFloorPose, type FloorPose } from '../frame/snapshotRead';
@@ -17,9 +27,11 @@ const PLANK = boxKindSize(DEFAULT_HIDESEEK_PHYSICS, 'plank');
 export function sandboxFrame(frame: HsFrame): Float32Array | null {
   const buf = frame.curr;
   if (!buf || frame.preview || buf.length < 8) return null;
-  const c = sandboxCounts(buf);
-  return buf.length === sandboxSnapshotLength(c.hiders + c.seekers, c.boxes) ? buf : null;
+  return buf.length === sandboxSnapshotLength(sandboxPlayerCount(buf), sandboxBoxCount(buf)) ? buf : null;
 }
+
+/** Hiders and seekers in a frame. */
+export const sandboxPlayerCount = (buf: Float32Array): number => sandboxHiderCount(buf) + sandboxSeekerCount(buf);
 
 /** The previous frame, when it belongs to the same match (same size), for blending. */
 function prevOf(frame: HsFrame, curr: Float32Array): Float32Array | null {
@@ -52,25 +64,61 @@ export function seekerIdle(curr: Float32Array, flags: number): boolean {
   return (flags & FLAG_FROZEN) !== 0 || curr[1] === 1;
 }
 
+/** Floats per box in SightBoxes: center x and z, half length, half width, cos and sin of the yaw. */
+const SIGHT_STRIDE = 6;
+
+/**
+ * The boxes of one frame shaped for sight tests. Their sizes and the cos
+ * and sin of their yaws are worked out once a frame here, instead of once
+ * per ray, and the array is reused, so casting cones allocates nothing.
+ */
+export class SightBoxes {
+  private data = new Float32Array(SANDBOX_LIMITS.boxes * SIGHT_STRIDE);
+  private count = 0;
+
+  /** Reads the boxes of a Sandbox frame. Call it once a frame, before any ray. */
+  read(buf: Float32Array): void {
+    const players = sandboxPlayerCount(buf);
+    const n = sandboxBoxCount(buf);
+    if (n * SIGHT_STRIDE > this.data.length) this.data = new Float32Array(n * SIGHT_STRIDE);
+    for (let b = 0; b < n; b++) {
+      const o = sandboxBoxAt(players, b);
+      const size = isPlank(buf[o + 3]) ? PLANK : CUBE;
+      const d = b * SIGHT_STRIDE;
+      this.data[d] = buf[o];
+      this.data[d + 1] = buf[o + 1];
+      this.data[d + 2] = size.length / 2;
+      this.data[d + 3] = size.width / 2;
+      this.data[d + 4] = Math.cos(buf[o + 2]);
+      this.data[d + 5] = Math.sin(buf[o + 2]);
+    }
+    this.count = n;
+  }
+
+  /** Distance along the ray to the nearest box, or `max` when none is closer. */
+  hit(x: number, z: number, dx: number, dz: number, max: number): number {
+    let best = max;
+    const v = this.data;
+    for (let d = 0; d < this.count * SIGHT_STRIDE; d += SIGHT_STRIDE) {
+      const t = rayBox(x, z, dx, dz, v[d], v[d + 1], v[d + 2], v[d + 3], v[d + 4], v[d + 5]);
+      if (t < best) best = t;
+    }
+    return best;
+  }
+}
+
 /**
  * Distance from (x, z) along the unit direction (dx, dz) to the first wall
- * or box of a Sandbox frame, capped at `max`. Like the arena version it
- * agrees with the engine's sight lines and only drives visuals.
+ * or box, capped at `max`. Like the arena version it agrees with the
+ * engine's sight lines and only drives visuals. `boxes` must have read the
+ * frame on screen.
  */
-export function sandboxSight(walls: Rect[], buf: Float32Array, x: number, z: number, dx: number, dz: number, max: number): number {
+export function sandboxSight(walls: Rect[], boxes: SightBoxes, x: number, z: number, dx: number, dz: number, max: number): number {
   let best = max;
   for (let w = 0; w < walls.length; w++) {
     const r = walls[w];
     const t = rayAabb(x, z, dx, dz, r.x, r.z, r.hx, r.hz);
     if (t < best) best = t;
   }
-  const { hiders, seekers, boxes } = sandboxCounts(buf);
-  for (let b = 0; b < boxes; b++) {
-    const o = sandboxBoxAt(hiders + seekers, b);
-    const size = isPlank(buf[o + 3]) ? PLANK : CUBE;
-    const yaw = buf[o + 2];
-    const t = rayBox(x, z, dx, dz, buf[o], buf[o + 1], size.length / 2, size.width / 2, Math.cos(yaw), Math.sin(yaw));
-    if (t < best) best = t;
-  }
-  return best;
+  return boxes.hit(x, z, dx, dz, best);
 }
