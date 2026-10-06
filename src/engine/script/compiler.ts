@@ -37,6 +37,8 @@ export interface CompiledScript {
   forkHash: string;
   /** Abstract cost per agent per tick, see cost.ts. */
   costEstimate: number;
+  /** Parts of the controller context this script reads. createController throws if one is missing. */
+  needs: readonly 'track'[];
   /** Builds a controller for one episode batch. The view type follows the script's environment. */
   createController<V = RacingCar>(ctx: ControllerContext): AgentController<V>;
   /** Runs the `each generation` block. Operators it skips keep the defaults of `neat`. */
@@ -76,6 +78,7 @@ export function compileScript(source: string, opts: CheckOptions = {}): CompileR
     sourceHash: sourceHash(parsed.program),
     forkHash: forkHash(checked),
     costEstimate: estimateCost(checked),
+    needs: [...checked.needs],
     createController: <V>(ctx: ControllerContext) => buildController<V>(checked, ctx),
     runGeneration: (ctx, rng, neat = DEFAULT_NEAT) => generation(ctx, rng, neat),
   };
