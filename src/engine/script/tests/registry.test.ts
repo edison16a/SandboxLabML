@@ -6,6 +6,9 @@ import { migrate } from '../autocorrect';
 import { compileScript } from '../compiler';
 import { REGISTRY, SLICES, entriesByName, type RegistryEntry } from '../registry';
 import { TICK_DT } from '../registry/core';
+import { check } from '../checker';
+import { parse } from '../parser';
+import { RACING_PRESETS } from '../presets/racing';
 import { errors, inGeneration, inTick, problems } from './helpers';
 
 const CATEGORIES = ['sensors', 'actions', 'rewards', 'logic', 'math', 'evolution', 'environment'];
@@ -45,6 +48,16 @@ describe('registry entries', () => {
       }
     });
   }
+
+  it('presets lists exactly the tiers whose preset script uses the entry', () => {
+    for (const preset of RACING_PRESETS) {
+      const checked = check(parse(preset.source).program);
+      const used = new Set<string>([...checked.calls.values()].map((c) => c.entry.name));
+      for (const info of checked.exprs.values()) if (info.ref?.kind === 'entry') used.add(info.ref.entry.name);
+      const tagged = REGISTRY.filter((e) => e.env !== 'hideseek' && e.presets.includes(preset.tier)).map((e) => e.name);
+      expect([...used].sort(), preset.id).toEqual(tagged.sort());
+    }
+  });
 
   it('names are unique within each environment', () => {
     for (const env of ['racing', 'hideseek'] as const) {

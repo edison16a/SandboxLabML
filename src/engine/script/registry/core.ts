@@ -24,7 +24,6 @@ export const CORE_SLICE: RegistrySlice = {
       summary: 'The size of a number without its sign.',
       description: 'Turns negative numbers positive and leaves positive ones alone. Handy when only the size of an error matters, not its direction.',
       example: 'let wobble = abs(rand() - 0.5)',
-      presets: ['advanced'],
       block: { category: 'math', label: 'abs {value}' },
       explain: 'the size of {value}',
       binding: { kind: 'fn', call: ([a]) => (v, io) => Math.abs(a(v, io)), fold: ([a]) => Math.abs(a) },

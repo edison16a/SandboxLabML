@@ -14,7 +14,7 @@ export const RACING_CAR_ENTRIES: RegistryEntry[] = [
       example: 'reward +0.01 * car.speed',
       explain: "the car's speed",
       label: 'car speed',
-      presets: ALL_TIERS,
+      presets: ['intermediate', 'advanced'],
     },
     () => (v) => car(v).car.speed,
   ),

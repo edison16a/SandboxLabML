@@ -1,11 +1,11 @@
 import type { GenerationContext, GenerationView } from '../generationTypes';
 import { clampTo, entry, optional, param, req } from './define';
 import type { MutationRates } from '../../neat/config';
-import type { Effect, EffectArgs, Reader, RegistryEntry, RegistrySlice } from './types';
+import type { Effect, EffectArgs, PresetTier, Reader, RegistryEntry, RegistrySlice } from './types';
 
 const view = (v: unknown) => v as GenerationView;
 
-function counter(name: string, field: keyof GenerationContext, summary: string, description: string, example: string, explain: string): RegistryEntry {
+function counter(name: string, field: keyof GenerationContext, summary: string, description: string, example: string, explain: string, presets: readonly PresetTier[] = []): RegistryEntry {
   return entry({
     name,
     kind: 'sensor',
@@ -16,7 +16,7 @@ function counter(name: string, field: keyof GenerationContext, summary: string, 
     summary,
     description,
     example,
-    presets: ['advanced'],
+    presets,
     block: { category: 'evolution', label: explain },
     explain,
     binding: { kind: 'num', read: () => (v) => view(v).ctx[field] },
@@ -34,7 +34,7 @@ const EVERY_TIER = ['beginner', 'intermediate', 'advanced'] as const;
 export const GENERATION_SLICE: RegistrySlice = {
   env: 'core',
   entries: [
-    counter('generation', 'generation', 'Number of the generation that just finished.', 'Counts up from 0. Use it to change settings over time, such as switching tracks every 10 generations.', 'if generation > 50 {\n  select(top: 10%)\n}', 'the generation number'),
+    counter('generation', 'generation', 'Number of the generation that just finished.', 'Counts up from 0. Use it to change settings over time, such as switching tracks every 10 generations.', 'if generation > 50 {\n  select(top: 10%)\n}', 'the generation number', ['advanced']),
     counter('species.count', 'speciesCount', 'How many species there are right now.', 'NEAT groups similar brains into species so new ideas get time to improve. This is how many groups exist after the last generation.', 'if species.count < 4 {\n  speciate(target: 6)\n}', 'the number of species'),
     counter('best.fitness', 'bestFitness', 'Highest fitness in the last generation.', 'The score of the best agent in the generation that just finished. Compare it with mean.fitness to see how far ahead the leaders are.', 'if best.fitness > 100 {\n  select(top: 10%)\n}', 'the best fitness'),
     counter('mean.fitness', 'meanFitness', 'Average fitness of the last generation.', 'The mean score across every agent in the generation that just finished. When it climbs while best.fitness stays flat, the whole population is catching up with the leaders.', 'if mean.fitness < 1 {\n  select(top: 30%)\n}', 'the average fitness'),
