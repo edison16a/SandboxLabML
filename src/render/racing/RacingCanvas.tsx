@@ -22,6 +22,7 @@ import { RacingEnvironment } from './RacingEnvironment';
 import { RaysOverlay } from './RaysOverlay';
 import { Scenery } from './Scenery';
 import { createFrame, RacingSceneContext } from './sceneContext';
+import { TireEffects } from './TireEffects';
 import { TrackMesh } from './TrackMesh';
 
 interface Props {
@@ -76,6 +77,7 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
         <PopulationCars castShadow={tier === 'high'} />
         <GhostCars />
         <ChampionCar />
+        {tier !== 'low' && <TireEffects />}
         <CrashRings />
         <BrakeMap />
         <RaysOverlay schema={schema} />
