@@ -41,7 +41,10 @@ export function SandboxCard() {
   const records = useHideSeekLab((s) => s.records);
   const setSandbox = useHideSeekLab((s) => s.setSandbox);
   const [editing, setEditing] = useState<{ room: SandboxRoom; saved: boolean } | null>(null);
-  const [open, setOpen] = useState(true);
+  // Null follows the inputs overlay: the setup folds while the inputs card stacks above it, so both fit.
+  const [unfolded, setUnfolded] = useState<boolean | null>(null);
+  const inputsShown = useHideSeekLab((s) => s.inputsOverlay);
+  const open = unfolded ?? !inputsShown;
   const pulse = useSandboxPulse();
   if (mode !== 'sandbox' || photo || !records.length) return null;
   const control = hideSeekSession().sandbox;
@@ -56,7 +59,7 @@ export function SandboxCard() {
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
-          onClick={() => setOpen(!open)}
+          onClick={() => setUnfolded(!open)}
           aria-expanded={open}
           aria-label={open ? 'Fold the Sandbox setup away' : 'Show the Sandbox setup'}
           className="-ml-1 flex items-center gap-1 rounded px-1 text-[11px] font-semibold tracking-wide text-white/60 uppercase transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-accent"
