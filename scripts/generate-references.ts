@@ -5,9 +5,9 @@
  * champion every few generations, then keeps the median and the middle
  * half of the scores at each checkpoint.
  *
- *   npx tsx scripts/generate-references.ts --seeds 8 --generations 100 --workers 2
+ *   npx tsx scripts/generate-references.ts --seeds 12 --generations 100 --workers 2
  *
- * Options, all optional: --seeds 8, --generations 100, --every 5,
+ * Options, all optional: --seeds 12, --first-seed 1, --generations 100, --every 5,
  * --population 100, --workers 2 (0 runs everything on this thread),
  * --tiers beginner,intermediate,advanced (a subset is for experiments),
  * --out public/references/racing.json, --raw file.json (every seed's
@@ -99,7 +99,8 @@ function format(file: BenchReferences): string {
 
 async function main(): Promise<void> {
   const args = parseArgs();
-  const seeds = Number(args.seeds ?? 8);
+  const seeds = Number(args.seeds ?? 12);
+  const firstSeed = Number(args['first-seed'] ?? 1);
   const generations = Number(args.generations ?? 100);
   const every = Number(args.every ?? 5);
   const population = Number(args.population ?? 100);
@@ -107,7 +108,7 @@ async function main(): Promise<void> {
   const out = args.out ?? 'public/references/racing.json';
   const keepGenomes = Boolean(args.raw);
   const tiers = args.tiers ? (args.tiers.split(',') as ReferenceCurve['tier'][]) : TIERS;
-  const jobs = tiers.flatMap((tier) => Array.from({ length: seeds }, (_, i) => ({ tier, seed: i + 1, generations, every, population, keepGenomes })));
+  const jobs = tiers.flatMap((tier) => Array.from({ length: seeds }, (_, i) => ({ tier, seed: firstSeed + i, generations, every, population, keepGenomes })));
   console.log(`Reference runs: ${tiers.length} tiers x ${seeds} seeds, ${generations} generations, population ${population}, ${workers} workers.`);
   const started = performance.now();
   const results = await runAll(jobs, workers, (r) =>
