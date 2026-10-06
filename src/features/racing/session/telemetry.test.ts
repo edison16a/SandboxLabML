@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { drivenDistance, frontCopies } from './telemetry';
 
 describe('sandbox telemetry', () => {
-  it('measures distance from the car own grid slot', () => {
+  it("measures distance from the car's own grid slot", () => {
     expect(drivenDistance({ distance: Float32Array.from([-30, -20, -10]) })).toBe(20);
     expect(drivenDistance({ distance: Float32Array.from([0.1, 50, 480]) })).toBeCloseTo(479.9, 4);
     expect(drivenDistance({ distance: new Float32Array(0) })).toBe(0);
