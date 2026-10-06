@@ -1,8 +1,10 @@
 name: Benchmark references
 
-# Retrains the Racing reference scripts and rebuilds public/references/racing.json.
-# Training is deterministic, so the file only changes when the engine, the
-# benchmark or a preset changed. When it does, the new file is committed to the
+# Retrains the reference scripts of both environments and rebuilds
+# public/references/racing.json and public/references/hideseek.json. Each
+# environment trains in its own job, so the two run side by side. Training
+# is deterministic, so a file only changes when the engine, the benchmark or
+# a preset changed. When one does, the new files are committed to the
 # references/update branch for review instead of straight to main.
 on:
   schedule:
@@ -18,9 +20,13 @@ concurrency:
 
 jobs:
   regenerate:
-    name: Regenerate Racing references
+    name: Regenerate ${{ matrix.env }} references
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [racing, hideseek]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,16 +35,34 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Train the reference scripts
-        run: npm run refs -- --workers 2
-      - name: Commit to references/update if the file changed
+        run: npm run refs -- --env ${{ matrix.env }} --workers "$(nproc)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: references-${{ matrix.env }}
+          path: public/references/${{ matrix.env }}.json
+          retention-days: 7
+
+  commit:
+    name: Commit changed references
+    runs-on: ubuntu-latest
+    needs: regenerate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: references-*
+          path: public/references
+          merge-multiple: true
+      - name: Commit to references/update if a file changed
         run: |
-          if git diff --quiet -- public/references/racing.json; then
+          # Porcelain status also lists a reference file that is new, not only changed.
+          if [ -z "$(git status --porcelain -- public/references)" ]; then
             echo "The references did not change."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -C references/update
-          git add public/references/racing.json
+          git add public/references
           git commit -m "Regenerate benchmark references"
           git push --force origin references/update
