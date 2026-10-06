@@ -76,6 +76,7 @@ export function StatementBlock({ block, path, scope }: Props) {
           text={block.comment ?? ''}
           readOnly={readOnly}
           startEditing={addingNote}
+          onCancel={() => setAddingNote(false)}
           onCommit={(text) => {
             setAddingNote(false);
             actions.setNote(text);

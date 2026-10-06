@@ -10,18 +10,21 @@ interface Props {
   onCommit: (text: string | null) => void;
   /** Open in edit mode, used right after "Add note". */
   startEditing?: boolean;
+  /** Called when editing ends without a change, so a note that was never written can close again. */
+  onCancel?: () => void;
 }
 
 /**
  * The comment lines above a statement, shown as a note. Comments are part
  * of the tree, so they survive switching views and every block edit.
  */
-export function BlockNote({ text, readOnly, onCommit, startEditing = false }: Props) {
+export function BlockNote({ text, readOnly, onCommit, startEditing = false, onCancel }: Props) {
   const [draft, setDraft] = useState<string | null>(startEditing ? text : null);
   const commit = () => {
     if (draft === null) return;
     const clean = draft.replace(/\r/g, '').trimEnd();
     if (clean !== text) onCommit(clean === '' ? null : clean);
+    else onCancel?.();
     setDraft(null);
   };
   if (draft !== null) {
@@ -35,7 +38,10 @@ export function BlockNote({ text, readOnly, onCommit, startEditing = false }: Pr
         onBlur={commit}
         onKeyDown={(e) => {
           e.stopPropagation();
-          if (e.key === 'Escape') setDraft(null);
+          if (e.key === 'Escape') {
+            setDraft(null);
+            onCancel?.();
+          }
           if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) commit();
         }}
         className="mb-1 w-full resize-none rounded-md border border-accent bg-bg px-2 py-1 text-[12px] leading-relaxed text-fg focus:outline-none"

@@ -5,7 +5,6 @@ import { lintKeymap } from '@codemirror/lint';
 import { Annotation, Compartment, EditorState, type Extension, type Transaction } from '@codemirror/state';
 import { drawSelection, dropCursor, EditorView, highlightActiveLine, highlightActiveLineGutter, keymap, lineNumbers } from '@codemirror/view';
 import { formatDocument, fixAllDocument } from '../state/docActions';
-import { saveCurrent } from '../state/scriptActions';
 import { useStudio } from '../state/studioStore';
 import { sblCompletion } from './complete';
 import { sblHover } from './hover';
@@ -34,7 +33,8 @@ const studioKeymap = keymap.of([
   { key: 'Mod-z', run: run(() => useStudio.getState().undo()), preventDefault: true },
   { key: 'Mod-y', run: run(() => useStudio.getState().redo()), preventDefault: true },
   { key: 'Mod-Shift-z', run: run(() => useStudio.getState().redo()), preventDefault: true },
-  { key: 'Mod-s', run: run(saveCurrent), preventDefault: true },
+  // Ctrl or Cmd with S is handled once for the whole page by useStudioShortcuts; here it only stops the browser's save dialog.
+  { key: 'Mod-s', run: () => true, preventDefault: true },
   { key: 'Shift-Alt-f', run: run(formatDocument) },
   { key: 'Mod-Shift-.', run: run(fixAllDocument) },
   { key: 'Mod-/', run: toggleComment },

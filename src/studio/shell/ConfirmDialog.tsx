@@ -13,7 +13,6 @@ export function ConfirmDialog() {
       open={request !== null}
       onOpenChange={(open) => !open && answer('cancel')}
       title={request?.title ?? ''}
-      description={request?.body}
       footer={
         <>
           <Button variant="ghost" onClick={() => answer('cancel')}>
@@ -30,7 +29,7 @@ export function ConfirmDialog() {
         </>
       }
     >
-      <span className="sr-only">{request?.body}</span>
+      <p className="text-[13px] leading-relaxed text-muted">{request?.body}</p>
     </Dialog>
   );
 }

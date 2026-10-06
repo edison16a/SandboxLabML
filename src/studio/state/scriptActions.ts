@@ -127,9 +127,14 @@ export async function duplicate(id: string): Promise<void> {
 }
 
 export async function rename(id: string, name: string): Promise<void> {
-  await renameScript(id, name).catch(fail('Could not rename'));
+  try {
+    await renameScript(id, name);
+  } catch (err) {
+    fail('Could not rename')(err);
+    return;
+  }
   const s = useStudio.getState();
-  if (s.script?.id === id) useStudio.setState({ script: { ...s.script, name: name.trim() || s.script.name } });
+  if (s.script?.id === id) useStudio.setState({ script: { ...s.script, name: name.trim() } });
   bumpList();
 }
 
