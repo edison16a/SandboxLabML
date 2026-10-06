@@ -10,13 +10,17 @@ const run = createRacingRunConfig({ name: 'r', seed: 1, blueprint: RACING_BLUEPR
 const records = Array.from({ length: 10 }, (_, g) => ({ generation: g, genome: { id: g }, replaySeed: 100 + g }) as unknown as GenerationRecord);
 
 describe('sandbox field', () => {
-  it('starts from the ghost picks, newest first, and caps the size', () => {
+  it('starts from the ghost picks, newest first, and thins them to fit', () => {
     expect(fieldFromGenerations([0, 4, 9, 4])).toEqual([
       { generation: 9, copies: 1 },
       { generation: 4, copies: 1 },
       { generation: 0, copies: 1 },
     ]);
-    expect(fieldFromGenerations(Array.from({ length: 40 }, (_, g) => g))).toHaveLength(MAX_FIELD);
+    const thinned = fieldFromGenerations(Array.from({ length: 40 }, (_, g) => g));
+    expect(thinned).toHaveLength(MAX_FIELD);
+    expect(thinned[0].generation).toBe(39);
+    expect(thinned[thinned.length - 1].generation).toBe(0);
+    expect(fieldFromGenerations([0, 10, 20, 30, 40], 3).map((e) => e.generation)).toEqual([40, 20, 0]);
   });
 
   it('adds, removes and clamps copies', () => {

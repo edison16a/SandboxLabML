@@ -20,12 +20,18 @@ export function fieldSize(field: readonly FieldEntry[]): number {
   return field.reduce((n, e) => n + e.copies, 0);
 }
 
-/** Each chosen generation once, newest kept first when there are more than fit. */
-export function fieldFromGenerations(gens: readonly number[]): FieldEntry[] {
-  return [...new Set(gens)]
-    .sort((a, b) => b - a)
-    .slice(0, MAX_FIELD)
-    .map((generation) => ({ generation, copies: 1 }));
+/** How many cars the Sandbox lines up the first time it opens: enough for a race, few enough to tell apart. */
+export const STARTING_FIELD = 8;
+
+/**
+ * Each chosen generation once, newest first. When there are more than
+ * `cap`, they are thinned evenly and the oldest and newest are kept, so the
+ * grid still spans the whole run rather than its last few generations.
+ */
+export function fieldFromGenerations(gens: readonly number[], cap = MAX_FIELD): FieldEntry[] {
+  const all = [...new Set(gens)].sort((a, b) => a - b);
+  const keep = all.length <= cap ? all : cap <= 1 ? all.slice(-1) : Array.from({ length: cap }, (_, i) => all[Math.round((i * (all.length - 1)) / (cap - 1))]);
+  return [...new Set(keep)].sort((a, b) => b - a).map((generation) => ({ generation, copies: 1 }));
 }
 
 /**

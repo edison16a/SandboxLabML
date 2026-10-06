@@ -2,7 +2,7 @@ import type { TrackSpec } from '@/engine/racing/track/types';
 import { racingSetupFor } from '@/engine/training/racingSetup';
 import type { WorkerPool } from '@/workers/client/workerPool';
 import { isWatchSpeed, WATCH_SPEEDS } from '@/workers/shared/protocol';
-import { fieldFromGenerations, fieldScene, type FieldEntry } from './field';
+import { fieldFromGenerations, fieldScene, STARTING_FIELD, type FieldEntry } from './field';
 import { selectGhosts } from './ghostSelection';
 import { useRacingLab } from '../state/labStore';
 
@@ -26,7 +26,7 @@ export async function enterSandbox(session: SandboxHost, pool: WorkerPool): Prom
   s.set({
     mode: 'sandbox',
     ...(first && { sandboxTrack: first, sandboxPicked: first }),
-    sandboxField: kept.length ? kept : fieldFromGenerations(selectGhosts(s.ghostSelection, s.records.length)),
+    sandboxField: kept.length ? kept : fieldFromGenerations(selectGhosts(s.ghostSelection, s.records.length), STARTING_FIELD),
     view: 'overlay',
     lesions: {},
     focus: { kind: 'champion' },
