@@ -8,7 +8,8 @@ import { useRacingLab } from '@/features/racing/state/labStore';
 import { attachOpacity, createFadeMaterial } from '@/render/shared/fadeMaterial';
 import { blendPose, type Pose } from '@/render/shared/interpolate';
 import { useDisposable } from '@/render/shared/useDisposable';
-import { mergedCarGeometry } from './carGeometry';
+import { crowdGeometry } from './car/geometry/crowd';
+import { withCarSurface } from './car/materials/carSurface';
 import { ghostColor, ghostOpacity } from './palette';
 import { useRacingScene } from './sceneContext';
 import { GhostTrails } from './GhostTrails';
@@ -30,9 +31,9 @@ export function GhostCars() {
   const mesh = useRef<THREE.InstancedMesh>(null);
   const depthMesh = useRef<THREE.InstancedMesh>(null);
   const built = useDisposable(() => {
-    const geometry = mergedCarGeometry();
+    const geometry = crowdGeometry();
     const opacity = attachOpacity(geometry, MAX_GHOSTS);
-    const material = createFadeMaterial({ vertexColors: true, roughness: 0.4, metalness: 0.2, depthFunc: THREE.LessEqualDepth });
+    const material = withCarSurface(createFadeMaterial({ vertexColors: true, depthFunc: THREE.LessEqualDepth }));
     // Transparent so it draws after the opaque scene; drawn earlier it would punch holes in the track behind it.
     const depth = new THREE.MeshBasicMaterial({ colorWrite: false, transparent: true, depthWrite: true });
     return { geometry, opacity, material, depth, dispose: () => (geometry.dispose(), material.dispose(), depth.dispose()) };

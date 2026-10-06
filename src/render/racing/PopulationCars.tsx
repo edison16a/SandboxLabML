@@ -7,7 +7,9 @@ import { RACING_SNAPSHOT } from '@/engine/racing/env';
 import { useRacingLab } from '@/features/racing/state/labStore';
 import { blendPose, type Pose } from '@/render/shared/interpolate';
 import { useDisposable } from '@/render/shared/useDisposable';
-import { mergedCarGeometry } from './carGeometry';
+import { crowdGeometry } from './car/geometry/crowd';
+import { withCarSurface } from './car/materials/carSurface';
+import { useCarReflections } from './car/materials/useCarReflections';
 import { CRASHED_COLOR, speciesColor } from './palette';
 import { useRacingScene } from './sceneContext';
 
@@ -15,18 +17,22 @@ const MAX_CARS = 256;
 const STRIDE = RACING_SNAPSHOT.stride;
 
 /**
- * The live generation, up to 256 cars in a single instanced draw call.
- * Cars are colored by species; stopped cars turn graphite and sink slightly
- * so the ones still driving stand out.
+ * The live generation, up to 256 cars in a single instanced draw call,
+ * each a lighter build of the hero car. The paint takes the species color;
+ * stopped cars turn graphite and sink slightly so the ones still driving
+ * stand out.
  */
 export function PopulationCars({ castShadow }: { castShadow: boolean }) {
   const { population, frame } = useRacingScene();
+  const tier = useRacingLab((s) => s.activeTier);
   const mesh = useRef<THREE.InstancedMesh>(null);
-  const geometry = useDisposable(() => mergedCarGeometry(), []);
+  const geometry = useDisposable(() => crowdGeometry(), []);
+  // High adds a clear coat over the paint and glass; the lower tiers keep the cheaper standard shading.
   const material = useDisposable(
-    () => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.38, metalness: 0.35, envMapIntensity: 1.1 }),
-    [],
+    () => withCarSurface(tier === 'high' ? new THREE.MeshPhysicalMaterial({ vertexColors: true, clearcoat: 1, clearcoatRoughness: 0.06, envMapIntensity: 0.85 }) : new THREE.MeshStandardMaterial({ vertexColors: true, envMapIntensity: 0.85 })),
+    [tier],
   );
+  useCarReflections([material]);
   const tmp = useMemo(
     () => ({ m: new THREE.Matrix4(), q: new THREE.Quaternion(), p: new THREE.Vector3(), s: new THREE.Vector3(1, 1, 1), c: new THREE.Color(), up: new THREE.Vector3(0, 1, 0), pose: { x: 0, y: 0, heading: 0 } as Pose }),
     [],

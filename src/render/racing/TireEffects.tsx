@@ -6,7 +6,7 @@ import { useMemo, useRef } from 'react';
 import { GRAVITY, DEFAULT_CAR } from '@/engine/racing/car/params';
 import { attachOpacity, createFadeMaterial } from '@/render/shared/fadeMaterial';
 import { useDisposable } from '@/render/shared/useDisposable';
-import { CAR } from './carGeometry';
+import { CAR } from './car/dimensions';
 import { useRacingScene } from './sceneContext';
 
 const MARKS = 600;
