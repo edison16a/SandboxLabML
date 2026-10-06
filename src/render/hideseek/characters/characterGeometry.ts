@@ -54,18 +54,18 @@ function segments(detail: MeshDetail, full: number, low: number, instanced = Mat
 /** The torso and base as one smooth lathe, its bottom at y = 0. */
 export function bodyGeometry(detail: MeshDetail): THREE.BufferGeometry {
   const curve = new THREE.SplineCurve(PROFILE.map(([r, y]) => new THREE.Vector2(r, y)));
-  const points = curve.getPoints(segments(detail, 40, 14, 9));
+  const points = curve.getPoints(segments(detail, 32, 14, 9));
   // The spline can overshoot past the axis at the ends; pin both poles back onto it.
   points[0].x = 0;
   points[points.length - 1].x = 0;
-  const g = new THREE.LatheGeometry(points, segments(detail, 40, 14, 9));
+  const g = new THREE.LatheGeometry(points, segments(detail, 36, 14, 9));
   g.computeVertexNormals();
   return g;
 }
 
 /** The head: a unit sphere of the head radius, centered on its own origin. The mesh scales it into a bun. */
 export function headGeometry(detail: MeshDetail): THREE.BufferGeometry {
-  return new THREE.SphereGeometry(RIG.headRadius, segments(detail, 48, 18, 11), segments(detail, 32, 12, 8));
+  return new THREE.SphereGeometry(RIG.headRadius, segments(detail, 44, 18, 11), segments(detail, 30, 12, 8));
 }
 
 /**

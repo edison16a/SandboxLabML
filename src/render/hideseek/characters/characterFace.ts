@@ -66,8 +66,8 @@ const LIFT = 0.0035;
  * sizes on the face stay true. Normals point straight out of the head.
  */
 function wrap(shapes: THREE.Shape[], coarse: boolean): THREE.BufferGeometry {
-  let g: THREE.BufferGeometry = new THREE.ShapeGeometry(shapes, coarse ? 4 : 16);
-  g = coarse ? subdivide(g) : subdivide(subdivide(g));
+  // One split is enough: a face mark is at most 0.17 m across, so its halves sag under 2 mm, less than the lift.
+  const g = subdivide(new THREE.ShapeGeometry(shapes, coarse ? 4 : 14));
   const lift = coarse ? LIFT * 2 : LIFT;
   const pos = g.attributes.position;
   const normals = new Float32Array(pos.count * 3);
