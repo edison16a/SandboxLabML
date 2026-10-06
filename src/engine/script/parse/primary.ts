@@ -30,6 +30,7 @@ export function parsePostfix(c: Cursor, sub: SubParser): Expr {
   }
 }
 
+/** `( arg, arg )`. A missing `)` gets a fix that adds it after the last argument. */
 function parseArgs(c: Cursor, sub: SubParser): { args: Arg[]; end: number } {
   const open = c.next();
   c.enter(open);
@@ -44,6 +45,7 @@ function parseArgs(c: Cursor, sub: SubParser): { args: Arg[]; end: number } {
   return { args, end: close.to };
 }
 
+/** `name: value`, or a bare value for positional arguments such as `abs(x)`. */
 function parseArg(c: Cursor, sub: SubParser): Arg {
   if (c.is('ident') && c.isPunct(':', 1)) {
     const name = c.next();

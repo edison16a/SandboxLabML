@@ -72,6 +72,7 @@ export function compileBool(f: Frame, e: Expr): Test {
   throw new Error(`Internal error: a ${e.kind} cannot be compiled as a condition.`);
 }
 
+/** A local slot, a loop item or a registry sensor or constant, as the checker resolved it. */
 function readName(f: Frame, ref: NameRef | undefined): Reader {
   const slots = f.slots;
   if (ref?.kind === 'slot') {
@@ -94,6 +95,7 @@ function readName(f: Frame, ref: NameRef | undefined): Reader {
   throw new Error('Internal error: a name was not resolved to a number.');
 }
 
+/** Arithmetic with a closure per shape, so a constant operand is captured instead of called. */
 function arithmetic(f: Frame, e: BinaryExpr): Reader {
   const a = compileNum(f, e.left);
   const b = compileNum(f, e.right);
@@ -122,6 +124,7 @@ function arithmetic(f: Frame, e: BinaryExpr): Reader {
   }
 }
 
+/** A registry function call. Arguments left out are filled with their defaults. */
 function callReader(f: Frame, e: CallExpr): Reader {
   const call = f.check.calls.get(e);
   if (!call || call.entry.binding.kind !== 'fn') throw new Error('Internal error: a call was not resolved to a function.');

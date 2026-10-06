@@ -10,7 +10,7 @@ import { unitsAgree } from './check/unitFix';
 import { replaceFix, sortDiagnostics, type Span, suggestionFixes } from './diagnostics';
 import { entriesByName, renamesFor, SCRIPT_ENVS } from './registry';
 import { describeType } from './types';
-import { dimWords, sameDim } from './units';
+import { dimWords } from './units';
 
 export type { CheckResult, ExprInfo, CallInfo, NameRef, ResolvedArg, Declaration } from './check/context';
 
@@ -113,7 +113,7 @@ function checkSensor(ctx: CheckContext, s: SensorItem): void {
       return;
     }
     const dim = value.type.kind === 'bool' ? info.type.dim : value.type.dim;
-    if (!unitsAgree(info.type.dim, dim, end, end) && !sameDim(info.type.dim, dim)) {
+    if (!unitsAgree(info.type.dim, dim, end, end)) {
       ctx.error('unit-mismatch', `The sensor measures ${dimWords(dim)}, but this end of the range is in ${dimWords(info.type.dim)}.`, end.span);
       return;
     }

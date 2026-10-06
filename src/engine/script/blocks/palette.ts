@@ -97,8 +97,24 @@ function entrySource(e: RegistryEntry): { source: string; value: boolean } {
   }
 }
 
-/** Palette for one environment and block, grouped by category, built from the registry. */
+const cache = new Map<string, PaletteCategory[]>();
+
+/**
+ * Palette for one environment and block, grouped by category, built from
+ * the registry. It is built once per pair and copied on every call, so the
+ * editor may change the blocks it gets back.
+ */
 export function blockPalette(env: EnvId, scope: Scope): PaletteCategory[] {
+  const key = `${env}/${scope}`;
+  let palette = cache.get(key);
+  if (!palette) {
+    palette = buildPalette(env, scope);
+    cache.set(key, palette);
+  }
+  return structuredClone(palette);
+}
+
+function buildPalette(env: EnvId, scope: Scope): PaletteCategory[] {
   const groups = new Map<BlockCategory, PaletteItem[]>(ORDER.map((c) => [c, []]));
   for (const l of LANGUAGE) {
     if (!l.scopes.includes(scope)) continue;

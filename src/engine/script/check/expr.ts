@@ -96,6 +96,7 @@ function checkBinary(ctx: CheckContext, e: BinaryExpr): ExprInfo {
   return info;
 }
 
+/** Folds two constant operands, or returns the type alone when either side is only known at run time. */
 function withValue(type: ValueType, x: unknown, y: unknown, f: (x: number | boolean, y: number | boolean) => number | boolean): ExprInfo {
   if ((typeof x === 'number' || typeof x === 'boolean') && (typeof y === 'number' || typeof y === 'boolean')) return { type, value: f(x, y) };
   return { type };
