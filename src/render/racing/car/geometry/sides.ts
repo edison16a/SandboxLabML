@@ -14,7 +14,7 @@ import type { Detail, PartBin } from './parts';
 export function addSides(bin: PartBin, detail: Detail): void {
   const rows = detail.fine ? 14 : 4;
   // The intake fills the scoop behind the door; its leading edge leans back like the crease above it.
-  // The crowd car's coarse body can bulge past the true surface, so its decals stand further off.
+  // Without fine detail (the crowd car and the Low hero) the coarse body can bulge past the true surface, so decals stand further off.
   const lift = detail.fine ? 0.003 : 0.012;
   const intake = bandPatch(2, SCOOP.from + 0.06, SCOOP.to - 0.04, () => 0.1, () => 0.93, rows, detail.fine ? 6 : 2, lift, -0.12);
   bin.add('grille', bothSides(intake));

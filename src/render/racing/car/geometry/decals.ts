@@ -8,9 +8,10 @@ import { gridGeometry, type Vec3 } from './grid';
 export type Pt = [number, number];
 
 /**
- * Shape and strip makers for one end of the car at a level of detail. The
- * crowd car's faces are coarse, so its decals are diced less and stand
- * further off to stay clear of the flatter surface under them.
+ * Shape and strip makers for one end of the car at a level of detail.
+ * Without fine detail (the crowd car and the Low hero) the faces are
+ * coarse, so decals are diced less and stand further off to stay clear of
+ * the flatter surface under them.
  */
 export function capDecals(end: 1 | -1, fine: boolean) {
   const k = fine ? 1 : 2.5;
