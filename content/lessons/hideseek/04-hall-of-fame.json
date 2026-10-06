@@ -1,0 +1,98 @@
+{
+  "id": "hideseek-04-hall-of-fame",
+  "course": "hideseek",
+  "order": 4,
+  "title": "Co-evolution and the hall of fame",
+  "summary": "Two teams learn from each other. Choose who each brain plays, and keep old champions around so nothing is forgotten.",
+  "minutes": 9,
+  "steps": [
+    {
+      "id": "choose-the-opponents",
+      "title": "Choose the opponents",
+      "body": "Hiders and seekers evolve side by side. A hider's score depends on the seekers it meets, and a seeker's score on the hiders. Each team is the other's teacher, and both get better together. This is called co-evolution.\n\nThe starter adds the breeding rules you may know from the Racing course. In Hide and Seek the generation block runs once for each team.\n\nA generation is played in rounds. In each round every brain plays one scored match. `opponents` sets how many rounds each kind of opponent gets, and `current` rounds are against the other team's brains of this generation.\n\nOne match can be luck: a good hider can meet the one seeker that happens to look its way. Add `opponents(current: 2)` so that every brain plays two current rounds.",
+      "starter": "// Your script from lesson 3, with breeding rules in the generation block.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Choose the opponents here.\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n",
+      "highlight": {
+        "lines": [35]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "call",
+            "scope": "generation",
+            "callee": "opponents"
+          }
+        ],
+        "message": "Call opponents inside each generation."
+      },
+      "hints": [
+        "opponents takes a count for each kind of opponent. Kinds you leave out get no rounds.",
+        "Replace the comment with opponents(current: 2)."
+      ],
+      "solution": "// Your script from lesson 3, with breeding rules in the generation block.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains.\n  opponents(current: 2)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n"
+    },
+    {
+      "id": "remember-old-champions",
+      "title": "Remember old champions",
+      "body": "Co-evolution can go in circles. Hiders find a trick, seekers learn to beat it, and hiders switch to a new trick. The seekers then forget the old one, and a few generations later it works again.\n\nAfter every generation, the best brain of each team joins that team's hall of fame. In a `hallOfFame` round each brain plays a champion picked from the other team's hall, so a seeker that forgets how to beat an old trick loses points for it.\n\nPress Check: it trains for 2 generations and counts the matches against past champions. There are none yet. Then change the line to `opponents(current: 2, hallOfFame: 2)`.",
+      "starter": "// Your script from lesson 3, with breeding rules in the generation block.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains.\n  opponents(current: 2)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n",
+      "highlight": {
+        "lines": [36]
+      },
+      "check": {
+        "kind": "metricAbove",
+        "generations": 2,
+        "metric": "hallOfFameMatches",
+        "value": 0,
+        "message": "Brains should play some matches against past champions."
+      },
+      "hints": [
+        "Add a second count inside opponents, after current.",
+        "Change the line to opponents(current: 2, hallOfFame: 2)."
+      ],
+      "solution": "// Your script from lesson 3, with breeding rules in the generation block.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains\n  // and two against its past champions.\n  opponents(current: 2, hallOfFame: 2)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n"
+    },
+    {
+      "id": "how-long-to-remember",
+      "title": "How long to remember",
+      "body": "`hallOfFame(size: ...)` sets how many past champions each team keeps. Once the hall is full, the oldest champion leaves when a new one joins.\n\nThe starter keeps only one, so the hall remembers last generation and nothing older. Press Check: after 2 generations it still holds a single champion.\n\nKeep 20 instead. A big hall remembers older tricks. Each brain still plays the same number of matches, though, so every old champion comes up less often.",
+      "starter": "// Your script from lesson 3, with breeding rules in the generation block.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains\n  // and two against its past champions.\n  opponents(current: 2, hallOfFame: 2)\n  // Keep the most recent champion of each team.\n  hallOfFame(size: 1)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n",
+      "highlight": {
+        "lines": [39]
+      },
+      "check": {
+        "kind": "metricAbove",
+        "generations": 2,
+        "metric": "hallOfFame",
+        "value": 1,
+        "message": "Each team should keep more than one past champion."
+      },
+      "hints": [
+        "The size is the number of past champions each team keeps.",
+        "Change the line to hallOfFame(size: 20)."
+      ],
+      "solution": "// Your script from lesson 3, with breeding rules in the generation block.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains\n  // and two against its past champions.\n  opponents(current: 2, hallOfFame: 2)\n  // Keep the 20 most recent champions of each team.\n  hallOfFame(size: 20)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n"
+    },
+    {
+      "id": "a-fixed-yardstick",
+      "title": "A fixed yardstick",
+      "body": "Co-evolution makes progress hard to see. If both teams get better, the share of time hiders stay hidden can stay flat. If both get worse, it stays flat too.\n\nA fixed opponent tells the two cases apart. The app has a scripted seeker and a scripted hider: hand-written players with no brain, which never change. In `scripted` rounds, hiders play the scripted seeker and seekers play the scripted hider. The lab shows these matches in the Skill check chart, and its lines only climb when the brains really improve.\n\nAdd `scripted: 1` to the opponents. The check trains for one generation and reports how long hiders stayed hidden from the scripted seeker.",
+      "starter": "// Your script from lesson 3, with breeding rules in the generation block.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains\n  // and two against its past champions.\n  opponents(current: 2, hallOfFame: 2)\n  // Keep the 20 most recent champions of each team.\n  hallOfFame(size: 20)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n",
+      "highlight": {
+        "lines": [37]
+      },
+      "check": {
+        "kind": "metricAbove",
+        "generations": 1,
+        "metric": "scriptedHiddenShare",
+        "value": 0,
+        "message": "Hiders should play some matches against the scripted seeker."
+      },
+      "hints": [
+        "It is a third count inside opponents.",
+        "Change the line to opponents(current: 2, hallOfFame: 2, scripted: 1)."
+      ],
+      "solution": "// Your script from lesson 3, with breeding rules in the generation block.\nscript \"My hide and seek\" for hideseek v1\n\n// hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,\n// its velocity, whether it holds a box, the phase, the time left and where the\n// other player is or was last seen.\nbrain hideseek-standard\n\n// Runs for every player, hider and seeker, 30 times per second.\neach tick {\n  // Move, turn, grab and lock as the brain says.\n  act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)\n\n  // The game is zero sum: whatever one team wins, the other loses.\n  if agent.isHider {\n    // +1 per second hidden, -1 per second seen.\n    reward +1 * dt when agent.hidden\n    reward -1 * dt when agent.seen\n  } else {\n    // +1 per second the hider is in sight, -1 per second it is not.\n    // Nothing counts during prep, while the seeker is frozen and blind.\n    reward +1 * dt when agent.seesOpponent\n    reward -1 * dt when not agent.prep and not agent.seesOpponent\n  }\n}\n\n// Runs once per generation for each team, after every match is over.\neach generation {\n  // How the next brains are bred: species, parents, mutation and champions.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Every brain plays two rounds against the other team's current brains,\n  // two against its past champions and one against the scripted players.\n  opponents(current: 2, hallOfFame: 2, scripted: 1)\n  // Keep the 20 most recent champions of each team.\n  hallOfFame(size: 20)\n\n  // Take turns between the open room and the room with a shelter.\n  useLayout(id: \"open\")\n  useLayout(id: \"shelter\")\n}\n"
+    }
+  ]
+}
