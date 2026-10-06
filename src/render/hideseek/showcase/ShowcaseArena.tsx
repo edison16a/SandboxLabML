@@ -40,7 +40,7 @@ function lowerShadowCamera(group: THREE.Group | null): void {
  * the frame every tick; React only re-renders when the arena or layout it
  * shows changes.
  */
-export function ShowcaseArena({ tier, sandbox }: { tier: HsQualityTier; sandbox: boolean }) {
+export function ShowcaseArena({ tier, sandbox, aoPass }: { tier: HsQualityTier; sandbox: boolean; /** N8AO runs over the frame, so the baked wall foot shade can be lighter. */ aoPass: boolean }) {
   const { frame, onMoveBox, onToggleLock } = useHsScene();
   const group = useRef<THREE.Group>(null);
   const [shown, setShown] = useState<{ arena: number; layout: number } | null>(null);
@@ -75,7 +75,7 @@ export function ShowcaseArena({ tier, sandbox }: { tier: HsQualityTier; sandbox:
     <group ref={group} visible={false}>
       {shown && (
         <>
-          <ArenaRoom layout={shown.layout} ao={tier === 'high' || tier === 'ultra' ? 0.3 : 0.5} />
+          <ArenaRoom layout={shown.layout} ao={aoPass ? 0.3 : 0.5} />
           <ShowcaseBoxes arena={shown.arena} tier={tier} onBoxPointerDown={sandbox ? drag : undefined} onBoxDoubleClick={sandbox ? toggleLock : undefined} />
           <ShowcaseAgent arena={shown.arena} agent={0} tier={tier} />
           <ShowcaseAgent arena={shown.arena} agent={1} tier={tier} />

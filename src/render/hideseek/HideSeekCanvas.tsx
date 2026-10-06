@@ -88,7 +88,7 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
         <StudioLighting tier={tier} shadows={showcase && tier !== 'low'} />
         <Backdrop />
         <GridScene />
-        {showcase && <ShowcaseArena tier={tier} sandbox={sandbox} />}
+        {showcase && <ShowcaseArena tier={tier} sandbox={sandbox} aoPass={composer} />}
         <RaysOverlay />
         <CameraRig />
         {composer && <ShowcaseEffects tier={tier} photo={photo} />}
