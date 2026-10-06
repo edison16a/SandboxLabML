@@ -18,7 +18,8 @@ interface Props {
   room: SandboxRoom;
   /** Whether the room is already saved, which offers Delete. */
   saved: boolean;
-  onSave: (room: SandboxRoom) => void;
+  /** Stores the room. The parent closes the dialog once it is stored. */
+  onSave: (room: SandboxRoom) => Promise<void>;
   onDelete: (id: string) => void;
   onClose: () => void;
 }
@@ -95,7 +96,7 @@ export function RoomEditorDialog({ room, saved, onSave, onDelete, onClose }: Pro
       <Button variant="outline" onClick={onClose}>
         Cancel
       </Button>
-      <Button variant="primary" onClick={() => onSave({ ...draft.room, name: draft.room.name.trim() || 'Custom room' })}>
+      <Button variant="primary" onClick={() => void onSave({ ...draft.room, name: draft.room.name.trim() || 'Custom room' })}>
         Save and play
       </Button>
     </div>

@@ -141,9 +141,9 @@ export function SandboxCard() {
           room={editing.room}
           saved={editing.saved}
           onClose={() => setEditing(null)}
-          onSave={(r) => {
-            setEditing(null);
-            void control?.saveRoom(r);
+          onSave={async (r) => {
+            // Close only once the room is stored: on a failure the draft lives only in the editor.
+            if (await control?.saveRoom(r)) setEditing(null);
           }}
           onDelete={(id) => {
             setEditing(null);

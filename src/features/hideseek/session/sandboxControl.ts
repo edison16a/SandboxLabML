@@ -83,13 +83,19 @@ export class SandboxControl {
     await this.pool.replay.setSandboxPaused(!this.store.sandbox.playing);
   }
 
-  /** Saves a room the user edited and plays it. */
-  async saveRoom(room: SandboxRoom): Promise<void> {
+  /**
+   * Saves a room the user edited and starts playing it. Returns false when
+   * storage refused it, so the editor can stay open with the user's work in
+   * it. It resolves once the room is stored, before the match is built.
+   */
+  async saveRoom(room: SandboxRoom): Promise<boolean> {
     try {
       const saved = await storeRoom(room);
-      await this.configure({ roomId: saved.id });
+      void this.configure({ roomId: saved.id });
+      return true;
     } catch (err) {
-      toast.error('Could not save the room', err instanceof Error ? err.message : String(err));
+      toast.error('Could not save the room', `Your edits are still in the editor. ${err instanceof Error ? err.message : String(err)}`);
+      return false;
     }
   }
 
