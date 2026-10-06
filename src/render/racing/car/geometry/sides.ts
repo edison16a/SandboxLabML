@@ -21,6 +21,9 @@ export function addSides(bin: PartBin, detail: Detail): void {
   // A carbon blade along the intake's leading edge, standing a little proud of the paint.
   if (detail.fine) bin.add('carbon', bothSides(edgeBlade(SCOOP.to - 0.04, detail)));
 
+  // The door's leading shut line, a hairline from the skirt up to the shoulder.
+  if (detail.fine) for (const band of [1, 2, 3]) bin.add('liner', bothSides(bandPatch(band, 0.9, 0.904, () => 0, () => 1, 1, 6, 0.0015, band === 3 ? -0.05 : 0)));
+
   const stripe = detail.fine ? 0.011 : 0.016;
   bin.add('gold', bothSides(creaseStripe(4, 'top', 0.98, 2.2, stripe, detail.fine ? 40 : 10)));
   bin.add('gold', bothSides(creaseStripe(1, 'bottom', -0.86, 0.94, stripe, detail.fine ? 24 : 6)));
