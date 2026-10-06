@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { Rect } from '@/engine/hideseek/layouts/types';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
+import { PLASTER_METERS } from './plasterMaps';
 
 const ARENA = DEFAULT_HIDESEEK_PHYSICS.arena;
 /** Edge rounding of walls, m. Small, but enough to catch a highlight along every edge. */
@@ -21,8 +22,32 @@ export function wallGeometry(rects: Rect[]): THREE.BufferGeometry {
   });
   const merged = mergeGeometries(parts) as THREE.BufferGeometry;
   parts.forEach((p) => p.dispose());
+  boxProjectUVs(merged, PLASTER_METERS);
   merged.computeBoundingSphere();
   return merged;
+}
+
+/**
+ * Replaces per-face UVs with ones measured in meters, picked by the axis
+ * each face looks along. A rounded box maps each face to 0..1, which would
+ * stretch a texture twenty fold along a long wall; this keeps the plaster
+ * the same scale on every wall and on both sides of it.
+ */
+function boxProjectUVs(g: THREE.BufferGeometry, metersPerRepeat: number): void {
+  const pos = g.attributes.position;
+  const nor = g.attributes.normal;
+  const uv = g.attributes.uv as THREE.BufferAttribute;
+  for (let i = 0; i < pos.count; i++) {
+    const nx = Math.abs(nor.getX(i));
+    const ny = Math.abs(nor.getY(i));
+    const nz = Math.abs(nor.getZ(i));
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    const z = pos.getZ(i);
+    const [u, v] = ny >= nx && ny >= nz ? [x, z] : nx >= nz ? [z, y] : [x, y];
+    uv.setXY(i, u / metersPerRepeat, v / metersPerRepeat);
+  }
+  uv.needsUpdate = true;
 }
 
 /**

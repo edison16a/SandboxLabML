@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { wallsOfLayout } from '../layout/arenaWalls';
 import { HS_COLORS } from '../palette';
+import { sharedPlasterMaps } from './plasterMaps';
 import { FLOOR_TILE_METERS, sharedFloorMaps } from './proceduralMaps';
 import { floorGeometry, skirtingGeometry, stripGeometry, wallGeometry } from './roomGeometry';
 
@@ -33,7 +34,10 @@ export function ArenaRoom({ layout }: { layout: number }) {
       envMapIntensity: 0.32,
     });
   }, []);
-  const wallMat = useDisposable(() => new THREE.MeshStandardMaterial({ color: HS_COLORS.wall, roughness: 0.62, metalness: 0, envMapIntensity: 0.55 }), []);
+  const wallMat = useDisposable(() => {
+    const maps = sharedPlasterMaps();
+    return new THREE.MeshStandardMaterial({ color: HS_COLORS.wall, ...maps, normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, metalness: 0, envMapIntensity: 0.55 });
+  }, []);
   const stripMat = useDisposable(() => new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#dfe9ff', emissiveIntensity: 3.2, toneMapped: false }), []);
 
   return (
