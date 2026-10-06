@@ -1,8 +1,6 @@
 /** Hermite smoothstep on 0..1, clamped outside. */
 export const smooth = (t: number) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 
-export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-
 /**
  * 1 between `a` and `b`, easing to 0 over `ramp` meters outside them. Used to
  * switch a feature (a scoop, a flare) on along part of the car's length.

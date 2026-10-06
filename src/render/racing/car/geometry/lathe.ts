@@ -21,11 +21,3 @@ export function lathe(runs: Profile[], segments: number): THREE.BufferGeometry {
   });
   return merge(parts);
 }
-
-/** A flat ring facing +Z or -Z at axial offset `a`, for disc faces and rim lips. */
-export function annulus(inner: number, outer: number, a: number, facing: 1 | -1, segments: number): THREE.BufferGeometry {
-  const g = new THREE.RingGeometry(inner, outer, segments, 1);
-  if (facing < 0) g.rotateY(Math.PI);
-  g.translate(0, 0, a);
-  return g;
-}
