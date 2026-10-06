@@ -8,6 +8,8 @@ import type { InputSpec } from '@/engine/env/types';
 import type { Track } from '@/engine/racing/track/types';
 import { useRacingLab, viewportHeld } from '@/features/racing/state/labStore';
 import { Effects } from '@/render/shared/Effects';
+import { FramePacer } from '@/render/shared/FramePacer';
+import { useFrameLoop } from '@/render/shared/frameLoop';
 import { lowerTier, raiseTier, tierDpr } from '@/render/shared/quality';
 import { StatsProbe } from '@/render/shared/StatsProbe';
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
@@ -46,6 +48,7 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
   const idle = useRacingLab((s) => s.status === 'paused' && s.mode === 'train' && s.speed !== 'turbo' && s.speed !== 'max');
   // Max hands the whole machine to training, so the last frame simply stays up.
   const held = useRacingLab(viewportHeld);
+  const loop = useFrameLoop(held ? 'held' : idle ? 'idle' : 'live');
   const frame = useMemo(() => createFrame(), []);
   const target = useRef(new THREE.Vector3());
   const value = useMemo(() => ({ track, population, ghosts, frame }), [track, population, ghosts, frame]);
@@ -71,10 +74,11 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
         gl.outputColorSpace = THREE.SRGBColorSpace;
         gl.toneMappingExposure = 0.92;
       }}
-      frameloop={held ? 'never' : idle ? 'demand' : 'always'}
+      frameloop={loop.frameloop}
       className="touch-none"
     >
       {quality === 'auto' && <PerformanceMonitor bounds={(r) => [Math.min(50, r * 0.8), r]} onDecline={() => step(-1)} onIncline={() => step(1)} />}
+      <FramePacer loop={loop} />
       <RacingSceneContext.Provider value={value}>
         <FrameDriver />
         <RacingEnvironment tier={tier} focus={target} />

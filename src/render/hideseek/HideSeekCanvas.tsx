@@ -5,6 +5,8 @@ import { Canvas } from '@react-three/fiber';
 import { useCallback, useMemo } from 'react';
 import type { InputSpec } from '@/engine/env/types';
 import { gridCapped, useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
+import { FramePacer } from '@/render/shared/FramePacer';
+import { useFrameLoop } from '@/render/shared/frameLoop';
 import { isIntegratedGpu } from '@/render/shared/quality';
 import { StatsProbe } from '@/render/shared/StatsProbe';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
@@ -45,6 +47,7 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
   const pov = useHideSeekLab((s) => s.pov);
   // Max trains headless with no replay, so nothing moves: draw only when the camera does.
   const animating = useHideSeekLab((s) => (s.status === 'running' && s.speed !== 'max') || s.replaying || (s.mode === 'sandbox' && s.sandbox.playing));
+  const loop = useFrameLoop(animating ? 'live' : 'idle');
   const frame = useMemo(() => createHsFrame(), []);
   const value = useMemo(() => ({ frame, getFeed, schemas, onMoveBox, onToggleLock }), [frame, getFeed, schemas, onMoveBox, onToggleLock]);
   const composer = showcase && effectsOn && (tier === 'high' || tier === 'ultra');
@@ -65,7 +68,7 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
     <Canvas
       shadows={{ enabled: tier !== 'low', type: THREE.PCFShadowMap }}
       dpr={tierDpr(tier)}
-      frameloop={animating ? 'always' : 'demand'}
+      frameloop={loop.frameloop}
       gl={{ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true }}
       camera={{ fov: 42, near: 0.1, far: 2500, position: [0, 140, 160] }}
       onCreated={({ gl, camera, raycaster }) => {
@@ -81,6 +84,7 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
       className="touch-none"
     >
       {quality === 'auto' && <QualityMonitor />}
+      <FramePacer loop={loop} />
       <HsSceneContext.Provider value={value}>
         <FrameDriver />
         <InvalidateOnChange feeds={feeds} />
