@@ -42,15 +42,14 @@ export function addFront(bin: PartBin, detail: Detail): void {
 
 /**
  * The splitter: a carbon plate that runs out ahead of the nose, its front
- * edge following the nose's curve in plan, with end fences and a pair of
- * canards on each corner.
+ * edge following the nose's curve in plan.
  */
 export function addSplitter(bin: PartBin, detail: Detail): void {
   const plan = new THREE.Shape();
   const steps = detail.fine ? 16 : 6;
   for (let i = 0; i <= steps; i++) {
     const z = -0.8 + (1.6 * i) / steps;
-    const x = 2.32 - 0.16 * (z / 0.8) ** 2;
+    const x = 2.22 - 0.15 * (z / 0.8) ** 2;
     if (i === 0) plan.moveTo(x, z);
     else plan.lineTo(x, z);
   }
@@ -62,6 +61,4 @@ export function addSplitter(bin: PartBin, detail: Detail): void {
   g.rotateX(Math.PI / 2).translate(0, 0.118 - bevel, 0);
   bin.add('carbon', g);
 
-  const fence = new THREE.BoxGeometry(0.22, 0.07, 0.012).translate(2.04, 0.14, 0.78);
-  bin.add('carbon', bothSides(fence));
 }
