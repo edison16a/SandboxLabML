@@ -5,7 +5,34 @@ import type { GenerationRecord } from '@/engine/training/records';
 
 function speciesCss(id: number): string {
   const hue = (((id * 0.618033988749895) % 1) + 1) % 1;
-  return `hsl(${Math.round(hue * 360)} 62% 52%)`;
+  return `hsl(${Math.round(hue * 360)} 56% 52%)`;
+}
+
+/**
+ * Each species' share of the population per generation, smoothed over a
+ * window that grows with the history. Members move between species from
+ * one generation to the next, and with hundreds of generations squeezed
+ * into a few hundred pixels that jitter drowns out the actual story: which
+ * species grow, which fade and when a new one appears.
+ */
+export function speciesShares(records: GenerationRecord[], ids: number[]): Float64Array[] {
+  const n = records.length;
+  const raw = ids.map((id) =>
+    Float64Array.from(records, (r) => {
+      const total = r.stats.species.reduce((sum, sp) => sum + sp.size, 0) || 1;
+      return (r.stats.species.find((sp) => sp.id === id)?.size ?? 0) / total;
+    }),
+  );
+  const half = Math.floor(Math.max(1, Math.round(n / 60)) / 2);
+  if (half === 0) return raw;
+  return raw.map((row) =>
+    Float64Array.from(row, (_, i) => {
+      let sum = 0;
+      let count = 0;
+      for (let k = Math.max(0, i - half); k <= Math.min(n - 1, i + half); k++, count++) sum += row[k];
+      return sum / count;
+    }),
+  );
 }
 
 /**
@@ -33,19 +60,25 @@ export function SpeciesChart({ records, height = 140 }: { records: GenerationRec
       const ids = [...new Set(records.flatMap((r) => r.stats.species.map((s) => s.id)))].sort((a, b) => a - b);
       const n = records.length;
       const x = (i: number) => (n === 1 ? w / 2 : (i / (n - 1)) * w);
-      const totals = records.map((r) => r.stats.species.reduce((s, sp) => s + sp.size, 0) || 1);
+      const shares = speciesShares(records, ids);
       const base = new Float64Array(n);
-      for (const id of ids) {
+      g.lineWidth = 0.75;
+      g.strokeStyle = 'rgba(11, 14, 20, 0.55)';
+      ids.forEach((id, k) => {
+        const tops = Float64Array.from(base, (b, i) => b + shares[k][i]);
         g.beginPath();
-        for (let i = 0; i < n; i++) g.lineTo(x(i), h - (base[i] / totals[i]) * h);
-        const tops = records.map((r, i) => base[i] + (r.stats.species.find((s) => s.id === id)?.size ?? 0));
-        for (let i = n - 1; i >= 0; i--) g.lineTo(x(i), h - (tops[i] / totals[i]) * h);
+        for (let i = 0; i < n; i++) g.lineTo(x(i), h - base[i] * h);
+        for (let i = n - 1; i >= 0; i--) g.lineTo(x(i), h - tops[i] * h);
         g.closePath();
         g.fillStyle = speciesCss(id);
-        g.globalAlpha = 0.85;
+        g.globalAlpha = 0.9;
         g.fill();
-        tops.forEach((t, i) => (base[i] = t));
-      }
+        g.globalAlpha = 1;
+        g.beginPath();
+        for (let i = 0; i < n; i++) g.lineTo(x(i), h - tops[i] * h);
+        g.stroke();
+        base.set(tops);
+      });
       g.globalAlpha = 1;
     };
     draw();
