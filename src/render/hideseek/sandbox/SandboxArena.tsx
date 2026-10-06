@@ -108,7 +108,7 @@ export function SandboxArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO r
       <RoomMesh walls={walls} wallsKey={wallsKey} ao={aoPass ? 0.3 : 0.5} />
       {shape && (
         <>
-          <SandboxBoxes kinds={shape.kinds} players={players} onPointerDown={onMoveBox ? drag : undefined} onDoubleClick={onToggleLock ? toggleLock : undefined} />
+          <SandboxBoxes kinds={shape.kinds} players={players} tier={tier} onPointerDown={onMoveBox ? drag : undefined} onDoubleClick={onToggleLock ? toggleLock : undefined} />
           {Array.from({ length: players }, (_, slot) => (
             <SandboxAgent key={slot} slot={slot} team={slot < shape.hiders ? 0 : 1} geometry={agentGeometry} />
           ))}
