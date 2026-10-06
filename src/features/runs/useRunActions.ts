@@ -5,10 +5,11 @@ import { downloadJson, exportRun } from '@/storage/exportImport';
 import { branchRun, duplicateRun, resetRun, rewindRun } from '@/storage/runActions';
 import { destroyRun, renameRun, restoreRun, trashRun } from '@/storage/runs';
 import type { RunRow } from '@/storage/db';
+import { LAB_PATH } from '@/features/shell/labPaths';
 import { toast } from '@/ui/toast/toastStore';
 
 function labPath(env: RunRow['env'], id: string): string {
-  return `${env === 'racing' ? '/lab/racing' : '/lab/hide-seek'}?run=${id}`;
+  return `${LAB_PATH[env]}?run=${id}`;
 }
 
 /**

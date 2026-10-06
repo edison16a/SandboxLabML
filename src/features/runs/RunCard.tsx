@@ -7,14 +7,14 @@ import { TrackThumb } from '@/features/racing/components/TrackThumb';
 import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
 import { Menu } from '@/ui/primitives/Menu';
+import { LAB_PATH } from '@/features/shell/labPaths';
 import { timeAgo } from './format';
 import type { RunSummary } from './useRuns';
 
 export type RunAction = 'rename' | 'export' | 'branch' | 'rewind' | 'reset' | 'delete' | 'duplicate';
 
 function labHref(summary: RunSummary): string {
-  const base = summary.row.env === 'racing' ? '/lab/racing' : '/lab/hide-seek';
-  return `${base}?run=${summary.row.id}`;
+  return `${LAB_PATH[summary.row.env]}?run=${summary.row.id}`;
 }
 
 function Metric({ label, value }: { label: string; value: React.ReactNode }) {
