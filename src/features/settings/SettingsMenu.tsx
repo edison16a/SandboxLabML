@@ -12,8 +12,8 @@ const NAMES = { low: 'Low', medium: 'Medium', high: 'High', ultra: 'Ultra' } as 
 /** Says where the quality on screen came from when nobody picked it here. */
 function qualityHint(s: SettingsState): string {
   if (s.pinned) return `The page address sets ${NAMES[s.pinned]} until you pick one here.`;
-  if (s.quality === null && s.weakGpu) return 'Medium suits this GPU. Training results never change.';
-  return 'Shadows, effects and sharpness. Training results never change.';
+  if (s.quality === null && s.weakGpu) return 'Medium suits this GPU. Training stays the same.';
+  return 'Shadows and effects. Training stays the same.';
 }
 
 /** One setting: the name and its control on a line, a short hint under them. */
