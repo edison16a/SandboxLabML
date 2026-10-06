@@ -1,4 +1,6 @@
 import type { Remote } from 'comlink';
+import type { HideSeekGenerationScript } from '@/engine/hideseek/trainer/generationScript';
+import { builtinHost } from '@/engine/training/scriptHost';
 import type { MatchResult } from '@/engine/hideseek/match/types';
 import { HideSeekTrainer } from '@/engine/hideseek/trainer/trainer';
 import type { HideSeekTrainerState } from '@/engine/hideseek/trainer/types';
@@ -28,6 +30,7 @@ export class HideSeekCoordinator {
   private stepsLeft = Infinity;
   private loopPromise: Promise<void> | null = null;
   private live: LiveRound | null = null;
+  private readonly generationScript: HideSeekGenerationScript | undefined;
   private done: MatchResult[][] = [];
   /** Shared by every coordinator in this worker, so a new run never reuses an epoch the main thread has seen. */
   private static epochs = 0;
@@ -40,7 +43,11 @@ export class HideSeekCoordinator {
   ) {
     const { host, error } = safeHideSeekHost(hideSeekScriptSource(config, state?.history.length ?? 0));
     if (error) emit({ type: 'notice', message: `The script did not compile for Hide and Seek, so built-in rewards are used. ${error}` });
-    this.trainer = state ? HideSeekTrainer.fromState(state) : HideSeekTrainer.create(hideSeekTrainerOptions(config, hideSeekSensorCounts(host)));
+    // A script's generation block shapes both teams' breeding and the match rules (rooms, prep time, opponents).
+    this.generationScript = host === builtinHost ? undefined : host;
+    this.trainer = state
+      ? HideSeekTrainer.fromState(state)
+      : HideSeekTrainer.create(hideSeekTrainerOptions(config, hideSeekSensorCounts(host)), this.generationScript);
   }
 
   get generation(): number {
@@ -128,7 +135,7 @@ export class HideSeekCoordinator {
     const replay = lastRoundReplay(plan, generation, script);
     const results = this.done;
     this.done = [];
-    const stats = t.completeGeneration(results);
+    const stats = t.completeGeneration(results, {}, this.generationScript);
     this.emit({ type: 'generation', record: generationRecord(this.config.id, t, stats, replay, results, performance.now() - started) });
     if (t.generation % CHECKPOINT_EVERY === 0) this.emit({ type: 'checkpoint', generation: t.generation, state: t.toState() });
     return true;
