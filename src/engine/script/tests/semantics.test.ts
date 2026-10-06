@@ -59,6 +59,14 @@ describe('Intermediate preset', () => {
     expect(laps).toBeGreaterThan(0);
   });
 
+  it('gives the same results after its comments change', () => {
+    const recommented = compiled(findScriptPreset('racing-intermediate')!.source.replace(/\/\/ .*/g, '// rewritten note'));
+    const pop = population('racing-standard', 13);
+    const a = evaluateRacing(pop.genomes, options('racing-standard', script.createController({ seed: 1, track: oval })));
+    const b = evaluateRacing(pop.genomes, options('racing-standard', recommented.createController({ seed: 1, track: oval })));
+    expect(b).toEqual(a);
+  });
+
   it('its generation block asks for exactly the default plan', () => {
     expect(script.runGeneration(GEN, new Rng(1)).plan).toEqual(defaultPlan(DEFAULT_NEAT));
     expect(script.header).toEqual({ name: 'Intermediate: built-in reward', env: 'racing', version: 1, brain: 'racing-standard' });
