@@ -13,6 +13,10 @@
  *
  *   npx tsx scripts/measure-hideseek.ts --setup v2 --generations 60 --workers 2
  *
+ * The numbers behind the choice of the v2 setup are in the docs of
+ * HIDESEEK_SETUPS (src/engine/hideseek/trainer/setups.ts). Expect about
+ * 8 s per generation at 50 per team on two worker threads.
+ *
  * Options, all optional: --setup v1|v2 (default v2), --generations 60,
  * --population 50, --seed 1, --workers 2, --every 10, --matches 6 (per
  * genome per yardstick at the start and the end), --curve-matches 3 (the

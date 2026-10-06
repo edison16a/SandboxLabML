@@ -13,13 +13,22 @@ export interface HideSeekSetup {
 
 /**
  * The named setups. v1 is the original co-evolution. v2 changes two things
- * that measurably speed up visible learning (numbers in the measurement
- * script's header): cover rewards, which give hiders a signal that does
- * not depend on how good the seekers are, and one scripted sparring round
- * in place of a hall of fame round, so fitness has a fixed reference from
- * the first generation. It also mixes the rooms within rounds, so the
- * sparring share is comparable from one generation to the next. It plays
- * the same 6N matches per generation.
+ * that measurably speed up visible learning: cover rewards, which give
+ * hiders a signal that does not depend on how good the seekers are, and
+ * one scripted sparring round in place of a hall of fame round, so fitness
+ * has a fixed reference from the first generation. It also mixes the rooms
+ * within rounds, so the sparring share is comparable from one generation
+ * to the next. It plays the same 6N matches per generation at the same
+ * cost per match.
+ *
+ * Measured with scripts/measure-hideseek.ts (50 per team, 80 generations,
+ * about 13 minutes on two worker threads). Hidden share of the hiders
+ * against the scripted seeker went from 0.294 to 0.395 under v2 (4.3
+ * standard errors) and to 0.353 under v1 (2.7), and seen share of the
+ * seekers against the scripted hider from 0.056 to 0.136 (4.2) and to
+ * 0.117 (3.2). A second seed gave 2.9 and 5.9 standard errors under v2.
+ * Shared starts (sharedSeeds) and a second sparring round helped in some
+ * runs and hurt in others, so they stay off.
  */
 export const HIDESEEK_SETUPS: Record<HideSeekSetupId, HideSeekSetup> = {
   v1: { reward: 'v1', opponents: { current: 2, hallOfFame: 2, scripted: 0 }, mixLayouts: false, sharedSeeds: false },
