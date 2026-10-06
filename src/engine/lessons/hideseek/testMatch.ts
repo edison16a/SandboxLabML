@@ -8,10 +8,9 @@ import { Population } from '../../neat/population';
 import type { PreparedHideSeek } from '../prepare';
 import type { TestMatchMetrics } from './metrics';
 import { lessonArenaPool, playMatch } from './play';
+import { TEST_MATCH_SEED } from './rules';
 import { TestHider, testSeekerBrain, withTestBrain } from './testPlayers';
 
-/** Seed of every test match: where the players start and how the boxes are jittered. */
-export const TEST_MATCH_SEED = 12;
 /** Seed of the stand-in genomes. Their outputs are replaced by the test players, so only their shape matters. */
 const TEST_GENOME_SEED = 0x7e57;
 

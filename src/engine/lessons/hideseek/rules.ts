@@ -3,6 +3,13 @@ import type { HideSeekLayoutId } from '../../hideseek/layouts/types';
 import { readHideSeekDirective } from '../../hideseek/trainer/directive';
 import type { CompiledScript } from '../../script/compiler';
 
+/**
+ * Seed of every lesson test match: where the players start and how the
+ * boxes are jittered. Kept here, away from the match code, so the Studio
+ * can name it without loading the physics engine.
+ */
+export const TEST_MATCH_SEED = 12;
+
 /** The room a test match plays when the script names none: the first room a new run plays. */
 export const DEFAULT_TEST_LAYOUT: HideSeekLayoutId = 'open';
 
