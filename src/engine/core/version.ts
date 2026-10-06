@@ -6,8 +6,15 @@
  */
 export const ENGINE_VERSION = 1;
 
-/** Bump when benchmark tracks, seeds or scoring change. */
+/** Bump when the Racing benchmark's tracks, seeds or scoring change. */
 export const BENCHMARK_VERSION = 1;
+
+/**
+ * Bump when the Hide and Seek benchmark's rooms, start seeds, match count
+ * or scoring change. It is separate from the Racing one, so a change to
+ * one exam never forces the other's reference file to be rebuilt.
+ */
+export const HIDESEEK_BENCHMARK_VERSION = 1;
 
 /** Bump when the script API changes in a way old scripts cannot express. */
 export const SCRIPT_API_VERSION = 1;
