@@ -9,7 +9,7 @@ SandboxLabML trains NEAT neural networks in the browser and draws them in 3D. Th
 | `src/engine/` | Pure TypeScript: NEAT, Racing and Hide and Seek simulations, the SBL script language, blueprints, benchmarks, lessons, training loops. No DOM. | Only itself |
 | `src/workers/` | Web Workers that wrap the engine: a coordinator, a pool of sim workers and a replay worker, plus the main-thread client. | `engine` |
 | `src/render/` | React Three Fiber scenes. Reads snapshots, never simulates. | `engine` types, `features` stores |
-| `src/storage/` | The only IndexedDB code (Dexie): runs, generations, checkpoints, scripts, blueprints, lesson progress. | `engine` |
+| `src/storage/` | The only IndexedDB code (Dexie): runs, generations, checkpoints, scripts, blueprints, saved Sandbox tracks, lesson progress. | `engine` |
 | `src/features/` | Pages and panels: labs, charts, network graph, model card, runs, landing. | everything above |
 | `src/studio/` | Script Studio: code editor, block editor, reference, test runs, lessons and the benchmark tab. | everything above |
 | `src/ui/` | Small design system on Radix primitives, plus the logo and GitHub button. | nothing app specific |
@@ -50,6 +50,8 @@ Overlay generations and round replays work by re-simulating genomes, so results 
 The car is a kinematic bicycle model with a friction circle: rate-limited steering that fades with speed, brake-by-wire deceleration, and understeer that scrubs speed when the tires run out of grip. The track is one data structure sampled every meter along a centripetal Catmull-Rom spline. Rays are cast against the edges through a uniform grid. The 3D road, kerbs, run-off and barriers are built from the same arrays, so what cars sense is exactly what is drawn.
 
 The cars on screen are built in code from one design in `src/render/racing/car`. The body is a loft of creased cross sections, so each panel is smooth and the lines between panels stay sharp. The followed car is the full build, under 50,000 triangles, with clear coat paint over metallic flakes and woven carbon. The rest of the field shares a light build of about 5,000 triangles in one instanced draw call. Each of its vertices carries its own surface values, and only the paint takes the species color. Every texture is computed on load, so nothing is downloaded.
+
+The Sandbox races stored champions on any track through the replay worker, and training never sees it. Extra cars line up on a staggered grid that follows the road behind the start line, 6 m apart. Slot 0 is the start line itself, where training puts every car, so a lone champion still replays its lap tick for tick.
 
 ## Scripts
 
