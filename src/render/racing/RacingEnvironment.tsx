@@ -52,7 +52,8 @@ export function RacingEnvironment({ tier, focus }: Props) {
       {tier !== 'low' && <Sky distance={4000} sunPosition={SUN.clone().multiplyScalar(100)} turbidity={2.6} rayleigh={1.6} mieCoefficient={0.003} mieDirectionalG={0.82} />}
       <Environment resolution={tier === 'high' ? 512 : tier === 'medium' ? 256 : 128} frames={1} environmentIntensity={0.45} background={tier === 'low'}>
         <Sky distance={4000} sunPosition={SUN.clone().multiplyScalar(100)} turbidity={2.6} rayleigh={1.6} />
-        <ReflectedGround />
+        {/* On Low this cube is also the visible background, so it keeps only the sky. */}
+        {tier !== 'low' && <ReflectedGround />}
         {tier !== 'low' && <Highlights sun={SUN} />}
       </Environment>
       <hemisphereLight args={['#dbe8ff', '#4d6b3a', 0.35]} />
