@@ -22,6 +22,17 @@ export interface InspectPayload {
   out: Float32Array;
 }
 
+/**
+ * Where one worker's slice sits in a stream that several workers fill
+ * together, such as the Hide and Seek arenas. The main thread merges the
+ * slices by `first`, and drops frames whose `epoch` is not the current one.
+ */
+export interface StreamPart {
+  first: number;
+  total: number;
+  epoch: number;
+}
+
 export type StreamOut =
   | {
       kind: 'start';
@@ -30,6 +41,8 @@ export type StreamOut =
       count: number;
       /** Optional per-agent tags, e.g. species id for coloring or ghost generation. */
       tags?: Int32Array;
+      /** A stream split over several workers: this part's first agent, the total across parts and the episode it belongs to. */
+      part?: StreamPart;
     }
   | {
       kind: 'frame';
@@ -41,6 +54,7 @@ export type StreamOut =
       inspect?: InspectPayload;
       /** Normalized ray readings for every agent, rays per agent = rays.length / count. */
       rays?: Float32Array;
+      part?: StreamPart;
     }
   | { kind: 'end'; stream: StreamName; generation: number };
 
