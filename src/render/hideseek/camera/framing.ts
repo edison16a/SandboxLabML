@@ -10,13 +10,16 @@ export interface Shot {
   tz: number;
 }
 
-/** Elevation of the overview and arena shots: steep enough to see over walls, low enough to read heights. */
-const ELEVATION = (52 * Math.PI) / 180;
+/** Elevation of the overview and arena shots: steep enough to see into every room past its walls, low enough to read heights. */
+const ELEVATION = (60 * Math.PI) / 180;
 const TOP = Math.PI / 2 - 1e-3;
 /** Wall height, m: the tops of the far walls must fit in the shot too. */
 const WALL = 2.5;
-/** Share of the screen the shot may fill, so the HUD never covers an arena. */
-const FILL = 0.86;
+/**
+ * Share of the screen the shot may fill. The HUD sits along the top and
+ * bottom edges, so the shot keeps clear of those and may run wider.
+ */
+const FILL = { h: 0.94, v: 0.84 };
 
 /**
  * Smallest camera distance at which a floor rectangle, walls included,
@@ -25,8 +28,8 @@ const FILL = 0.86;
  * and near corners, which look bigger, decide it.
  */
 export function fitDistance(width: number, depth: number, fovDeg: number, aspect: number, elevation = ELEVATION): number {
-  const tanV = Math.tan((fovDeg * Math.PI) / 360) * FILL;
-  const tanH = Math.tan((fovDeg * Math.PI) / 360) * aspect * FILL;
+  const tanV = Math.tan((fovDeg * Math.PI) / 360) * FILL.v;
+  const tanH = Math.tan((fovDeg * Math.PI) / 360) * aspect * FILL.h;
   const dy = Math.sin(elevation);
   const dz = Math.cos(elevation);
   let best = 0;
