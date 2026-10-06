@@ -10,7 +10,6 @@ import { useHsScene } from '../frame/sceneContext';
 import { useBoxDrag } from '../interaction/useBoxDrag';
 import { ArenaContactShadows } from '../showcase/ArenaContactShadows';
 import { RoomMesh } from '../showcase/ArenaRoom';
-import { useAgentGeometry } from '../showcase/ShowcaseAgent';
 import { SandboxAgent } from './SandboxAgent';
 import { SandboxBoxes } from './SandboxBoxes';
 import { SandboxCones } from './SandboxCones';
@@ -53,7 +52,6 @@ export function SandboxArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO r
   const walls = useMemo(() => roomWallRects(room, P), [room]);
   const wallsKey = useMemo(() => JSON.stringify(room.walls), [room]);
   const [shape, setShape] = useState<Shape | null>(null);
-  const agentGeometry = useAgentGeometry();
   const origin = useMemo(() => ({ x: 0, z: 0 }), []);
   const getOrigin = useCallback(() => origin, [origin]);
   const drag = useBoxDrag(getOrigin, onMoveBox);
@@ -110,7 +108,7 @@ export function SandboxArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO r
         <>
           <SandboxBoxes kinds={shape.kinds} players={players} tier={tier} onPointerDown={onMoveBox ? drag : undefined} onDoubleClick={onToggleLock ? toggleLock : undefined} />
           {Array.from({ length: players }, (_, slot) => (
-            <SandboxAgent key={slot} slot={slot} team={slot < shape.hiders ? 0 : 1} geometry={agentGeometry} />
+            <SandboxAgent key={slot} slot={slot} team={slot < shape.hiders ? 0 : 1} tier={tier} />
           ))}
           <SandboxCones first={shape.hiders} count={shape.seekers} walls={walls} />
           <SeenMarkers hiders={shape.hiders} />
