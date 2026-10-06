@@ -82,6 +82,7 @@ function drawCone(g: CanvasRenderingContext2D, v: View, s: { x: number; z: numbe
   g.restore();
 }
 
+/** A player as a disc in its team color with a white line where it faces, faded while frozen. */
 function drawAgent(g: CanvasRenderingContext2D, v: View, at: { x: number; z: number; yaw: number }, color: string, frozen: boolean): void {
   const r = Math.max(P.agent.radius * v.scale, 4);
   const x = px(v, at.x);

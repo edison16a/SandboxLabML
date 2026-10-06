@@ -26,6 +26,7 @@ function line(g: CanvasRenderingContext2D, v: View, pts: Float32Array, close: bo
   g.stroke();
 }
 
+/** The road as a wide dark band with thin edges, and the start line across it. */
 function drawRoad(g: CanvasRenderingContext2D, v: View, p: DrivePreview): void {
   g.lineJoin = 'round';
   g.lineCap = 'round';

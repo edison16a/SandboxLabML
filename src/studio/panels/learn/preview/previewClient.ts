@@ -1,6 +1,7 @@
 import type { PreviewResult } from '@/engine/lessons/preview/types';
 import { startTestWorker } from '../../testrun/testRunClient';
 
+/** The running worker, and the reject of the request it is working on while there is one. */
 type Live = ReturnType<typeof startTestWorker> & { reject: ((err: Error) => void) | null };
 
 /**
