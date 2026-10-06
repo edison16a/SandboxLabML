@@ -1,6 +1,6 @@
 'use client';
 
-import { MousePointerClick, Repeat } from 'lucide-react';
+import { Gauge, MousePointerClick, Repeat } from 'lucide-react';
 import { useHideSeekLab } from '../../state/hideSeekStore';
 import { FocusBar } from './FocusBar';
 import { HiddenHistogram } from './HiddenHistogram';
@@ -21,6 +21,7 @@ export function ViewportHud({ viewport }: { viewport: React.RefObject<HTMLDivEle
   const focus = useHideSeekLab((s) => s.focus);
   const replay = useHideSeekLab((s) => (s.mode === 'train' && s.source === 'replay' && s.speed === 'turbo' ? s.replayOf : null));
   const streaming = useHideSeekLab((s) => s.round !== null || s.replaying);
+  const held = useHideSeekLab((s) => s.mode === 'train' && s.speed === 'max' && s.status === 'running');
   if (photo) return <PhotoBar viewport={viewport} />;
   const overview = mode === 'train' && grid > 1 && focus === null;
   return (
@@ -33,6 +34,12 @@ export function ViewportHud({ viewport }: { viewport: React.RefObject<HTMLDivEle
           <span className="flex items-center gap-1.5 rounded-md border border-white/10 bg-black/50 px-2 py-1 text-[11px] text-white/75 backdrop-blur-sm">
             <Repeat className="size-3" />
             Turbo trains headless. This is a replay of generation {replay.generation + 1}, round {replay.round + 1}.
+          </span>
+        )}
+        {held && (
+          <span className="flex items-center gap-1.5 rounded-md border border-white/10 bg-black/50 px-2 py-1 text-[11px] text-white/75 backdrop-blur-sm">
+            <Gauge className="size-3" />
+            Max gives every core to training, so the arenas hold still. Pick Turbo to watch replays.
           </span>
         )}
       </div>

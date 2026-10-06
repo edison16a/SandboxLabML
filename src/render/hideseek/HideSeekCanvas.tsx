@@ -43,7 +43,8 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
   const effectsOn = useHideSeekLab((s) => s.effects);
   const photo = useHideSeekLab((s) => s.photoMode);
   const pov = useHideSeekLab((s) => s.pov);
-  const animating = useHideSeekLab((s) => s.status === 'running' || s.replaying || (s.mode === 'sandbox' && s.sandbox.playing));
+  // Max trains headless with no replay, so nothing moves: draw only when the camera does.
+  const animating = useHideSeekLab((s) => (s.status === 'running' && s.speed !== 'max') || s.replaying || (s.mode === 'sandbox' && s.sandbox.playing));
   const frame = useMemo(() => createHsFrame(), []);
   const value = useMemo(() => ({ frame, getFeed, schemas, onMoveBox, onToggleLock }), [frame, getFeed, schemas, onMoveBox, onToggleLock]);
   const composer = showcase && effectsOn && (tier === 'high' || tier === 'ultra');
