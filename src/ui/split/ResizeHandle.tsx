@@ -118,8 +118,11 @@ export function ResizeHandle({ pane, label, className, ...options }: ResizeHandl
       onKeyDown={onKeyDown}
       className={cn('group relative z-20 hidden w-0 shrink-0 touch-none outline-none select-none lg:block', className)}
     >
-      {/* The grab area is wider than the line and overlaps both panes a little, so it is easy to hit. */}
-      <div className="absolute inset-y-0 -left-1.5 w-3 cursor-col-resize" />
+      {/*
+        The grab area is wider than the line, so it is easy to hit. It reaches only 2 px into the pane on the
+        left, where the Studio's script list and editor keep their scrollbars, and the rest into the pane on the right.
+      */}
+      <div className="absolute inset-y-0 -left-0.5 w-2.5 cursor-col-resize" />
       <div className="pointer-events-none absolute inset-y-0 left-0 w-0.5 -translate-x-1/2 bg-accent opacity-0 transition-opacity duration-150 group-hover:opacity-60 group-hover:delay-100 group-focus-visible:opacity-100 group-data-dragging:opacity-100" />
       <div className="pointer-events-none absolute top-1/2 left-0 flex h-7 w-3.5 -translate-1/2 items-center justify-center rounded-[4px] border border-border-strong bg-surface-3 text-muted opacity-0 shadow-sm shadow-black/40 transition-opacity duration-150 group-hover:opacity-100 group-hover:delay-100 group-focus-visible:opacity-100 group-data-dragging:opacity-100 group-data-dragging:text-fg">
         <GripVertical className="size-3" />
