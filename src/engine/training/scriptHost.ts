@@ -7,6 +7,7 @@ import { builtinRacingController } from '../racing/builtinReward';
 import type { RacingCar } from '../racing/car/runtime';
 import type { CustomSensorSpec } from '../racing/sensors/inputSchema';
 import type { Track } from '../racing/track/types';
+import type { HideSeekAgent } from '../hideseek/agents/agent';
 
 /** Facts about the finished generation that a script's `each generation` block can read. */
 export interface GenerationContext {
@@ -35,6 +36,12 @@ export interface GenerationDirectives {
 export interface ScriptHost {
   readonly customSensors: CustomSensorSpec[];
   createRacingController(seed: number, track: Track): AgentController<RacingCar>;
+  /**
+   * Controllers for both Hide and Seek teams. Optional: when it is missing
+   * the trainer uses the built-in rewards. Script sensors for each team come
+   * from the returned controllers' customSensorCount.
+   */
+  createHideSeekControllers?(seed: number): { hider: AgentController<HideSeekAgent>; seeker: AgentController<HideSeekAgent> };
   runGeneration(ctx: GenerationContext, rng: Rng, neat: NeatConfig): GenerationDirectives;
 }
 
