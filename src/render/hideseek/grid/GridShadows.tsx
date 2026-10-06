@@ -26,7 +26,7 @@ export function GridShadows() {
   const geometry = useDisposable(() => floorQuad(1), []);
   const built = useDisposable(() => {
     const alphaMap = blobTexture();
-    const material = new THREE.MeshBasicMaterial({ color: '#000000', alphaMap, transparent: true, opacity: 0.55, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    const material = new THREE.MeshBasicMaterial({ color: '#1d1a15', alphaMap, transparent: true, opacity: 0.5, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
     return { material, dispose: () => (alphaMap.dispose(), material.dispose()) };
   }, []);
   const t = useMemo(() => makeScratch(), []);
