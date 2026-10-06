@@ -58,19 +58,27 @@ export interface FieldScene {
 }
 
 /**
- * Expands the field into one ghost per car. Cars go oldest first, the order
- * the ghost colors ramp in, and grid slots run the other way so the newest
- * champion takes pole. The camera follows the last car by default, so that
- * is the car on pole. Rows without a stored record are skipped.
+ * Expands the field into one ghost per car. Champions go oldest first, the
+ * order the ghost colors ramp in, while the grid fills newest first so the
+ * newest champion takes pole. Within a champion its copies run front to
+ * back, because the lab finds a champion's car by its first copy: following
+ * it, or clicking any copy, lands on the one nearest the front. Rows
+ * without a stored record are skipped.
  */
 export function fieldScene(run: RunConfig, records: GenerationRecord[], field: readonly FieldEntry[]): FieldScene {
-  const rows = [...field].sort((a, b) => a.generation - b.generation);
-  const base = new Map(ghostSpecs(run, records, rows.map((r) => r.generation)).map((s) => [s.generation, s]));
+  const asked = [...field].sort((a, b) => a.generation - b.generation);
+  const base = new Map(ghostSpecs(run, records, asked.map((r) => r.generation)).map((s) => [s.generation, s]));
+  const rows = asked.filter((r) => base.has(r.generation));
+  const firstSlot = new Map<number, number>();
+  let taken = 0;
+  for (const row of [...rows].reverse()) {
+    firstSlot.set(row.generation, taken);
+    taken += row.copies;
+  }
   const cars: GhostSpec[] = [];
   for (const row of rows) {
-    const spec = base.get(row.generation);
-    if (spec) for (let k = 0; k < row.copies && cars.length < MAX_FIELD; k++) cars.push({ ...spec });
+    for (let k = 0; k < row.copies; k++) cars.push({ ...base.get(row.generation)!, slot: firstSlot.get(row.generation)! + k });
   }
-  cars.forEach((car, i) => (car.slot = cars.length - 1 - i));
-  return { specs: cars, generations: cars.map((c) => c.generation) };
+  const kept = cars.filter((c) => (c.slot ?? 0) < MAX_FIELD);
+  return { specs: kept, generations: kept.map((c) => c.generation) };
 }

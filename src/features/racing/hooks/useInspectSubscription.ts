@@ -21,7 +21,9 @@ export function useInspectSubscription(ready: boolean) {
     const wanted = overlay || tab === 'inputs' || tab === 'network';
     const popIndex = !wanted ? null : focus.kind === 'car' ? focus.index : -1;
     streams.population.subscribe(popIndex, overlay && scope === 'all');
-    const ghostIndex = wanted ? (focus.kind === 'ghost' ? ghostGens.indexOf(focus.generation) : ghostGens.length - 1) : null;
+    // Ghosts are found by their champion's first car, the same one the camera follows.
+    const followed = focus.kind === 'ghost' ? focus.generation : ghostGens[ghostGens.length - 1];
+    const ghostIndex = wanted ? ghostGens.indexOf(followed) : null;
     streams.ghosts.subscribe(ghostIndex !== null && ghostIndex >= 0 ? ghostIndex : null, false);
   }, [ready, overlay, scope, tab, focus, ghostGens]);
 }

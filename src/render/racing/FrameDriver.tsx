@@ -59,7 +59,8 @@ export function FrameDriver() {
       index = frame.leader;
     } else if (index < 0 && showGhosts) {
       stream = ghosts;
-      index = ghosts!.count - 1;
+      // The newest champion's first car. In the Sandbox that is the copy on pole; otherwise it is the last ghost.
+      index = ghosts!.tags.indexOf(ghosts!.tags[ghosts!.count - 1]);
     }
 
     frame.focusStream = stream ? stream.name === 'ghosts' ? 'ghosts' : 'population' : null;

@@ -34,11 +34,11 @@ describe('sandbox field', () => {
     expect(field.map((e) => e.generation)).toEqual([9, 5]);
   });
 
-  it('expands copies with the newest champion on pole', () => {
-    const scene = fieldScene(run, records, setCopies(fieldFromGenerations([1, 9]), 9, 4));
-    expect(scene.generations).toEqual([1, 9, 9, 9, 9]);
-    expect(scene.specs.map((s) => s.slot)).toEqual([4, 3, 2, 1, 0]);
-    expect(scene.specs[4].seed).toBe(109);
+  it('expands copies with the newest champion on pole and its first copy at the front', () => {
+    const scene = fieldScene(run, records, setCopies(setCopies(fieldFromGenerations([1, 9]), 9, 4), 1, 2));
+    expect(scene.generations).toEqual([1, 1, 9, 9, 9, 9]);
+    expect(scene.specs.map((s) => s.slot)).toEqual([4, 5, 0, 1, 2, 3]);
+    expect(scene.specs[2].seed).toBe(109);
   });
 
   it('skips generations without a stored record', () => {

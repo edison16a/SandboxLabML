@@ -40,14 +40,14 @@ function useResults(): Map<number, Result> {
   }, [telemetry, spec]);
 }
 
-/** Dot color for each row: the ghost color of the row's front car, which is where the stream puts it. */
+/** Dot color for each row: the ghost color of the row's front car, which the stream puts first among its copies. */
 function rowColors(field: readonly FieldEntry[]): Map<number, string> {
   const total = fieldSize(field);
   const out = new Map<number, string>();
-  let end = 0;
+  let start = 0;
   for (const e of [...field].sort((a, b) => a.generation - b.generation)) {
-    end += e.copies;
-    out.set(e.generation, ghostCss(total > 1 ? (end - 1) / (total - 1) : 1));
+    out.set(e.generation, ghostCss(total > 1 ? start / (total - 1) : 1));
+    start += e.copies;
   }
   return out;
 }

@@ -29,7 +29,7 @@ export function NetworkTab() {
   const lesioned = useMemo(() => new Set(Object.keys(lesions).map(Number)), [lesions]);
   const [playing, setPlaying] = useState(false);
 
-  // In the Sandbox the camera follows the car on pole, the last ghost in the stream.
+  // In the Sandbox the camera follows the car on pole, a copy of the last champion in the stream.
   const poleGen = useRacingLab((s) => (s.mode === 'sandbox' ? s.ghostGenerations[s.ghostGenerations.length - 1] : undefined));
   const followGen = focus.kind === 'ghost' ? focus.generation : (poleGen ?? records.length - 1);
   const gen = pinned ?? followGen;
