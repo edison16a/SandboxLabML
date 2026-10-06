@@ -23,15 +23,12 @@ describe('public/references/hideseek.json', () => {
   });
 
   /**
-   * A known failure, kept so it is noticed when it starts to pass. The
-   * presets are teaching tiers, and at the reference budget they come out
-   * in reverse: Beginner's small brain learns to seek fastest, and
-   * Advanced's cover rewards make seeing the hider worth half as much to a
-   * seeker. See "What the references show" in docs/benchmark.md. Once
-   * retuned presets put the tiers in order, vitest reports this test as
-   * failing: turn it.fails back into it.
+   * The presets are teaching tiers, and their references should rank that
+   * way. It took the Advanced seekers' v1 rewards and the nightly budget of
+   * 60 generations to get there; see "What the references show" in
+   * docs/benchmark.md if a regenerated file breaks the order.
    */
-  it.fails('ranks Beginner below Intermediate below Advanced', async () => {
+  it('ranks Beginner below Intermediate below Advanced', async () => {
     const refs = await readReferences('hideseek');
     expect(final(refs, 'beginner')).toBeLessThan(final(refs, 'intermediate'));
     expect(final(refs, 'intermediate')).toBeLessThan(final(refs, 'advanced'));
