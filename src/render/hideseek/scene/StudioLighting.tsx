@@ -15,10 +15,11 @@ const KEY = new THREE.Vector3(-0.55, 1, 0.42).normalize();
 const SHADOW_HALF = 11.5;
 
 /**
- * Lights for both tiers. Image based lighting comes from a small studio
- * built out of drei Lightformers (a ceiling softbox, side strips and a warm
- * kicker) rendered once into an environment map, so there is no HDR file.
- * One key light casts soft shadows, fitted tightly to the focused arena.
+ * Daylight for every tier. Image based lighting comes from a small sky
+ * built out of drei Lightformers (a broad overhead softbox, a cool sky fill
+ * and a warm bounce) rendered once into an environment map, so there is no
+ * HDR file. One warm sun casts soft shadows, fitted tightly to the focused
+ * arena, and a pale haze swallows the far backdrop.
  */
 export function StudioLighting({ tier, shadows }: { tier: HsQualityTier; shadows: boolean }) {
   const { frame } = useHsScene();
@@ -52,19 +53,19 @@ export function StudioLighting({ tier, shadows }: { tier: HsQualityTier; shadows
   return (
     <>
       <color attach="background" args={[HS_COLORS.background]} />
-      <fog attach="fog" args={[HS_COLORS.background, 220, 900]} />
-      <hemisphereLight args={['#dfe7f5', '#141922', 0.3]} />
+      <fog attach="fog" args={[HS_COLORS.background, 160, 620]} />
+      <hemisphereLight args={['#eef3fb', '#e2ded8', 0.45]} />
       <primitive object={target} />
       <directionalLight
         ref={light}
         target={target}
         intensity={2.9}
-        color="#fff4e6"
+        color="#fff6ec"
         castShadow={shadows}
         shadow-mapSize={[mapSize, mapSize]}
         shadow-bias={-0.00025}
         shadow-normalBias={0.025}
-        shadow-radius={tier === 'ultra' ? 6 : 4}
+        shadow-radius={tier === 'ultra' ? 7 : 5}
         shadow-camera-left={-SHADOW_HALF}
         shadow-camera-right={SHADOW_HALF}
         shadow-camera-top={SHADOW_HALF}
@@ -72,12 +73,12 @@ export function StudioLighting({ tier, shadows }: { tier: HsQualityTier; shadows
         shadow-camera-near={10}
         shadow-camera-far={80}
       />
-      <Environment resolution={tier === 'low' ? 64 : 256} frames={1} environmentIntensity={0.55}>
-        <color attach="background" args={['#0c1017']} />
-        <Lightformer form="rect" intensity={2.4} color="#f4f7ff" position={[0, 9, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[16, 16, 1]} />
-        <Lightformer form="rect" intensity={1.2} color="#dfe8ff" position={[-10, 4, -2]} rotation={[0, Math.PI / 2, 0]} scale={[14, 3, 1]} />
-        <Lightformer form="rect" intensity={0.9} color="#ffe2c4" position={[10, 3, 3]} rotation={[0, -Math.PI / 2, 0]} scale={[12, 2, 1]} />
-        <Lightformer form="ring" intensity={1.4} color="#ffffff" position={[3, 6, 9]} scale={3} />
+      <Environment resolution={tier === 'low' ? 64 : 256} frames={1} environmentIntensity={0.45}>
+        <color attach="background" args={['#cfd5dc']} />
+        <Lightformer form="rect" intensity={2.6} color="#ffffff" position={[0, 10, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[22, 22, 1]} />
+        <Lightformer form="rect" intensity={1.3} color="#e6eeff" position={[-12, 4, -3]} rotation={[0, Math.PI / 2, 0]} scale={[18, 5, 1]} />
+        <Lightformer form="rect" intensity={1.0} color="#ffe9d2" position={[12, 3, 4]} rotation={[0, -Math.PI / 2, 0]} scale={[16, 4, 1]} />
+        <Lightformer form="rect" intensity={0.8} color="#f4ede4" position={[0, -2, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[30, 30, 1]} />
       </Environment>
     </>
   );

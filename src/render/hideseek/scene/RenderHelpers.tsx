@@ -7,6 +7,7 @@ import { useEffect, useRef } from 'react';
 import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
+import { HS_TONE_MAPPING } from '../palette';
 
 /**
  * Renders the main scene when nothing else does. R3F stops its own render
@@ -19,15 +20,15 @@ export function MainPass() {
 }
 
 /**
- * The renderer tone maps with AgX unless the effect composer does it, in
- * which case the renderer must hand over linear colors untouched.
+ * The renderer tone maps unless the effect composer does it, in which
+ * case the renderer must hand over linear colors untouched.
  */
 export function ToneMappingSync({ composer }: { composer: boolean }) {
   const gl = useThree((s) => s.gl);
   const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
-    gl.toneMapping = composer ? THREE.NoToneMapping : THREE.AgXToneMapping;
-    gl.toneMappingExposure = 1.05;
+    gl.toneMapping = composer ? THREE.NoToneMapping : HS_TONE_MAPPING;
+    gl.toneMappingExposure = 1;
     invalidate();
   }, [gl, composer, invalidate]);
   return null;

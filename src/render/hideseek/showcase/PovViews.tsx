@@ -7,6 +7,7 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
 import { agentAt, blendFloorPose } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
+import { HS_TONE_MAPPING } from '../palette';
 import { PIP_AGENTS, pipRects } from './pipLayout';
 
 const EYE = 1.32;
@@ -106,7 +107,7 @@ function PipPresenter({ overlay, ortho, quads }: { overlay: THREE.Scene; ortho: 
     const autoClear = gl.autoClear;
     const toneMapping = gl.toneMapping;
     gl.autoClear = false;
-    gl.toneMapping = THREE.AgXToneMapping;
+    gl.toneMapping = HS_TONE_MAPPING;
     gl.render(overlay, ortho);
     gl.autoClear = autoClear;
     gl.toneMapping = toneMapping;
