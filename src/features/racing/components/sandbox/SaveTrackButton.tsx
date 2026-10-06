@@ -27,11 +27,7 @@ export function SaveTrackButton({ spec, picked }: { spec: TrackSpec; picked: Tra
   const [busy, setBusy] = useState(false);
 
   const onOpenChange = (next: boolean) => {
-    if (next) {
-      setName(picked?.id.startsWith(SAVED_TRACK_PREFIX) ? picked.name : nextTrackName(saved.map((t) => t.name)));
-      // Backspace in the name field must not delete the track point selected in the editor.
-      set({ selectedHandle: null });
-    }
+    if (next) setName(picked?.id.startsWith(SAVED_TRACK_PREFIX) ? picked.name : nextTrackName(saved.map((t) => t.name)));
     setOpen(next);
   };
   const submit = async () => {
