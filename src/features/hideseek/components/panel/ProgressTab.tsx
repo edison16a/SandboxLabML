@@ -39,6 +39,7 @@ export function ProgressTab() {
   const charts = useMemo(() => {
     const gens = records.map((r) => r.generation + 1);
     const pct = (v: number) => Math.round(v * 1000) / 10;
+    const opt = (v: number | undefined) => (v === undefined ? null : pct(v));
     return {
       gens,
       fitness: [
@@ -50,6 +51,13 @@ export function ProgressTab() {
       hidden: [
         { label: 'Current teams', color: HIDER, values: records.map((r) => pct(r.stats.game.currentHiddenShare)), width: 2, fill: true },
         { label: 'All matches', color: MUTED, values: records.map((r) => pct(r.stats.game.hiddenShare)), dash: [4, 4], width: 1 },
+        { label: 'In the open', color: AMBER, values: records.map((r) => opt(r.stats.game.exposedShare)), dash: [2, 3], width: 1.25 },
+      ],
+      // Scores against the fixed, scripted sparring partners. They are the same yardstick every
+      // generation, so unlike the co-evolution numbers above they rise as each team gets better.
+      skill: [
+        { label: 'Hiders vs scripted seeker', color: HIDER, values: records.map((r) => opt(r.stats.game.scriptedHiddenShare)), width: 2 },
+        { label: 'Seekers vs scripted hider', color: SEEKER, values: records.map((r) => opt(r.stats.game.scriptedSeenShare)), width: 2 },
       ],
       boxes: [
         { label: 'Locks', color: AMBER, values: records.map((r) => r.stats.game.locksPerMatch), width: 2 },
@@ -57,6 +65,8 @@ export function ProgressTab() {
       ],
     };
   }, [records]);
+  const hasExposed = records.some((r) => r.stats.game.exposedShare !== undefined);
+  const hasSkill = records.some((r) => r.stats.game.scriptedHiddenShare !== undefined || r.stats.game.scriptedSeenShare !== undefined);
   if (!records.length) {
     return (
       <div className="p-4">
@@ -77,8 +87,14 @@ export function ProgressTab() {
       </Section>
       <Section title="Hidden share" hint="% of seek time">
         <HsLineChart generations={charts.gens} series={charts.hidden} yLabel="%" range={[0, 100]} height={130} />
-        <Legend items={[{ label: 'Current teams', color: HIDER }, { label: 'Including hall of fame', color: MUTED, dashed: true }]} />
+        <Legend items={[{ label: 'Current teams', color: HIDER }, { label: 'Including hall of fame', color: MUTED, dashed: true }, ...(hasExposed ? [{ label: 'In the open', color: AMBER, dashed: true }] : [])]} />
       </Section>
+      {hasSkill && (
+        <Section title="Skill check" hint="% vs scripted partners">
+          <HsLineChart generations={charts.gens} series={charts.skill} yLabel="%" range={[0, 100]} height={120} />
+          <Legend items={[{ label: 'Hiders hidden from a scripted seeker', color: HIDER }, { label: 'Seekers seeing a scripted hider', color: SEEKER }]} />
+        </Section>
+      )}
       <Section title="Box use" hint="per match">
         <HsLineChart generations={charts.gens} series={charts.boxes} yLabel="Count" height={120} />
         <Legend items={charts.boxes.map((s) => ({ label: s.label, color: s.color }))} />

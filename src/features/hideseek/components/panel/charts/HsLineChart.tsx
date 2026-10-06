@@ -7,7 +7,8 @@ import { axis, UPlotChart } from '@/features/charts/UPlotChart';
 export interface Series {
   label: string;
   color: string;
-  values: number[];
+  /** Null leaves a gap, for numbers only some generations have. */
+  values: Array<number | null>;
   width?: number;
   dash?: number[];
   fill?: boolean;
@@ -35,7 +36,7 @@ export function HsLineChart({ generations, series, yLabel, height = 150, range }
       cursor: { drag: { x: true, y: false }, points: { size: 5 } },
       scales: { x: { time: false }, y: range ? { range: () => range } : {} },
       axes: [axis('Generation'), axis(yLabel, 3)],
-      series: [{}, ...series.map((s) => ({ label: s.label, stroke: s.color, width: s.width ?? 1.75, dash: s.dash, fill: s.fill ? `${s.color}18` : undefined }))],
+      series: [{}, ...series.map((s) => ({ label: s.label, stroke: s.color, width: s.width ?? 1.75, dash: s.dash, fill: s.fill ? `${s.color}18` : undefined, spanGaps: true }))],
     }),
     // The series shape only changes when the labels do; values flow through `data`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
