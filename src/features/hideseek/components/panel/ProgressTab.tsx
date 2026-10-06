@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { BenchmarkChart } from '@/features/charts/BenchmarkChart';
 import { Stat } from '@/ui/primitives/Panel';
 import { useHideSeekLab } from '../../state/hideSeekStore';
 import { HsLineChart, Legend } from './charts/HsLineChart';
@@ -32,7 +33,7 @@ function Empty() {
   );
 }
 
-/** Both teams' fitness, how long hiders stay hidden, how much the boxes get used, and species. */
+/** Both teams' fitness, the benchmark, how long hiders stay hidden, how much the boxes get used, and species. */
 export function ProgressTab() {
   const records = useHideSeekLab((s) => s.records);
   const last = records[records.length - 1];
@@ -84,6 +85,9 @@ export function ProgressTab() {
       <Section title="Fitness" hint="per team">
         <HsLineChart generations={charts.gens} series={charts.fitness} yLabel="Fitness" />
         <Legend items={charts.fitness.map((s) => ({ label: s.label, color: s.color, dashed: !!s.dash }))} />
+      </Section>
+      <Section title="Benchmark" hint="vs reference champions, 0 to 100">
+        <BenchmarkChart env="hideseek" records={records} height={140} />
       </Section>
       <Section title="Hidden share" hint="% of seek time">
         <HsLineChart generations={charts.gens} series={charts.hidden} yLabel="%" range={[0, 100]} height={130} />
