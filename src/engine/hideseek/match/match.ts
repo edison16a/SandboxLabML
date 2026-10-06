@@ -4,8 +4,9 @@ import { clearEvents, HIDER, SEEKER, type HideSeekAgent, type HideSeekTeam } fro
 import { updateGrab } from '../agents/grab';
 import { updateLock } from '../agents/lock';
 import { driveAgent, updateFreeze } from '../agents/movement';
-import { HIDESEEK_OUTPUT_COUNT, hideSeekInputCount } from '../inputConfig';
+import { HIDESEEK_OUTPUT_COUNT } from '../inputConfig';
 import { sampleSetup, type MatchSetup } from '../layouts/spawn';
+import { hideSeekBrainInputs } from '../sensing/inputSchema';
 import { HideSeekObserver } from '../sensing/observe';
 import { SensorRays } from '../sensing/rays';
 import { SightLines, updateVision } from '../sensing/vision';
@@ -182,7 +183,7 @@ export class HideSeekMatch {
 }
 
 function checkBrain(t: HideSeekTeamSetup, team: HideSeekTeam): void {
-  const want = hideSeekInputCount(t.inputs) + t.controller.customSensorCount;
+  const want = hideSeekBrainInputs(t.inputs, t.controller.customSensorCount);
   if (t.brain.inputCount !== want) {
     throw new Error(`The ${team} brain has ${t.brain.inputCount} inputs but its input config needs ${want}.`);
   }

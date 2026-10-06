@@ -104,8 +104,3 @@ export function createMatchState(arena: ArenaWorld, setup: MatchSetup, rayCounts
     tick: 0,
   };
 }
-
-/** True when step number `tick` (1 based) belongs to the prep phase. */
-export function isPrepStep(s: MatchState, tick: number): boolean {
-  return tick <= s.prepTicks;
-}

@@ -2,11 +2,12 @@ import { mixSeed, Rng, type RngState } from '../../core/rng';
 import type { GenerationPlan } from '../../neat/plan';
 import { defaultPlan, Population } from '../../neat/population';
 import type { GenomeShape } from '../../neat/types';
-import { HIDESEEK_OUTPUT_COUNT, hideSeekInputCount, type HideSeekInputConfig } from '../inputConfig';
+import { HIDESEEK_OUTPUT_COUNT, type HideSeekInputConfig } from '../inputConfig';
 import { HIDESEEK_LAYOUT_IDS } from '../layouts/presets';
 import { runMatch } from '../match/runMatch';
 import type { MatchControllers, MatchResult, MatchSpec } from '../match/types';
 import { DEFAULT_HIDESEEK_PHYSICS } from '../physics';
+import { hideSeekBrainInputs } from '../sensing/inputSchema';
 import type { ArenaPool } from '../world/pool';
 import { HallOfFame } from './hallOfFame';
 import { planRounds } from './schedule';
@@ -34,7 +35,7 @@ export function resolveTrainerOptions(o: HideSeekTrainerOptions): ResolvedTraine
 
 function shapeFor(o: ResolvedTrainerOptions, inputs: HideSeekInputConfig, custom: number): GenomeShape {
   return {
-    inputCount: hideSeekInputCount(inputs) + custom,
+    inputCount: hideSeekBrainInputs(inputs, custom),
     outputCount: HIDESEEK_OUTPUT_COUNT,
     activation: o.activation,
     wiring: o.wiring,
