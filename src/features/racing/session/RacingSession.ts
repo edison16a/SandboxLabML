@@ -13,6 +13,7 @@ import { isWatchSpeed, WATCH_SPEEDS, type SpeedMode } from '@/workers/shared/pro
 import { useRacingLab } from '../state/labStore';
 import { selectGhosts } from './ghostSelection';
 import { enterSandbox, scheduleSandboxScene } from './sandbox';
+import { maybeBenchmark } from './backgroundBench';
 
 /**
  * Main-thread glue for the Racing lab: owns the workers, saves what the
@@ -168,6 +169,7 @@ export class RacingSession {
       case 'generation':
         this.store.addRecord(e.record);
         void saveGeneration(e.record);
+        if (this.pool) maybeBenchmark(this.pool, e.record);
         void this.refreshGhosts();
         break;
       case 'checkpoint':

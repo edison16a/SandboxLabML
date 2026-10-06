@@ -2,6 +2,7 @@
 
 import { FitnessChart } from '@/features/charts/FitnessChart';
 import { SpeciesChart } from '@/features/charts/SpeciesChart';
+import { BenchmarkChart } from '@/features/charts/BenchmarkChart';
 import { Stat } from '@/ui/primitives/Panel';
 import { useRacingLab } from '../state/labStore';
 
@@ -31,6 +32,9 @@ export function ProgressTab() {
       </div>
       <Section title="Fitness" hint="best, median, mean">
         {records.length > 0 ? <FitnessChart records={records} /> : <Empty />}
+      </Section>
+      <Section title="Benchmark" hint="held-out roads, 0 to 100">
+        <BenchmarkChart records={records} />
       </Section>
       <Section title="Species" hint="share of the population">
         {records.length > 0 ? <SpeciesChart records={records} /> : <Empty />}

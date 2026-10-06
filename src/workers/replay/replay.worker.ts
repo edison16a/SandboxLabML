@@ -2,6 +2,9 @@
 import * as Comlink from 'comlink';
 import '@/workers/shared/loadScripts';
 import type { RacingSetup } from '@/engine/training/racingSetup';
+import type { Genome } from '@/engine/neat/types';
+import type { RunConfig } from '@/engine/training/runConfig';
+import { runBenchmark } from '@/engine/bench';
 import { StreamSender } from '../shared/streamPort';
 import { GhostPlayer, type GhostSpec } from './ghostPlayer';
 
@@ -30,6 +33,11 @@ const api = {
   },
   stopGhosts() {
     ghosts?.stop();
+  },
+  /** Scores one champion on the benchmark at low priority, between ghost frames. */
+  async benchmark(config: RunConfig, genome: Genome) {
+    const result = await runBenchmark(config, genome);
+    return result ? { score: result.score, radar: result.radar } : null;
   },
   ghostTelemetry() {
     const t = ghosts?.telemetry() ?? [];
