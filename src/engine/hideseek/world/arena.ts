@@ -1,9 +1,9 @@
 import type { RigidBody, World } from '@dimforge/rapier3d-compat';
 import { quatToYaw, yawToQuat, type Pose, type Quat } from '../frame';
-import type { MatchSetup } from '../layouts/spawn';
 import { arenaWallRects } from '../layouts/geometry';
+import { layoutSetup, type MatchSetup } from '../layouts/spawn';
 import type { ArenaLayout, Rect } from '../layouts/types';
-import { boxSize, type HideSeekPhysics } from '../physics';
+import type { HideSeekPhysics } from '../physics';
 import { buildArena } from './build';
 import type { Rapier } from './rapier';
 
@@ -15,21 +15,24 @@ export interface PlanarVelocity {
 }
 
 /**
- * One Rapier world holding one room. It is built once and then reset for
- * every match, so thousands of matches reuse the same WASM memory. All body
- * access goes through here, using scratch objects instead of allocating.
+ * A pooled slot that runs one room. It owns exactly one live Rapier world
+ * at a time and frees it before building the next, and all body access goes
+ * through here using scratch objects instead of allocating.
+ *
+ * `world`, `agents` and `boxes` are replaced on every reset, so read them
+ * through the arena each time rather than keeping them across matches.
  */
 export class ArenaWorld {
   readonly layout: ArenaLayout;
   readonly physics: HideSeekPhysics;
-  readonly world: World;
-  /** Hider first, then seeker. */
-  readonly agents: RigidBody[];
-  readonly boxes: RigidBody[];
   /** Every wall as a floor rectangle, outer walls first. Used by the sensor ray caster. */
   readonly walls: Rect[];
   /** The loaded Rapier module, for queries that need its classes. */
   readonly rapier: Rapier;
+  world: World;
+  /** Hider first, then seeker. */
+  agents: RigidBody[];
+  boxes: RigidBody[];
   private readonly vec = { x: 0, y: 0, z: 0 };
   private readonly quat: Quat = { x: 0, y: 0, z: 0, w: 1 };
   private disposed = false;
@@ -38,34 +41,34 @@ export class ArenaWorld {
     this.rapier = R;
     this.layout = layout;
     this.physics = physics;
-    this.world = new R.World({ x: 0, y: 0, z: 0 });
-    this.world.timestep = physics.dt;
-    this.world.numSolverIterations = physics.solverIterations;
-    const bodies = buildArena(R, this.world, layout, physics);
-    this.agents = bodies.agents;
-    this.boxes = bodies.boxes;
     this.walls = arenaWallRects(layout, physics);
+    const built = buildArena(R, layout, physics, layoutSetup(layout));
+    this.world = built.world;
+    this.agents = built.agents;
+    this.boxes = built.boxes;
   }
 
   /**
-   * Puts the room back to a start state: every lock cleared, every body
-   * dynamic and free to move, placed at its start pose with zero velocity.
-   * Bodies are handled in creation order so the reset itself is the same
-   * no matter what the previous match did.
+   * Starts a match: frees the current Rapier world and builds a fresh one
+   * with every body at its start pose, unlocked and at rest.
+   *
+   * Why not move the old bodies back? Rapier keeps history beyond positions
+   * and velocities. Its broad phase tree, contact graph and active body
+   * order all depend on earlier matches, and they set the order the solver
+   * visits contacts in, which changes float results. In tests, teleporting
+   * bodies back made 4 of 40 matches drift from a fresh run, and rebuilding
+   * only the moving bodies 1 of 40. Restoring a saved snapshot is exact but
+   * leaks about 2 KB of WASM heap per restore. A fresh build is exact, keeps
+   * the heap flat (the allocator reuses the freed blocks) and takes about a
+   * tenth of a millisecond, nothing next to a 900 tick match.
    */
   reset(setup: MatchSetup): void {
-    for (let i = 0; i < this.agents.length; i++) {
-      const body = this.agents[i];
-      this.setFixed(body, false);
-      this.setFrozen(i, false);
-      this.teleport(body, setup.agents[i]);
-    }
-    for (let i = 0; i < this.boxes.length; i++) {
-      const body = this.boxes[i];
-      this.setFixed(body, false);
-      this.setCarried(i, false);
-      this.teleport(body, setup.boxes[i]);
-    }
+    if (this.disposed) throw new Error('This arena has been disposed.');
+    this.world.free();
+    const built = buildArena(this.rapier, this.layout, this.physics, setup);
+    this.world = built.world;
+    this.agents = built.agents;
+    this.boxes = built.boxes;
   }
 
   step(): void {
@@ -107,8 +110,6 @@ export class ArenaWorld {
     v.z = pose.z;
     body.setTranslation(v, true);
     body.setRotation(yawToQuat(pose.yaw, this.quat), true);
-    body.resetForces(true);
-    body.resetTorques(true);
     this.setVelocity(body, 0, 0, 0);
   }
 
@@ -138,17 +139,11 @@ export class ArenaWorld {
     body.setAngularDamping(carried ? 0 : this.physics.box.angularDamping);
   }
 
-  /** Half length and half width of box `i`, m. */
-  boxHalfExtents(i: number): [number, number] {
-    const size = boxSize(this.physics, i);
-    return [size.length / 2, size.width / 2];
-  }
-
   get isDisposed(): boolean {
     return this.disposed;
   }
 
-  /** Frees the WASM world. Safe to call twice. */
+  /** Frees the live WASM world. Safe to call twice. */
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;

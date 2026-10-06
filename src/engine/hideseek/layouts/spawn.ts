@@ -54,3 +54,9 @@ export function sampleSetup(layout: ArenaLayout, p: HideSeekPhysics, seed: numbe
   const seeker = place(layout.seekerSpawn, hider);
   return { agents: [hider, seeker], boxes };
 }
+
+/** The layout as drawn, with no jitter: boxes on their spots and agents in the middle of their regions. */
+export function layoutSetup(layout: ArenaLayout): MatchSetup {
+  const center = (r: Region): Pose => ({ x: (r.minX + r.maxX) / 2, z: (r.minZ + r.maxZ) / 2, yaw: 0 });
+  return { agents: [center(layout.hiderSpawn), center(layout.seekerSpawn)], boxes: layout.boxes.map((b) => ({ ...b })) };
+}

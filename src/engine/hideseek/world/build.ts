@@ -1,11 +1,14 @@
 import type { RigidBody, World } from '@dimforge/rapier3d-compat';
+import { yawToQuat, type Pose } from '../frame';
 import { arenaWallRects } from '../layouts/geometry';
+import type { MatchSetup } from '../layouts/spawn';
 import type { ArenaLayout } from '../layouts/types';
 import { BOX_COUNT, boxSize, type HideSeekPhysics } from '../physics';
 import { AGENT_GROUPS, BOX_GROUPS, WALL_GROUPS } from './groups';
 import type { Rapier } from './rapier';
 
 export interface ArenaBodies {
+  world: World;
   /** Hider first, then seeker. */
   agents: RigidBody[];
   boxes: RigidBody[];
@@ -15,16 +18,19 @@ export interface ArenaBodies {
 const WALL_FRICTION = 0.3;
 
 /**
- * Builds a room inside an empty world: fixed walls, then the two agents,
- * then the four boxes. The order never changes, so body handles and solver
- * order are the same in every copy of a layout.
+ * Builds a room in a new Rapier world, with every moving body at its start
+ * pose: fixed walls first, then the two agents, then the four boxes. The
+ * order never changes, so two builds of the same setup are identical.
  *
  * Agents and boxes move only on the floor plane: y translation and tilting
  * are locked, only yaw is free. That keeps building stable (nothing tips
  * over) and means there is no floor collider at all, so the solver only
  * works on real contacts. Box damping stands in for floor friction.
  */
-export function buildArena(R: Rapier, world: World, layout: ArenaLayout, p: HideSeekPhysics): ArenaBodies {
+export function buildArena(R: Rapier, layout: ArenaLayout, p: HideSeekPhysics, setup: MatchSetup): ArenaBodies {
+  const world = new R.World({ x: 0, y: 0, z: 0 });
+  world.timestep = p.dt;
+  world.numSolverIterations = p.solverIterations;
   const wallHalfHeight = p.arena.wallHeight / 2;
   for (const w of arenaWallRects(layout, p)) {
     const body = world.createRigidBody(R.RigidBodyDesc.fixed().setTranslation(w.x, wallHalfHeight, w.z));
@@ -35,9 +41,9 @@ export function buildArena(R: Rapier, world: World, layout: ArenaLayout, p: Hide
   const a = p.agent;
   const agents: RigidBody[] = [];
   for (let i = 0; i < 2; i++) {
-    const body = world.createRigidBody(planarBody(R).setTranslation(i * 2, a.height / 2, 0));
-    // A capsule whose straight part spans the middle of the body. Its full radius
-    // covers the ray height and the whole height of a box face.
+    const body = world.createRigidBody(planarBody(R, setup.agents[i], a.height / 2));
+    // A capsule whose straight part spans the middle of the body. Its full
+    // radius covers the ray height and the whole height of a box face.
     const desc = R.ColliderDesc.capsule(a.height / 2 - a.radius, a.radius)
       .setMass(a.mass)
       .setFriction(a.friction)
@@ -49,26 +55,26 @@ export function buildArena(R: Rapier, world: World, layout: ArenaLayout, p: Hide
   const boxes: RigidBody[] = [];
   for (let i = 0; i < BOX_COUNT; i++) {
     const size = boxSize(p, i);
-    const spot = layout.boxes[i];
-    const body = world.createRigidBody(
-      planarBody(R)
-        .setTranslation(spot.x, size.height / 2, spot.z)
-        .setLinearDamping(p.box.linearDamping)
-        .setAngularDamping(p.box.angularDamping),
-    );
-    const desc = R.ColliderDesc.cuboid(size.length / 2, size.height / 2, size.width / 2)
+    const desc = planarBody(R, setup.boxes[i], size.height / 2).setLinearDamping(p.box.linearDamping).setAngularDamping(p.box.angularDamping);
+    const body = world.createRigidBody(desc);
+    const shape = R.ColliderDesc.cuboid(size.length / 2, size.height / 2, size.width / 2)
       .setMass(p.box.mass)
       .setFriction(p.box.friction)
       .setCollisionGroups(BOX_GROUPS);
-    world.createCollider(desc, body);
+    world.createCollider(shape, body);
     boxes.push(body);
   }
-  return { agents, boxes };
+  return { world, agents, boxes };
 }
 
-/** A dynamic body that slides and spins on the floor plane and never sleeps. */
-function planarBody(R: Rapier) {
+/**
+ * A dynamic body that slides and spins on the floor plane. It never sleeps,
+ * so the set of active bodies, and with it the solver order, stays fixed.
+ */
+function planarBody(R: Rapier, pose: Pose, y: number) {
   return R.RigidBodyDesc.dynamic()
+    .setTranslation(pose.x, y, pose.z)
+    .setRotation(yawToQuat(pose.yaw, { x: 0, y: 0, z: 0, w: 1 }))
     .enabledTranslations(true, false, true)
     .enabledRotations(false, true, false)
     .setGravityScale(0)

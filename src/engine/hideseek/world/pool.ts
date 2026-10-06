@@ -17,10 +17,11 @@ function keyOf(layout: ArenaLayout, physics: HideSeekPhysics): string {
 }
 
 /**
- * Reusable worlds, one per running match. Creating a Rapier world per match
- * would churn the WASM heap over thousands of matches; a pool builds a world
- * the first time a layout is needed, hands it back after the match, and
- * resets it for the next one. A worker keeps one pool for its whole life.
+ * Arena slots, one per running match. A slot owns one live Rapier world at
+ * a time and frees it before building the next (see ArenaWorld.reset), and
+ * the pool owns every slot, so no world is ever left unfreed: the WASM heap
+ * stays flat however many matches a worker plays. A worker keeps one pool
+ * for its whole life and disposes it when it shuts down.
  */
 export class ArenaPool {
   readonly rapier: Rapier;
@@ -32,7 +33,7 @@ export class ArenaPool {
     this.rapier = rapier;
   }
 
-  /** An idle world for this room and rules, built if none is free. The caller resets it. */
+  /** An idle slot for this room and rules, built if none is free. The caller resets it. */
   acquire(layout: ArenaLayout, physics: HideSeekPhysics): ArenaWorld {
     if (this.disposed) throw new Error('This arena pool has been disposed.');
     const key = keyOf(layout, physics);
@@ -43,7 +44,7 @@ export class ArenaPool {
     return arena;
   }
 
-  /** Returns a world for reuse. Releasing twice is a no-op. */
+  /** Returns a slot for reuse. Releasing twice is a no-op. */
   release(arena: ArenaWorld): void {
     const key = this.keys.get(arena);
     if (!key || this.disposed) return;
@@ -52,12 +53,12 @@ export class ArenaPool {
     if (!list.includes(arena)) list.push(arena);
   }
 
-  /** Worlds built so far, in use or idle. Stays flat once every concurrent match has one. */
+  /** Slots built so far, in use or idle. Stops growing once every concurrent match has one. */
   get size(): number {
     return this.keys.size;
   }
 
-  /** Frees every world this pool built, including any still in use. */
+  /** Frees the live world of every slot, including slots still in use. */
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
