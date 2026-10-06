@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import type { QualityTier } from '@/features/racing/state/labStore';
 import type { Slot } from '../geometry/parts';
-import { carbonMaps } from '../textures/carbon';
+import { carbonColor, carbonFibers, carbonNormal } from '../textures/carbon';
 import { discMap, DISC_REPEAT } from '../textures/disc';
 import { flakeNormalMap } from '../textures/flakes';
-import { HONEYCOMB_ASPECT, honeycombMaps } from '../textures/grille';
+import { HONEYCOMB_ASPECT, honeycombColor, honeycombNormal } from '../textures/grille';
 
 export interface HeroMaterials {
   slots: Record<Slot, THREE.Material>;
@@ -56,21 +56,20 @@ export function createHeroMaterials(tier: QualityTier): HeroMaterials {
     paint.normalScale.set(0.55, 0.55);
   }
 
-  const weave = carbonMaps(high ? 512 : 256);
-  [weave.color, weave.normal, weave.anisotropy].forEach((t) => keep(repeat(t, 16)));
-  const carbon = new THREE.MeshPhysicalMaterial({ map: weave.color, roughness: 0.5, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.05 });
+  // Maps are built only for the tiers that use them: Low skips the normals, and only High has fiber highlights.
+  const weave = high ? 512 : 256;
+  const carbon = new THREE.MeshPhysicalMaterial({ map: keep(repeat(carbonColor(weave), 16)), roughness: 0.5, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.05 });
   if (tier !== 'low') {
-    carbon.normalMap = weave.normal;
+    carbon.normalMap = keep(repeat(carbonNormal(weave), 16));
     carbon.normalScale.set(0.3, 0.3);
   }
   if (high) {
     carbon.anisotropy = 0.55;
-    carbon.anisotropyMap = weave.anisotropy;
+    carbon.anisotropyMap = keep(repeat(carbonFibers(weave), 16));
   }
 
-  const mesh = honeycombMaps(128);
-  [mesh.color, mesh.normal].forEach((t) => keep(repeat(t, 8, 8 * HONEYCOMB_ASPECT)));
-  const grille = new THREE.MeshStandardMaterial({ map: mesh.color, normalMap: tier === 'low' ? null : mesh.normal, roughness: 0.55, metalness: 0.35 });
+  const mesh = <T extends THREE.Texture>(t: T) => keep(repeat(t, 8, 8 * HONEYCOMB_ASPECT));
+  const grille = new THREE.MeshStandardMaterial({ map: mesh(honeycombColor(128)), normalMap: tier === 'low' ? null : mesh(honeycombNormal(128)), roughness: 0.55, metalness: 0.35 });
 
   const disc = new THREE.MeshStandardMaterial({ map: keep(repeat(discMap(128), DISC_REPEAT, 1)), roughness: 0.55, metalness: 0.3 });
   const tail = new THREE.MeshStandardMaterial({ color: '#2a0303', emissive: '#ff1a10', emissiveIntensity: TAIL_GLOW.idle, roughness: 0.3, toneMapped: false });

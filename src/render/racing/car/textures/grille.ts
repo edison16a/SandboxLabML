@@ -14,7 +14,7 @@ export const HONEYCOMB_ASPECT = (2 * COLS) / (Math.sqrt(3) * ROWS);
  * around dark hexagonal holes. Color and normal both come from the hex
  * distance to the nearest cell center, so they always line up.
  */
-export function honeycombMaps(size: number): { color: THREE.DataTexture; normal: THREE.DataTexture } {
+function honeycomb(size: number) {
   const a = size / (2 * COLS);
   const hy = size / ROWS;
   const squash = (Math.sqrt(3) * a) / hy;
@@ -33,13 +33,24 @@ export function honeycombMaps(size: number): { color: THREE.DataTexture; normal:
   };
   // 0 inside a hole, 1 on top of a wall, with a short slope between.
   const height = (d: number) => Math.min(1, Math.max(0, (d - (a - wall)) / (wall * 0.5)));
-  const color = pixelTexture('honeycomb-color', size, true, (x, y, out) => {
+  return { cellAt, height };
+}
+
+/** The mesh's color: dark holes, lighter wall tops. */
+export function honeycombColor(size: number): THREE.DataTexture {
+  const { cellAt, height } = honeycomb(size);
+  return pixelTexture('honeycomb-color', size, true, (x, y, out) => {
     const v = 5 + height(cellAt(x + 0.5, y + 0.5).d) * 36;
     out[0] = v;
     out[1] = v;
     out[2] = v + 2;
   });
-  const normal = pixelTexture('honeycomb-normal', size, false, (x, y, out) => {
+}
+
+/** The mesh's normals, which tilt only on the short slopes up the walls. Low skips this map. */
+export function honeycombNormal(size: number): THREE.DataTexture {
+  const { cellAt, height } = honeycomb(size);
+  return pixelTexture('honeycomb-normal', size, false, (x, y, out) => {
     const c = cellAt(x + 0.5, y + 0.5);
     const h = height(c.d);
     const len = Math.hypot(c.dx, c.dy) || 1;
@@ -47,5 +58,4 @@ export function honeycombMaps(size: number): { color: THREE.DataTexture; normal:
     const k = h > 0 && h < 1 ? -0.7 : 0;
     packNormal((c.dx / len) * k, (c.dy / len) * k, out);
   });
-  return { color, normal };
 }
