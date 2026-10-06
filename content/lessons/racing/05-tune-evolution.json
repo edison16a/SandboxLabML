@@ -1,0 +1,97 @@
+{
+  "id": "racing-05-tune-evolution",
+  "course": "racing",
+  "order": 5,
+  "title": "Tune evolution",
+  "summary": "Decide how the next generation is made: species, parents, mutation and champions.",
+  "minutes": 8,
+  "steps": [
+    {
+      "id": "species",
+      "title": "Species protect new ideas",
+      "body": "NEAT, the method that trains these brains, groups similar brains into species. A brain mostly competes with its own species.\n\nThat matters because a new idea usually starts out worse. A brain that just grew a new neuron has not tuned it yet. Inside its own species it gets a few generations to improve before it has to beat the leaders.\n\n`speciate(target: 8)` aims for about 8 species. More species keep more variety alive, fewer focus on the best ideas so far.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// How sharply the road bends 40 m ahead. A tight right bend reads 0, a straight 0.5 and a tight left bend 1.\nsensor bendFar \"Bend 40 m ahead\" in -0.05 1/m .. 0.05 1/m = track.curvatureAhead(distance: 40 m)\n\n// How much tire slide is fine before it costs points. 0 is full grip, 1 is a full slide.\nlet slipLimit = 0.3\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n  // Sliding means the car asked the tires for more grip than they have.\n  reward -0.05 when car.slip > slipLimit\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Set the number of species here.\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n",
+      "highlight": {
+        "lines": [35]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "call",
+            "scope": "generation",
+            "callee": "speciate"
+          }
+        ],
+        "message": "Call speciate inside each generation."
+      },
+      "hints": [
+        "speciate takes one setting, target, the number of species to aim for.",
+        "Replace the comment with speciate(target: 8)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// How sharply the road bends 40 m ahead. A tight right bend reads 0, a straight 0.5 and a tight left bend 1.\nsensor bendFar \"Bend 40 m ahead\" in -0.05 1/m .. 0.05 1/m = track.curvatureAhead(distance: 40 m)\n\n// How much tire slide is fine before it costs points. 0 is full grip, 1 is a full slide.\nlet slipLimit = 0.3\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n  // Sliding means the car asked the tires for more grip than they have.\n  reward -0.05 when car.slip > slipLimit\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Group similar brains into about 8 species, so new ideas get time to grow.\n  speciate(target: 8)\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n"
+    },
+    {
+      "id": "choose-the-parents",
+      "title": "Choose the parents",
+      "body": "Only the best part of each species gets to have children. `select(top: 20%)` lets the top fifth breed.\n\nA small share pushes hard toward what works today. A large share keeps more variety, which helps when today's leaders are heading for a dead end. Machine learning people call this the balance between exploitation and exploration.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// How sharply the road bends 40 m ahead. A tight right bend reads 0, a straight 0.5 and a tight left bend 1.\nsensor bendFar \"Bend 40 m ahead\" in -0.05 1/m .. 0.05 1/m = track.curvatureAhead(distance: 40 m)\n\n// How much tire slide is fine before it costs points. 0 is full grip, 1 is a full slide.\nlet slipLimit = 0.3\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n  // Sliding means the car asked the tires for more grip than they have.\n  reward -0.05 when car.slip > slipLimit\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Group similar brains into about 8 species, so new ideas get time to grow.\n  speciate(target: 8)\n  // Choose the parents here.\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n",
+      "highlight": {
+        "lines": [37]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "call",
+            "scope": "generation",
+            "callee": "select"
+          }
+        ],
+        "message": "Call select inside each generation."
+      },
+      "hints": [
+        "select takes one setting, top, the share of each species that may breed.",
+        "Replace the comment with select(top: 20%)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// How sharply the road bends 40 m ahead. A tight right bend reads 0, a straight 0.5 and a tight left bend 1.\nsensor bendFar \"Bend 40 m ahead\" in -0.05 1/m .. 0.05 1/m = track.curvatureAhead(distance: 40 m)\n\n// How much tire slide is fine before it costs points. 0 is full grip, 1 is a full slide.\nlet slipLimit = 0.3\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n  // Sliding means the car asked the tires for more grip than they have.\n  reward -0.05 when car.slip > slipLimit\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Group similar brains into about 8 species, so new ideas get time to grow.\n  speciate(target: 8)\n  // Only the best fifth of each species gets to have children.\n  select(top: 20%)\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n"
+    },
+    {
+      "id": "mutation-explores",
+      "title": "Mutation is exploration",
+      "body": "A child mixes two parents (crossover) and then changes a little at random (mutation). Mutation nudges weights, and now and then adds a connection or a whole neuron so the brain can grow.\n\nThe starter sets every mutation chance to 0. Press Check: children can only remix brains that already exist, so progress stalls after a few generations.\n\nTurn mutation back on with the usual chances: weights 0.8, addConnection 0.05, addNode 0.03 and toggle 0.01.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// How sharply the road bends 40 m ahead. A tight right bend reads 0, a straight 0.5 and a tight left bend 1.\nsensor bendFar \"Bend 40 m ahead\" in -0.05 1/m .. 0.05 1/m = track.curvatureAhead(distance: 40 m)\n\n// How much tire slide is fine before it costs points. 0 is full grip, 1 is a full slide.\nlet slipLimit = 0.3\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n  // Sliding means the car asked the tires for more grip than they have.\n  reward -0.05 when car.slip > slipLimit\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Group similar brains into about 8 species, so new ideas get time to grow.\n  speciate(target: 8)\n  // Only the best fifth of each species gets to have children.\n  select(top: 20%)\n  // A child mixes two parents 75% of the time, then changes at random.\n  breed(crossover: 0.75, mutate: { weights: 0, addConnection: 0, addNode: 0, toggle: 0 })\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n",
+      "highlight": {
+        "lines": [39, 40]
+      },
+      "check": {
+        "kind": "metricAbove",
+        "generations": 10,
+        "metric": "bestDistance",
+        "value": 300,
+        "message": "Training should get the best car past 300 m on the Hairpin."
+      },
+      "hints": [
+        "Each number inside mutate is a chance between 0 and 1.",
+        "Use mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 }."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// How sharply the road bends 40 m ahead. A tight right bend reads 0, a straight 0.5 and a tight left bend 1.\nsensor bendFar \"Bend 40 m ahead\" in -0.05 1/m .. 0.05 1/m = track.curvatureAhead(distance: 40 m)\n\n// How much tire slide is fine before it costs points. 0 is full grip, 1 is a full slide.\nlet slipLimit = 0.3\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n  // Sliding means the car asked the tires for more grip than they have.\n  reward -0.05 when car.slip > slipLimit\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Group similar brains into about 8 species, so new ideas get time to grow.\n  speciate(target: 8)\n  // Only the best fifth of each species gets to have children.\n  select(top: 20%)\n  // A child mixes two parents 75% of the time, then changes a little at random.\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n"
+    },
+    {
+      "id": "keep-champions",
+      "title": "Never lose the best",
+      "body": "Mutation can break a good brain as easily as it improves one. `keepChampions()` copies the best brain of each species into the next generation unchanged, so the best result so far never gets worse.\n\nIt is already on by default, which is why the editor says it uses its default setting. Write it out anyway: a script that says what it does is easier to read, and the last warning goes away.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// How sharply the road bends 40 m ahead. A tight right bend reads 0, a straight 0.5 and a tight left bend 1.\nsensor bendFar \"Bend 40 m ahead\" in -0.05 1/m .. 0.05 1/m = track.curvatureAhead(distance: 40 m)\n\n// How much tire slide is fine before it costs points. 0 is full grip, 1 is a full slide.\nlet slipLimit = 0.3\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n  // Sliding means the car asked the tires for more grip than they have.\n  reward -0.05 when car.slip > slipLimit\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Group similar brains into about 8 species, so new ideas get time to grow.\n  speciate(target: 8)\n  // Only the best fifth of each species gets to have children.\n  select(top: 20%)\n  // A child mixes two parents 75% of the time, then changes a little at random.\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  // Protect the best brains here.\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n",
+      "highlight": {
+        "lines": [41]
+      },
+      "check": {
+        "kind": "compiles",
+        "noWarnings": true,
+        "message": "The script should compile with no warnings."
+      },
+      "hints": ["The call takes no settings at all.", "Replace the comment with keepChampions()."],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First drive\" for racing v1\n\n// racing-standard sees nine distance rays, its speed and the angle to the road.\nbrain racing-standard\n\n// How sharply the road bends 40 m ahead. A tight right bend reads 0, a straight 0.5 and a tight left bend 1.\nsensor bendFar \"Bend 40 m ahead\" in -0.05 1/m .. 0.05 1/m = track.curvatureAhead(distance: 40 m)\n\n// How much tire slide is fine before it costs points. 0 is full grip, 1 is a full slide.\nlet slipLimit = 0.3\n\n// This block runs for every car, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A tiny reward for speed, every tick, so faster cars score higher.\n  reward +0.002 * car.speed\n  // One point each time the car passes a checkpoint. They sit every 10 m along the road.\n  reward +1 when checkpoint.passed\n  // Ten points for every lap the car finishes.\n  reward +10 when lap.completed\n  // Sliding means the car asked the tires for more grip than they have.\n  reward -0.05 when car.slip > slipLimit\n\n  // Crossing the white edge line ends this car's run.\n  stop \"crash\" when car.offTrack\n  // A car that has not moved forward for 5 seconds is stuck, so stop it too.\n  stop \"stalled\" when car.noProgress > 5 s\n}\n\n// This block runs once per generation, after every car has stopped.\neach generation {\n  // Group similar brains into about 8 species, so new ideas get time to grow.\n  speciate(target: 8)\n  // Only the best fifth of each species gets to have children.\n  select(top: 20%)\n  // A child mixes two parents 75% of the time, then changes a little at random.\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  // The best brain of each species moves on unchanged, so it is never lost.\n  keepChampions()\n  // Train on the Hairpin: a long straight, then a tight bend.\n  useTrack(id: \"hairpin\")\n}\n"
+    }
+  ]
+}
