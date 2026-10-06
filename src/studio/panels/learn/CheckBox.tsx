@@ -11,7 +11,7 @@ interface Props {
   onNext: (() => void) | null;
 }
 
-/** The Check button, its progress while a check trains or drives, and the verdict. */
+/** The Check button, its progress while a check plays or trains, and the verdict. */
 export function CheckBox({ check, onCheck, onCancel, onNext }: Props) {
   return (
     <div className="flex flex-col gap-2">

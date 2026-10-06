@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Clock, GraduationCap } from 'lucide-react';
 import type { EnvId } from '@/engine/env/types';
 import { findLesson, lessonsFor } from '@/engine/lessons/catalog';
+import type { Lesson } from '@/engine/lessons/types';
 import { listLessonProgress, type LessonProgress } from '@/storage/lessonProgress';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { analyze } from '../../doc/analyze';
@@ -12,8 +13,9 @@ import { LessonPlayer } from './LessonPlayer';
 import { lessonFraction } from './player';
 
 /**
- * Courses of short lessons for each environment. The catalog fills in
- * elsewhere; until it has lessons this shows a friendly note instead.
+ * Courses of short lessons for each environment, Racing and Hide and
+ * Seek. A course with no lessons in the catalog shows a friendly note
+ * instead of an empty list.
  */
 export default function LearnTab() {
   const text = useStudio(selectText);
@@ -25,7 +27,12 @@ export default function LearnTab() {
   useEffect(reload, [reload]);
 
   const open = lessonId ? findLesson(lessonId) : undefined;
-  if (open && progress) return <LessonPlayer key={open.id} lesson={open} saved={progress.get(open.id)} onBack={() => useStudio.setState({ lessonId: null })} onProgress={reload} />;
+  // Back lands on the open lesson's course, which may not be the one picked before a link opened it.
+  const back = (lesson: Lesson) => {
+    setCourse(lesson.course);
+    useStudio.setState({ lessonId: null });
+  };
+  if (open && progress) return <LessonPlayer key={open.id} lesson={open} saved={progress.get(open.id)} onBack={() => back(open)} onProgress={reload} />;
 
   const lessons = lessonsFor(course);
   return (
