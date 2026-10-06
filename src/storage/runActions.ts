@@ -75,3 +75,12 @@ export async function resetRun(runId: string): Promise<RunConfig> {
   await trashRun(runId);
   return config;
 }
+
+/** A new, empty run with the same settings and a fresh seed. */
+export async function duplicateRun(runId: string, seed: number): Promise<RunConfig> {
+  const run = await getRun(runId);
+  if (!run) throw new Error('Run not found.');
+  const config = cloneConfig(run.config, { name: `${run.name} copy`, seed, parent: undefined });
+  await createRun(config);
+  return config;
+}
