@@ -3,7 +3,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
-import { FLAG_SEEING, HIDESEEK_RAY_SNAPSHOT, SNAPSHOT_RAYS } from '@/engine/hideseek/snapshot';
+import { FLAG_FROZEN, FLAG_SEEING, HIDESEEK_RAY_SNAPSHOT, SNAPSHOT_RAYS } from '@/engine/hideseek/snapshot';
 import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
 import { RayBuffer } from '@/render/shared/RayBuffer';
 import { useDisposable } from '@/render/shared/useDisposable';
@@ -60,6 +60,8 @@ export function RaysOverlay() {
           arenaOrigin(k, frame.lattice, t.o);
           for (let a = 0; a < 2; a++) {
             const o = agentAt(arena, a);
+            // A frozen seeker is blind: its rays read full range straight through walls, which says nothing.
+            if (hasFlag(curr[o + 3], FLAG_FROZEN)) continue;
             const ax = curr[o];
             const az = curr[o + 1];
             const base = arena * RAY_STRIDE + a * SNAPSHOT_RAYS * 2;
@@ -77,14 +79,17 @@ export function RaysOverlay() {
       const inspect = feed.inspect;
       const arena = inspect ? inspect.index >> 1 : -1;
       const slot = arena - frame.first;
-      if (inspect && slot >= 0 && slot < frame.count) {
-        const agent = inspect.index & 1;
+      const agent = inspect ? inspect.index & 1 : 0;
+      if (inspect && slot >= 0 && slot < frame.count && !hasFlag(curr[agentAt(arena, agent) + 3], FLAG_FROZEN)) {
         arenaOrigin(slot, frame.lattice, t.o);
         blendFloorPose(frame.prev, curr, agentAt(arena, agent), frame.alpha, t.s);
         const x = t.o.x + t.s.x;
         const z = t.o.z + t.s.z;
-        let label = 0;
-        for (const spec of schemas[agent]) {
+        // Distance labels only where they can be read: on the arena in the showcase.
+        let label = slot === frame.focusSlot ? 0 : MAX_RAY_LABELS;
+        const schema = schemas[agent];
+        for (let i = 0; i < schema.length; i++) {
+          const spec = schema[i];
           if (!spec.ray) continue;
           const v = Math.min(1, Math.max(0, inspect.obs[spec.index] ?? 1));
           const len = v * spec.ray.maxLength;
