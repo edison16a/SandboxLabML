@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { ENGINE_VERSION } from '@/engine/core/version';
 import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { TrackSpec } from '@/engine/racing/track/types';
@@ -16,6 +17,21 @@ export type QualitySetting = QualityTier | 'auto';
 export type Focus = { kind: 'champion' } | { kind: 'car'; index: number } | { kind: 'ghost'; generation: number };
 
 export type PanelTab = 'progress' | 'network' | 'species' | 'inputs' | 'model';
+
+/** Lab state for a run that was just opened: its history, a clean focus and nothing cached from the run before. */
+export function openedRunState(run: RunConfig, records: GenerationRecord[], liveGeneration: number): Partial<RacingLabState> {
+  return {
+    run,
+    records,
+    liveGeneration,
+    status: 'idle',
+    replayBlocked: run.engineVersion === ENGINE_VERSION ? null : 'This run was trained on an older engine, so its generations cannot be replayed.',
+    focus: { kind: 'champion' },
+    networkGeneration: null,
+    telemetry: [],
+    ghostGenerations: [],
+  };
+}
 
 /**
  * Max trades the picture for training speed: while it trains, the viewport

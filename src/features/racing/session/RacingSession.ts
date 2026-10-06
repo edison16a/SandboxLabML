@@ -1,4 +1,3 @@
-import { ENGINE_VERSION } from '@/engine/core/version';
 import type { RacingTrainerState } from '@/engine/training/racingTrainer';
 import type { GenerationRecord } from '@/engine/training/records';
 import { racingSetupFor } from '@/engine/training/racingSetup';
@@ -11,7 +10,7 @@ import { toast } from '@/ui/toast/toastStore';
 import { createWorkerPool, type WorkerPool } from '@/workers/client/workerPool';
 import type { CoordinatorEvent } from '@/workers/coordinator/events';
 import { isWatchSpeed, WATCH_SPEEDS, type SpeedMode } from '@/workers/shared/protocol';
-import { useRacingLab, viewportHeld } from '../state/labStore';
+import { openedRunState, useRacingLab, viewportHeld } from '../state/labStore';
 import { ghostSpecs, selectGhosts } from './ghostSelection';
 import { enterSandbox, scheduleSandboxScene } from './sandbox';
 import { maybeBenchmark } from './backgroundBench';
@@ -72,17 +71,7 @@ export class RacingSession {
     this.store.set({ trackSpec: null });
     const generation = await pool.coordinator.loadRacing(config, state);
     this.ghostKey = '';
-    this.store.set({
-      run: config,
-      records: history,
-      liveGeneration: generation,
-      status: 'idle',
-      replayBlocked: config.engineVersion === ENGINE_VERSION ? null : 'This run was trained on an older engine, so its generations cannot be replayed.',
-      focus: { kind: 'champion' },
-      networkGeneration: null,
-      telemetry: [],
-      ghostGenerations: [],
-    });
+    this.store.set(openedRunState(config, history, generation));
     await pool.coordinator.setSpeed(this.store.speed);
     await this.refreshGhosts();
   }
