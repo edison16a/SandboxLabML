@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type uPlot from 'uplot';
-import { loadReferences, type BenchReferences } from '@/engine/bench';
+// The narrow modules, not the bench index, so the lab bundles never pull in the exam engines.
+import { loadReferences } from '@/engine/bench/references';
+import type { BenchReferences } from '@/engine/bench/types';
 import type { EnvId } from '@/engine/env/types';
 import { axis, UPlotChart } from './UPlotChart';
 

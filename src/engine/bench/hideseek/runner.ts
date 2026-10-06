@@ -41,7 +41,7 @@ export async function playExam(pool: ArenaPool, model: ExamSide, opponents: read
 }
 
 /** Plays the exam on the given pool, or on a fresh one that is disposed afterwards. */
-export async function withPool<T>(pool: ArenaPool | undefined, play: (pool: ArenaPool) => Promise<T>): Promise<T> {
+async function withPool<T>(pool: ArenaPool | undefined, play: (pool: ArenaPool) => Promise<T>): Promise<T> {
   const own = pool ? null : await createArenaPool();
   try {
     return await play(pool ?? (own as ArenaPool));
