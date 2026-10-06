@@ -29,7 +29,8 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
   const session = racingSession();
 
   return (
-    <div className="flex h-14 shrink-0 items-center gap-3 border-t border-border bg-bg px-3">
+    // On a phone the row scrolls sideways instead of making the whole page wider than the screen.
+    <div className="no-scrollbar flex h-14 shrink-0 items-center gap-3 overflow-x-auto border-t border-border bg-bg px-3 [&>*]:shrink-0">
       <Tooltip content={running ? 'Pause training' : 'Start training'} shortcut="Space">
         <Button
           variant="primary"
@@ -66,16 +67,16 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
       <div className="ml-auto flex min-w-0 items-center gap-2">
         <RunSwitcher />
         <Tooltip content="Replay champions on a track you can edit, and switch inputs off">
-          <Button data-tour="sandbox" variant={mode === 'sandbox' ? 'primary' : 'outline'} onClick={() => void (mode === 'sandbox' ? session.exitSandbox() : session.enterSandbox())} disabled={!records.length}>
+          <Button data-tour="sandbox" variant={mode === 'sandbox' ? 'primary' : 'outline'} onClick={() => void (mode === 'sandbox' ? session.exitSandbox() : session.enterSandbox())} disabled={!records.length} aria-label="Sandbox">
             <FlaskConical />
-            Sandbox
+            <span className="max-sm:hidden">Sandbox</span>
           </Button>
         </Tooltip>
         <HelpMenu />
         <Tooltip content="Start a new run" shortcut="N">
-          <Button variant="outline" onClick={onNewRun}>
+          <Button variant="outline" onClick={onNewRun} aria-label="New run">
             <Plus />
-            New run
+            <span className="max-sm:hidden">New run</span>
           </Button>
         </Tooltip>
       </div>

@@ -28,7 +28,8 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
   const session = hideSeekSession();
 
   return (
-    <div className="flex h-14 shrink-0 items-center gap-3 border-t border-border bg-bg px-3">
+    // On a phone the row scrolls sideways instead of making the whole page wider than the screen.
+    <div className="no-scrollbar flex h-14 shrink-0 items-center gap-3 overflow-x-auto border-t border-border bg-bg px-3 [&>*]:shrink-0">
       <Tooltip content={running ? 'Pause training' : 'Start training'} shortcut="Space">
         <Button variant="primary" size="lg" className="w-28 justify-center" onClick={() => void (running ? session.pause() : session.start())} disabled={!run} aria-label={running ? 'Pause' : 'Train'}>
           {running ? <Pause /> : <Play />}
@@ -64,15 +65,16 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
             onClick={() => void (mode === 'sandbox' ? session.exitSandbox() : session.enterSandbox())}
             disabled={!run || !records.length || !!blocked}
             aria-pressed={mode === 'sandbox'}
+            aria-label="Sandbox"
           >
             <FlaskConical />
-            Sandbox
+            <span className="max-sm:hidden">Sandbox</span>
           </Button>
         </Tooltip>
         <Tooltip content="Start a new run" shortcut="N">
-          <Button variant="outline" onClick={onNewRun}>
+          <Button variant="outline" onClick={onNewRun} aria-label="New run">
             <Plus />
-            New run
+            <span className="max-sm:hidden">New run</span>
           </Button>
         </Tooltip>
       </div>
