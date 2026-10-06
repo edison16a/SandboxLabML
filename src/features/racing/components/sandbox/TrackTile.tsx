@@ -28,14 +28,15 @@ export function TrackTile({ label, selected, onSelect, spec, icon, tag, onRemove
         aria-pressed={selected}
         title={label}
         className={cn(
-          'flex w-full flex-col items-center gap-1 rounded-md border px-1 pt-2 pb-1 text-[11px] transition-colors',
+          'flex h-full w-full flex-col items-center justify-start gap-1 rounded-md border px-1 pt-2 pb-1 text-[11px] transition-colors',
           selected ? 'border-accent/70 bg-accent/15 text-white' : 'border-white/10 bg-white/[0.04] text-white/70 hover:border-white/25 hover:text-white',
         )}
       >
         <span className="flex size-10 items-center justify-center [&_svg]:size-5">
           {spec ? <TrackThumb spec={spec} size={40} className={selected ? 'text-accent' : 'text-white/75'} /> : icon}
         </span>
-        <span className="w-full truncate text-center leading-tight">{label}</span>
+        {/* Names people type run longer than the built in ones, so they get a second line before cutting off. */}
+        <span className="line-clamp-2 w-full text-center leading-tight break-words">{label}</span>
       </button>
       {tag && <span className="pointer-events-none absolute top-0.5 left-0.5 rounded-sm bg-black/55 px-1 text-[9px] leading-[14px] font-medium text-white/75">{tag}</span>}
       {onRemove && (
