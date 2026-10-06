@@ -8,6 +8,7 @@ import { racingSession } from '../session/RacingSession';
 import { useRacingLab } from '../state/labStore';
 import { SpeedBar } from './SpeedBar';
 import { HelpMenu } from './HelpMenu';
+import { RunSwitcher } from './RunSwitcher';
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds.toFixed(0)} s`;
@@ -63,11 +64,7 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
         {status === 'error' && <Badge tone="danger">Stopped on an error</Badge>}
       </div>
       <div className="ml-auto flex min-w-0 items-center gap-2">
-        {run && (
-          <span className="hidden max-w-56 truncate text-[13px] text-muted lg:inline" title={run.name}>
-            {run.name}
-          </span>
-        )}
+        <RunSwitcher />
         <Tooltip content="Replay champions on a track you can edit, and switch inputs off">
           <Button data-tour="sandbox" variant={mode === 'sandbox' ? 'primary' : 'outline'} onClick={() => void (mode === 'sandbox' ? session.exitSandbox() : session.enterSandbox())} disabled={!records.length}>
             <FlaskConical />
