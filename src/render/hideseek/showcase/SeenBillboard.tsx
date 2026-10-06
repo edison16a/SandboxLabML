@@ -33,7 +33,7 @@ export function SeenBillboard({ arena }: { arena: number }) {
   const group = useRef<THREE.Group>(null);
   const state = useMemo(() => ({ pose: { x: 0, z: 0, yaw: 0 }, show: 0, since: 0 }), []);
 
-  useFrame((_, dt) => {
+  useFrame((three, dt) => {
     const g = group.current;
     const curr = frame.curr;
     if (!g || !curr) return;
@@ -43,6 +43,8 @@ export function SeenBillboard({ arena }: { arena: number }) {
     state.since = seen ? state.since + dt : 0;
     state.show += ((seen ? 1 : 0) - state.show) * Math.min(1, dt * 14);
     g.visible = state.show > 0.02;
+    // Keep drawing on demand until the pop and the fade have settled.
+    if (Math.abs((seen ? 1 : 0) - state.show) > 0.01 || (seen && state.since < 0.25)) three.invalidate();
     if (!g.visible) return;
     // A short overshoot when the word appears: 0.7 to about 1.12 and back to 1 in a quarter second.
     const t = Math.min(1, state.since / 0.25);

@@ -48,10 +48,11 @@ export function ShowcaseBoxes({ arena, onBoxPointerDown, onBoxDoubleClick }: { a
   }, []);
   const state = useMemo(() => ({ lock: new Float32Array(BOX_COUNT), pose: { x: 0, z: 0, yaw: 0 }, c: new THREE.Color() }), []);
 
-  useFrame((_, dt) => {
+  useFrame((three, dt) => {
     const curr = frame.curr;
     if (!curr) return;
     const step = Math.min(dt, 0.05) / LOCK_SECONDS;
+    let settling = false;
     for (let b = 0; b < BOX_COUNT; b++) {
       const p = parts.current[b];
       if (!p.root) continue;
@@ -61,6 +62,7 @@ export function ShowcaseBoxes({ arena, onBoxPointerDown, onBoxDoubleClick }: { a
       p.root.rotation.y = state.pose.yaw;
       const target = curr[o + 3] === 1 ? 1 : 0;
       const k = (state.lock[b] = THREE.MathUtils.clamp(state.lock[b] + (target ? step : -step), 0, 1));
+      if (k !== target) settling = true;
       const e = k * k * (3 - 2 * k);
       mats.crate[b].color.copy(b < 2 ? HS.cube : HS.plank).lerp(HS.locked, e * 0.85);
       mats.crate[b].emissive.copy(HS.locked).multiplyScalar(e * 0.08);
@@ -77,6 +79,9 @@ export function ShowcaseBoxes({ arena, onBoxPointerDown, onBoxDoubleClick }: { a
         p.shackle.rotation.y = (1 - e) * (Math.PI / 2);
       }
     }
+    // While paused the canvas only draws on demand, so ask for the next
+    // frame until a lock or unlock has fully played out.
+    if (settling) three.invalidate();
   });
 
   return (
