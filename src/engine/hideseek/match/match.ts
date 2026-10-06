@@ -55,8 +55,8 @@ export class HideSeekMatch {
     this.noise = this.teams.map((t, i) => (t.inputs.noise > 0 ? new Rng(mixSeed(opts.seed, i + 1)) : null));
     this.sight = new SightLines(arena);
     this.onRelease = onRelease;
-    // Rapier's broad phase only catches up with the reset on the first step,
-    // so tick 0 fills everything except vision, which starts blank.
+    // A fresh Rapier world answers ray casts only after its first step, so
+    // tick 0 fills everything except vision, which starts blank.
     updateClock(this.state);
     this.castRays();
     updateDerived(this.state);
@@ -83,8 +83,8 @@ export class HideSeekMatch {
     if (this.done) return;
     const s = this.state;
     const next = s.tick + 1;
+    for (const a of s.agents) clearEvents(a);
     for (let i = 0; i < s.agents.length; i++) {
-      clearEvents(s.agents[i]);
       updateFreeze(s, i, next);
       driveAgent(s, i);
       updateGrab(s, i);
