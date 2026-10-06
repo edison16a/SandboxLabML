@@ -6,7 +6,7 @@ import { envOptionsFor, TrackCache } from '../training/racingSetup';
 import { RacingTrainer } from '../training/racingTrainer';
 import { createRacingRunConfig } from '../training/runConfig';
 import { linkScriptCompiler } from './compilerLink';
-import type { PreparedScript } from './prepare';
+import type { PreparedRacing } from './prepare';
 
 /** Small and fixed, so a check trains in a few seconds and gives every learner the same answer. */
 export const LESSON_POPULATION = 40;
@@ -45,7 +45,7 @@ function pause(): Promise<void> {
  * yields every few hundred ticks and between generations. Returns null if
  * the signal aborts.
  */
-export async function trainLessonScript(prepared: PreparedScript, generations: number, opts: TrainingOptions = {}): Promise<TrainingMetrics | null> {
+export async function trainLessonScript(prepared: PreparedRacing, generations: number, opts: TrainingOptions = {}): Promise<TrainingMetrics | null> {
   const blueprint = prepared.blueprint;
   if (!blueprint) throw new Error('Training checks need a racing brain.');
   linkScriptCompiler();

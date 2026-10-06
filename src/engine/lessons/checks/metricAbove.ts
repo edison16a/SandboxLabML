@@ -1,4 +1,4 @@
-import type { PreparedScript } from '../prepare';
+import type { PreparedRacing } from '../prepare';
 import { trainLessonScript, TRAINING_METRICS, type TrainingMetrics, type TrainingOptions } from '../training';
 import type { CheckOutcome, LessonCheck } from '../types';
 import { metricOutcome } from './compare';
@@ -9,7 +9,7 @@ type MetricCheck = Extract<LessonCheck, { kind: 'metricAbove' }>;
 export const MAX_CHECK_GENERATIONS = 30;
 
 /** Trains for the check's generations, then compares the metric with the target. */
-export async function metricAboveCheck(check: MetricCheck, prepared: PreparedScript, opts: TrainingOptions): Promise<CheckOutcome> {
+export async function metricAboveCheck(check: MetricCheck, prepared: PreparedRacing, opts: TrainingOptions): Promise<CheckOutcome> {
   if (!prepared.blueprint) return { passed: false, message: 'Training checks need a racing brain, such as brain racing-starter.' };
   if (!(TRAINING_METRICS as readonly string[]).includes(check.metric)) {
     return { passed: false, message: `Training cannot measure ${check.metric}. It measures ${TRAINING_METRICS.join(', ')}.` };

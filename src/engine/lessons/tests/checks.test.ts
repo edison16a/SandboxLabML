@@ -17,7 +17,7 @@ const PARKED = script('  drive(steer: 0, pedal: 0)\n  reward +1 when checkpoint.
 
 function prepared(source: string) {
   const p = prepareScript(source);
-  if (!p.ok) throw new Error(p.message);
+  if (!p.ok || p.value.env !== 'racing') throw new Error(p.ok ? 'Not a racing script' : p.message);
   return p.value;
 }
 

@@ -4,7 +4,7 @@ import { DEFAULT_CAR, SIM_DT } from '../../racing/car/params';
 import { STATUS_CRASHED } from '../../racing/car/runtime';
 import { RacingEnv } from '../../racing/env';
 import { buildTrack } from '../../racing/track/buildTrack';
-import type { PreparedScript } from '../prepare';
+import type { PreparedRacing } from '../prepare';
 import { TEST_BRAIN_SEED, testDriverGenome } from '../testDriver';
 import type { CheckOutcome, LessonCheck } from '../types';
 import { metricOutcome } from './compare';
@@ -24,7 +24,7 @@ export const TEST_DRIVE_METRICS: readonly (keyof TestDriveMetrics)[] = ['totalRe
  * brain. The script's own controller runs every tick, so its drive call,
  * rewards and stop rules are exactly what the car lives by.
  */
-export function testDrive(prepared: PreparedScript): TestDriveMetrics {
+export function testDrive(prepared: PreparedRacing): TestDriveMetrics {
   const blueprint = prepared.blueprint;
   if (!blueprint) throw new Error('Test drives need a racing brain.');
   const track = buildTrack(prepared.track);
@@ -53,7 +53,7 @@ export function testDrive(prepared: PreparedScript): TestDriveMetrics {
 }
 
 /** Runs a testRun check. Unknown metrics fail with a message that names the ones that exist. */
-export function testRunCheck(check: TestRunCheck, prepared: PreparedScript): CheckOutcome {
+export function testRunCheck(check: TestRunCheck, prepared: PreparedRacing): CheckOutcome {
   if (!prepared.blueprint) return { passed: false, message: 'Test drives need a racing brain, such as brain racing-starter.' };
   if (!(TEST_DRIVE_METRICS as readonly string[]).includes(check.metric)) {
     return { passed: false, message: `A test drive cannot measure ${check.metric}. It measures ${TEST_DRIVE_METRICS.join(', ')}.` };
