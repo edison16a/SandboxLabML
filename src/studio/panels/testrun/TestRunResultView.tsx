@@ -1,20 +1,24 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Stat } from '@/ui/primitives/Panel';
+import { ResultSection as Section } from './ResultSection';
 import { RewardChart } from './RewardChart';
-import { TickTable } from './TickTable';
-import type { TestRunOk } from './types';
+import { TickTable, type TickColumn } from './TickTable';
+import type { TestRunOk, TickLog } from './types';
 
-function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <section className="flex flex-col gap-2">
-      <div className="flex items-baseline justify-between gap-2">
-        <h3 className="text-[12px] font-semibold tracking-wide text-muted uppercase">{title}</h3>
-        {hint && <span className="text-[11px] text-subtle">{hint}</span>}
-      </div>
-      {children}
-    </section>
+/** Racing ticks: the points each tick gave, the running total and the speed. Ticks with points count as notable. */
+function RacingTicks({ log }: { log: TickLog }) {
+  const columns = useMemo<TickColumn[]>(
+    () => [
+      { label: 'Reward', values: log.reward, digits: 3, tone: 'signed' },
+      { label: 'Total', values: log.total, digits: 2 },
+      { label: 'Speed', values: log.speed, digits: 1, tone: 'muted', width: 60 },
+    ],
+    [log],
   );
+  const notable = useMemo(() => (t: number) => Math.abs(log.reward[t]) >= 1e-9, [log]);
+  return <TickTable time={log.time} columns={columns} events={log.events} notable={notable} filterLabel="Only ticks with points or events" />;
 }
 
 /** What one test episode did: how it ended, the reward curve, the cost and every tick. */
@@ -39,7 +43,7 @@ export function TestRunResultView({ result, estimate }: { result: TestRunOk; est
         {estimate !== null && <p className="text-[11px] text-subtle">The editor estimated {estimate.toFixed(3)} µs for the script. Measurements vary with the machine and what else is running.</p>}
       </Section>
       <Section title="Ticks">
-        <TickTable log={result.log} />
+        <RacingTicks log={result.log} />
       </Section>
     </div>
   );
