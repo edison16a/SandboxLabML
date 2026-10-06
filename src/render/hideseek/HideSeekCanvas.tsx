@@ -47,7 +47,7 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
   const frame = useMemo(() => createHsFrame(), []);
   const value = useMemo(() => ({ frame, getFeed, schemas, onMoveBox, onToggleLock }), [frame, getFeed, schemas, onMoveBox, onToggleLock]);
   const composer = showcase && effectsOn && (tier === 'high' || tier === 'ultra');
-  const pip = showcase && pov && tier !== 'low';
+  const pip = showcase && pov && tier !== 'low' && !photo;
   const instances = useCallback(
     () => ({
       arenas: frame.count,
