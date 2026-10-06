@@ -44,6 +44,8 @@ export function GridCones() {
     const curr = frame.curr;
     if (!curr || frame.count <= 1) return commit(m, 0);
     updateArenaClip(clip, frame.lattice);
+    // Every cone drawn here is outside the showcase (its own is hidden), so all dim with the grid.
+    material.color.setScalar(frame.dim);
     for (let k = 0; k < frame.count; k++) {
       const arena = frame.first + k;
       const o = agentAt(arena, 1);
