@@ -1,7 +1,6 @@
 import { racingSetupFor } from '@/engine/training/racingSetup';
-import { scriptAt } from '@/engine/training/runConfig';
 import type { WorkerPool } from '@/workers/client/workerPool';
-import { selectGhosts } from './ghostSelection';
+import { ghostSpecs, selectGhosts } from './ghostSelection';
 import { useRacingLab } from '../state/labStore';
 
 /** The parts of the session the Sandbox needs, kept narrow to avoid an import cycle. */
@@ -35,11 +34,7 @@ export async function sendSandboxScene(pool: WorkerPool): Promise<void> {
   if (s.mode !== 'sandbox' || !s.run || !s.sandboxTrack) return;
   const run = s.run;
   const gens = selectGhosts(s.ghostSelection, s.records.length);
-  const byGen = new Map(s.records.map((r) => [r.generation, r]));
-  const specs = gens
-    .map((g) => byGen.get(g))
-    .filter((r) => r !== undefined)
-    .map((r) => ({ generation: r.generation, genome: r.genome, seed: r.replaySeed, scriptSource: scriptAt(run, r.generation)?.source ?? null }));
+  const specs = ghostSpecs(run, s.records, gens);
   const setup = racingSetupFor(run, s.sandboxTrack, null);
   const lesion = Object.entries(s.lesions).map(([k, v]) => [Number(k), v] as [number, number]);
   await pool.replay.setGhostScene({ ...setup, lesion: lesion.length ? lesion : undefined }, specs);

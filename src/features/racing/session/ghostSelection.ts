@@ -1,3 +1,7 @@
+import type { GenerationRecord } from '@/engine/training/records';
+import { scriptAt, type RunConfig } from '@/engine/training/runConfig';
+import type { GhostSpec } from '@/workers/replay/ghostPlayer';
+
 /** How the user picks which past champions appear as ghosts. */
 export type GhostSelection =
   | { mode: 'auto' }
@@ -45,4 +49,17 @@ export function selectGhosts(sel: GhostSelection, available: number): number[] {
     gens = [...new Set([...thinned, ...gens.slice(-keepNewest)])];
   }
   return gens;
+}
+
+/**
+ * What the replay worker needs to re-simulate each chosen champion: its
+ * genome, the seed its car drove with and the script it trained under.
+ * Generations without a stored record are skipped.
+ */
+export function ghostSpecs(run: RunConfig, records: GenerationRecord[], gens: number[]): GhostSpec[] {
+  const byGen = new Map(records.map((r) => [r.generation, r]));
+  return gens
+    .map((g) => byGen.get(g))
+    .filter((r) => r !== undefined)
+    .map((r) => ({ generation: r.generation, genome: r.genome, seed: r.replaySeed, scriptSource: scriptAt(run, r.generation)?.source ?? null }));
 }
