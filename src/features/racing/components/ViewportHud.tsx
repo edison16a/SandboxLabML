@@ -48,48 +48,57 @@ export function ViewportHud({ population }: { population: SnapshotStream | null 
   const set = useRacingLab((s) => s.set);
   return (
     <>
-      <div className="pointer-events-none absolute top-3 left-3 flex max-w-[60%] flex-col gap-2 max-sm:top-13 max-sm:max-w-[calc(100%-1.5rem)]">
-        <LiveStats stream={population} />
-        <div className="pointer-events-auto">
-          <FocusChip />
+      {/* Stats and controls share one row, so on a narrow viewport the stats wrap instead of sliding under the
+          controls. On a phone the controls become one row across the top that scrolls sideways, with the stats below it. */}
+      <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-2 max-sm:flex-col-reverse max-sm:items-stretch">
+        <div className="flex min-w-0 flex-col items-start gap-2">
+          <LiveStats stream={population} />
+          <div className="pointer-events-auto">
+            <FocusChip />
+          </div>
         </div>
-      </div>
-      {/* On a phone the controls become one row across the top that scrolls sideways, with the stats below it.
-          Wider up, they wrap before they would run into the stats on a narrow viewport. */}
-      <div className="no-scrollbar absolute top-3 right-3 flex flex-wrap items-center justify-end gap-1.5 max-sm:left-3 sm:max-w-[calc(100%-20rem)] max-sm:flex-nowrap max-sm:justify-start max-sm:overflow-x-auto max-sm:[&>*]:shrink-0">
-        <Segmented<ViewMode>
-          data-tour="view"
-          label="What to show"
-          size="sm"
-          value={view}
-          onChange={(v) => set({ view: v })}
-          className="border-white/10 bg-black/45 backdrop-blur-sm"
-          overlay
-          options={[
-            { value: 'population', label: 'Population', title: 'The live generation' },
-            { value: 'overlay', label: 'Overlay', title: 'Ghosts of past champions' },
-            { value: 'both', label: 'Both' },
-          ]}
-        />
-        <GhostMenu />
-        <Tooltip content="Show what the car senses" shortcut="I">
-          <Button data-tour="inputs" size="sm" variant="secondary" className={inputs ? 'border-accent/60 bg-accent/25 text-white' : glass} onClick={() => set({ inputsOverlay: !inputs })} aria-pressed={inputs}>
-            <ScanEye />
-            Inputs
-          </Button>
-        </Tooltip>
-        <Select<CameraMode>
-          label="Camera"
-          value={camera}
-          onChange={(v) => set({ camera: v })}
-          className={`h-7 w-28 ${glass}`}
-          options={[
-            { value: 'chase', label: 'Chase cam' },
-            { value: 'orbit', label: 'Orbit' },
-            { value: 'top', label: 'Top down' },
-            { value: 'free', label: 'Free' },
-          ]}
-        />
+        <div className="no-scrollbar pointer-events-auto flex max-w-[60%] shrink-0 flex-wrap items-center justify-end gap-1.5 max-sm:max-w-none max-sm:flex-nowrap max-sm:justify-start max-sm:overflow-x-auto max-sm:[&>*]:shrink-0">
+          <Segmented<ViewMode>
+            data-tour="view"
+            label="What to show"
+            size="sm"
+            value={view}
+            onChange={(v) => set({ view: v })}
+            className="border-white/10 bg-black/45 backdrop-blur-sm"
+            overlay
+            options={[
+              { value: 'population', label: 'Population', title: 'The live generation' },
+              { value: 'overlay', label: 'Overlay', title: 'Ghosts of past champions' },
+              { value: 'both', label: 'Both' },
+            ]}
+          />
+          <GhostMenu />
+          <Tooltip content="Show what the car senses" shortcut="I">
+            <Button
+              data-tour="inputs"
+              size="sm"
+              variant="secondary"
+              className={inputs ? 'border-accent/60 bg-accent/25 text-white' : glass}
+              onClick={() => set({ inputsOverlay: !inputs })}
+              aria-pressed={inputs}
+            >
+              <ScanEye />
+              Inputs
+            </Button>
+          </Tooltip>
+          <Select<CameraMode>
+            label="Camera"
+            value={camera}
+            onChange={(v) => set({ camera: v })}
+            className={`h-7 w-28 ${glass}`}
+            options={[
+              { value: 'chase', label: 'Chase cam' },
+              { value: 'orbit', label: 'Orbit' },
+              { value: 'top', label: 'Top down' },
+              { value: 'free', label: 'Free' },
+            ]}
+          />
+        </div>
       </div>
       <HeldNote />
       <div className="pointer-events-none absolute right-3 bottom-3 hidden items-center gap-1 rounded-md bg-black/40 px-2 py-1 text-[11px] text-white/70 md:flex">
