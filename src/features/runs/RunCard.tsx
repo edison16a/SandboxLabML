@@ -51,8 +51,12 @@ export function RunCard({ summary, onAction }: { summary: RunSummary; onAction: 
         </div>
         <div className="grid grid-cols-3 gap-x-6 gap-y-2 sm:grid-cols-6">
           <Metric label="Generations" value={row.generation} />
-          <Metric label="Best fitness" value={row.bestFitness.toFixed(1)} />
-          <Metric label={racing ? 'Best lap' : 'Best distance'} value={racing ? (row.bestLapTime > 0 ? `${row.bestLapTime.toFixed(2)} s` : '-') : '-'} />
+          <Metric label={racing ? 'Best fitness' : 'Hider best'} value={row.bestFitness.toFixed(1)} />
+          {racing ? (
+            <Metric label="Best lap" value={row.bestLapTime > 0 ? `${row.bestLapTime.toFixed(2)} s` : '-'} />
+          ) : (
+            <Metric label="Hidden" value={row.hiddenShare !== undefined ? `${Math.round(row.hiddenShare * 100)}%` : '-'} />
+          )}
           <Metric label="Benchmark" value={row.benchmark !== undefined ? row.benchmark.toFixed(0) : '-'} />
           <Metric label="Parameters" value={model ? model.parameters : '-'} />
           <Metric label="Brain size" value={model ? formatBytes(model.bytes) : '-'} />

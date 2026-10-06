@@ -56,7 +56,7 @@ export async function saveHideSeekGeneration(r: HideSeekRecord): Promise<void> {
     });
   const run = await d.runs.get(r.runId);
   if (!run) return;
-  await updateRun(r.runId, { generation: r.generation + 1, bestFitness: Math.max(run.bestFitness, r.stats.hiders.best) });
+  await updateRun(r.runId, { generation: r.generation + 1, bestFitness: Math.max(run.bestFitness, r.stats.hiders.best), hiddenShare: r.stats.game.currentHiddenShare });
 }
 
 export async function loadHideSeekHistory(runId: string): Promise<HideSeekRecord[]> {

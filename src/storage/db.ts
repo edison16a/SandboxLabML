@@ -18,6 +18,8 @@ export interface RunRow {
   bestDistance: number;
   bestLapTime: number;
   benchmark?: number;
+  /** Hide and Seek only: share of seek time the newest hiders stayed hidden from current seekers, 0 to 1. */
+  hiddenShare?: number;
   /** Soft delete: set when moved to Trash, purged 7 days later. */
   deletedAt?: number;
 }
