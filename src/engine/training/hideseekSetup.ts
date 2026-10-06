@@ -36,6 +36,7 @@ export function hideSeekTrainerOptions(config: RunConfig, sensors: HideSeekSenso
     rounds: s.rounds,
     hallOfFameSize: s.hallOfFameSize,
     reward: s.reward,
+    setup: s.setup,
     physics: s.physics,
   };
 }

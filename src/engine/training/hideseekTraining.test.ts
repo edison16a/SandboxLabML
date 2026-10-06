@@ -27,8 +27,18 @@ describe('Hide and Seek run config', () => {
     const s = hideSeekSettingsOf(c);
     expect(s.layouts).toEqual(['open', 'shelter']);
     expect(s.rounds).toBe(2);
-    expect(s.reward).toBe('v1');
+    // New runs get the tuned v2 setup and its cover rewards.
+    expect(s.setup).toBe('v2');
+    expect(s.reward).toBe('cover');
     expect(hideSeekBlueprints(c).seeker.id).toBe(standard.id);
+  });
+
+  it('reads runs saved before setups existed as v1', () => {
+    const c = createHideSeekRunConfig({ name: 'old', seed: 1, blueprint: standard, populationPerTeam: 10 });
+    const { setup: _setup, reward: _reward, ...legacy } = c.hideseek as Record<string, unknown>;
+    const s = hideSeekSettingsOf({ ...c, hideseek: legacy });
+    expect(s.setup).toBe('v1');
+    expect(s.reward).toBe('v1');
   });
 
   it('keeps a separate seeker blueprint and changes the hash with it', () => {

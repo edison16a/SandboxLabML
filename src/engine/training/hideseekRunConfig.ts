@@ -1,4 +1,6 @@
 import type { HideSeekBlueprint } from '../blueprints/types';
+import { DEFAULT_HIDESEEK_SETUP, HIDESEEK_SETUPS } from '../hideseek/trainer/setups';
+import type { HideSeekSetupId } from '../hideseek/trainer/types';
 import { hashObject } from '../core/hash';
 import { ENGINE_VERSION } from '../core/version';
 import { HIDESEEK_LAYOUT_IDS } from '../hideseek/layouts/presets';
@@ -27,6 +29,12 @@ export interface HideSeekSettings {
   hallOfFameSize: number;
   /** Seekers can sense differently from hiders. Missing means they share the run blueprint. */
   seekerBlueprint?: HideSeekBlueprint;
+  /**
+   * Named training setup: v2 (cover rewards, a sparring round, mixed rooms)
+   * learns visibly faster and is the default for new runs. Runs saved before
+   * setups existed read back as v1, so they keep playing the rules they trained under.
+   */
+  setup: HideSeekSetupId;
 }
 
 export interface NewHideSeekRun {
@@ -61,7 +69,8 @@ export function createHideSeekRunConfig(input: NewHideSeekRun): RunConfig {
     layouts,
     rounds,
     populationPerTeam: Math.max(2, Math.round(input.populationPerTeam)),
-    reward: input.reward ?? 'v1',
+    reward: input.reward ?? HIDESEEK_SETUPS[DEFAULT_HIDESEEK_SETUP].reward,
+    setup: DEFAULT_HIDESEEK_SETUP,
     physics,
     hallOfFameSize: input.hallOfFameSize ?? 20,
     ...(input.seekerBlueprint ? { seekerBlueprint: input.seekerBlueprint } : {}),
@@ -98,6 +107,7 @@ export function hideSeekSettingsOf(config: RunConfig): HideSeekSettings {
     rounds: s.rounds ?? 4,
     populationPerTeam: s.populationPerTeam ?? config.neat.populationSize,
     reward: s.reward ?? 'v1',
+    setup: s.setup ?? 'v1',
     physics: s.physics ?? DEFAULT_HIDESEEK_PHYSICS,
     hallOfFameSize: s.hallOfFameSize ?? 20,
     ...(s.seekerBlueprint ? { seekerBlueprint: s.seekerBlueprint } : {}),
