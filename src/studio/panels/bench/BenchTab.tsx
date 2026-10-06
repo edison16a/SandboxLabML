@@ -4,23 +4,23 @@ import { useEffect, useRef, useState } from 'react';
 import { Gauge, Square } from 'lucide-react';
 import { loadReferences, runBenchmark } from '@/engine/bench';
 import type { BenchReferences, BenchResult } from '@/engine/bench/types';
-import { listGenerationNumbers } from '@/storage/generationIndex';
-import { loadChampion, setGenerationBenchmark } from '@/storage/generations';
 import { Button } from '@/ui/primitives/Button';
 import { Field } from '@/ui/primitives/Field';
 import { Select } from '@/ui/primitives/Select';
-import { useRacingChampions } from '../useRacingChampions';
 import { BenchResultCard } from './BenchResultCard';
+import { generationsOf, loadModel, saveScore, useBenchSources } from './benchSource';
+
+const ENV_NAMES = { racing: 'Racing', hideseek: 'Hide and Seek' } as const;
 
 type Outcome = { kind: 'result'; result: BenchResult; references: BenchReferences | null; generation: number } | { kind: 'message'; text: string };
 
 /**
  * Scores a stored champion on the benchmark for its environment and shows
- * how it compares with the reference presets. It is built against the
- * benchmark contract, so it starts working as soon as the engine does.
+ * how it compares with the reference presets. A Racing run is scored by
+ * its champion, a Hide and Seek run by the champion pair of a generation.
  */
 export default function BenchTab() {
-  const { sources, loading } = useRacingChampions();
+  const { sources, loading } = useBenchSources();
   const [runId, setRunId] = useState<string | null>(null);
   const [generations, setGenerations] = useState<number[]>([]);
   const [generation, setGeneration] = useState<number | null>(null);
@@ -32,7 +32,7 @@ export default function BenchTab() {
   useEffect(() => {
     if (!source) return;
     let live = true;
-    void listGenerationNumbers(source.run.id).then((list) => {
+    void generationsOf(source.run).then((list) => {
       if (!live) return;
       setGenerations(list);
       setGeneration(list[list.length - 1] ?? null);
@@ -51,15 +51,15 @@ export default function BenchTab() {
     setProgress(0);
     setOutcome(null);
     try {
-      const genome = await loadChampion(source.run.id, generation);
-      if (!genome) throw new Error('That champion could not be loaded.');
-      const result = await runBenchmark(source.run.config, genome, { signal: ctrl.signal, onProgress: setProgress });
+      const model = await loadModel(source.run, generation);
+      if (!model) throw new Error('That champion could not be loaded.');
+      const result = await runBenchmark(source.run.config, model, { signal: ctrl.signal, onProgress: setProgress });
       if (ctrl.signal.aborted) return;
       if (!result) {
-        setOutcome({ kind: 'message', text: 'Benchmark engine not available yet. This tab will work as soon as it lands.' });
+        setOutcome({ kind: 'message', text: 'This run could not be benchmarked.' });
         return;
       }
-      await setGenerationBenchmark(source.run.id, generation, result.score).catch(() => undefined);
+      await saveScore(source.run, generation, result.score).catch(() => undefined);
       setOutcome({ kind: 'result', result, references: await loadReferences(source.run.env), generation });
     } catch (err) {
       if (!ctrl.signal.aborted) setOutcome({ kind: 'message', text: err instanceof Error ? err.message : String(err) });
@@ -73,14 +73,14 @@ export default function BenchTab() {
   };
 
   if (!loading && sources.length === 0) {
-    return <p className="m-4 rounded-md border border-dashed border-border p-4 text-center text-[13px] text-muted">No racing runs with a champion yet. Train a run in the Racing lab, then benchmark its champion here.</p>;
+    return <p className="m-4 rounded-md border border-dashed border-border p-4 text-center text-[13px] text-muted">No runs with a champion yet. Train a run in the Racing or Hide and Seek lab, then benchmark its champion here.</p>;
   }
   return (
     <div className="flex flex-col gap-4 p-4">
       <Field label="Run">
-        <Select label="Run" value={source?.run.id ?? ''} disabled={progress !== null} onChange={(id) => setRunId(id)} options={sources.map((s) => ({ value: s.run.id, label: s.run.name, hint: `${s.latest + 1} generations` }))} />
+        <Select label="Run" value={source?.run.id ?? ''} disabled={progress !== null} onChange={(id) => setRunId(id)} options={sources.map((s) => ({ value: s.run.id, label: s.run.name, hint: `${ENV_NAMES[s.run.env]}, ${s.latest + 1} generations` }))} />
       </Field>
-      <Field label="Champion of generation" hint="Defaults to the latest champion.">
+      <Field label="Champion of generation" hint={source?.run.env === 'hideseek' ? 'Defaults to the latest generation. Its hider and seeker champions play together.' : 'Defaults to the latest champion.'}>
         <Select
           label="Generation"
           value={generation === null ? '' : String(generation)}
