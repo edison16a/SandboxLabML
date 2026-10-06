@@ -112,12 +112,14 @@ export function RunsPage() {
               <div className="flex gap-2">
                 <Link
                   href="/lab/racing"
+                  prefetch={false}
                   className="inline-flex h-8 items-center rounded-md bg-accent px-3 text-[13px] font-semibold text-[#06101f]"
                 >
                   Open the Racing lab
                 </Link>
                 <Link
                   href="/lab/hide-seek"
+                  prefetch={false}
                   className="inline-flex h-8 items-center rounded-md border border-border px-3 text-[13px]"
                 >
                   Hide and Seek

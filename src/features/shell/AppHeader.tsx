@@ -29,6 +29,8 @@ export function AppHeader({ right }: { right?: React.ReactNode }) {
             <Link
               key={href}
               href={href}
+              // Lab routes carry three.js and Rapier; prefetching them would make every page heavy.
+              prefetch={false}
               aria-current={active ? 'page' : undefined}
               className={cn(
                 'inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium whitespace-nowrap transition-colors',

@@ -20,11 +20,11 @@ export function Landing() {
             Evolve brains that race cars around a 3D circuit and play hide and seek with boxes. Write the training loop yourself and see every decision as it happens. Everything runs in your browser.
           </p>
           <div className="flex flex-wrap gap-2">
-            <Link href="/lab/racing" className="inline-flex h-10 items-center gap-2 rounded-md bg-accent px-4 text-[14px] font-semibold text-[#06101f] transition-colors hover:bg-[#62a8ff]">
+            <Link href="/lab/racing" prefetch={false} className="inline-flex h-10 items-center gap-2 rounded-md bg-accent px-4 text-[14px] font-semibold text-[#06101f] transition-colors hover:bg-[#62a8ff]">
               Open the Racing lab
               <ArrowRight className="size-4" />
             </Link>
-            <Link href="/lab/hide-seek" className="inline-flex h-10 items-center rounded-md border border-border px-4 text-[14px] font-medium hover:border-border-strong hover:bg-surface">
+            <Link href="/lab/hide-seek" prefetch={false} className="inline-flex h-10 items-center rounded-md border border-border px-4 text-[14px] font-medium hover:border-border-strong hover:bg-surface">
               Hide and Seek
             </Link>
             <Link href="/studio" className="inline-flex h-10 items-center rounded-md border border-border px-4 text-[14px] font-medium hover:border-border-strong hover:bg-surface">

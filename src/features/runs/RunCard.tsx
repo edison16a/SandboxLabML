@@ -61,7 +61,7 @@ export function RunCard({ summary, onAction }: { summary: RunSummary; onAction: 
       <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end">
         <span className="text-[12px] text-subtle">{timeAgo(row.updatedAt)}</span>
         <div className="flex items-center gap-1.5">
-          <Link href={labHref(summary)} className="inline-flex h-8 items-center rounded-md bg-accent px-3 text-[13px] font-semibold text-[#06101f] hover:bg-[#62a8ff]">
+          <Link href={labHref(summary)} prefetch={false} className="inline-flex h-8 items-center rounded-md bg-accent px-3 text-[13px] font-semibold text-[#06101f] hover:bg-[#62a8ff]">
             Open
           </Link>
           <Menu
