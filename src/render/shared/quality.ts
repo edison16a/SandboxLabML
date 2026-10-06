@@ -1,0 +1,27 @@
+import type { QualityTier } from '@/features/racing/state/labStore';
+
+/** Pixel ratio cap per tier. Pixel ratio is the first thing to drop when frames run long. */
+export function tierDpr(tier: QualityTier): [number, number] {
+  if (tier === 'low') return [1, 1];
+  if (tier === 'medium') return [1, 1.5];
+  return [1, 2];
+}
+
+export function lowerTier(tier: QualityTier): QualityTier {
+  return tier === 'high' ? 'medium' : 'low';
+}
+
+export function raiseTier(tier: QualityTier): QualityTier {
+  return tier === 'low' ? 'medium' : 'high';
+}
+
+/**
+ * Rough guess at a weak GPU from the WebGL renderer string. Integrated GPUs
+ * start on Medium and the Hide and Seek grid caps at 25 arenas on them.
+ */
+export function isIntegratedGpu(gl: WebGL2RenderingContext | WebGLRenderingContext): boolean {
+  const ext = gl.getExtension('WEBGL_debug_renderer_info');
+  const name = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)).toLowerCase();
+  if (name.includes('apple')) return false;
+  return /intel|swiftshader|llvmpipe|mali|adreno|powervr|software/.test(name);
+}
