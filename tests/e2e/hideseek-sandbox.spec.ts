@@ -7,7 +7,7 @@ function instance(page: Page, key: string) {
 
 /** The Sandbox card's status line, a countdown like the HUD chip: "Prep 9.0 s left", then "Seek 20.8 s left". */
 function status(page: Page) {
-  return page.getByTestId('sandbox-card').getByRole('status');
+  return page.getByTestId('sandbox-status');
 }
 
 /**
