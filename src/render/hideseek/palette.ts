@@ -8,9 +8,9 @@ import * as THREE from 'three';
  */
 export const HS_COLORS = {
   background: '#0b0f16',
-  ground: '#11161f',
-  floor: '#5b616c',
-  gridFloor: '#343a46',
+  ground: '#07090d',
+  floor: '#737985',
+  gridFloor: '#3a414e',
   wall: '#e3e5e9',
   gridWall: '#b7bdc8',
   cube: '#d2b080',

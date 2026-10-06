@@ -1,9 +1,9 @@
 'use client';
 
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Environment, Lightformer } from '@react-three/drei';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useHsScene } from '../frame/sceneContext';
 import { arenaOrigin } from '../layout/gridLattice';
@@ -22,12 +22,24 @@ const SHADOW_HALF = 11.5;
  */
 export function StudioLighting({ tier, shadows }: { tier: HsQualityTier; shadows: boolean }) {
   const { frame } = useHsScene();
+  const gl = useThree((s) => s.gl);
   const light = useRef<THREE.DirectionalLight>(null);
   const target = useMemo(() => new THREE.Object3D(), []);
   const origin = useMemo(() => ({ x: 0, z: 0 }), []);
   const mapSize = tier === 'ultra' ? 4096 : tier === 'high' ? 2048 : 1024;
 
+  useEffect(() => {
+    // Shadow maps are redrawn by hand once a frame. Left automatic, every
+    // render call (each first person view, the contact shadow pass) would
+    // redraw them again.
+    gl.shadowMap.autoUpdate = false;
+    return () => {
+      gl.shadowMap.autoUpdate = true;
+    };
+  }, [gl]);
+
   useFrame(() => {
+    gl.shadowMap.needsUpdate = true;
     const l = light.current;
     if (!l) return;
     if (frame.focusSlot >= 0) arenaOrigin(frame.focusSlot, frame.lattice, origin);
@@ -41,12 +53,12 @@ export function StudioLighting({ tier, shadows }: { tier: HsQualityTier; shadows
     <>
       <color attach="background" args={[HS_COLORS.background]} />
       <fog attach="fog" args={[HS_COLORS.background, 220, 900]} />
-      <hemisphereLight args={['#dfe7f5', '#141922', 0.55]} />
+      <hemisphereLight args={['#dfe7f5', '#141922', 0.3]} />
       <primitive object={target} />
       <directionalLight
         ref={light}
         target={target}
-        intensity={2.1}
+        intensity={2.9}
         color="#fff4e6"
         castShadow={shadows}
         shadow-mapSize={[mapSize, mapSize]}
@@ -60,7 +72,7 @@ export function StudioLighting({ tier, shadows }: { tier: HsQualityTier; shadows
         shadow-camera-near={10}
         shadow-camera-far={80}
       />
-      <Environment resolution={tier === 'low' ? 64 : 256} frames={1} environmentIntensity={0.85}>
+      <Environment resolution={tier === 'low' ? 64 : 256} frames={1} environmentIntensity={0.55}>
         <color attach="background" args={['#0c1017']} />
         <Lightformer form="rect" intensity={2.4} color="#f4f7ff" position={[0, 9, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[16, 16, 1]} />
         <Lightformer form="rect" intensity={1.2} color="#dfe8ff" position={[-10, 4, -2]} rotation={[0, Math.PI / 2, 0]} scale={[14, 3, 1]} />

@@ -18,8 +18,9 @@ import { arenaOrigin } from '../layout/gridLattice';
  */
 export function ShowcaseEffects({ tier, photo }: { tier: HsQualityTier; photo: boolean }) {
   const ultra = tier === 'ultra';
-  const ao = <N8AO aoRadius={1.4} distanceFalloff={1.1} intensity={2.2} quality={ultra ? 'high' : 'medium'} halfRes={!ultra} color="#05070b" />;
-  const bloom = <Bloom mipmapBlur levels={ultra ? 7 : 5} luminanceThreshold={1} luminanceSmoothing={0.3} intensity={0.85} radius={0.62} />;
+  const ao = <N8AO ref={opaqueOnly} aoRadius={1.4} distanceFalloff={1.1} intensity={2.2} quality={ultra ? 'high' : 'medium'} halfRes={!ultra} color="#05070b" />;
+  // Lit white walls reach a little past 1 in linear light, so the threshold sits above them and only emissive parts glow.
+  const bloom = <Bloom mipmapBlur levels={ultra ? 7 : 5} luminanceThreshold={1.5} luminanceSmoothing={0.2} intensity={0.9} radius={0.6} />;
   const finish = [<ToneMapping key="tm" mode={ToneMappingMode.AGX} />, <SMAA key="smaa" />, <Vignette key="v" eskil={false} offset={0.32} darkness={0.36} />];
   return photo ? (
     <EffectComposer multisampling={0} enableNormalPass={false} frameBufferType={THREE.HalfFloatType}>
@@ -35,6 +36,19 @@ export function ShowcaseEffects({ tier, photo }: { tier: HsQualityTier; photo: b
       {finish}
     </EffectComposer>
   );
+}
+
+/**
+ * N8AO turns on a transparency mode by itself as soon as the scene holds a
+ * transparent material, which this scene always does (cones, trails, blob
+ * shadows). That mode renders the scene twice more and stamped ghost
+ * outlines of floor decals into the occlusion, so it is switched off: only
+ * opaque geometry should darken corners.
+ */
+function opaqueOnly(pass: { autoDetectTransparency: boolean; configuration: { transparencyAware: boolean } } | null): void {
+  if (!pass) return;
+  pass.autoDetectTransparency = false;
+  pass.configuration.transparencyAware = false;
 }
 
 /** Depth of field with its focus on the center of the focused arena. */

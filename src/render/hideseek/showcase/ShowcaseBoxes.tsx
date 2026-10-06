@@ -40,7 +40,7 @@ export function ShowcaseBoxes({ arena, onBoxPointerDown }: { arena: number; onBo
     return { crates, edges, body, shackle, dispose: () => [...crates, ...edges, body, shackle].forEach((g) => g.dispose()) };
   }, []);
   const mats = useDisposable(() => {
-    const crate = SIZES.map((_, i) => new THREE.MeshStandardMaterial({ color: i < 2 ? HS.cube : HS.plank, roughness: 0.5, metalness: 0, envMapIntensity: 1 }));
+    const crate = SIZES.map((_, i) => new THREE.MeshStandardMaterial({ color: i < 2 ? HS.cube : HS.plank, roughness: 0.55, metalness: 0, envMapIntensity: 0.6 }));
     const edge = SIZES.map(() => new THREE.MeshStandardMaterial({ color: '#000000', emissive: HS.locked, emissiveIntensity: 0, toneMapped: false, transparent: true, opacity: 0 }));
     const body = new THREE.MeshStandardMaterial({ color: '#e9a03b', roughness: 0.32, metalness: 0.85, emissive: HS.locked, emissiveIntensity: 0.25 });
     const steel = new THREE.MeshStandardMaterial({ color: '#d9dee6', roughness: 0.22, metalness: 1 });

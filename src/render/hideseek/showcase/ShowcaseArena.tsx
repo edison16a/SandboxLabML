@@ -20,6 +20,20 @@ import { VisionCone } from './VisionCone';
 const SIZE = DEFAULT_HIDESEEK_PHYSICS.arena.size;
 
 /**
+ * Contact shadows look up from their plane and darken whatever they see
+ * close above it. Crates and agents stand exactly on the floor, so from a
+ * camera at plane height their bottom faces sit right on the near plane
+ * and their sides are seen edge on: the shadow comes out empty. Dropping
+ * the shadow camera a few centimeters below the floor, while the shadow
+ * itself stays drawn just above it, lets the camera see those bottoms.
+ * The group is turned a quarter turn about x, so its local +z points down.
+ */
+function lowerShadowCamera(group: THREE.Group | null): void {
+  const camera = group?.children.find((c) => (c as THREE.OrthographicCamera).isOrthographicCamera);
+  if (camera) camera.position.z = 0.03;
+}
+
+/**
  * One arena in full quality, mounted at the focused slot's place in the
  * grid: textured room, rounded crates with lock animation, detailed agents,
  * the clipped vision cone, sight lines and the SEEN billboard. It follows
@@ -76,7 +90,7 @@ export function ShowcaseArena({ tier, sandbox }: { tier: HsQualityTier; sandbox:
             <SeenBillboard arena={shown.arena} />
           </Suspense>
           {tier !== 'low' && (
-            <ContactShadows position={[0, 0.006, 0]} scale={SIZE} resolution={tier === 'ultra' ? 1024 : 512} far={1.8} blur={2.6} opacity={0.62} color="#05070b" frames={Infinity} />
+            <ContactShadows ref={lowerShadowCamera} position={[0, 0.004, 0]} scale={SIZE} resolution={tier === 'ultra' ? 1024 : 512} far={1.8} blur={2.2} opacity={0.7} color="#04060a" frames={Infinity} />
           )}
         </>
       )}

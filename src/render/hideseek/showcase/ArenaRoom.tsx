@@ -26,10 +26,11 @@ export function ArenaRoom({ layout }: { layout: number }) {
       roughnessMap: maps.roughnessMap,
       roughness: 1,
       metalness: 0,
-      envMapIntensity: 0.9,
+      // Low on purpose: a big softbox mirrored in a semi gloss floor would wash out the key light shadows.
+      envMapIntensity: 0.32,
     });
   }, []);
-  const wallMat = useDisposable(() => new THREE.MeshStandardMaterial({ color: HS_COLORS.wall, roughness: 0.58, metalness: 0, envMapIntensity: 0.8 }), []);
+  const wallMat = useDisposable(() => new THREE.MeshStandardMaterial({ color: HS_COLORS.wall, roughness: 0.62, metalness: 0, envMapIntensity: 0.55 }), []);
   const stripMat = useDisposable(() => new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#dfe9ff', emissiveIntensity: 3.2, toneMapped: false }), []);
 
   return (
