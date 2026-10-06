@@ -33,7 +33,7 @@ export function GhostCars() {
   const built = useDisposable(() => {
     const geometry = crowdGeometry();
     const opacity = attachOpacity(geometry, MAX_GHOSTS);
-    const material = withCarSurface(createFadeMaterial({ vertexColors: true, depthFunc: THREE.LessEqualDepth }));
+    const material = withCarSurface(createFadeMaterial({ vertexColors: true, depthFunc: THREE.LessEqualDepth }), { ghost: true });
     // Transparent so it draws after the opaque scene; drawn earlier it would punch holes in the track behind it.
     const depth = new THREE.MeshBasicMaterial({ colorWrite: false, transparent: true, depthWrite: true });
     return { geometry, opacity, material, depth, dispose: () => (geometry.dispose(), material.dispose(), depth.dispose()) };

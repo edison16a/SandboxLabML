@@ -9,12 +9,17 @@ import type * as THREE from 'three';
  * (the lamps). Smooth surfaces also pick up the clear coat, if the
  * material has one.
  *
+ * Ghosts set `ghost`: the instance color then washes over the whole car,
+ * full strength on the paint and dimmer elsewhere, so a translucent ghost
+ * reads as one colored shape instead of a smoky dark one.
+ *
  * Any onBeforeCompile already on the material still runs first, so this
  * stacks on the ghosts' per-instance fade.
  */
-export function withCarSurface<T extends THREE.MeshStandardMaterial>(material: T): T {
+export function withCarSurface<T extends THREE.MeshStandardMaterial>(material: T, { ghost = false } = {}): T {
   const before = material.onBeforeCompile.bind(material);
   const key = material.customProgramCacheKey.bind(material);
+  const tinted = ghost ? 'instanceColor.rgb * mix( 0.45, 1.0, surface.w )' : 'vColor.rgb * mix( vec3( 1.0 ), instanceColor.rgb, surface.w )';
   material.onBeforeCompile = (shader, renderer) => {
     before(shader, renderer);
     shader.vertexShader = shader.vertexShader
@@ -28,7 +33,7 @@ export function withCarSurface<T extends THREE.MeshStandardMaterial>(material: T
           '#endif',
           'vRawColor = vColor.rgb;',
           '#ifdef USE_INSTANCING_COLOR',
-          '  vColor.rgb *= mix( vec3( 1.0 ), instanceColor.rgb, surface.w );',
+          `  vColor.rgb = ${tinted};`,
           '#endif',
           'vSurface = surface;',
         ].join('\n'),
@@ -40,6 +45,6 @@ export function withCarSurface<T extends THREE.MeshStandardMaterial>(material: T
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += vRawColor * vSurface.z;')
       .replace('material.clearcoat = clearcoat;', 'material.clearcoat = clearcoat * clamp( ( 0.5 - vSurface.x ) * 2.5, 0.0, 1.0 );');
   };
-  material.customProgramCacheKey = () => `${key()}|car-surface`;
+  material.customProgramCacheKey = () => `${key()}|car-surface${ghost ? '-ghost' : ''}`;
   return material;
 }
