@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
 import { useMemo, useRef } from 'react';
+import { configureTextBuilder } from 'troika-three-text';
 import { FLAG_SEEN } from '@/engine/hideseek/snapshot';
 import { useHsScene } from '../frame/sceneContext';
 import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
@@ -14,6 +15,11 @@ import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
  * policy blocks and which would break offline.
  */
 export const SDF_FONT = '/fonts/Geist-SemiBold.ttf';
+
+// The text builder normally runs in a worker that loads its code from blob
+// URLs, which the content security policy forbids. Building four glyphs on
+// the main thread costs nothing.
+configureTextBuilder({ useWorker: false, defaultFontURL: SDF_FONT });
 
 /** Pushed past 1 so bloom gives the word a glow. */
 const RED = new THREE.Color('#ff5f6d').multiplyScalar(2.4);
