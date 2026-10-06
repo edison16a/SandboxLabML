@@ -30,7 +30,9 @@ export function probeWeakGpu(): boolean {
   if (probed !== null) return probed;
   try {
     const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
+    // Ask like the lab canvases do. A dual GPU laptop gives a default context the integrated GPU.
+    const attrs: WebGLContextAttributes = { powerPreference: 'high-performance' };
+    const gl = canvas.getContext('webgl2', attrs) ?? canvas.getContext('webgl', attrs);
     probed = gl ? isIntegratedGpu(gl) : true;
     gl?.getExtension('WEBGL_lose_context')?.loseContext();
   } catch {
