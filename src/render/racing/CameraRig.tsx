@@ -25,13 +25,22 @@ export function CameraRig({ mode, target }: { mode: CameraMode; target: React.Re
     return { x: (b.minX + b.maxX) / 2, z: -(b.minY + b.maxY) / 2, size: Math.max(b.maxX - b.minX, b.maxY - b.minY) };
   }, [track]);
 
+  const editing = useRacingLab((s) => s.editingTrack);
+  const controls = useThree((s) => s.controls) as { target?: THREE.Vector3; update?: () => void } | null;
+  const placed = useRef('');
   useEffect(() => {
     spring.init = false;
-    if (mode === 'top' || mode === 'free') {
-      camera.position.set(center.x, center.size * 1.05 + 40, center.z + 0.01);
-      camera.lookAt(center.x, 0, center.z);
-    }
-  }, [mode, camera, center, spring]);
+    if (mode !== 'top' && mode !== 'free') return void (placed.current = '');
+    // Dragging a track point moves the bounds on every update. Re-framing then would slide the map out from under the pointer.
+    const key = `${mode}:${track.spec.id}:${controls ? 'controls' : 'none'}`;
+    if (editing && placed.current === key) return;
+    placed.current = key;
+    camera.position.set(center.x, center.size * 1.05 + 40, center.z + 0.01);
+    camera.lookAt(center.x, 0, center.z);
+    // The map controls aim at their own target. Left at the old center, a camera now on its far side turns the map upside down.
+    controls?.target?.set(center.x, 0, center.z);
+    controls?.update?.();
+  }, [mode, camera, center, spring, editing, track.spec.id, controls]);
 
   useFrame((_, rawDt) => {
     // A generous clamp keeps the spring stable after a stall without leaving the camera behind on slow GPUs.
