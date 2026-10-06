@@ -11,6 +11,7 @@ import { useHsScene } from '../frame/sceneContext';
 import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
 import { MAX_ARENAS } from '../grid/scratch';
+import { HS_COLORS } from '../palette';
 import { MAX_RAY_LABELS, RayLabels, type RayLabelsHandle } from './RayLabels';
 
 const Y = DEFAULT_HIDESEEK_PHYSICS.rayHeight;
@@ -29,7 +30,7 @@ export const overlayCounts = { rays: 0, sightLines: 0 };
  */
 export function RaysOverlay() {
   const { frame, schemas } = useHsScene();
-  const buffer = useDisposable(() => new RayBuffer(CAPACITY), []);
+  const buffer = useDisposable(() => new RayBuffer(CAPACITY, HS_COLORS.rayHighlight), []);
   const labels = useRef<RayLabelsHandle>(null);
   const rayRange = schemas[0].find((s) => s.ray)?.ray?.maxLength ?? 12;
   const t = useMemo(() => ({ o: { x: 0, z: 0 }, s: { x: 0, z: 0, yaw: 0 }, h: { x: 0, z: 0, yaw: 0 } }), []);

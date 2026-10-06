@@ -25,6 +25,8 @@ export const HS_COLORS = {
   dormant: '#9aa0aa',
   /** The soft round shadow under every character and crate. */
   blobShadow: '#1a1712',
+  /** The ray of a hovered input: dark ink, since white would vanish on the pale floor and walls. */
+  rayHighlight: '#1d2433',
 } as const;
 
 /** The same colors as three.js Colors, created once and never mutated. */

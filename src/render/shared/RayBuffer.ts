@@ -2,12 +2,12 @@ import * as THREE from 'three';
 
 const FAR = new THREE.Color('#3dd68c');
 const NEAR = new THREE.Color('#ff4d4d');
-const HOT = new THREE.Color('#ffffff');
 
 /**
  * One LineSegments buffer for sensor rays, rewritten in place every frame.
  * Rays fade from green (open road) to red (wall close); a hovered input is
- * drawn white. Hit points go into a Points buffer so each ray ends in a dot.
+ * drawn in the highlight color, white unless the scene is too pale for it.
+ * Hit points go into a Points buffer so each ray ends in a dot.
  */
 export class RayBuffer {
   readonly lines: THREE.LineSegments;
@@ -18,8 +18,10 @@ export class RayBuffer {
   private readonly dotCol: THREE.BufferAttribute;
   private n = 0;
   private readonly c = new THREE.Color();
+  private readonly hot: THREE.Color;
 
-  constructor(readonly capacity: number) {
+  constructor(readonly capacity: number, highlight: THREE.ColorRepresentation = '#ffffff') {
+    this.hot = new THREE.Color(highlight);
     const g = new THREE.BufferGeometry();
     this.pos = new THREE.BufferAttribute(new Float32Array(capacity * 6), 3).setUsage(THREE.DynamicDrawUsage);
     this.col = new THREE.BufferAttribute(new Float32Array(capacity * 6), 3).setUsage(THREE.DynamicDrawUsage);
@@ -59,7 +61,7 @@ export class RayBuffer {
     p[i * 6 + 3] = x1;
     p[i * 6 + 4] = y;
     p[i * 6 + 5] = z1;
-    if (highlighted) this.c.copy(HOT);
+    if (highlighted) this.c.copy(this.hot);
     else this.c.copy(FAR).lerp(NEAR, Math.min(1, Math.max(0, closeness)));
     const { r, g, b } = this.c;
     const c = this.col.array as Float32Array;
