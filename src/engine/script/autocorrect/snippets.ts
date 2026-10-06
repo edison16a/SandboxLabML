@@ -39,6 +39,22 @@ export const SNIPPETS: readonly Snippet[] = [
   { label: 'brain', detail: 'Pick the brain blueprint', template: 'brain ${1:racing-starter}', scopes: ['top'] },
 ];
 
+/**
+ * Blanks in the shared templates hold racing names. A Hide and Seek script
+ * gets the same templates with its own names, so a snippet never inserts
+ * a name the checker would reject.
+ */
+const HIDESEEK_TEMPLATES: Readonly<Record<string, string>> = {
+  'reward when': 'reward ${1:+1} * dt when ${2:agent.hidden}',
+  'reward every tick': 'reward ${1:+0.1} * dt * ${2:agent.boxesLocked}',
+  'stop when': 'stop "${1:done}" when ${2:agent.timeLeft < 1 s}',
+  'each tick': 'each tick {\n  ${1:act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)}\n}',
+  script: 'script "${1:My script}" for ${2:hideseek} v1',
+  brain: 'brain ${1:hideseek-starter}',
+};
+
+const HIDESEEK_SNIPPETS: readonly Snippet[] = SNIPPETS.map((s) => ({ ...s, template: HIDESEEK_TEMPLATES[s.label] ?? s.template }));
+
 function placeholder(p: ParamDef, n: number): string {
   let text: string;
   if (p.type === 'string') text = quote(String(p.choices?.[0] ?? p.default ?? ''));
@@ -61,6 +77,7 @@ export function callSnippets(env: EnvId | null, scope: 'tick' | 'generation'): S
 /** Snippets whose label starts with what was typed, so typing `rew` offers the reward templates. */
 export function snippetsFor(prefix: string, scope: SnippetScope, env: EnvId | null = 'racing'): Snippet[] {
   const p = prefix.trim().toLowerCase();
-  const all = [...SNIPPETS, ...(scope === 'top' ? [] : callSnippets(env, scope))];
+  const shared = env === 'hideseek' ? HIDESEEK_SNIPPETS : SNIPPETS;
+  const all = [...shared, ...(scope === 'top' ? [] : callSnippets(env, scope))];
   return all.filter((s) => s.scopes.includes(scope) && s.label.toLowerCase().startsWith(p));
 }

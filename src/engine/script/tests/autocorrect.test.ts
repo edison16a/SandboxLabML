@@ -103,4 +103,11 @@ describe('snippets', () => {
     expect(snippetsFor('spe', 'tick').map((s) => s.label)).not.toContain('speciate');
     expect(snippetsFor('each', 'top').map((s) => s.label)).toEqual(['each tick', 'each generation']);
   });
+
+  it('fills the blanks with names from the script environment', () => {
+    expect(snippetsFor('each tick', 'top', 'hideseek')[0].template).toContain('act(move: brain.move');
+    expect(snippetsFor('act', 'tick', 'hideseek').map((s) => s.label)).toContain('act');
+    expect(snippetsFor('dri', 'tick', 'hideseek').map((s) => s.label)).not.toContain('drive');
+    for (const s of snippetsFor('', 'tick', 'hideseek')) expect(s.template, s.label).not.toMatch(/car\.|checkpoint\.|drive\(/);
+  });
 });
