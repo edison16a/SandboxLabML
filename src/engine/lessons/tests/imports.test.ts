@@ -37,15 +37,17 @@ function staticGraph(entry: string): Map<string, string[]> {
 
 describe('lesson check imports', () => {
   it('keep Rapier out of the Learn tab until a Hide and Seek check runs', () => {
-    for (const entry of ['evaluate.ts', 'validate.ts', 'catalog.ts']) {
+    for (const entry of ['evaluate.ts', 'validate.ts', 'catalog.ts', 'preview/record.ts']) {
       const graph = staticGraph(join(SRC, 'engine/lessons', entry));
       const offenders = [...graph].filter(([, specs]) => specs.includes(RAPIER)).map(([file]) => file);
       expect(offenders, entry).toEqual([]);
     }
   });
 
-  it('do load Rapier through the Hide and Seek checks', () => {
-    const graph = staticGraph(join(SRC, 'engine/lessons/hideseek/checks.ts'));
-    expect([...graph.values()].some((specs) => specs.includes(RAPIER))).toBe(true);
+  it('do load Rapier through the Hide and Seek checks and the match preview', () => {
+    for (const entry of ['hideseek/checks.ts', 'preview/match.ts']) {
+      const graph = staticGraph(join(SRC, 'engine/lessons', entry));
+      expect([...graph.values()].some((specs) => specs.includes(RAPIER)), entry).toBe(true);
+    }
   });
 });
