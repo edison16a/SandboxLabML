@@ -19,7 +19,8 @@ import { LAST_RUN_KEY } from '../hooks/useRunBootstrap';
 import { racingSession } from '../session/RacingSession';
 import { blueprintInputCount } from '@/engine/blueprints/shape';
 import { TrackThumb } from './TrackThumb';
-import { ScriptPicker, type ScriptChoice } from './ScriptPicker';
+import { ScriptPicker } from '@/features/scripts/ScriptPicker';
+import type { ScriptChoice } from '@/features/scripts/scriptChoice';
 import { BlueprintDialog } from '@/features/blueprints/BlueprintDialog';
 import { listBlueprints } from '@/storage/blueprints';
 
@@ -29,7 +30,7 @@ interface Props {
   /** Prefill, e.g. when training on a track drawn in the editor. */
   initialTrack?: TrackSpec;
   /** Prefill the script, e.g. when Studio sends a script here to train. */
-  initialScript?: ScriptChoice;
+  initialScript?: ScriptChoice<RacingBlueprint>;
 }
 
 /**
@@ -43,7 +44,7 @@ export function NewRunDialog({ open, onOpenChange, initialTrack, initialScript }
   const [car, setCar] = useState<CarPresetId>('standard');
   const [pop, setPop] = useState<'50' | '100' | '150'>('100');
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1e6));
-  const [script, setScript] = useState<ScriptChoice>({ kind: 'builtin' });
+  const [script, setScript] = useState<ScriptChoice<RacingBlueprint>>({ kind: 'builtin' });
   const [busy, setBusy] = useState(false);
   const [custom, setCustom] = useState<RacingBlueprint[]>([]);
   const [editing, setEditing] = useState(false);
@@ -126,7 +127,7 @@ export function NewRunDialog({ open, onOpenChange, initialTrack, initialScript }
             </button>
           </div>
         </Field>
-        <ScriptPicker value={script} onChange={setScript} />
+        <ScriptPicker env="racing" value={script} onChange={setScript} />
         {script.kind === 'builtin' && (
           <Field label="Brain blueprint" hint={blueprint.teaches || 'Your own blueprint.'}>
             <div className="grid grid-cols-2 gap-2">
