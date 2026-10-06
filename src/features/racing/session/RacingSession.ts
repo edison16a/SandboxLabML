@@ -12,7 +12,7 @@ import type { CoordinatorEvent } from '@/workers/coordinator/events';
 import { isWatchSpeed, WATCH_SPEEDS, type SpeedMode } from '@/workers/shared/protocol';
 import { openedRunState, useRacingLab, viewportHeld } from '../state/labStore';
 import { ghostSpecs, selectGhosts } from './ghostSelection';
-import { enterSandbox, scheduleSandboxScene } from './sandbox';
+import { enterSandbox, sandboxControls, scheduleSandboxScene, type SandboxControls } from './sandbox';
 import { maybeBenchmark } from './backgroundBench';
 import { RecordBatcher } from './recordBatcher';
 import { restoreRacingHistory } from './restoreRun';
@@ -126,6 +126,11 @@ export class RacingSession {
   /** Call after any Sandbox change (track edit, lesion, ghost selection). */
   sandboxChanged(): void {
     if (this.pool) scheduleSandboxScene(this.pool);
+  }
+
+  /** Play, pause, restart, track and field for the Sandbox. Null until the workers are up. */
+  get sandbox(): SandboxControls | null {
+    return this.pool ? sandboxControls(this.pool) : null;
   }
 
   /** Rebuilds the ghost list from the current selection and restarts the replay if it changed. */

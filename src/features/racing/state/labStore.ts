@@ -6,6 +6,7 @@ import type { TrackSpec } from '@/engine/racing/track/types';
 import type { TrainingStatus } from '@/workers/coordinator/events';
 import type { SpeedMode } from '@/workers/shared/protocol';
 import type { GhostTelemetry } from '@/workers/replay/ghostPlayer';
+import type { FieldEntry } from '../session/field';
 import type { GhostSelection } from '../session/ghostSelection';
 
 export type ViewMode = 'population' | 'overlay' | 'both';
@@ -29,6 +30,14 @@ export function openedRunState(run: RunConfig, records: GenerationRecord[], live
     networkGeneration: null,
     telemetry: [],
     ghostGenerations: [],
+    // A Sandbox set up for one run means nothing for the next, so it closes and starts over.
+    mode: 'train',
+    editingTrack: false,
+    selectedHandle: null,
+    lesions: {},
+    sandboxTrack: null,
+    sandboxField: [],
+    sandboxPaused: false,
   };
 }
 
@@ -80,6 +89,9 @@ export interface RacingLabState {
   /** Train runs the population; Sandbox replays champions on an editable track. */
   mode: 'train' | 'sandbox';
   sandboxTrack: TrackSpec | null;
+  /** Champions racing in the Sandbox and how many copies of each. Empty until the Sandbox first opens for a run. */
+  sandboxField: FieldEntry[];
+  sandboxPaused: boolean;
   /** Lesion test: input index mapped to the value it is forced to. Sandbox only. */
   lesions: Record<number, number>;
   selectedHandle: number | null;
@@ -120,6 +132,8 @@ export const useRacingLab = create<RacingLabState>((set, get) => ({
   editingTrack: false,
   mode: 'train',
   sandboxTrack: null,
+  sandboxField: [],
+  sandboxPaused: false,
   lesions: {},
   selectedHandle: null,
   tourSignal: 0,
