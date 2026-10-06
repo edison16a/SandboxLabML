@@ -26,14 +26,8 @@ describe('public/references/racing.json', () => {
     expect(final(refs, 'beginner')).toBeLessThan(final(refs, 'advanced'));
   });
 
-  /**
-   * The intended order puts Advanced on top, but with 100 cars and 100
-   * generations its champions steer harder and crash more on unseen roads
-   * than Intermediate's, on every part of the score (see docs/benchmark.md).
-   * This is marked as an expected failure so it flips, and gets noticed,
-   * the day a preset change makes Advanced win.
-   */
-  it.fails('ranks Advanced above Intermediate', async () => {
+  /** The circuit curriculum in the Advanced preset generalizes best, which is the point of the tiers. */
+  it('ranks Advanced above Intermediate', async () => {
     const refs = await readReferences('racing');
     expect(final(refs, 'intermediate')).toBeLessThan(final(refs, 'advanced'));
   });
