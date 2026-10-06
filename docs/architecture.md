@@ -32,7 +32,8 @@ SandboxLabML trains NEAT neural networks in the browser and draws them in 3D. Th
 ## Drawing
 
 * Settings, behind the gear at the top right, hold the frame rate (30, 60 or Max) and the quality (Low, Medium or High) for both labs, saved in localStorage. Until someone picks a quality, a discrete GPU gets High and an integrated or software one gets Medium. `?quality=` in a lab's address overrides the choice, which the browser tests use.
-* A viewport is live (animating), idle (drawing only when something changes) or held (Max is training, so nothing new is drawn). A live viewport under a cap runs with `frameloop="never"` and `FramePacer` draws on the display frames closest to the cap. Max draws on every display frame.
+* A viewport is live (animating), idle (drawing only when something changes) or held (drawing nothing new). Held is the Racing lab while it trains at Max speed. Hide and Seek goes idle at Max speed instead, so it still redraws when the camera moves.
+* A live viewport under a 30 or 60 cap runs with `frameloop="never"` and `FramePacer` draws on the display frames closest to the cap. The Max frame rate draws on every display frame.
 * Every viewport redraws right after it resizes, so dragging the divider next to the side panel never shows an empty canvas.
 
 ## Determinism
