@@ -35,7 +35,7 @@ const api = {
     const t = ghosts?.telemetry() ?? [];
     return Comlink.transfer(
       t,
-      t.flatMap((g) => [g.distance.buffer as ArrayBuffer, g.speed.buffer as ArrayBuffer]),
+      t.flatMap((g) => [g.distance.buffer as ArrayBuffer, g.speed.buffer as ArrayBuffer, g.brake.buffer as ArrayBuffer]),
     );
   },
 };

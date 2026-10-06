@@ -17,6 +17,7 @@ export function GhostMenu() {
   const sel = useRacingLab((s) => s.ghostSelection);
   const trails = useRacingLab((s) => s.ghostTrails);
   const rings = useRacingLab((s) => s.ghostCrashRings);
+  const brakes = useRacingLab((s) => s.brakeMap);
   const gens = useRacingLab((s) => s.ghostGenerations);
   const set = useRacingLab((s) => s.set);
   const apply = (next: GhostSelection) => {
@@ -83,6 +84,13 @@ export function GhostMenu() {
         <label className="flex items-center justify-between text-[13px]">
           Fading trails
           <Switch label="Fading trails" checked={trails} onChange={(v) => set({ ghostTrails: v })} />
+        </label>
+        <label className="flex items-center justify-between text-[13px]">
+          <span className="flex flex-col">
+            Brake map
+            <span className="text-[11px] text-muted">Where each champion braked, colored by generation</span>
+          </span>
+          <Switch label="Brake map" checked={brakes} onChange={(v) => set({ brakeMap: v })} />
         </label>
         <label className="flex items-center justify-between text-[13px]">
           Crash rings

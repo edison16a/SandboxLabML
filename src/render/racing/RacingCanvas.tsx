@@ -13,6 +13,7 @@ import { StatsProbe } from '@/render/shared/StatsProbe';
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
 import { CameraRig, useCameraMode } from './CameraRig';
 import { ChampionCar } from './ChampionCar';
+import { BrakeMap } from './BrakeMap';
 import { CrashRings } from './CrashRings';
 import { FrameDriver } from './FrameDriver';
 import { GhostCars } from './GhostCars';
@@ -76,6 +77,7 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
         <GhostCars />
         <ChampionCar />
         <CrashRings />
+        <BrakeMap />
         <RaysOverlay schema={schema} />
         <CameraRig mode={camera} target={target} />
         {children}

@@ -18,6 +18,8 @@ export interface GhostTelemetry {
   generation: number;
   distance: Float32Array;
   speed: Float32Array;
+  /** Brake pedal per tick, 0 to 1, for the brake map. */
+  brake: Float32Array;
 }
 
 /**
@@ -97,13 +99,15 @@ export class GhostPlayer {
       const env = this.makeEnv([g]);
       const dist: number[] = [];
       const speed: number[] = [];
+      const brake: number[] = [];
       while (!env.done) {
         env.step();
         const rc = env.cars[0];
         dist.push(rc.progress);
         speed.push(rc.car.speed);
+        brake.push(Math.max(0, -rc.car.pedal));
       }
-      return { generation: g.generation, distance: Float32Array.from(dist), speed: Float32Array.from(speed) };
+      return { generation: g.generation, distance: Float32Array.from(dist), speed: Float32Array.from(speed), brake: Float32Array.from(brake) };
     });
   }
 

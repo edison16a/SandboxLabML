@@ -37,6 +37,7 @@ export interface RacingLabState {
   ghostSelection: GhostSelection;
   ghostTrails: boolean;
   ghostCrashRings: boolean;
+  brakeMap: boolean;
   ghostGenerations: number[];
   telemetry: GhostTelemetry[];
   hoveredGhost: number | null;
@@ -76,6 +77,7 @@ export const useRacingLab = create<RacingLabState>((set, get) => ({
   ghostSelection: { mode: 'auto' },
   ghostTrails: true,
   ghostCrashRings: true,
+  brakeMap: true,
   ghostGenerations: [],
   telemetry: [],
   hoveredGhost: null,
