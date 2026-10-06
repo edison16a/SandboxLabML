@@ -14,7 +14,8 @@ import { TeamToggle } from './TeamToggle';
  * The model card is shared with Racing and reads Racing shaped records, so
  * each Hide and Seek generation is presented as one: the team's champion
  * genome, its best fitness and the generation's simulated time. Fields only
- * a car has stay empty.
+ * a car has stay empty. The benchmark score belongs to the pair, so it
+ * shows on both teams' cards.
  */
 function cardRecords(records: HideSeekRecord[], team: Team): GenerationRecord[] {
   return records.map((r) => {
@@ -30,6 +31,8 @@ function cardRecords(records: HideSeekRecord[], team: Team): GenerationRecord[] 
       replaySeed: 0,
       simSeconds: r.simSeconds,
       wallMs: r.wallMs,
+      // The benchmark scores the pair, so both teams' cards show the same score.
+      ...(r.benchmark !== undefined ? { benchmark: r.benchmark } : {}),
     };
   });
 }
