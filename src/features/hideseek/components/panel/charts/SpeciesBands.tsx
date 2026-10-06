@@ -28,16 +28,18 @@ export function SpeciesBands({ stats, hue, height = 72, label }: { stats: Genera
       if (!g) return;
       g.scale(dpr, dpr);
       g.clearRect(0, 0, w, h);
-      const n = stats.length;
-      if (n < 1) return;
-      const ids = [...new Set(stats.flatMap((s) => s.species.map((sp) => sp.id)))].sort((a, b) => a - b);
-      const x = (i: number) => (n === 1 ? w / 2 : (i / (n - 1)) * w);
-      const totals = stats.map((s) => s.species.reduce((sum, sp) => sum + sp.size, 0) || 1);
+      if (stats.length < 1) return;
+      // A single generation is drawn as a flat stack across the full width.
+      const series = stats.length === 1 ? [stats[0], stats[0]] : stats;
+      const n = series.length;
+      const ids = [...new Set(series.flatMap((s) => s.species.map((sp) => sp.id)))].sort((a, b) => a - b);
+      const x = (i: number) => (i / (n - 1)) * w;
+      const totals = series.map((s) => s.species.reduce((sum, sp) => sum + sp.size, 0) || 1);
       const base = new Float64Array(n);
       for (const id of ids) {
         g.beginPath();
         for (let i = 0; i < n; i++) g.lineTo(x(i), h - (base[i] / totals[i]) * h);
-        const tops = stats.map((s, i) => base[i] + (s.species.find((sp) => sp.id === id)?.size ?? 0));
+        const tops = series.map((s, i) => base[i] + (s.species.find((sp) => sp.id === id)?.size ?? 0));
         for (let i = n - 1; i >= 0; i--) g.lineTo(x(i), h - (tops[i] / totals[i]) * h);
         g.closePath();
         g.fillStyle = bandColor(id, hue);
