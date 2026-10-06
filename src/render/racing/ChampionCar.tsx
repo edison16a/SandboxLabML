@@ -10,7 +10,7 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { ContactShadow } from './car/ContactShadow';
 import { CAR } from './car/dimensions';
 import { HeroCar, type HeroRig } from './car/HeroCar';
-import { createHeroMaterials } from './car/materials/heroMaterials';
+import { createHeroMaterials, TAIL_GLOW } from './car/materials/heroMaterials';
 import { useCarReflections } from './car/materials/useCarReflections';
 import { ghostColor, speciesColor } from './palette';
 import { useRacingScene } from './sceneContext';
@@ -72,7 +72,7 @@ export function ChampionCar() {
       const spinner = rig.spin.current[i];
       if (spinner) spinner.rotation.z = state.spin;
     }
-    materials.tail.emissiveIntensity = pedal < -0.1 ? 7 : 1.2;
+    materials.tail.emissiveIntensity = pedal < -0.1 ? TAIL_GLOW.brake : TAIL_GLOW.idle;
     if (stream === ghosts) ghostColor(1, state.color);
     else speciesColor(stream.tags[frame.focusIndex] ?? 0, state.color);
     materials.paint.color.lerp(state.color, 0.2);

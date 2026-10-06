@@ -22,6 +22,14 @@ export interface HeroMaterials {
  */
 const REFLECT: Partial<Record<Slot, number>> = { paint: 1, carbon: 0.65, glass: 1.1, gold: 1, metal: 1, rim: 0.7, caliper: 0.8, disc: 0.5, tire: 0.4, trim: 0.5, grille: 0.45, liner: 0.3, tail: 0.5 };
 
+/**
+ * Tail lamp glow at rest and under braking. The lamps skip tone mapping and
+ * only High has bloom, so the idle glow stays below full red. That keeps
+ * braking a clear step brighter on every tier, and on High only the brake
+ * glow crosses the bloom threshold.
+ */
+export const TAIL_GLOW = { idle: 0.45, brake: 7 };
+
 const repeat = <T extends THREE.Texture>(t: T, u: number, v = u): T => {
   t.repeat.set(u, v);
   return t;
@@ -63,7 +71,7 @@ export function createHeroMaterials(tier: QualityTier): HeroMaterials {
   const grille = new THREE.MeshStandardMaterial({ map: mesh.color, normalMap: tier === 'low' ? null : mesh.normal, roughness: 0.55, metalness: 0.35 });
 
   const disc = new THREE.MeshStandardMaterial({ map: keep(repeat(discMap(128), DISC_REPEAT, 1)), roughness: 0.55, metalness: 0.3 });
-  const tail = new THREE.MeshStandardMaterial({ color: '#2a0303', emissive: '#ff1a10', emissiveIntensity: 1.2, roughness: 0.3, toneMapped: false });
+  const tail = new THREE.MeshStandardMaterial({ color: '#2a0303', emissive: '#ff1a10', emissiveIntensity: TAIL_GLOW.idle, roughness: 0.3, toneMapped: false });
 
   const slots: Record<Slot, THREE.Material> = {
     paint,
