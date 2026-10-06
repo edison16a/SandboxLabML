@@ -14,6 +14,10 @@ export interface BackdropBlock {
 const CELL = 11;
 /** Half size of the square the blocks are scattered over, m. */
 export const BACKDROP_HALF = 270;
+/** Open ground kept round the arenas before the first blocks, m. */
+export const CITY_MARGIN = 5;
+/** How far out from that open ground blocks still stand, m. The haze is full by then (see haze.ts). */
+export const CITY_REACH = 200;
 
 /** Smooth noise on a coarse grid, so tall blocks cluster into districts instead of standing alone. */
 function districts(rng: Rng, cells: number, span: number): (x: number, z: number) => number {

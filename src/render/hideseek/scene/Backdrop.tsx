@@ -8,12 +8,8 @@ import { useHsScene } from '../frame/sceneContext';
 import { standingUnitBox } from '../shared/basicGeometry';
 import { commit, makeScratch, placeInstance } from '../grid/scratch';
 import { HS_COLORS } from '../palette';
-import { backdropBlocks, distanceToClear, heightRamp } from './backdropBlocks';
+import { backdropBlocks, CITY_MARGIN, CITY_REACH, distanceToClear, heightRamp } from './backdropBlocks';
 
-/** Open ground kept round the arenas before the first blocks, m. */
-const MARGIN = 5;
-/** How far out from the arenas blocks still stand, m. Beyond, the haze has taken them anyway. */
-const REACH = 120;
 const LIGHT = new THREE.Color('#f1f1ef');
 const DARK = new THREE.Color('#dcdcd9');
 
@@ -38,12 +34,12 @@ export function Backdrop() {
     if (!m || (t.w === width && t.d === depth)) return;
     t.w = width;
     t.d = depth;
-    const hx = width / 2 + MARGIN;
-    const hz = depth / 2 + MARGIN;
+    const hx = width / 2 + CITY_MARGIN;
+    const hz = depth / 2 + CITY_MARGIN;
     let n = 0;
     for (const b of blocks) {
       const gap = distanceToClear(b.x, b.z, hx, hz) - Math.max(b.w, b.d) / 2;
-      if (gap < 0 || gap > REACH) continue;
+      if (gap < 0 || gap > CITY_REACH) continue;
       placeInstance(m, n, t, b.x, 0, b.z, 0, b.w, b.h * heightRamp(gap), b.d);
       m.setColorAt(n++, t.c.copy(LIGHT).lerp(DARK, b.tone));
     }

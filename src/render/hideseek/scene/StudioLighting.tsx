@@ -8,6 +8,7 @@ import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useHsScene } from '../frame/sceneContext';
 import { arenaOrigin } from '../layout/gridLattice';
 import { HS_COLORS } from '../palette';
+import { HAZE } from './haze';
 
 /** Key light direction: high and from the front left, so walls throw readable shadows into the room. */
 const KEY = new THREE.Vector3(-0.55, 1, 0.42).normalize();
@@ -19,7 +20,8 @@ const SHADOW_HALF = 11.5;
  * built out of drei Lightformers (a broad overhead softbox, a cool sky fill
  * and a warm bounce) rendered once into an environment map, so there is no
  * HDR file. One warm sun casts soft shadows, fitted tightly to the focused
- * arena, and a pale haze swallows the far backdrop.
+ * arena, and a pale haze swallows the far backdrop. CameraRig moves the
+ * haze with the view every frame; these are only its starting values.
  */
 export function StudioLighting({ tier, shadows }: { tier: HsQualityTier; shadows: boolean }) {
   const { frame } = useHsScene();
@@ -53,7 +55,7 @@ export function StudioLighting({ tier, shadows }: { tier: HsQualityTier; shadows
   return (
     <>
       <color attach="background" args={[HS_COLORS.background]} />
-      <fog attach="fog" args={[HS_COLORS.background, 160, 620]} />
+      <fog attach="fog" args={[HS_COLORS.background, HAZE.near, HAZE.far]} />
       <hemisphereLight args={['#eef3fb', '#e2ded8', 0.6]} />
       <primitive object={target} />
       <directionalLight

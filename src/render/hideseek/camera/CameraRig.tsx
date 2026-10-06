@@ -9,6 +9,7 @@ import { useHsScene } from '../frame/sceneContext';
 import { agentAt, blendFloorPose } from '../frame/snapshotRead';
 import { boxDrag } from '../interaction/useBoxDrag';
 import { arenaOrigin, ARENA_SPAN } from '../layout/gridLattice';
+import { cityEdgeFrom, farPlane, hazeRange } from '../scene/haze';
 import { arenaShot, easeInOutCubic, overviewShot, type Shot } from './framing';
 
 /** How long a change of focus takes to fly, s. */
@@ -28,9 +29,10 @@ export function CameraRig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const size = useThree((s) => s.size);
   const invalidate = useThree((s) => s.invalidate);
+  const scene = useThree((s) => s.scene);
   const controls = useRef<Controls>(null);
   const fly = useMemo(
-    () => ({ key: Number.NaN, started: false, t: 1, fromPos: new THREE.Vector3(), fromTarget: new THREE.Vector3(), toPos: new THREE.Vector3(), toTarget: new THREE.Vector3(), o: { x: 0, z: 0 }, pose: { x: 0, z: 0, yaw: 0 }, look: new THREE.Vector3() }),
+    () => ({ key: Number.NaN, started: false, t: 1, fromPos: new THREE.Vector3(), fromTarget: new THREE.Vector3(), toPos: new THREE.Vector3(), toTarget: new THREE.Vector3(), o: { x: 0, z: 0 }, pose: { x: 0, z: 0, yaw: 0 }, look: new THREE.Vector3(), haze: { near: 0, far: 0 } }),
     [],
   );
 
@@ -39,7 +41,8 @@ export function CameraRig() {
     const mode = useHideSeekLab.getState().camera;
     const pov = mode === 'seeker' || mode === 'hider';
     if (c) c.enabled = !pov && fly.t >= 1 && !boxDrag.active;
-    fitClipPlanes(pov ? 0 : camera.position.distanceTo(c?.target ?? fly.toTarget));
+    const target = c?.target ?? fly.toTarget;
+    fitDepthRanges(pov ? 0 : camera.position.distanceTo(target), target);
     if (pov) return firstPerson(mode === 'seeker' ? 1 : 0);
     const key = (frame.focusSlot + 1) * 1e6 + frame.count * 1e4 + frame.lattice.cols * 10 + (mode === 'top' ? 1 : 0);
     if (key !== fly.key) {
@@ -75,11 +78,19 @@ export function CameraRig() {
   /**
    * Near and far planes follow the viewing distance. Depth precision is
    * spread between them, so a near plane fit for first person views would
-   * make the thin floor markings flicker when seen from 200 m away.
+   * make the thin floor markings flicker when seen from 200 m away. The
+   * haze follows it too, so the city fades out from any orbit, and the far
+   * plane always lies past the end of the haze.
    */
-  function fitClipPlanes(distance: number): void {
+  function fitDepthRanges(distance: number, target: THREE.Vector3): void {
+    const fog = scene.fog as THREE.Fog | null;
+    if (fog) {
+      hazeRange(distance, cityEdgeFrom(target.x, target.z, frame.lattice.width / 2, frame.lattice.depth / 2), fly.haze);
+      fog.near = fly.haze.near;
+      fog.far = fly.haze.far;
+    }
     const near = THREE.MathUtils.clamp(distance * 0.012, 0.05, 4);
-    const far = Math.max(400, distance * 5);
+    const far = farPlane(distance);
     if (Math.abs(camera.near - near) > near * 0.1 || Math.abs(camera.far - far) > far * 0.1) {
       camera.near = near;
       camera.far = far;
