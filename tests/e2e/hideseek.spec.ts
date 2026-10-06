@@ -22,6 +22,7 @@ function instances(page: Page, key: string) {
  */
 test('the grid shows 50 arenas, the inputs overlay draws rays and a click focuses an arena', async ({ page }) => {
   test.setTimeout(300_000);
+  await page.addInitScript(() => window.localStorage.setItem('sandboxlab.tour.hideseek', '1'));
   await page.goto('/lab/hide-seek?quality=low');
   await expect.poll(instances(page, 'arenas'), { timeout: 120_000 }).toBe(50);
   const grid = await stats(page);

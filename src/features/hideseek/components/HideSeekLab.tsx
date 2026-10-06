@@ -13,6 +13,7 @@ import { InputsCard } from './hud/InputsCard';
 import { SandboxCard } from './hud/SandboxCard';
 import { ViewportHud } from './hud/ViewportHud';
 import { NewRunDialog } from './newrun/NewRunDialog';
+import { HideSeekTour } from './HideSeekTour';
 import { SidePanel } from './panel/SidePanel';
 import { HideSeekToolbar } from './toolbar/HideSeekToolbar';
 
@@ -63,6 +64,7 @@ export function HideSeekLab() {
         <SidePanel />
       </aside>
       <NewRunDialog open={newRun} onOpenChange={setNewRun} />
+      {ready && <HideSeekTour />}
     </div>
   );
 }
