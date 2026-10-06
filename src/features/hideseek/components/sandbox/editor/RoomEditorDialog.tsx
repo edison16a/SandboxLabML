@@ -11,7 +11,8 @@ import { EDITOR_TOOLS, KEYBOARD_HINT, toolForKey, type EditorTool } from './edit
 import { useBoardInput } from './useBoardInput';
 import { useRoomDraft } from './useRoomDraft';
 
-const UNSAVED = 'This room has unsaved changes. Press Escape again to close without saving.';
+/** Shown after the first Escape or a click outside over unsaved changes. Either way, the next Escape closes. */
+const UNSAVED = 'This room has unsaved changes. Save it, or press Escape to close without saving.';
 
 interface Props {
   /** The room to edit; the dialog is open while this is set. */
