@@ -4,8 +4,15 @@ import type { Track } from '../track/types';
 export const GRID_SPACING = 6;
 
 /**
+ * Slots the grid is laid out for. On a road too short to fit them at full
+ * spacing, every slot moves closer together, so the grid never wraps round
+ * past the start line and no two cars share a spot.
+ */
+export const GRID_SLOTS = 16;
+
+/**
  * Share of the half width a grid car sits off the centerline. Slots are
- * already 6 m apart along the road, so the offset only has to read as a
+ * already apart along the road, so the offset only has to read as a
  * staggered grid. Kept small because brains only ever started on the
  * centerline, and a big offset sends some of them into the wall.
  */
@@ -30,8 +37,9 @@ export interface GridSlot {
  */
 export function gridSlot(track: Track, slot: number): GridSlot {
   if (slot <= 0) return { index: 0, back: 0, lateral: 0 };
-  // Never wrap all the way round: the last slot stays at least one sample behind the line.
-  const steps = Math.min(Math.round((slot * GRID_SPACING) / track.spacing), track.count - 1);
+  const gap = Math.min(GRID_SPACING, (track.length * 0.9) / GRID_SLOTS);
+  // The clamp only matters past GRID_SLOTS: the last slot stays at least one sample behind the line.
+  const steps = Math.min(Math.round((slot * gap) / track.spacing), track.count - 1);
   const index = track.count - steps;
   return {
     index,

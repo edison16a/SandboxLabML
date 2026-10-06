@@ -1,3 +1,4 @@
+import { GRID_SLOTS } from '@/engine/racing/car/startGrid';
 import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { GhostSpec } from '@/workers/replay/ghostPlayer';
@@ -10,11 +11,10 @@ export interface FieldEntry {
 }
 
 /**
- * Most cars the Sandbox races at once. Sixteen fill a grid about 90 m long,
- * which fits behind the line on every built in track, and the replay
- * worker still steps them all in well under a frame.
+ * Most cars the Sandbox races at once: the slots the start grid is laid out
+ * for. The replay worker still steps them all in well under a frame.
  */
-export const MAX_FIELD = 16;
+export const MAX_FIELD = GRID_SLOTS;
 
 export function fieldSize(field: readonly FieldEntry[]): number {
   return field.reduce((n, e) => n + e.copies, 0);

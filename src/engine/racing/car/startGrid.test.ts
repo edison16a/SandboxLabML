@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { scriptedDriver } from '../scriptedDriver';
 import { buildTrack } from '../track/buildTrack';
 import { BUILT_IN_TRACKS } from '../track/presets';
+import { circle } from '../track/shapes';
 import { stepCar } from './dynamics';
 import { DEFAULT_CAR } from './params';
 import { createRacingCar, updateTrackState } from './runtime';
-import { gridSlot } from './startGrid';
+import { GRID_SLOTS, GRID_SPACING, gridSlot } from './startGrid';
 
 const tracks = BUILT_IN_TRACKS.map(buildTrack);
 
@@ -32,6 +33,16 @@ describe('start grid', () => {
       }
     });
   }
+
+  it('packs a full grid closer on a road too short for it, without wrapping past the line', () => {
+    const tiny = buildTrack({ id: 'tiny', name: 'Tiny', width: 10, points: circle(13, 12) });
+    expect(tiny.length).toBeLessThan(GRID_SLOTS * GRID_SPACING);
+    const cars = Array.from({ length: GRID_SLOTS }, (_, k) => createRacingCar(k, tiny, 0, k, k));
+    for (let a = 0; a < cars.length; a++) {
+      expect(cars[a].progress).toBeGreaterThan(-tiny.length);
+      for (let b = a + 1; b < cars.length; b++) expect(Math.hypot(cars[a].car.x - cars[b].car.x, cars[a].car.y - cars[b].car.y)).toBeGreaterThan(4);
+    }
+  });
 
   it('starts later slots behind the line and counts their first lap from it', () => {
     const track = tracks[0];
