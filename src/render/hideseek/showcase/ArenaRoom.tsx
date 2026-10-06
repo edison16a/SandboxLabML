@@ -4,48 +4,49 @@ import * as THREE from 'three';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { wallsOfLayout } from '../layout/arenaWalls';
 import { HS_COLORS } from '../palette';
-import { sharedPlasterMaps } from './plasterMaps';
-import { FLOOR_TILE_METERS, sharedFloorMaps } from './proceduralMaps';
-import { floorGeometry, skirtingGeometry, stripGeometry, wallGeometry } from './roomGeometry';
+import { floorAoMaterial } from '../room/floorAoMaterial';
+import { sharedPlasterMaps } from '../room/plasterMaps';
+import { floorAoGeometry, floorGeometry, wallGeometry } from '../room/roomGeometry';
+import { FLOOR_TILE_METERS, sharedFloorMaps } from '../room/terrazzoMaps';
 
 /**
- * The showcase room: polished concrete tiles with real normal and
- * roughness detail, rounded plaster walls on a dark skirting and light
- * strips along the top of the outer walls. Four draw calls whatever the
- * layout.
+ * The showcase room: a polished warm terrazzo floor in 2 m slabs, soft
+ * matte plaster walls with round caps, and a baked band of shade along the
+ * foot of every wall so the walls sit on the floor even without screen
+ * space occlusion. Three draw calls whatever the layout.
  */
-export function ArenaRoom({ layout }: { layout: number }) {
+export function ArenaRoom({ layout, ao = 0.5 }: { layout: number; /** Strength of the baked floor shade, lower where screen space occlusion runs too. */ ao?: number }) {
   const walls = useDisposable(() => wallGeometry(wallsOfLayout(layout)), [layout]);
-  const skirting = useDisposable(() => skirtingGeometry(wallsOfLayout(layout)), [layout]);
-  const skirtingMat = useDisposable(() => new THREE.MeshStandardMaterial({ color: '#2a2e36', roughness: 0.45, metalness: 0.1, envMapIntensity: 0.5 }), []);
+  const shade = useDisposable(() => floorAoGeometry(wallsOfLayout(layout)), [layout]);
+  const shadeMat = useDisposable(() => floorAoMaterial(ao), [ao]);
   const floor = useDisposable(() => floorGeometry(FLOOR_TILE_METERS), []);
-  const strips = useDisposable(() => stripGeometry(), []);
   const floorMat = useDisposable(() => {
     const maps = sharedFloorMaps();
-    return new THREE.MeshStandardMaterial({
+    return new THREE.MeshPhysicalMaterial({
       color: HS_COLORS.floor,
       map: maps.map,
       normalMap: maps.normalMap,
-      normalScale: new THREE.Vector2(0.9, 0.9),
+      normalScale: new THREE.Vector2(0.8, 0.8),
       roughnessMap: maps.roughnessMap,
       roughness: 1,
       metalness: 0,
-      // Low on purpose: a big softbox mirrored in a semi gloss floor would wash out the key light shadows.
-      envMapIntensity: 0.32,
+      // A thin polished coat: soft reflections of the walls and the sky. Kept faint, or the floor
+      // turns to glare in the first person views, which see it at a grazing angle.
+      clearcoat: 0.15,
+      clearcoatRoughness: 0.25,
+      envMapIntensity: 0.45,
     });
   }, []);
   const wallMat = useDisposable(() => {
     const maps = sharedPlasterMaps();
-    return new THREE.MeshStandardMaterial({ color: HS_COLORS.wall, ...maps, normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, metalness: 0, envMapIntensity: 0.55 });
+    return new THREE.MeshStandardMaterial({ color: HS_COLORS.wall, ...maps, normalScale: new THREE.Vector2(0.3, 0.3), roughness: 1, metalness: 0, envMapIntensity: 0.7 });
   }, []);
-  const stripMat = useDisposable(() => new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#dfe9ff', emissiveIntensity: 3.2, toneMapped: false }), []);
 
   return (
     <group>
       <mesh geometry={floor} material={floorMat} receiveShadow />
+      <mesh geometry={shade} material={shadeMat} renderOrder={1} raycast={() => null} />
       <mesh geometry={walls} material={wallMat} castShadow receiveShadow />
-      <mesh geometry={skirting} material={skirtingMat} receiveShadow />
-      <mesh geometry={strips} material={stripMat} />
     </group>
   );
 }
