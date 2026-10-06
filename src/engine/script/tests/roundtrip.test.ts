@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { fromBlocks, toBlocks } from '../blocks';
 import { compileScript } from '../compiler';
 import { parse } from '../parser';
-import { RACING_PRESETS } from '../presets/racing';
+import { RACING_PRESETS, SCRIPT_PRESETS } from '../presets/racing';
 import { print } from '../printer';
 import { randomProgram } from './gen/program';
 import { errors, shape } from './helpers';
 
 const RANDOM_COUNT = 200;
 const sources = [
-  ...RACING_PRESETS.map((p) => ({ name: p.id, source: p.source })),
+  ...SCRIPT_PRESETS.map((p) => ({ name: p.id, source: p.source })),
   ...Array.from({ length: RANDOM_COUNT }, (_, i) => ({ name: `random ${i}`, source: randomProgram(1000 + i) })),
 ];
 
@@ -42,7 +42,7 @@ describe('printer round trip', () => {
   });
 
   it('presets are already in canonical form', () => {
-    for (const p of RACING_PRESETS) expect(print(parse(p.source).program)).toBe(p.source);
+    for (const p of SCRIPT_PRESETS) expect(print(parse(p.source).program), p.id).toBe(p.source);
   });
 });
 
@@ -76,7 +76,7 @@ describe('block round trip', () => {
 
 describe('comments never change behavior', () => {
   it('editing a comment keeps the source hash and the fork hash', () => {
-    for (const p of RACING_PRESETS) {
+    for (const p of SCRIPT_PRESETS) {
       const a = compileScript(p.source).script;
       const b = compileScript(p.source.replace(/\/\/ .*/g, '// changed').replace('each tick {', 'each tick { // new note')).script;
       expect(a?.sourceHash).toBe(b?.sourceHash);

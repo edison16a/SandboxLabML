@@ -8,6 +8,7 @@ import { REGISTRY, SLICES, entriesByName, type RegistryEntry } from '../registry
 import { TICK_DT } from '../registry/core';
 import { check } from '../checker';
 import { parse } from '../parser';
+import { HIDESEEK_PRESETS } from '../presets/hideseek';
 import { RACING_PRESETS } from '../presets/racing';
 import { errors, inGeneration, inHideSeekGeneration, inHideSeekTick, inTick, problems } from './helpers';
 
@@ -76,6 +77,14 @@ describe('registry entries', () => {
     }
   });
 
+  // Core entries are shared, and their tags describe the racing presets, so only Hide and Seek entries are compared here.
+  it('hide and seek entries list exactly the tiers whose preset uses them', () => {
+    for (const preset of HIDESEEK_PRESETS) {
+      const used = usedBy(preset.source).filter((e) => e.env === 'hideseek').map((e) => e.name);
+      const tagged = REGISTRY.filter((e) => e.env === 'hideseek' && e.presets.includes(preset.tier)).map((e) => e.name);
+      expect(used.sort(), preset.id).toEqual(tagged.sort());
+    }
+  });
 
   it('names are unique within each environment', () => {
     for (const env of ['racing', 'hideseek'] as const) {

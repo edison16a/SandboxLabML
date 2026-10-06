@@ -1,18 +1,10 @@
-import type { EnvId } from '../../env/types';
-import type { PresetTier } from '../registry/types';
+import { HIDESEEK_PRESETS } from './hideseek';
 import { RACING_ADVANCED } from './racingAdvanced';
 import { RACING_BEGINNER } from './racingBeginner';
 import { RACING_INTERMEDIATE } from './racingIntermediate';
+import type { ScriptPreset } from './types';
 
-/** A ready-made script shown in the script picker. Presets are read only, and editing one makes a copy. */
-export interface ScriptPreset {
-  id: string;
-  name: string;
-  tier: PresetTier;
-  env: EnvId;
-  description: string;
-  source: string;
-}
+export type { ScriptPreset };
 
 export const RACING_PRESETS: readonly ScriptPreset[] = [
   {
@@ -41,6 +33,13 @@ export const RACING_PRESETS: readonly ScriptPreset[] = [
   },
 ];
 
+/**
+ * Every preset of every environment, racing first. It lives in this file
+ * so code that already imports findScriptPreset from here keeps working.
+ */
+export const SCRIPT_PRESETS: readonly ScriptPreset[] = [...RACING_PRESETS, ...HIDESEEK_PRESETS];
+
+/** Finds a preset of any environment by id. */
 export function findScriptPreset(id: string): ScriptPreset | undefined {
-  return RACING_PRESETS.find((p) => p.id === id);
+  return SCRIPT_PRESETS.find((p) => p.id === id);
 }

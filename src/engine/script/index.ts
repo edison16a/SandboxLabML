@@ -23,4 +23,5 @@ export { createScriptHost, ScriptCompileError, type ScriptHostAdapter } from './
 export * from './autocorrect';
 export * from './registry';
 export * from './blocks';
-export { RACING_PRESETS, findScriptPreset, type ScriptPreset } from './presets/racing';
+export { RACING_PRESETS, SCRIPT_PRESETS, findScriptPreset, type ScriptPreset } from './presets/racing';
+export { HIDESEEK_PRESETS } from './presets/hideseek';

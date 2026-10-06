@@ -7,7 +7,7 @@ import { fromBlocks, toBlocks } from '../blocks';
 import { compileScript } from '../compiler';
 import { tokenize } from '../highlight';
 import { parse } from '../parser';
-import { RACING_PRESETS } from '../presets/racing';
+import { SCRIPT_PRESETS } from '../presets/racing';
 import { print } from '../printer';
 import { inTick } from './helpers';
 import { buildTrack } from '../../racing/track/buildTrack';
@@ -44,7 +44,7 @@ describe('fuzzing', () => {
   });
 
   it('every truncation of every preset never throws', () => {
-    for (const p of RACING_PRESETS) {
+    for (const p of SCRIPT_PRESETS) {
       for (let end = 0; end <= p.source.length; end += 5) {
         const source = p.source.slice(0, end);
         expect(() => everything(source), `${p.id} at ${end}`).not.toThrow();

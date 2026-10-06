@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { compileScript } from '../compiler';
-import { RACING_PRESETS } from '../presets/racing';
+import { SCRIPT_PRESETS } from '../presets/racing';
 
 const HEAD = 'script "t" for racing v1\nbrain racing-standard\n';
 const GEN = '\neach generation {\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75)\n  keepChampions()\n}\n';
@@ -16,7 +16,7 @@ function warnings(source: string): string[] {
 
 describe('lint', () => {
   it('presets are clean', () => {
-    for (const p of RACING_PRESETS) expect(warnings(p.source), p.id).toEqual([]);
+    for (const p of SCRIPT_PRESETS) expect(warnings(p.source), p.id).toEqual([]);
   });
 
   it('warns when no reward is about progress', () => {
