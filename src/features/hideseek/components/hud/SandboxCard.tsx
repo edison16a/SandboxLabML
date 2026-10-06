@@ -42,7 +42,8 @@ export function SandboxCard() {
   const setSandbox = useHideSeekLab((s) => s.setSandbox);
   const [editing, setEditing] = useState<{ room: SandboxRoom; saved: boolean } | null>(null);
   // Null follows the inputs overlay: the setup folds while the inputs card stacks above it, so both fit.
-  const [unfolded, setUnfolded] = useState<boolean | null>(null);
+  // On a phone the setup would cover the whole arena, so it starts folded there.
+  const [unfolded, setUnfolded] = useState<boolean | null>(() => (typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches ? false : null));
   const inputsShown = useHideSeekLab((s) => s.inputsOverlay);
   const open = unfolded ?? !inputsShown;
   const pulse = useSandboxPulse();
@@ -55,7 +56,10 @@ export function SandboxCard() {
   const max = SANDBOX_LIMITS.playersPerTeam;
 
   return (
-    <div data-testid="sandbox-card" className="flex w-80 flex-col gap-3 rounded-lg border border-white/10 bg-black/65 p-3 text-white shadow-xl shadow-black/30 backdrop-blur-md">
+    <div
+      data-testid="sandbox-card"
+      className="flex max-h-[calc(60vh-1.5rem)] w-80 max-w-[calc(100vw-1.5rem)] flex-col gap-3 rounded-lg border border-white/10 bg-black/65 p-3 text-white shadow-xl shadow-black/30 backdrop-blur-md"
+    >
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
@@ -70,7 +74,8 @@ export function SandboxCard() {
         <SandboxStatus pulse={pulse} />
       </div>
       {open && (
-        <>
+        // The setup scrolls on short screens; the status above and the run controls below stay put.
+        <div className="-mx-1 flex min-h-0 flex-col gap-3 overflow-y-auto px-1">
           <Section
             title="Room"
             aside={
@@ -124,7 +129,7 @@ export function SandboxCard() {
               );
             })}
           </Section>
-        </>
+        </div>
       )}
 
       <div className={cn(open && 'border-t border-white/10 pt-3')}>
