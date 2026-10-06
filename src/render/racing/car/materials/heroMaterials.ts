@@ -30,6 +30,9 @@ const REFLECT: Partial<Record<Slot, number>> = { paint: 1, carbon: 0.65, glass: 
  */
 export const TAIL_GLOW = { idle: 0.45, brake: 7 };
 
+/** The parked car's color, before any generation. Driving cars take their species color. */
+export const PARKED_PAINT = '#2f6ee8';
+
 const repeat = <T extends THREE.Texture>(t: T, u: number, v = u): T => {
   t.repeat.set(u, v);
   return t;
@@ -46,8 +49,7 @@ export function createHeroMaterials(tier: QualityTier): HeroMaterials {
   const textures: THREE.Texture[] = [];
   const keep = <T extends THREE.Texture>(t: T) => (textures.push(t), t);
 
-  // The parked car's color, before any generation; driving cars take their species color.
-  const paint = new THREE.MeshPhysicalMaterial({ color: '#2f6ee8', metalness: 0.2, roughness: 0.42, clearcoat: 1, clearcoatRoughness: 0.03 });
+  const paint = new THREE.MeshPhysicalMaterial({ color: PARKED_PAINT, metalness: 0.2, roughness: 0.42, clearcoat: 1, clearcoatRoughness: 0.03 });
   if (tier !== 'low') {
     // UVs are in meters, so ten repeats make each flake about a millimeter across.
     paint.normalMap = keep(repeat(flakeNormalMap(high ? 512 : 256), high ? 10 : 6));

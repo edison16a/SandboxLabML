@@ -10,7 +10,7 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { ContactShadow } from './car/ContactShadow';
 import { CAR } from './car/dimensions';
 import { HeroCar, type HeroRig } from './car/HeroCar';
-import { createHeroMaterials, TAIL_GLOW } from './car/materials/heroMaterials';
+import { createHeroMaterials, PARKED_PAINT, TAIL_GLOW } from './car/materials/heroMaterials';
 import { useCarReflections } from './car/materials/useCarReflections';
 import { ghostColor, speciesColor } from './palette';
 import { useRacingScene } from './sceneContext';
@@ -28,8 +28,13 @@ export function ChampionCar() {
   const tier = useRacingLab((s) => s.activeTier);
   const root = useRef<THREE.Group>(null);
   const rig: HeroRig = { body: useRef<THREE.Group>(null), steer: useRef<Array<THREE.Group | null>>([]), spin: useRef<Array<THREE.Group | null>>([]) };
-  const materials = useDisposable(() => createHeroMaterials(tier), [tier]);
-  const state = useMemo(() => ({ roll: 0, rollV: 0, pitch: 0, pitchV: 0, spin: 0, lastSpeed: 0, lastYaw: 0, color: new THREE.Color() }), []);
+  const state = useMemo(() => ({ roll: 0, rollV: 0, pitch: 0, pitchV: 0, spin: 0, lastSpeed: 0, lastYaw: 0, color: new THREE.Color(PARKED_PAINT) }), []);
+  // A tier change rebuilds the materials. Start the new paint at the current target so the car does not flash the parked color.
+  const materials = useDisposable(() => {
+    const m = createHeroMaterials(tier);
+    m.paint.color.copy(state.color);
+    return m;
+  }, [tier]);
   useCarReflections(Object.values(materials.slots));
 
   useFrame((_, dt) => {
