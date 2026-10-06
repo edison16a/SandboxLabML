@@ -1,3 +1,4 @@
+import { HIDESEEK_FORMATS } from '../hideseek/metrics';
 import type { CheckOutcome } from '../types';
 
 export type CompareOp = '>' | '>=' | '<' | '<=' | '==';
@@ -24,6 +25,7 @@ export function compare(measured: number, op: CompareOp, target: number): boolea
 
 /** Human wording for each metric value, so outcomes read "182 m" rather than "182.3349". */
 const FORMATS: Record<string, (v: number) => string> = {
+  ...HIDESEEK_FORMATS,
   totalReward: (v) => `${round(v)} points`,
   bestFitness: (v) => `${round(v)} points`,
   distance: (v) => `${Math.round(v)} m`,
