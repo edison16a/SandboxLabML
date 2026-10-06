@@ -22,6 +22,18 @@ beforeEach(() => {
 });
 
 describe('saved track list', () => {
+  it('keeps a track saved while the first read was out, once', async () => {
+    const store = useSavedTracks.getState();
+    const loading = store.load();
+    await store.save('Mine', RING_TRACK);
+    expect(names()).toEqual(['Mine']);
+    // The read may or may not have seen the new row; either way it shows once, on top.
+    reads[0]([track('Mine'), track('Older')]);
+    await loading;
+    expect(names()).toEqual(['Mine', 'Older']);
+    expect(useSavedTracks.getState().loaded).toBe(true);
+  });
+
   it('reads again after a reset, and drops a read that was out at the time', async () => {
     const store = useSavedTracks.getState();
     const first = store.load();
