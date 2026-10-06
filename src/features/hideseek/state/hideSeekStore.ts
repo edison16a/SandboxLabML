@@ -34,7 +34,7 @@ export interface HideSeekLabState {
   pov: boolean;
   quality: HsQualitySetting;
   activeTier: HsQualityTier;
-  /** Weak GPUs cap the grid at 25 arenas and start with post-processing off. */
+  /** An integrated or software GPU. On Auto quality it caps the grid at 25 arenas and starts with post-processing off. */
   integratedGpu: boolean;
   effects: boolean;
   photoMode: boolean;
@@ -52,6 +52,15 @@ export interface HideSeekLabState {
   set: (patch: Partial<HideSeekLabState>) => void;
   setSandbox: (patch: Partial<SandboxSettings>) => void;
   addRecord: (record: HideSeekRecord) => void;
+}
+
+/**
+ * Whether the grid stops at 25 arenas. Only Auto quality caps a weak GPU:
+ * Low is cheap enough for all 50, and someone who pins a tier has chosen
+ * the cost themselves.
+ */
+export function gridCapped(s: { integratedGpu: boolean; quality: HsQualitySetting }): boolean {
+  return s.integratedGpu && s.quality === 'auto';
 }
 
 export const useHideSeekLab = create<HideSeekLabState>((set, get) => ({

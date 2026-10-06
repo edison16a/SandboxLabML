@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import type { SpeedMode } from '@/workers/shared/protocol';
 import { hideSeekSession } from '../session/HideSeekSession';
-import { useHideSeekLab } from '../state/hideSeekStore';
+import { gridCapped, useHideSeekLab } from '../state/hideSeekStore';
 import { GRID_SIZES, HS_CAMERAS, type GridSize } from '../state/types';
 
 const SPEEDS: SpeedMode[] = ['1x', '2x', '4x', 'turbo', 'max'];
@@ -12,9 +12,9 @@ function next<T>(list: readonly T[], current: T): T {
   return list[(list.indexOf(current) + 1) % list.length];
 }
 
-/** Grid sizes this machine may show. Integrated GPUs stop at 25 arenas. */
-export function allowedGridSizes(integratedGpu: boolean): GridSize[] {
-  return integratedGpu ? GRID_SIZES.filter((g) => g <= 25) : GRID_SIZES;
+/** Grid sizes this machine may show. A capped grid stops at 25 arenas. */
+export function allowedGridSizes(capped: boolean): GridSize[] {
+  return capped ? GRID_SIZES.filter((g) => g <= 25) : GRID_SIZES;
 }
 
 /**
@@ -39,7 +39,7 @@ export function useHideSeekShortcuts(onNewRun: () => void) {
       else if (key >= '1' && key <= '5') void session.setSpeed(SPEEDS[Number(key) - 1]);
       else if (key === 'i') s.set({ inputsOverlay: !s.inputsOverlay });
       else if (key === 'c') s.set({ camera: next(HS_CAMERAS, s.camera) });
-      else if (key === 'g' && s.mode === 'train') s.set({ gridSize: next(allowedGridSizes(s.integratedGpu), s.gridSize), focus: null });
+      else if (key === 'g' && s.mode === 'train') s.set({ gridSize: next(allowedGridSizes(gridCapped(s)), s.gridSize), focus: null });
       else if (key === 'n') onNewRun();
       else if (key === 'escape') {
         if (s.photoMode) s.set({ photoMode: false });

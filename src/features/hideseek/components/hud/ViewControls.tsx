@@ -6,7 +6,7 @@ import { Segmented } from '@/ui/primitives/Segmented';
 import { Select } from '@/ui/primitives/Select';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import { allowedGridSizes } from '../../hooks/useHideSeekShortcuts';
-import { useHideSeekLab } from '../../state/hideSeekStore';
+import { gridCapped, useHideSeekLab } from '../../state/hideSeekStore';
 import type { GridSize, HsCamera, HsQualitySetting } from '../../state/types';
 
 export const glass = 'border-white/10 bg-black/50 text-white backdrop-blur-sm hover:bg-black/65';
@@ -22,13 +22,13 @@ export function ViewControls() {
   const effects = useHideSeekLab((s) => s.effects);
   const quality = useHideSeekLab((s) => s.quality);
   const tier = useHideSeekLab((s) => s.activeTier);
-  const weak = useHideSeekLab((s) => s.integratedGpu && s.quality !== 'low');
+  const weak = useHideSeekLab(gridCapped);
   const set = useHideSeekLab((s) => s.set);
   const sizes = allowedGridSizes(weak);
   return (
     <div className="flex flex-wrap items-center justify-end gap-1.5">
       {mode === 'train' && (
-        <Tooltip content={weak ? 'Arenas on screen. This GPU shows up to 25 unless quality is Low.' : 'Arenas on screen'} shortcut="G">
+        <Tooltip content={weak ? 'Arenas on screen. On Auto quality this GPU shows up to 25; pick a quality to lift the cap.' : 'Arenas on screen'} shortcut="G">
           <span>
             <Segmented<`${GridSize}`>
               label="Arenas on screen"
@@ -78,7 +78,7 @@ export function ViewControls() {
       <Select<HsQualitySetting>
         label="Quality"
         value={quality}
-        onChange={(v) => set({ quality: v, activeTier: v === 'auto' ? (tier === 'ultra' ? 'high' : tier) : v })}
+        onChange={(v) => set({ quality: v, activeTier: v === 'auto' ? (tier === 'ultra' ? 'high' : tier) : v, ...(gridCapped({ integratedGpu: useHideSeekLab.getState().integratedGpu, quality: v }) && grid > 25 ? { gridSize: 25 } : {}) })}
         className={`h-7 w-32 ${glass}`}
         options={[
           { value: 'auto', label: `Auto (${tier})`, hint: 'Steps down if frames run long' },

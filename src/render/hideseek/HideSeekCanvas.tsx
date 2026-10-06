@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import { useCallback, useMemo } from 'react';
 import type { InputSpec } from '@/engine/env/types';
-import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
+import { gridCapped, useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
 import { isIntegratedGpu } from '@/render/shared/quality';
 import { StatsProbe } from '@/render/shared/StatsProbe';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
@@ -74,7 +74,8 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
         raycaster.layers.enable(GRID_LAYER);
         if (isIntegratedGpu(gl.getContext())) {
           const s = useHideSeekLab.getState();
-          s.set({ integratedGpu: true, effects: false, gridSize: s.quality !== 'low' && s.gridSize > 25 ? 25 : s.gridSize });
+          const capped = gridCapped({ integratedGpu: true, quality: s.quality });
+          s.set({ integratedGpu: true, ...(capped ? { effects: false, gridSize: s.gridSize > 25 ? 25 : s.gridSize } : {}) });
         }
       }}
       className="touch-none"
