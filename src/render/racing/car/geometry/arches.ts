@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { archCut, bandPoints } from './body';
-import { ARCH, archFloor, AXLES } from './bodyProfile';
+import { ARCHED_BANDS, archCut, bandPoints } from './body';
+import { ARCH, archFloor, AXLES, sectionAt } from './bodyProfile';
 import { bothSides, gridGeometry, polygonGeometry, type Vec3 } from './grid';
 import type { Detail, PartBin } from './parts';
 import { warp } from './warp';
@@ -8,6 +8,8 @@ import { warp } from './warp';
 /** The inner wall of each wheel well, inboard of the tire even at full lock. */
 const WELL_Z = 0.565;
 const FLOOR_Y = 0.115;
+/** How far the well stays under the paint where the hood dips below the arch line. */
+const UNDER_SKIN = 0.012;
 
 /**
  * Wheel wells: a painted lip rolled under the arch edge, a dark liner over
@@ -25,16 +27,38 @@ export function addArches(bin: PartBin, detail: Detail): void {
       return [warp([x, y - 0.012, z - 0.045]), warp([x, y - 0.009, z - 0.02]), warp([x, y, z])];
     });
     bin.add('paint', bothSides(gridGeometry(lip)));
+    // The middle point sits under the hood edge crease, the one dip in the skin, so the liner can follow it down.
     const liner = xs.map((x, i) => {
       const [z, y] = cuts[i];
-      return [warp([x, y - 0.014, WELL_Z]), warp([x, y - 0.013, (WELL_Z + z) / 2]), warp([x, y - 0.012, z - 0.04])];
+      const crease = Math.min(Math.max(sectionAt(x).keys[5][0], WELL_Z + 0.01), z - 0.05);
+      return [warp([x, underSkin(x, WELL_Z, y - 0.014), WELL_Z]), warp([x, underSkin(x, crease, y - 0.013), crease]), warp([x, y - 0.012, z - 0.04])];
     });
     bin.add('liner', bothSides(gridGeometry(liner)));
-    const wall: Vec3[] = [...xs.map((x, i) => warp([x, cuts[i][1] - 0.014, WELL_Z])), warp([xs[n], FLOOR_Y, WELL_Z]), warp([xs[0], FLOOR_Y, WELL_Z])];
+    const wall: Vec3[] = [...xs.map((x, i) => warp([x, underSkin(x, WELL_Z, cuts[i][1] - 0.014), WELL_Z])), warp([xs[n], FLOOR_Y, WELL_Z]), warp([xs[0], FLOOR_Y, WELL_Z])];
     bin.add('liner', bothSides(polygonGeometry(wall, [0, 0, 1])));
     bin.add('liner', bothSides(footWall(xs[0] - 0.002, cuts[0][1], 1)));
     bin.add('liner', bothSides(footWall(xs[n] + 0.002, cuts[n][1], -1)));
   }
+}
+
+/**
+ * A well height at (x, z), lowered where needed to stay under the body.
+ * Over the front wheels the hood dips below the arch line, and a liner at
+ * full arch height would poke up through the paint there.
+ */
+function underSkin(x: number, z: number, y: number): number {
+  let skin = Infinity;
+  // The highest arched band and every band above it, up to the centerline.
+  const bands = sectionAt(x).keys.length - 1;
+  for (let band = ARCHED_BANDS - 1; band < bands; band++) {
+    const pts = bandPoints(x, band, 16);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [z0, y0] = pts[i];
+      const [z1, y1] = pts[i + 1];
+      if (z0 !== z1 && (z0 - z) * (z1 - z) <= 0) skin = Math.min(skin, y0 + ((y1 - y0) * (z - z0)) / (z1 - z0));
+    }
+  }
+  return Math.min(y, skin - UNDER_SKIN);
 }
 
 /**
