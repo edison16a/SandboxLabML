@@ -31,8 +31,6 @@ export function NetworkCanvas({ genome, inputLabels, outputLabels, liveObservati
   const nodes = useMemo(() => layoutGenome(genome), [genome]);
   const net = useMemo(() => new Network(genome), [genome]);
   const [size, setSize] = useState({ w: 360, h: 420 });
-  const hovered = useRef(hoveredInput);
-  hovered.current = hoveredInput;
 
   useEffect(() => {
     const el = canvas.current;
@@ -51,22 +49,29 @@ export function NetworkCanvas({ genome, inputLabels, outputLabels, liveObservati
     el.height = size.h * dpr;
     const out = new Float64Array(genome.outputs.length);
     let raf = 0;
+    let drewStatic = false;
     const render = () => {
       const obs = liveObservation?.() ?? null;
-      let activity: Map<number, number> | null = null;
-      if (obs && obs.length >= genome.inputs.length) {
-        net.activate(obs, out);
-        activity = new Map();
-        for (let i = 0; i < net.nodeIds.length; i++) activity.set(net.nodeIds[i], net.values[i]);
+      const live = !!obs && obs.length >= genome.inputs.length;
+      // Live activations change every frame. Without them the graph only needs drawing once
+      // per change, which keeps a 2D canvas from repainting at 60 fps for nothing.
+      if (live || !drewStatic) {
+        let activity: Map<number, number> | null = null;
+        if (live) {
+          net.activate(obs, out);
+          activity = new Map();
+          for (let i = 0; i < net.nodeIds.length; i++) activity.set(net.nodeIds[i], net.values[i]);
+        }
+        const o: DrawOptions = { width: size.w, height: size.h, inputLabels, outputLabels, activity, hoveredInput, lesioned, showDisabled, margin: MARGIN };
+        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+        drawNetwork(g, genome, nodes, o);
+        drewStatic = !live;
       }
-      const o: DrawOptions = { width: size.w, height: size.h, inputLabels, outputLabels, activity, hoveredInput: hovered.current, lesioned, showDisabled, margin: MARGIN };
-      g.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawNetwork(g, genome, nodes, o);
-      raf = requestAnimationFrame(render);
+      if (liveObservation) raf = requestAnimationFrame(render);
     };
-    raf = requestAnimationFrame(render);
+    render();
     return () => cancelAnimationFrame(raf);
-  }, [genome, nodes, net, size, inputLabels, outputLabels, liveObservation, showDisabled, lesioned]);
+  }, [genome, nodes, net, size, inputLabels, outputLabels, liveObservation, hoveredInput, showDisabled, lesioned]);
 
   const onMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
