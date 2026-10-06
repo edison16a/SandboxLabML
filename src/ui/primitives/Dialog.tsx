@@ -13,15 +13,21 @@ interface DialogProps {
   children: ReactNode;
   footer?: ReactNode;
   className?: string;
+  /** Called before Escape closes the dialog; preventDefault keeps it open, e.g. to cancel a step in progress first. */
+  onEscapeKeyDown?: D.DialogContentProps['onEscapeKeyDown'];
+  /** Called before a click or focus outside closes the dialog; preventDefault keeps it open. */
+  onInteractOutside?: D.DialogContentProps['onInteractOutside'];
 }
 
 /** Modal dialog with a title row, scrollable body and an optional footer. */
-export function Dialog({ open, onOpenChange, title, description, children, footer, className }: DialogProps) {
+export function Dialog({ open, onOpenChange, title, description, children, footer, className, onEscapeKeyDown, onInteractOutside }: DialogProps) {
   return (
     <D.Root open={open} onOpenChange={onOpenChange}>
       <D.Portal>
         <D.Overlay className="fixed inset-0 z-40 animate-fade-in bg-black/60" />
         <D.Content
+          onEscapeKeyDown={onEscapeKeyDown}
+          onInteractOutside={onInteractOutside}
           className={cn(
             'fixed top-1/2 left-1/2 z-50 flex max-h-[88vh] w-[calc(100vw-32px)] max-w-lg -translate-x-1/2 -translate-y-1/2 animate-pop-in flex-col rounded-lg border border-border-strong bg-surface shadow-2xl shadow-black/50 outline-none',
             className,

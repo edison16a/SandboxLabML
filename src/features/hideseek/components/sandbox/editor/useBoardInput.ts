@@ -93,7 +93,7 @@ export function useBoardInput(draft: RoomDraft, tool: EditorTool, plankYaw: numb
     if (tool === 'plank' && room.boxes[g.box]?.kind === 'plank') draft.edit(turnBox(room, g.box));
   }, [gesture, draft, room, tool]);
 
-  /** Arrow keys, Enter, Delete and Escape on the focused board. Returns true when the key was used. */
+  /** Arrow keys, Enter and Delete on the focused board. Returns true when the key was used. Escape goes through cancel. */
   const key = useCallback(
     (k: string, shift: boolean): boolean => {
       const step = shift ? 2 : 0.5;
@@ -117,14 +117,20 @@ export function useBoardInput(draft: RoomDraft, tool: EditorTool, plankYaw: numb
         else draft.flash('Nothing to erase under the cursor.');
         return true;
       }
-      if (k === 'Escape' && pendingWall) {
-        setPendingWall(null);
-        return true;
-      }
       return false;
     },
     [tool, cursor, pendingWall, clickAt, draft, room],
   );
 
-  return { gesture, hover, cursor, pendingWall, down, move, up, key, leave: () => setHover(null) };
+  /** Drops a wall or drag in progress. Returns true when there was one, so Escape can stop there. */
+  const cancel = useCallback((): boolean => {
+    if (!pendingWall && !gesture) return false;
+    setPendingWall(null);
+    setGesture(null);
+    return true;
+  }, [pendingWall, gesture]);
+
+  return { gesture, hover, cursor, pendingWall, down, move, up, key, cancel, leave: () => setHover(null) };
 }
+
+export type BoardInput = ReturnType<typeof useBoardInput>;

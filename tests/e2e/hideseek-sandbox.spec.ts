@@ -65,6 +65,13 @@ test('the Sandbox plays a room built in the editor with many players, and keeps 
   await page.keyboard.press('Enter');
   for (let i = 0; i < 8; i++) await page.keyboard.press('ArrowUp');
   await page.keyboard.press('Enter');
+  // Escape drops a wall in progress, then warns about the unsaved wall, and the editor stays open both times.
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Escape');
+  await expect(board).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog').getByText('Press Escape again')).toBeVisible();
+  await expect(board).toBeVisible();
   await page.keyboard.press('c');
   for (let i = 0; i < 12; i++) await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Enter');

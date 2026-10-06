@@ -4,7 +4,7 @@ import { forwardRef, useCallback, useRef, useState } from 'react';
 import { boxAtPoint, placeBox, snap, straightWall, wallAtPoint } from '@/engine/hideseek/sandbox/roomEdit';
 import { BOARD_COLORS, BoardBox, BoardGrid, BoardRoom, HALF, SpawnArea } from './BoardLayers';
 import type { EditorTool } from './editorTools';
-import { regionOf, snapped, useBoardInput, type Point } from './useBoardInput';
+import { regionOf, snapped, type BoardInput, type Point } from './useBoardInput';
 import type { RoomDraft } from './useRoomDraft';
 
 const PAD = 0.6;
@@ -12,6 +12,8 @@ const VIEW = `${-HALF - PAD} ${-HALF - PAD} ${2 * (HALF + PAD)} ${2 * (HALF + PA
 
 interface Props {
   draft: RoomDraft;
+  /** Owned by the dialog, which needs the wall in progress to decide what Escape does. */
+  input: BoardInput;
   tool: EditorTool;
   plankYaw: number;
 }
@@ -22,9 +24,8 @@ interface Props {
  * the previews: the wall being dragged, the box about to be placed (red
  * when it does not fit), the spawn area being drawn and the keyboard cursor.
  */
-export const EditorBoard = forwardRef<SVGSVGElement, Props>(function EditorBoard({ draft, tool, plankYaw }, ref) {
+export const EditorBoard = forwardRef<SVGSVGElement, Props>(function EditorBoard({ draft, input, tool, plankYaw }, ref) {
   const svg = useRef<SVGSVGElement | null>(null);
-  const input = useBoardInput(draft, tool, plankYaw);
   /** The cursor shows only while the keyboard drives the board, so it never sits under the mouse. */
   const [keys, setKeys] = useState(false);
   const room = draft.room;
