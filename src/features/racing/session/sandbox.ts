@@ -17,9 +17,11 @@ interface SandboxHost {
  * that it comes back to whatever the user last set up.
  */
 export async function enterSandbox(session: SandboxHost, pool: WorkerPool): Promise<void> {
+  if (!useRacingLab.getState().run?.racing) return;
+  if (useRacingLab.getState().status === 'running') await session.pause();
+  // Read after pausing: the pause flushes generations still waiting to reach the store.
   const s = useRacingLab.getState();
   if (!s.run?.racing) return;
-  if (s.status === 'running') await session.pause();
   const last = s.records.length - 1;
   const kept = s.sandboxField.filter((e) => e.generation <= last);
   const first = s.sandboxTrack ? null : structuredClone(s.trackSpec ?? s.run.racing.track);
