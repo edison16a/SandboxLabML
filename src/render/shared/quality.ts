@@ -25,3 +25,23 @@ export function isIntegratedGpu(gl: WebGL2RenderingContext | WebGLRenderingConte
   if (name.includes('apple')) return false;
   return /intel|swiftshader|llvmpipe|mali|adreno|powervr|software/.test(name);
 }
+
+let probed: boolean | null = null;
+
+/**
+ * Asks a throwaway WebGL context which GPU this is, once per page load, so
+ * the default quality is known before a lab creates its own canvas. A
+ * browser without WebGL counts as weak.
+ */
+export function probeWeakGpu(): boolean {
+  if (probed !== null) return probed;
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
+    probed = gl ? isIntegratedGpu(gl) : true;
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+  } catch {
+    probed = true;
+  }
+  return probed;
+}
