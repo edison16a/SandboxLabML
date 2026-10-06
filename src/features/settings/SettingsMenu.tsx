@@ -1,7 +1,7 @@
 'use client';
 
 import { Settings } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { Popover } from '@/ui/primitives/Popover';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { resolvedQuality, useSettings, type FrameRate, type Quality, type SettingsState } from './settingsStore';
@@ -16,15 +16,25 @@ function qualityHint(s: SettingsState): string {
   return 'Shadows and effects. Training stays the same.';
 }
 
-/** One setting: the name and its control on a line, a short hint under them. */
+/**
+ * One setting: the name and its control on a line, a short hint under them.
+ * It is a labelled group like Field, so a screen reader hears the hint with
+ * the choices. The type is a step larger than Field's because the name is
+ * a row title beside its control, not a caption above it.
+ */
 function Row({ label, hint, children }: { label: string; hint: string; children: ReactNode }) {
+  const id = useId();
   return (
-    <div className="flex flex-col gap-1.5 px-3 py-3">
+    <div role="group" aria-labelledby={`${id}label`} aria-describedby={`${id}hint`} className="flex flex-col gap-1.5 px-3 py-3">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[13px] font-medium text-fg">{label}</span>
+        <span id={`${id}label`} className="text-[13px] font-medium text-fg">
+          {label}
+        </span>
         {children}
       </div>
-      <p className="text-[12px] leading-snug text-muted">{hint}</p>
+      <p id={`${id}hint`} className="text-[12px] leading-snug text-muted">
+        {hint}
+      </p>
     </div>
   );
 }
