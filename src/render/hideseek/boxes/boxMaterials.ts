@@ -45,10 +45,11 @@ export class BoxMaterials {
     this.brace.color.copy(BRACE).lerp(LOCKED_BRACE, lock);
     this.brace.emissive.copy(BRACE).lerp(LOCK_GLOW, lock);
     this.brace.emissiveIntensity = 0.06 + lock * 0.7;
-    for (const m of [this.lockBody, this.lockShackle]) {
-      m.uniforms.uOpacity.value = lock;
-      m.uniforms.uTime.value = time;
-    }
+    // Set one by one: this runs every frame for every crate and must not allocate.
+    this.lockBody.uniforms.uOpacity.value = lock;
+    this.lockBody.uniforms.uTime.value = time;
+    this.lockShackle.uniforms.uOpacity.value = lock;
+    this.lockShackle.uniforms.uTime.value = time;
   }
 
   dispose(): void {
