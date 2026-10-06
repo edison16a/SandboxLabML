@@ -1,8 +1,6 @@
 'use client';
 
-import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import { ContactShadows } from '@react-three/drei';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { sandboxBoxAt, sandboxBoxCount, sandboxHiderCount, sandboxSeekerCount } from '@/engine/hideseek/sandbox/snapshot';
 import { DEFAULT_HIDESEEK_PHYSICS, type BoxKind } from '@/engine/hideseek/physics';
@@ -10,6 +8,7 @@ import { roomWallRects } from '@/engine/hideseek/sandbox/room';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useHsScene } from '../frame/sceneContext';
 import { useBoxDrag } from '../interaction/useBoxDrag';
+import { ArenaContactShadows } from '../showcase/ArenaContactShadows';
 import { useAgentGeometry } from '../showcase/ShowcaseAgent';
 import { SandboxAgent } from './SandboxAgent';
 import { SandboxBoxes } from './SandboxBoxes';
@@ -38,12 +37,6 @@ function sameShape(shape: Shape | null, curr: Float32Array): boolean {
   const players = shape.hiders + shape.seekers;
   for (let b = 0; b < shape.kinds.length; b++) if (kindOf(curr[sandboxBoxAt(players, b) + 3]) !== shape.kinds[b]) return false;
   return true;
-}
-
-/** Same as the showcase: drop the contact shadow camera below the floor so it sees crate and agent bottoms. */
-function lowerShadowCamera(group: THREE.Group | null): void {
-  const camera = group?.children.find((c) => (c as THREE.OrthographicCamera).isOrthographicCamera);
-  if (camera) camera.position.z = 0.03;
 }
 
 /**
@@ -122,19 +115,7 @@ export function SandboxArena({ tier }: { tier: HsQualityTier }) {
           <SeenMarkers hiders={shape.hiders} />
         </>
       )}
-      {tier !== 'low' && (
-        <ContactShadows
-          ref={lowerShadowCamera}
-          position={[0, 0.004, 0]}
-          scale={P.arena.size}
-          resolution={tier === 'ultra' ? 1024 : 512}
-          far={1.8}
-          blur={2.2}
-          opacity={0.7}
-          color="#04060a"
-          frames={Infinity}
-        />
-      )}
+      <ArenaContactShadows tier={tier} />
     </group>
   );
 }

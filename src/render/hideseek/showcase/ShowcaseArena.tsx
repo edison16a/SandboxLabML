@@ -2,34 +2,17 @@
 
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { ContactShadows } from '@react-three/drei';
 import { Suspense, useRef, useState } from 'react';
-import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useHsScene } from '../frame/sceneContext';
 import { arenaOrigin } from '../layout/gridLattice';
+import { ArenaContactShadows } from './ArenaContactShadows';
 import { ArenaRoom } from './ArenaRoom';
 import { SeenBillboard } from './SeenBillboard';
 import { ShowcaseAgent } from './ShowcaseAgent';
 import { ShowcaseBoxes } from './ShowcaseBoxes';
 import { SightLines } from './SightLines';
 import { VisionCone } from './VisionCone';
-
-const SIZE = DEFAULT_HIDESEEK_PHYSICS.arena.size;
-
-/**
- * Contact shadows look up from their plane and darken whatever they see
- * close above it. Crates and agents stand exactly on the floor, so from a
- * camera at plane height their bottom faces sit right on the near plane
- * and their sides are seen edge on: the shadow comes out empty. Dropping
- * the shadow camera a few centimeters below the floor, while the shadow
- * itself stays drawn just above it, lets the camera see those bottoms.
- * The group is turned a quarter turn about x, so its local +z points down.
- */
-function lowerShadowCamera(group: THREE.Group | null): void {
-  const camera = group?.children.find((c) => (c as THREE.OrthographicCamera).isOrthographicCamera);
-  if (camera) camera.position.z = 0.03;
-}
 
 /**
  * One arena in full quality, mounted at the focused slot's place in the
@@ -71,9 +54,7 @@ export function ShowcaseArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO 
           <Suspense fallback={null}>
             <SeenBillboard arena={shown.arena} />
           </Suspense>
-          {tier !== 'low' && (
-            <ContactShadows ref={lowerShadowCamera} position={[0, 0.004, 0]} scale={SIZE} resolution={tier === 'ultra' ? 1024 : 512} far={1.8} blur={2.2} opacity={0.5} color="#2a2219" frames={Infinity} />
-          )}
+          <ArenaContactShadows tier={tier} />
         </>
       )}
     </group>
