@@ -129,6 +129,18 @@ export interface TrackRow {
 }
 
 /**
+ * A Hide and Seek Sandbox room the user drew. Rooms belong to no run, so
+ * every trained model can play in every room. `room` is a SandboxRoom as
+ * plain data and is cleaned on read.
+ */
+export interface SandboxRoomRow {
+  id: string;
+  room: unknown;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
  * The only IndexedDB code in the app. Everything else goes through the
  * repository functions in this folder.
  */
@@ -144,6 +156,7 @@ export class SandboxDb extends Dexie {
   settings!: Table<SettingRow, string>;
   hsGenerations!: Table<HideSeekGenerationRow, [string, number]>;
   tracks!: Table<TrackRow, string>;
+  sandboxRooms!: Table<SandboxRoomRow, string>;
 
   constructor(name = 'sandboxlab') {
     super(name);
@@ -159,8 +172,9 @@ export class SandboxDb extends Dexie {
       settings: 'key',
     });
     this.version(2).stores({ hsGenerations: '[runId+generation], runId' });
-    // Version 3 only adds a table, so existing rows carry over untouched.
+    // Versions 3 and 4 only add tables, so existing rows carry over untouched.
     this.version(3).stores({ tracks: 'id, updatedAt' });
+    this.version(4).stores({ sandboxRooms: 'id, createdAt' });
   }
 }
 
