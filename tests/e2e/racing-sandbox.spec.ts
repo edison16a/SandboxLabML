@@ -51,6 +51,7 @@ test.describe('Racing Sandbox', () => {
     while ((await panel.getByRole('listitem').count()) > 1) await panel.getByRole('button', { name: /^Remove Gen/ }).last().click();
     for (let k = 0; k < 5; k++) await panel.getByRole('button', { name: /^One more Gen/ }).click();
     await expect(panel.getByText('6 of 16 cars')).toBeVisible();
+    await expect(panel.getByRole('listitem').getByRole('status')).toHaveText(/^6 copies of Gen \d+$/);
     await expect(panel.getByText(/of 6 driving/)).toBeVisible({ timeout: 60_000 });
 
     // Pause, then restart puts everyone back on the grid and running.

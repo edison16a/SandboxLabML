@@ -28,9 +28,13 @@ export function CopiesStepper({ value, max, onChange, label, canRemove }: Props)
       >
         {removing ? <Trash2 /> : <Minus />}
       </Button>
-      <span className="tabular w-5 text-center font-mono text-[12px] text-white" aria-label={`${label} copies`}>
+      {/* A live output, so a screen reader hears "3 copies of Gen 12" after each press. */}
+      <output className="tabular w-5 text-center font-mono text-[12px] text-white" aria-live="polite">
         {value}
-      </span>
+        <span className="sr-only">
+          {value === 1 ? ' copy' : ' copies'} of {label}
+        </span>
+      </output>
       <Button
         size="icon-sm"
         variant="ghost"
