@@ -12,7 +12,10 @@ export function flakeNormalMap(size: number): THREE.DataTexture {
   const cell = 3;
   const cells = Math.floor(size / cell);
   const tilt = 0.32;
+  // Every texel checks nine cells, so each cell's feature point is hashed once up front instead of nine times over.
+  let points: Float64Array | undefined;
   return pixelTexture('flakes', size, false, (x, y, out) => {
+    points ??= featurePoints(cells);
     const cx = Math.floor(x / cell);
     const cy = Math.floor(y / cell);
     // The winning cell is kept as two numbers, not an array, so the loop over every texel does not allocate.
@@ -25,8 +28,9 @@ export function flakeNormalMap(size: number): THREE.DataTexture {
         const gy = cy + dy;
         const wx = ((gx % cells) + cells) % cells;
         const wy = ((gy % cells) + cells) % cells;
-        const fx = (gx + hash(wx, wy, 1)) * cell;
-        const fy = (gy + hash(wx, wy, 2)) * cell;
+        const k = (wy * cells + wx) * 2;
+        const fx = (gx + points[k]) * cell;
+        const fy = (gy + points[k + 1]) * cell;
         const d = (fx - x - 0.5) ** 2 + (fy - y - 0.5) ** 2;
         if (d < best) {
           best = d;
@@ -39,4 +43,16 @@ export function flakeNormalMap(size: number): THREE.DataTexture {
     const r = tilt * Math.sqrt(hash(idx, idy, 4));
     packNormal(Math.cos(a) * r, Math.sin(a) * r, out);
   });
+}
+
+/** Where each cell's feature point sits inside it, as (x, y) pairs from 0 to 1. */
+function featurePoints(cells: number): Float64Array {
+  const out = new Float64Array(cells * cells * 2);
+  for (let wy = 0; wy < cells; wy++) {
+    for (let wx = 0; wx < cells; wx++) {
+      out[(wy * cells + wx) * 2] = hash(wx, wy, 1);
+      out[(wy * cells + wx) * 2 + 1] = hash(wx, wy, 2);
+    }
+  }
+  return out;
 }
