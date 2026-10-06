@@ -26,8 +26,8 @@ describe('public/references/hideseek.json', () => {
    * A known failure, kept so it is noticed when it starts to pass. The
    * presets are teaching tiers, and at the reference budget they come out
    * in reverse: Beginner's small brain learns to seek fastest, and
-   * Advanced's cover rewards pay seekers for a line of sight rather than
-   * for seeing. See "What the references show" in docs/benchmark.md. Once
+   * Advanced's cover rewards make seeing the hider worth half as much to a
+   * seeker. See "What the references show" in docs/benchmark.md. Once
    * retuned presets put the tiers in order, vitest reports this test as
    * failing: turn it.fails back into it.
    */
