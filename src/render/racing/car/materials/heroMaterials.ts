@@ -20,7 +20,7 @@ export interface HeroMaterials {
  * lighting dim; the car gets its own, stronger, so paint and glass read as
  * glossy while tires and liners stay dull.
  */
-const REFLECT: Partial<Record<Slot, number>> = { paint: 1, carbon: 0.85, glass: 1.1, gold: 1, metal: 1, rim: 0.7, caliper: 0.8, disc: 0.5, tire: 0.4, trim: 0.5, grille: 0.45, liner: 0.3, tail: 0.5 };
+const REFLECT: Partial<Record<Slot, number>> = { paint: 1, carbon: 0.65, glass: 1.1, gold: 1, metal: 1, rim: 0.7, caliper: 0.8, disc: 0.5, tire: 0.4, trim: 0.5, grille: 0.45, liner: 0.3, tail: 0.5 };
 
 const repeat = <T extends THREE.Texture>(t: T, u: number, v = u): T => {
   t.repeat.set(u, v);
