@@ -3,8 +3,6 @@ import { DEFAULT_HIDESEEK_PHYSICS } from '../physics';
 import { SANDBOX_LIMITS, type SandboxBox, type SandboxRoom } from './room';
 
 const HALF = DEFAULT_HIDESEEK_PHYSICS.arena.size / 2;
-/** Box centers stay this far inside the outer walls, m, so a plank never starts poking through one. */
-const BOX_MARGIN = DEFAULT_HIDESEEK_PHYSICS.box.plank.length / 2 + 0.1;
 /** Smallest spawn area side, m. */
 export const MIN_SPAWN_SIDE = 1;
 const MAX_NAME = 40;
@@ -25,11 +23,24 @@ function wall(raw: unknown): WallSegment | null {
   return straight && long ? { from, to } : null;
 }
 
+/**
+ * How far a box center must stay from the outer walls, m: its half
+ * extent along that axis at its yaw, plus a little, so a box never starts
+ * poking through a wall whichever way it is turned.
+ */
+export function boxMargins(kind: SandboxBox['kind'], yaw: number): { x: number; z: number } {
+  const s = kind === 'cube' ? DEFAULT_HIDESEEK_PHYSICS.box.cube : DEFAULT_HIDESEEK_PHYSICS.box.plank;
+  const c = Math.abs(Math.cos(yaw));
+  const n = Math.abs(Math.sin(yaw));
+  return { x: (s.length * c + s.width * n) / 2 + 0.05, z: (s.length * n + s.width * c) / 2 + 0.05 };
+}
+
 function box(raw: unknown): SandboxBox | null {
   const b = raw as Partial<SandboxBox> | null;
   if (!b || !num(b.x) || !num(b.z) || (b.kind !== 'cube' && b.kind !== 'plank')) return null;
-  const lim = HALF - BOX_MARGIN;
-  return { x: clamp(b.x, -lim, lim), z: clamp(b.z, -lim, lim), yaw: num(b.yaw) ? b.yaw : 0, kind: b.kind };
+  const yaw = num(b.yaw) ? b.yaw : 0;
+  const m = boxMargins(b.kind, yaw);
+  return { x: clamp(b.x, -HALF + m.x, HALF - m.x), z: clamp(b.z, -HALF + m.z, HALF - m.z), yaw, kind: b.kind };
 }
 
 /** A spawn area kept inside the room and at least MIN_SPAWN_SIDE on each side. */

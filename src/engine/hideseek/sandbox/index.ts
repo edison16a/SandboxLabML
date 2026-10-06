@@ -4,7 +4,7 @@
  * movement, grab, lock, ray and sight code as a training match.
  */
 export * from './room';
-export { fitRegion, MIN_SPAWN_SIDE, sanitizeRoom } from './validate';
+export { boxMargins, fitRegion, MIN_SPAWN_SIDE, sanitizeRoom } from './validate';
 export { sandboxSetup, type SandboxSetup } from './spawn';
 export type { SandboxState } from './state';
 export * from './snapshot';
