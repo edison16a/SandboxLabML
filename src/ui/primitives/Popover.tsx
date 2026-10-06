@@ -12,10 +12,12 @@ interface PopoverProps {
   className?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** Names the panel for screen readers, which announce it as a dialog. */
+  label?: string;
 }
 
 /** Anchored floating panel, used for settings menus and the block editor. */
-export function Popover({ trigger, children, side = 'bottom', align = 'start', className, open, onOpenChange }: PopoverProps) {
+export function Popover({ trigger, children, side = 'bottom', align = 'start', className, open, onOpenChange, label }: PopoverProps) {
   return (
     <P.Root open={open} onOpenChange={onOpenChange}>
       <P.Trigger asChild>{trigger}</P.Trigger>
@@ -24,6 +26,7 @@ export function Popover({ trigger, children, side = 'bottom', align = 'start', c
           side={side}
           align={align}
           sideOffset={6}
+          aria-label={label}
           className={cn(
             'z-50 w-72 animate-fade-in rounded-lg border border-border-strong bg-surface-2 p-3 shadow-xl shadow-black/40 outline-none',
             className,

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Car, Code2, FolderOpen, Users } from 'lucide-react';
 import { Logo } from '@/ui/brand/Logo';
+import { SettingsMenu } from '@/features/settings/SettingsMenu';
 import { GitHubButton } from '@/ui/brand/GitHubButton';
 import { cn } from '@/ui/cn';
 
@@ -14,7 +15,7 @@ const NAV = [
   { href: '/runs', label: 'Runs', icon: FolderOpen },
 ] as const;
 
-/** Top bar shared by every page: logo on the left, sections, then GitHub. */
+/** Top bar shared by every page: logo on the left, sections, then GitHub and Settings. */
 export function AppHeader({ right }: { right?: React.ReactNode }) {
   const pathname = usePathname();
   return (
@@ -47,6 +48,7 @@ export function AppHeader({ right }: { right?: React.ReactNode }) {
         {right}
         <GitHubButton className="hidden md:inline-flex" />
         <GitHubButton compact className="md:hidden" />
+        <SettingsMenu />
       </div>
     </header>
   );
