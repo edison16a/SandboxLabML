@@ -34,7 +34,7 @@ export function SightLines({ arena, layout }: { arena: number; layout: number })
     const geometry = new LineSegmentsGeometry();
     geometry.setPositions(new Float32Array(3 * 6));
     geometry.setColors(new Float32Array(3 * 6));
-    const material = new LineMaterial({ linewidth: 2.4, vertexColors: true, transparent: true, depthWrite: false, toneMapped: false });
+    const material = new LineMaterial({ linewidth: 3, vertexColors: true, transparent: true, depthWrite: false, toneMapped: false });
     const lines = new LineSegments2(geometry, material);
     lines.frustumCulled = false;
     lines.renderOrder = 6;

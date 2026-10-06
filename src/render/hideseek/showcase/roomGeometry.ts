@@ -26,6 +26,22 @@ export function wallGeometry(rects: Rect[]): THREE.BufferGeometry {
 }
 
 /**
+ * A dark skirting board round the foot of every wall, a hair proud of the
+ * plaster. It is the small line where wall meets floor that makes a room
+ * read as built rather than modeled.
+ */
+export function skirtingGeometry(rects: Rect[]): THREE.BufferGeometry {
+  const parts = rects.map((r) => {
+    const g = new THREE.BoxGeometry(r.hx * 2 + 0.024, 0.09, r.hz * 2 + 0.024);
+    g.translate(r.x, 0.045, r.z);
+    return g;
+  });
+  const merged = mergeGeometries(parts) as THREE.BufferGeometry;
+  parts.forEach((p) => p.dispose());
+  return merged;
+}
+
+/**
  * Thin light strips along the inner top edge of the four outer walls. They
  * are emissive, so with bloom on they read as the room's lighting fixtures.
  */

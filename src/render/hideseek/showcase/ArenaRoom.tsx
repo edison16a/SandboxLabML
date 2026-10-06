@@ -5,15 +5,18 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { wallsOfLayout } from '../layout/arenaWalls';
 import { HS_COLORS } from '../palette';
 import { FLOOR_TILE_METERS, sharedFloorMaps } from './proceduralMaps';
-import { floorGeometry, stripGeometry, wallGeometry } from './roomGeometry';
+import { floorGeometry, skirtingGeometry, stripGeometry, wallGeometry } from './roomGeometry';
 
 /**
  * The showcase room: polished concrete tiles with real normal and
- * roughness detail, rounded plaster walls and light strips along the top
- * of the outer walls. Three draw calls whatever the layout.
+ * roughness detail, rounded plaster walls on a dark skirting and light
+ * strips along the top of the outer walls. Four draw calls whatever the
+ * layout.
  */
 export function ArenaRoom({ layout }: { layout: number }) {
   const walls = useDisposable(() => wallGeometry(wallsOfLayout(layout)), [layout]);
+  const skirting = useDisposable(() => skirtingGeometry(wallsOfLayout(layout)), [layout]);
+  const skirtingMat = useDisposable(() => new THREE.MeshStandardMaterial({ color: '#2a2e36', roughness: 0.45, metalness: 0.1, envMapIntensity: 0.5 }), []);
   const floor = useDisposable(() => floorGeometry(FLOOR_TILE_METERS), []);
   const strips = useDisposable(() => stripGeometry(), []);
   const floorMat = useDisposable(() => {
@@ -37,6 +40,7 @@ export function ArenaRoom({ layout }: { layout: number }) {
     <group>
       <mesh geometry={floor} material={floorMat} receiveShadow />
       <mesh geometry={walls} material={wallMat} castShadow receiveShadow />
+      <mesh geometry={skirting} material={skirtingMat} receiveShadow />
       <mesh geometry={strips} material={stripMat} />
     </group>
   );
