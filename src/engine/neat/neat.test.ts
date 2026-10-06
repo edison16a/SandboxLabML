@@ -205,3 +205,17 @@ describe('XOR', () => {
     expect(b.genomes).toEqual(a.genomes);
   });
 });
+
+describe('resetStagnation', () => {
+  it('clears every species best so a new environment does not cull them all', () => {
+    const pop = Population.create({ inputCount: 2, outputCount: 1, activation: 'tanh', wiring: 'direct' }, 3, { populationSize: 30 });
+    pop.genomes.forEach((g, i) => (g.fitness = i));
+    pop.advance();
+    expect(pop.species.some((s) => s.bestFitness > 0)).toBe(true);
+    pop.resetStagnation();
+    for (const s of pop.species) {
+      expect(s.bestFitness).toBe(-Infinity);
+      expect(s.staleness).toBe(0);
+    }
+  });
+});

@@ -117,8 +117,16 @@ export class RacingTrainer {
     const stats = this.population.advance(directives.plan);
     const nextTrack = directives.racing?.track;
     if (nextTrack) {
-      this.trackSpec = resolveTrackDirective(nextTrack, this.trackSpec.width);
-      this.trackObj = buildTrack(this.trackSpec);
+      const spec = resolveTrackDirective(nextTrack, this.trackSpec.width);
+      const changed = buildTrack(spec);
+      if (changed.hash !== this.trackObj.hash) {
+        this.trackSpec = spec;
+        this.trackObj = changed;
+        // Scores on the new road are not comparable with the old one.
+        this.population.resetStagnation();
+        this.bestEver = -Infinity;
+        this.stagnation = 0;
+      }
     }
     return {
       runId: this.config.id,

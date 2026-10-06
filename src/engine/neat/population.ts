@@ -103,6 +103,18 @@ export class Population {
     };
   }
 
+  /**
+   * Forgets every species' best score. Call it when the environment changes
+   * (a new track): old bests were earned on easier or different ground, and
+   * keeping them would mark every species as stagnant and cull them.
+   */
+  resetStagnation(): void {
+    for (const s of this.species) {
+      s.bestFitness = -Infinity;
+      s.staleness = 0;
+    }
+  }
+
   champion(): Genome {
     return this.genomes.reduce((best, g) => (g.fitness > best.fitness ? g : best), this.genomes[0]);
   }
