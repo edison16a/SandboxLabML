@@ -35,7 +35,8 @@ export function useRoomDraft(initial: SandboxRoom) {
   /** Applies an edit, or shows why it was refused. */
   const edit = useCallback((result: EditResult) => (result.room ? apply(result.room) : flash(result.error)), [apply, flash]);
 
-  const undo = useCallback(() => setState((s) => (s.past.length ? { room: s.past[s.past.length - 1], past: s.past.slice(0, -1) } : s)), []);
+  /** Steps back one edit. The name stays as typed: renaming is not an undo step, so undo must not revert it either. */
+  const undo = useCallback(() => setState((s) => (s.past.length ? { room: { ...s.past[s.past.length - 1], name: s.room.name }, past: s.past.slice(0, -1) } : s)), []);
 
   /** Renaming is not an undo step: it would make undo walk back one letter at a time. */
   const rename = useCallback((name: string) => setState((s) => ({ ...s, room: { ...s.room, name } })), []);
