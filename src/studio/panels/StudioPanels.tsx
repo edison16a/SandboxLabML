@@ -31,25 +31,25 @@ export function StudioPanels({ className }: { className?: string }) {
   return (
     <aside className={cn('flex min-h-0 flex-col bg-surface', className)} aria-label="Studio panels">
       <Tabs value={tab} onValueChange={(v) => useStudio.setState({ panel: v as PanelTab })} className="flex h-full min-h-0 flex-col">
-        <TabsList className="no-scrollbar overflow-x-auto">
-          <TabsTrigger className="px-2 whitespace-nowrap" value="reference">
+        <TabsList className="no-scrollbar gap-0.5 overflow-x-auto">
+          <TabsTrigger className="px-1.5 whitespace-nowrap" value="reference">
             <BookOpen />
             Reference
           </TabsTrigger>
-          <TabsTrigger className="px-2 whitespace-nowrap" value="problems">
+          <TabsTrigger className="px-1.5 whitespace-nowrap" value="problems">
             <CircleAlert />
             Problems
             <ProblemCount />
           </TabsTrigger>
-          <TabsTrigger className="px-2 whitespace-nowrap" value="test">
+          <TabsTrigger className="px-1.5 whitespace-nowrap" value="test">
             <Play />
             Test run
           </TabsTrigger>
-          <TabsTrigger className="px-2 whitespace-nowrap" value="learn">
+          <TabsTrigger className="px-1.5 whitespace-nowrap" value="learn">
             <GraduationCap />
             Learn
           </TabsTrigger>
-          <TabsTrigger className="px-2 whitespace-nowrap" value="bench">
+          <TabsTrigger className="px-1.5 whitespace-nowrap" value="bench">
             <Gauge />
             Bench
           </TabsTrigger>
