@@ -4,17 +4,10 @@ import { useEffect, useMemo, useRef } from 'react';
 import type uPlot from 'uplot';
 import { useRacingLab } from '@/features/racing/state/labStore';
 import type { GhostTelemetry } from '@/workers/replay/ghostPlayer';
+import { ghostCss } from './ghostCss';
 import { axis, UPlotChart } from './UPlotChart';
 
 const STEP = 2;
-
-function ghostCss(t: number): string {
-  // Matches palette.ghostColor: slate for early generations, accent blue for recent ones.
-  const a = [127, 143, 176];
-  const b = [76, 154, 255];
-  const c = a.map((v, i) => Math.round(v + (b[i] - v) * t));
-  return `rgb(${c.join(',')})`;
-}
 
 /** Resamples each ghost's speed onto one shared distance grid so uPlot can align them. */
 function align(telemetry: GhostTelemetry[]): uPlot.AlignedData {
