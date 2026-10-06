@@ -1,4 +1,5 @@
 import type { EnvId } from '../env/types';
+import type { HideSeekInputConfig } from '../hideseek/inputConfig';
 
 /** The four axes of the Racing radar chart, each 0 to 1. */
 export interface RacingRadar {
@@ -61,6 +62,28 @@ export interface BenchResult {
   scorePer100Params: number;
 }
 
+/** One team of a shipped reference champion: what it senses and its genome in the binary format, as base64. */
+export interface ReferenceBrain {
+  inputs: HideSeekInputConfig;
+  genome: string;
+}
+
+/**
+ * A Hide and Seek reference champion: the hider and seeker champions of
+ * one generation of a preset's reference run. They are the exam's
+ * opponents, so they ship with the curves and are rebuilt with them.
+ */
+export interface ReferenceChampion {
+  tier: ReferenceTier;
+  /** The training seed and generation the pair comes from. */
+  seed: number;
+  generation: number;
+  /** Elo-style rating from a round robin between the reference champions. */
+  rating: number;
+  hider: ReferenceBrain;
+  seeker: ReferenceBrain;
+}
+
 /** What the Bench tab shows next to the user's result. */
 export interface BenchReferences {
   env: EnvId;
@@ -70,4 +93,6 @@ export interface BenchReferences {
   generatedAt: string;
   seeds: number;
   references: ReferenceCurve[];
+  /** Hide and Seek only: the champions the exam plays against. */
+  champions?: ReferenceChampion[];
 }
