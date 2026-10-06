@@ -26,9 +26,10 @@ export function diagnose(source: string, opts: CheckOptions = {}): Diagnostic[] 
 }
 
 /**
- * Applies every fix that has exactly one choice, then checks again, since
- * fixing a missing `}` can uncover a misspelled name behind it. Stops when
- * nothing changes, after a few rounds at most.
+ * Applies every fix that has exactly one choice, or one clear favorite
+ * marked preferred, then checks again, since fixing a missing `}` can
+ * uncover a misspelled name behind it. Stops when nothing changes, after a
+ * few rounds at most.
  */
 export function fixAll(source: string, opts: CheckOptions = {}): FixAllResult {
   let text = source;
@@ -37,8 +38,9 @@ export function fixAll(source: string, opts: CheckOptions = {}): FixAllResult {
     const edits: TextEdit[] = [];
     const titles: string[] = [];
     for (const d of diagnose(text, opts)) {
-      if (!d.fixes || d.fixes.length !== 1 || NEEDS_A_DECISION.has(d.code)) continue;
-      const fix = d.fixes[0];
+      if (!d.fixes || NEEDS_A_DECISION.has(d.code)) continue;
+      const fix = d.fixes.length === 1 ? d.fixes[0] : d.fixes.find((f) => f.isPreferred);
+      if (!fix) continue;
       if (fix.edits.some((e) => edits.some((o) => e.from < o.to && o.from < e.to) || edits.some((o) => o.from === e.from && o.to === e.to))) continue;
       edits.push(...fix.edits);
       titles.push(fix.title);

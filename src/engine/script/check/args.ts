@@ -1,6 +1,6 @@
 import type { Arg, Expr } from '../ast';
 import { suggest } from '../autocorrect/suggest';
-import { replaceFix } from '../diagnostics';
+import { suggestionFixes } from '../diagnostics';
 import { formatNumber, quote } from '../printExpr';
 import type { ParamDef } from '../registry';
 import { describeType, RECORD, STRING } from '../types';
@@ -59,7 +59,7 @@ function checkTextArg(ctx: CheckContext, p: ParamDef, value: Expr): ExprInfo {
   ctx.exprs.set(value, { type: STRING });
   if (p.choices && !p.choices.includes(value.value)) {
     const found = suggest(value.value, p.choices);
-    const fixes = found.map((s) => replaceFix(`Change to ${quote(s.name)}`, value.span, quote(s.name)));
+    const fixes = suggestionFixes(found, value.span, quote);
     const hint = found.length > 0 ? ` Did you mean ${quote(found[0].name)}?` : ` Choose one of ${p.choices.join(', ')}.`;
     ctx.error('unknown-choice', `There is no ${p.name} ${quote(value.value)}.${hint}`, value.span, fixes);
     return ERROR_INFO;
@@ -82,7 +82,7 @@ function checkRecordArg(ctx: CheckContext, p: ParamDef, value: Expr, star: StarU
     if (!def || f.name === null) {
       const found = suggest(f.name ?? '', fields.map((d) => d.name));
       const hint = found.length > 0 ? ` Did you mean ${found[0].name}?` : ` Use ${fields.map((d) => d.name).join(', ')}.`;
-      ctx.error('unknown-field', `${p.name} has no setting called ${f.name}.${hint}`, nameSpan, found.map((s) => replaceFix(`Change to ${s.name}`, nameSpan, s.name)));
+      ctx.error('unknown-field', `${p.name} has no setting called ${f.name}.${hint}`, nameSpan, suggestionFixes(found, nameSpan));
       ok = false;
     } else if (seen.has(def.name)) {
       ok = fail(ctx, 'duplicate-arg', `${def.name} is given twice.`, f);

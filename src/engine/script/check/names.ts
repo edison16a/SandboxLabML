@@ -1,6 +1,6 @@
 import type { NameExpr } from '../ast';
 import { suggest } from '../autocorrect/suggest';
-import { insertFix, replaceFix, type QuickFix } from '../diagnostics';
+import { insertFix, replaceFix, suggestionFixes, type QuickFix } from '../diagnostics';
 import { findAnywhere, inScope, scopeLabel, type RegistryEntry } from '../registry';
 import { BOOL, ERROR, num } from '../types';
 import { dimOf, type UnitName } from '../units';
@@ -55,7 +55,7 @@ function unknownName(ctx: CheckContext, node: NameExpr, full: string, callable: 
   const candidates = [...ctx.names.values()].filter((e) => CALLABLE.has(e.kind) === callable && e.kind !== 'collection' && inScope(e, scope)).map((e) => e.name);
   if (!callable) candidates.push(...ctx.localNames());
   const found = suggest(full, candidates);
-  const fixes: QuickFix[] = found.map((s) => replaceFix(`Change to ${s.name}`, node.span, s.name));
+  const fixes: QuickFix[] = suggestionFixes(found, node.span);
   const hint = found.length > 0 ? ` Did you mean ${found.map((s) => s.name).join(' or ')}?` : '';
   if (callable) ctx.error('unknown-function', `There is no function or action called ${full}.${hint}`, node.span, fixes);
   else ctx.error('unknown-name', `Unknown name ${full}.${hint}`, node.span, fixes);

@@ -20,6 +20,8 @@ export interface TextEdit {
 export interface QuickFix {
   title: string;
   edits: TextEdit[];
+  /** The clear favorite among several fixes. fixAll applies it, and editors may offer it first. */
+  isPreferred?: boolean;
 }
 
 export type Severity = 'error' | 'warning' | 'info';
@@ -50,6 +52,16 @@ export function replaceFix(title: string, span: Span, insert: string): QuickFix 
 
 export function insertFix(title: string, at: number, insert: string): QuickFix {
   return { title, edits: [{ from: at, to: at, insert }] };
+}
+
+/**
+ * One fix per suggestion, best first. When the best is strictly closer than
+ * the runner up, it is marked preferred, so fixAll can apply it.
+ */
+export function suggestionFixes(found: ReadonlyArray<{ name: string; distance: number }>, span: Span, render: (name: string) => string = (n) => n): QuickFix[] {
+  const fixes = found.map((s) => replaceFix(`Change to ${render(s.name)}`, span, render(s.name)));
+  if (fixes.length > 1 && found[0].distance < found[1].distance) fixes[0].isPreferred = true;
+  return fixes;
 }
 
 /**

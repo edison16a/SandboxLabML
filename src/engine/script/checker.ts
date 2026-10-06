@@ -7,7 +7,7 @@ import { CheckContext, type CheckResult } from './check/context';
 import { checkExpr, expectKind } from './check/expr';
 import { checkBlock, checkNewName } from './check/stmt';
 import { unitsAgree } from './check/unitFix';
-import { replaceFix, sortDiagnostics, type Span } from './diagnostics';
+import { replaceFix, sortDiagnostics, type Span, suggestionFixes } from './diagnostics';
 import { entriesByName, renamesFor, SCRIPT_ENVS } from './registry';
 import { describeType } from './types';
 import { dimWords, sameDim } from './units';
@@ -65,7 +65,7 @@ function checkHeader(ctx: CheckContext, h: Header | null): void {
   if (!(SCRIPT_ENVS as readonly string[]).includes(h.env)) {
     const found = suggest(h.env, SCRIPT_ENVS);
     const hint = found.length > 0 ? ` Did you mean ${found[0].name}?` : ` Use ${SCRIPT_ENVS.join(' or ')}.`;
-    ctx.error('unknown-env', `There is no environment called ${h.env}.${hint}`, h.envSpan, found.map((f) => replaceFix(`Change to ${f.name}`, h.envSpan, f.name)));
+    ctx.error('unknown-env', `There is no environment called ${h.env}.${hint}`, h.envSpan, suggestionFixes(found, h.envSpan));
   }
   if (h.version !== SCRIPT_API_VERSION) {
     const span: Span = { from: h.span.to - `v${h.version}`.length, to: h.span.to };
@@ -78,7 +78,7 @@ function checkBrain(ctx: CheckContext, b: BrainDecl | null, env: EnvId | null, a
   if (!allowed.includes(b.id)) {
     const found = suggest(b.id, allowed);
     const hint = found.length > 0 ? ` Did you mean ${found[0].name}?` : '';
-    ctx.error('unknown-brain', `There is no brain called ${b.id}.${hint}`, b.idSpan, found.map((f) => replaceFix(`Change to ${f.name}`, b.idSpan, f.name)));
+    ctx.error('unknown-brain', `There is no brain called ${b.id}.${hint}`, b.idSpan, suggestionFixes(found, b.idSpan));
     return;
   }
   const preset = findPresetBlueprint(b.id);

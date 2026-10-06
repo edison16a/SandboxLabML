@@ -1,6 +1,6 @@
 import type { Arg, CallExpr, NameExpr } from '../ast';
 import { suggest } from '../autocorrect/suggest';
-import { insertFix, replaceFix, type QuickFix } from '../diagnostics';
+import { insertFix, replaceFix, type QuickFix, suggestionFixes } from '../diagnostics';
 import { formatNumber, quote } from '../printExpr';
 import type { ParamDef, RegistryEntry } from '../registry';
 import { ERROR, num, VOID, type ValueType } from '../types';
@@ -88,7 +88,7 @@ function matchArgs(ctx: CheckContext, e: CallExpr, entry: RegistryEntry, callee:
     if (!p) {
       const nameSpan = { from: arg.span.from, to: arg.span.from + arg.name.length };
       const found = suggest(arg.name, entry.params.map((q) => q.name));
-      const fixes = found.map((s) => replaceFix(`Change to ${s.name}`, nameSpan, s.name));
+      const fixes = suggestionFixes(found, nameSpan);
       const hint = found.length > 0 ? ` Did you mean ${found[0].name}?` : '';
       ctx.error('unknown-param', `${entry.name} has no setting called ${arg.name}.${hint}`, nameSpan, fixes);
       ok = false;

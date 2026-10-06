@@ -1,6 +1,6 @@
 import type { Block, Expr, ForEachStmt, LetStmt, Stmt } from '../ast';
 import { suggest } from '../autocorrect/suggest';
-import { replaceFix, type Span } from '../diagnostics';
+import { suggestionFixes, type Span } from '../diagnostics';
 import { RESERVED_ROOTS, inScope, scopeLabel } from '../registry';
 import { ERROR } from '../types';
 import { isUnitName } from '../units';
@@ -84,7 +84,7 @@ function checkForEach(ctx: CheckContext, s: ForEachStmt): void {
   if (!entry || entry.kind !== 'collection') {
     const found = suggest(s.collection, lists.map((e) => e.name));
     const hint = found.length > 0 ? ` Did you mean ${found[0].name}?` : lists.length > 0 ? ` Try ${lists.map((e) => e.name).join(' or ')}.` : '';
-    ctx.error('unknown-list', `There is no list called ${s.collection}.${hint}`, s.collectionSpan, found.map((f) => replaceFix(`Change to ${f.name}`, s.collectionSpan, f.name)));
+    ctx.error('unknown-list', `There is no list called ${s.collection}.${hint}`, s.collectionSpan, suggestionFixes(found, s.collectionSpan));
   } else if (!inScope(entry, ctx.blockScope)) {
     ctx.error('wrong-scope', `${entry.name} only works inside ${scopeLabel(entry.scope)}.`, s.collectionSpan);
   }
