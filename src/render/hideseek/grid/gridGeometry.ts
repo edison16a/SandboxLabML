@@ -1,36 +1,5 @@
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { ARENA_SPAN } from '../layout/gridLattice';
-
-const AGENT = DEFAULT_HIDESEEK_PHYSICS.agent;
-
-/** Paints a whole geometry one vertex color, so instance colors tint white parts and leave dark parts dark. */
-function painted(g: THREE.BufferGeometry, r: number, gr: number, b: number): THREE.BufferGeometry {
-  const geo = g.index ? g.toNonIndexed() : g;
-  const n = geo.attributes.position.count;
-  const colors = new Float32Array(n * 3);
-  for (let i = 0; i < n; i++) colors.set([r, gr, b], i * 3);
-  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  geo.deleteAttribute('uv');
-  return geo;
-}
-
-/**
- * The cheap grid agent: a capsule of 112 triangles plus a dark visor on
- * the front (+x) so facing reads from far away, 124 triangles in all.
- * Standing on the floor, its base at y = 0.
- */
-export function gridAgentGeometry(): THREE.BufferGeometry {
-  const body = new THREE.CapsuleGeometry(AGENT.radius, AGENT.height - 2 * AGENT.radius, 3, 8, 1);
-  body.translate(0, AGENT.height / 2, 0);
-  const visor = new THREE.BoxGeometry(0.16, 0.16, 0.5);
-  visor.translate(AGENT.radius - 0.04, AGENT.height * 0.78, 0);
-  const g = mergeGeometries([painted(body, 1, 1, 1), painted(visor, 0.05, 0.06, 0.08)]) as THREE.BufferGeometry;
-  g.computeVertexNormals();
-  g.computeBoundingSphere();
-  return g;
-}
 
 /** A unit cube standing on the floor (y from 0 to 1), scaled per instance into walls and boxes. */
 export function standingUnitBox(): THREE.BufferGeometry {
@@ -41,8 +10,8 @@ export function standingUnitBox(): THREE.BufferGeometry {
 
 /**
  * A flat fan for a vision cone on the grid: apex at the origin, centered on
- * +x, `fov` wide. Vertex alpha fades from the apex outwards, so additive
- * blending gives a soft cone with no texture.
+ * +x, `fov` wide. Vertex alpha fades from the apex outwards, so plain
+ * alpha blending gives a soft cone with no texture.
  */
 export function fanGeometry(radius: number, fov: number, segments = 16): THREE.BufferGeometry {
   const pos: number[] = [0, 0, 0];
