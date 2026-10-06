@@ -20,7 +20,11 @@ const step =
  * Arrow keys step it too when it has focus, like a native spin button.
  */
 export function CountStepper({ label, value, min, max, onChange, dot }: Props) {
-  const set = (v: number) => onChange(Math.max(min, Math.min(max, v)));
+  // A key at the limit changes nothing, and must not rebuild a running match.
+  const set = (v: number) => {
+    const next = Math.max(min, Math.min(max, v));
+    if (next !== value) onChange(next);
+  };
   return (
     <div
       role="spinbutton"
