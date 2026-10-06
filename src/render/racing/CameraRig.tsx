@@ -27,14 +27,15 @@ export function CameraRig({ mode, target }: { mode: CameraMode; target: React.Re
 
   const editing = useRacingLab((s) => s.editingTrack);
   const controls = useThree((s) => s.controls) as { target?: THREE.Vector3; update?: () => void } | null;
-  const placed = useRef('');
+  const placed = useRef<{ key: string; controls: unknown } | null>(null);
   useEffect(() => {
     spring.init = false;
-    if (mode !== 'top' && mode !== 'free') return void (placed.current = '');
+    if (mode !== 'top' && mode !== 'free') return void (placed.current = null);
     // Dragging a track point moves the bounds on every update. Re-framing then would slide the map out from under the pointer.
-    const key = `${mode}:${track.spec.id}:${controls ? 'controls' : 'none'}`;
-    if (editing && placed.current === key) return;
-    placed.current = key;
+    // New controls still get aimed, since the map controls replace the orbit ones a render after the mode changes.
+    const key = `${mode}:${track.spec.id}`;
+    if (editing && placed.current?.key === key && placed.current.controls === controls) return;
+    placed.current = { key, controls };
     camera.position.set(center.x, center.size * 1.05 + 40, center.z + 0.01);
     camera.lookAt(center.x, 0, center.z);
     // The map controls aim at their own target. Left at the old center, a camera now on its far side turns the map upside down.
