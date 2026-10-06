@@ -8,6 +8,7 @@ import { configureTextBuilder } from 'troika-three-text';
 import { FLAG_SEEN } from '@/engine/hideseek/snapshot';
 import { useHsScene } from '../frame/sceneContext';
 import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
+import { GRID_LAYER } from '../grid/scratch';
 
 /**
  * The SDF font for 3D text, served from the app itself. Without one, the
@@ -27,6 +28,8 @@ const RED = new THREE.Color('#ff5f6d').multiplyScalar(2.4);
 /**
  * "SEEN" floating over the hider whenever the seeker has it in sight. It
  * always faces the camera, pops in with a small overshoot and fades out.
+ * It is drawn on the main camera's extra layer only, so the first person
+ * views never show a word turned toward another camera.
  */
 export function SeenBillboard({ arena }: { arena: number }) {
   const { frame } = useHsScene();
@@ -56,7 +59,7 @@ export function SeenBillboard({ arena }: { arena: number }) {
   return (
     <group ref={group} visible={false}>
       <Billboard>
-        <Text font={SDF_FONT} fontSize={0.46} letterSpacing={0.12} color={RED} outlineWidth={0.018} outlineColor="#200509" anchorX="center" anchorY="middle" characters="SEN" material-toneMapped={false}>
+        <Text layers={GRID_LAYER} font={SDF_FONT} fontSize={0.46} letterSpacing={0.12} color={RED} outlineWidth={0.018} outlineColor="#200509" anchorX="center" anchorY="middle" characters="SEN" material-toneMapped={false}>
           SEEN
         </Text>
       </Billboard>
