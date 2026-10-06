@@ -9,7 +9,7 @@ import { RayBuffer } from '@/render/shared/RayBuffer';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
 import { followedAgent } from '../frame/followedAgent';
-import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
+import { agentAt, agentFlags, blendFloorPose, hasFlag } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
 import { MAX_ARENAS } from '../grid/scratch';
 import { HS_COLORS } from '../palette';
@@ -45,7 +45,7 @@ export function RaysOverlay() {
     if (curr && frame.count > 1) {
       for (let k = 0; k < frame.count; k++) {
         const arena = frame.first + k;
-        if (k === frame.focusSlot || !hasFlag(curr[agentAt(arena, 1) + 3], FLAG_SEEING)) continue;
+        if (k === frame.focusSlot || !hasFlag(agentFlags(curr, agentAt(arena, 1)), FLAG_SEEING)) continue;
         arenaOrigin(k, frame.lattice, t.o);
         blendFloorPose(frame.prev, curr, agentAt(arena, 1), frame.alpha, t.s);
         blendFloorPose(frame.prev, curr, agentAt(arena, 0), frame.alpha, t.h);
@@ -63,7 +63,7 @@ export function RaysOverlay() {
           for (let a = 0; a < 2; a++) {
             const o = agentAt(arena, a);
             // A frozen seeker is blind: its rays read full range straight through walls, which says nothing.
-            if (hasFlag(curr[o + 3], FLAG_FROZEN)) continue;
+            if (hasFlag(agentFlags(curr, o), FLAG_FROZEN)) continue;
             const ax = curr[o];
             const az = curr[o + 1];
             const base = arena * RAY_STRIDE + a * SNAPSHOT_RAYS * 2;

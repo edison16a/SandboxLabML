@@ -6,7 +6,7 @@ import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { HsBox, type BoxDrive } from '../boxes/HsBox';
 import { useHsScene } from '../frame/sceneContext';
 import type { BoxPointerHandler } from '../showcase/ShowcaseBoxes';
-import { isLocked, readBox, sandboxFrame } from './sandboxRead';
+import { readBox, sandboxBoxLock, sandboxFrame } from './sandboxRead';
 
 const SIZES: Record<BoxKind, ReturnType<typeof boxKindSize>> = {
   cube: boxKindSize(DEFAULT_HIDESEEK_PHYSICS, 'cube'),
@@ -40,7 +40,7 @@ export function SandboxBoxes({ kinds, players, tier, onPointerDown, onDoubleClic
         d.x = pose.x;
         d.z = pose.z;
         d.yaw = pose.yaw;
-        d.locked = isLocked(bits);
+        d.lock = sandboxBoxLock(bits);
       }),
     [frame, kinds, players, pose],
   );

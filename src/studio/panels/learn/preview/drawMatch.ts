@@ -1,7 +1,19 @@
 import { arenaWallRects } from '@/engine/hideseek/layouts/geometry';
 import { getLayout } from '@/engine/hideseek/layouts/presets';
-import { BOX_COUNT, boxSize, DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
-import { FLAG_FROZEN, FLAG_SEEING, HIDESEEK_SNAPSHOT, SNAPSHOT_AGENTS_AT, SNAPSHOT_BOXES_AT, SNAPSHOT_ENTRY } from '@/engine/hideseek/snapshot';
+import { BOX_COUNT, BOX_KINDS, boxSize, DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
+import {
+  AGENT_FLAGS,
+  BOX_LOCK,
+  FLAG_FROZEN,
+  FLAG_SEEING,
+  HIDESEEK_SNAPSHOT,
+  LOCK_FREE,
+  LOCK_SEEKERS,
+  SNAPSHOT_PHASE,
+  SNAPSHOT_SEEN,
+  snapshotAgentAt,
+  snapshotBoxAt,
+} from '@/engine/hideseek/snapshot';
 import type { MatchPreview } from '@/engine/lessons/preview/types';
 import { frameAt, lerp, lerpAngle, secondsAt } from './playback';
 import { fitView, px, py, type View } from './view';
@@ -10,14 +22,14 @@ import { fitView, px, py, type View } from './view';
 const P = DEFAULT_HIDESEEK_PHYSICS;
 const STRIDE = HIDESEEK_SNAPSHOT.stride;
 
-/** The 3D scene's colors on a dark floor: team blue and red, gold crates, and a locked crate edged in hider blue like its 3D braces. */
+/** The 3D scene's colors on a dark floor: team blue and red, gold crates, a jade ramp, and a locked box edged in its owner's color like its 3D braces. */
 const C = {
   floor: '#151a24',
   grid: '#1b212d',
   wall: '#8a94a7',
   cube: '#bf9a3e',
   plank: '#c28d45',
-  locked: '#4c9aff',
+  ramp: '#5f9e7f',
   hider: '#4c9aff',
   seeker: '#ff5f6d',
   cone: 'rgba(255, 95, 109, 0.09)',
@@ -47,8 +59,8 @@ function drawRoom(g: CanvasRenderingContext2D, v: View, p: MatchPreview): void {
   for (const r of arenaWallRects(getLayout(p.layout), P)) g.fillRect(px(v, r.x - r.hx), py(v, r.z - r.hz), 2 * r.hx * v.scale, 2 * r.hz * v.scale);
 }
 
-/** A box turned to its yaw. Its local x runs along its length; a locked box keeps its fill and gets a blue edge. */
-function drawBox(g: CanvasRenderingContext2D, v: View, index: number, at: { x: number; z: number; yaw: number }, locked: boolean): void {
+/** A box turned to its yaw. Its local x runs along its length; a locked box keeps its fill and gets an edge in its owner team's color. */
+function drawBox(g: CanvasRenderingContext2D, v: View, index: number, at: { x: number; z: number; yaw: number }, lock: number): void {
   const size = boxSize(P, index);
   const l = size.length * v.scale;
   const w = size.width * v.scale;
@@ -56,10 +68,10 @@ function drawBox(g: CanvasRenderingContext2D, v: View, index: number, at: { x: n
   g.translate(px(v, at.x), py(v, at.z));
   // Yaw turns counterclockwise seen from above, and the canvas turns clockwise, hence the minus.
   g.rotate(-at.yaw);
-  g.fillStyle = index < 2 ? C.cube : C.plank;
+  g.fillStyle = C[BOX_KINDS[index]];
   g.fillRect(-l / 2, -w / 2, l, w);
-  if (locked) {
-    g.strokeStyle = C.locked;
+  if (lock !== LOCK_FREE) {
+    g.strokeStyle = lock === LOCK_SEEKERS ? C.seeker : C.hider;
     g.lineWidth = 2;
     g.strokeRect(-l / 2, -w / 2, l, w);
   }
@@ -117,14 +129,15 @@ export function drawMatch(g: CanvasRenderingContext2D, w: number, h: number, p: 
   const A = i * STRIDE;
   const B = j * STRIDE;
   for (let k = 0; k < BOX_COUNT; k++) {
-    const o = SNAPSHOT_BOXES_AT + k * SNAPSHOT_ENTRY;
-    drawBox(g, v, k, pose(fr, A + o, B + o, f), fr[A + o + 3] === 1);
+    const o = snapshotBoxAt(k);
+    drawBox(g, v, k, pose(fr, A + o, B + o, f), fr[A + o + BOX_LOCK]);
   }
-  const hider = pose(fr, A + SNAPSHOT_AGENTS_AT, B + SNAPSHOT_AGENTS_AT, f);
-  const so = SNAPSHOT_AGENTS_AT + SNAPSHOT_ENTRY;
+  const ho = snapshotAgentAt(0);
+  const so = snapshotAgentAt(1);
+  const hider = pose(fr, A + ho, B + ho, f);
   const seeker = pose(fr, A + so, B + so, f);
-  const seekerFlags = fr[A + so + 3];
-  if (fr[A + 1] !== 1) drawCone(g, v, seeker);
+  const seekerFlags = fr[A + so + AGENT_FLAGS];
+  if (fr[A + SNAPSHOT_PHASE] !== 1) drawCone(g, v, seeker);
   if (seekerFlags & FLAG_SEEING) {
     g.strokeStyle = C.seeker;
     g.lineWidth = 2;
@@ -133,7 +146,7 @@ export function drawMatch(g: CanvasRenderingContext2D, w: number, h: number, p: 
     g.lineTo(px(v, hider.x), py(v, hider.z));
     g.stroke();
   }
-  drawAgent(g, v, hider, C.hider, (fr[A + SNAPSHOT_AGENTS_AT + 3] & FLAG_FROZEN) !== 0);
+  drawAgent(g, v, hider, C.hider, (fr[A + ho + AGENT_FLAGS] & FLAG_FROZEN) !== 0);
   drawAgent(g, v, seeker, C.seeker, (seekerFlags & FLAG_FROZEN) !== 0);
 }
 
@@ -142,6 +155,6 @@ export function matchReadout(p: MatchPreview, pos: number): string {
   if (p.ticks === 0) return '';
   const { i } = frameAt(pos, p.ticks);
   const A = i * STRIDE;
-  const phase = p.frames[A + 1] === 1 ? 'prep' : p.frames[A + 2] === 1 ? 'hider seen' : 'hider hidden';
+  const phase = p.frames[A + SNAPSHOT_PHASE] === 1 ? 'prep' : p.frames[A + SNAPSHOT_SEEN] === 1 ? 'hider seen' : 'hider hidden';
   return `${secondsAt(pos, p.ticks).toFixed(1)} s, ${phase}, hider ${p.rewards[2 * i].toFixed(1)}, seeker ${p.rewards[2 * i + 1].toFixed(1)}`;
 }

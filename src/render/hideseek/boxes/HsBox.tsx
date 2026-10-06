@@ -4,16 +4,18 @@ import * as THREE from 'three';
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import type { BoxKind, BoxSize } from '@/engine/hideseek/physics';
+import { LOCK_FREE, LOCK_SEEKERS } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { crateExtras, crateParts } from './boxKit';
 import { BoxMaterials } from './boxMaterials';
 
-/** Where a crate is and whether it is locked, filled in by the caller every frame. */
+/** Where a crate is and its lock, filled in by the caller every frame. */
 export interface BoxDrive {
   x: number;
   z: number;
   yaw: number;
-  locked: boolean;
+  /** LOCK_FREE, LOCK_HIDERS or LOCK_SEEKERS (see the engine snapshot). */
+  lock: number;
 }
 
 export interface HsBoxProps {
@@ -39,7 +41,7 @@ const HOVER = 0.55;
 const HOLO_SCALE = 1.35;
 
 /**
- * One braced crate. Locking it turns the braces to the hider color and
+ * One braced crate. Locking it turns the braces to the owner team's color and
  * raises a padlock hologram that bobs and turns slowly over the top, its
  * shackle snapping shut, so a sealed fort reads from across the room.
  */
@@ -47,7 +49,7 @@ export function HsBox({ kind, size, read, full = true, shadows = false, blob = f
   const parts = crateParts(size);
   const extras = crateExtras();
   const mats = useDisposable(() => new BoxMaterials(kind, full, extras.blobMap), [kind, full, extras]);
-  const state = useMemo(() => ({ drive: { x: 0, z: 0, yaw: 0, locked: false } as BoxDrive, lock: 0, seed: Math.random() * 10 }), []);
+  const state = useMemo(() => ({ drive: { x: 0, z: 0, yaw: 0, lock: LOCK_FREE } as BoxDrive, lock: 0, owner: 0, seed: Math.random() * 10 }), []);
   const root = useRef<THREE.Group>(null);
   const holo = useRef<THREE.Group>(null);
   const shackle = useRef<THREE.Mesh>(null);
@@ -62,13 +64,15 @@ export function HsBox({ kind, size, read, full = true, shadows = false, blob = f
     const d = state.drive;
     g.position.set(d.x, 0, d.z);
     g.rotation.y = d.yaw;
-    const target = d.locked ? 1 : 0;
+    const target = d.lock === LOCK_FREE ? 0 : 1;
+    // The owner sticks while a lock fades out, so an unlock never flashes the other team's color.
+    if (target) state.owner = d.lock === LOCK_SEEKERS ? 1 : 0;
     const step = Math.min(dt, 0.05) / LOCK_SECONDS;
     state.lock = THREE.MathUtils.clamp(state.lock + (target ? step : -step), 0, 1);
     const k = state.lock;
     const e = k * k * (3 - 2 * k);
     const t = three.clock.elapsedTime;
-    mats.apply(e, t);
+    mats.apply(e, t, state.owner);
     const h = holo.current;
     if (h) {
       h.visible = k > 0.001;

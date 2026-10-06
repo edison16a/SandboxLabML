@@ -2,6 +2,7 @@ import { getLayout, HIDESEEK_LAYOUT_IDS } from '@/engine/hideseek/layouts/preset
 import { layoutSetup } from '@/engine/hideseek/layouts/spawn';
 import type { HideSeekLayoutId } from '@/engine/hideseek/layouts/types';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
+import { SNAPSHOT_PHASE } from '@/engine/hideseek/snapshot';
 import { agentAt, boxAt, STRIDE } from './snapshotRead';
 
 /**
@@ -15,7 +16,7 @@ export function previewFeed(layoutId: HideSeekLayoutId, count: number): ArenaFee
   const [h, s] = setup.agents;
   const buffer = new Float32Array(count * STRIDE);
   for (let i = 0; i < count; i++) {
-    buffer[i * STRIDE + 1] = 1;
+    buffer[i * STRIDE + SNAPSHOT_PHASE] = 1;
     const facing = [Math.atan2(-(s.z - h.z), s.x - h.x), Math.atan2(-(h.z - s.z), h.x - s.x)];
     setup.agents.forEach((a, k) => buffer.set([a.x, a.z, facing[k], 0], agentAt(i, k)));
     setup.boxes.forEach((b, k) => buffer.set([b.x, b.z, b.yaw, 0], boxAt(i, k)));

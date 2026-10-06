@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
-import { STRIDE } from '@/render/hideseek/frame/snapshotRead';
+import { arenaHiderSeen, arenaInPrep } from '@/render/hideseek/frame/snapshotRead';
 import { hideSeekSession } from '../../session/HideSeekSession';
 import { useHideSeekLab } from '../../state/hideSeekStore';
 
@@ -44,9 +44,9 @@ export function HiddenHistogram() {
       let h = 0;
       let k = 0;
       for (let i = 0; i < n; i++) {
-        if (buf[i * STRIDE + 1] === 1) continue;
+        if (arenaInPrep(buf, i)) continue;
         k++;
-        if (buf[i * STRIDE + 2] === 0) h++;
+        if (!arenaHiderSeen(buf, i)) h++;
       }
       if (k > 0) {
         hidden[bin] = h / n;

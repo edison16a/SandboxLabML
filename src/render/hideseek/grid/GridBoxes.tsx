@@ -4,11 +4,12 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { BOX_KINDS, boxSize, DEFAULT_HIDESEEK_PHYSICS, type BoxKind } from '@/engine/hideseek/physics';
+import { LOCK_FREE, LOCK_SEEKERS } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { BOX_LOOK } from '../boxes/boxMaterials';
 import { instancedCrateGeometry } from '../boxes/instancedCrate';
 import { useHsScene } from '../frame/sceneContext';
-import { blendFloorPose, boxAt } from '../frame/snapshotRead';
+import { blendFloorPose, boxAt, boxLock } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
 import { commit, GRID_LAYER, makeScratch, MAX_ARENAS, placeInstance } from './scratch';
 import { tintMaskMaterial } from '../shared/tintMask';
@@ -16,6 +17,7 @@ import { tintMaskMaterial } from '../shared/tintMask';
 const BRACE = new THREE.Color(BOX_LOOK.brace);
 /** Pushed past 1 so a locked crate's braces read as lit even from far away. */
 const LOCKED = new THREE.Color(BOX_LOOK.lockGlow).multiplyScalar(1.5);
+const SEEKER_LOCKED = new THREE.Color(BOX_LOOK.seekerLockGlow).multiplyScalar(1.5);
 /** Box indexes of each kind: two cubes, then two planks. */
 const OF_KIND: Record<BoxKind, number[]> = { cube: [], plank: [], ramp: [] };
 BOX_KINDS.forEach((k, i) => OF_KIND[k].push(i));
@@ -57,7 +59,8 @@ function CrateKind({ kind, onPick }: { kind: BoxKind; onPick: (slot: number) => 
         const o = boxAt(arena, b);
         blendFloorPose(frame.prev, curr, o, frame.alpha, t.pose);
         placeInstance(m, n, t, t.o.x + t.pose.x, 0, t.o.z + t.pose.z, t.pose.yaw, hide, hide, hide);
-        m.setColorAt(n++, curr[o + 3] === 1 ? LOCKED : BRACE);
+        const lock = boxLock(curr, o);
+        m.setColorAt(n++, lock === LOCK_FREE ? BRACE : lock === LOCK_SEEKERS ? SEEKER_LOCKED : LOCKED);
       }
     }
     commit(m, n);

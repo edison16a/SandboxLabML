@@ -7,7 +7,7 @@ import { useCallback, useMemo, useRef } from 'react';
 import { configureTextBuilder } from 'troika-three-text';
 import { FLAG_SEEN } from '@/engine/hideseek/snapshot';
 import { useHsScene, type HsFrame } from '../frame/sceneContext';
-import { agentAt, blendFloorPose, hasFlag, type FloorPose } from '../frame/snapshotRead';
+import { agentAt, agentFlags, blendFloorPose, hasFlag, type FloorPose } from '../frame/snapshotRead';
 import { GRID_LAYER } from '../grid/scratch';
 
 /**
@@ -80,7 +80,7 @@ export function SeenBillboard({ arena }: { arena: number }) {
       if (!curr) return false;
       const o = agentAt(arena, 0);
       blendFloorPose(frame.prev, curr, o, frame.alpha, out);
-      return hasFlag(curr[o + 3], FLAG_SEEN);
+      return hasFlag(agentFlags(curr, o), FLAG_SEEN);
     },
     [arena],
   );

@@ -71,11 +71,11 @@ describe('Sandbox match', () => {
   it('streams a frame whose header says how many players and boxes follow', () => {
     const m = sandbox(R, { hiders: 5, seekers: 2 });
     const [frame] = trace(m, 1);
-    expect(frame.length).toBe(8 + 4 * (7 + 5));
+    expect(frame.length).toBe(8 + 5 * 7 + 4 * 5);
     const snap = readSandboxSnapshot(frame);
     expect(snap.hiders).toHaveLength(5);
     expect(snap.seekers).toHaveLength(2);
-    expect(snap.boxes.map((b) => b.plank)).toEqual([false, false, true, true, true]);
+    expect(snap.boxes.map((b) => b.kind)).toEqual(['cube', 'cube', 'plank', 'plank', 'plank']);
     expect(snap.hiders[0].x).toBeCloseTo(m.state.agents[0].x, 4);
     expect(snap.seekers[1].z).toBeCloseTo(m.state.agents[6].z, 4);
     m.dispose();

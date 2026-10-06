@@ -111,7 +111,7 @@ export class HideSeekMatch {
     return buildResult(this.state, this.state.arena.layout.id, this.seed);
   }
 
-  /** Writes this arena's 28 floats (see HIDESEEK_SNAPSHOT) into `out` at `offset`. */
+  /** Writes this arena's snapshot (see HIDESEEK_SNAPSHOT) into `out` at `offset`. */
   snapshot(out: Float32Array, offset = 0): void {
     writeArenaSnapshot(this.state, out, offset);
   }

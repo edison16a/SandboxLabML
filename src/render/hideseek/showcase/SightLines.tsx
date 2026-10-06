@@ -11,9 +11,9 @@ import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { FLAG_FROZEN } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
-import { agentAt, blendFloorPose, hasFlag, STRIDE } from '../frame/snapshotRead';
+import { agentAt, agentFlags, arenaInPrep, blendFloorPose, hasFlag } from '../frame/snapshotRead';
 import { wallsOfLayout } from '../layout/arenaWalls';
-import { sightClear } from '../overlay/sight2d';
+import { sightClear, sightMode } from '../overlay/sight2d';
 import { HS } from '../palette';
 
 const P = DEFAULT_HIDESEEK_PHYSICS;
@@ -50,7 +50,7 @@ export function SightLines({ arena, layout }: { arena: number; layout: number })
     lines.visible = false;
     if (!curr) return;
     const so = agentAt(arena, 1);
-    if (hasFlag(curr[so + 3], FLAG_FROZEN) || curr[arena * STRIDE + 1] === 1) return;
+    if (hasFlag(agentFlags(curr, so), FLAG_FROZEN) || arenaInPrep(curr, arena)) return;
     blendFloorPose(frame.prev, curr, so, frame.alpha, state.s);
     blendFloorPose(frame.prev, curr, agentAt(arena, 0), frame.alpha, state.h);
     const dx = state.h.x - state.s.x;
@@ -63,13 +63,14 @@ export function SightLines({ arena, layout }: { arena: number; layout: number })
     const col = colorStart.data.array as Float32Array;
     const walls = wallsOfLayout(layout);
     const y = P.rayHeight;
+    const mode = sightMode(curr, arena, 1, 0);
     const sx = (-dz / d) * P.agent.radius;
     const sz = (dx / d) * P.agent.radius;
     for (let k = 0; k < 3; k++) {
       const side = k === 0 ? 0 : k === 1 ? 1 : -1;
       const tx = state.h.x + sx * side;
       const tz = state.h.z + sz * side;
-      const c = sightClear(walls, curr, arena, state.s.x, state.s.z, tx, tz) ? CLEAR : BLOCKED;
+      const c = sightClear(walls, curr, arena, state.s.x, state.s.z, tx, tz, mode) ? CLEAR : BLOCKED;
       pos[k * 6] = state.s.x;
       pos[k * 6 + 1] = y;
       pos[k * 6 + 2] = state.s.z;

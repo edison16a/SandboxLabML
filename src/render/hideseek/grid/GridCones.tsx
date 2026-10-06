@@ -7,7 +7,7 @@ import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { FLAG_FROZEN, FLAG_SEEING } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
-import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
+import { agentAt, agentFlags, blendFloorPose, hasFlag } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
 import { clipToArenas, createArenaClip, updateArenaClip } from './arenaClip';
 import { HS } from '../palette';
@@ -49,7 +49,7 @@ export function GridCones() {
     for (let k = 0; k < frame.count; k++) {
       const arena = frame.first + k;
       const o = agentAt(arena, 1);
-      const flags = curr[o + 3];
+      const flags = agentFlags(curr, o);
       arenaOrigin(k, frame.lattice, t.o);
       blendFloorPose(frame.prev, curr, o, frame.alpha, t.pose);
       const off = k === frame.focusSlot || hasFlag(flags, FLAG_FROZEN) ? 0 : 1;

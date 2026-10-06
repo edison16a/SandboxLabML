@@ -7,9 +7,9 @@ import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { FLAG_FROZEN, FLAG_SEEING } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
-import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
+import { agentAt, agentFlags, blendFloorPose, hasFlag } from '../frame/snapshotRead';
 import { wallsOfLayout } from '../layout/arenaWalls';
-import { castSight } from '../overlay/sight2d';
+import { castSight, sightMode } from '../overlay/sight2d';
 import { HS } from '../palette';
 import { createConeMaterial } from './coneMaterial';
 import { VisionWedge, WEDGE_SEGMENTS } from './VisionWedge';
@@ -34,15 +34,16 @@ export function VisionCone({ arena, layout }: { arena: number; layout: number })
     const curr = frame.curr;
     if (!m || !curr) return;
     const o = agentAt(arena, 1);
-    const flags = curr[o + 3];
+    const flags = agentFlags(curr, o);
     m.visible = !hasFlag(flags, FLAG_FROZEN);
     if (!m.visible) return;
     blendFloorPose(frame.prev, curr, o, frame.alpha, state.pose);
     const { x, z, yaw } = state.pose;
     const walls = wallsOfLayout(layout);
+    const mode = sightMode(curr, arena, 1);
     for (let k = 0; k <= WEDGE_SEGMENTS; k++) {
       const a = yaw + wedge.angle(k);
-      state.d[k] = castSight(walls, curr, arena, x, z, Math.cos(a), -Math.sin(a), VISION.range);
+      state.d[k] = castSight(walls, curr, arena, x, z, Math.cos(a), -Math.sin(a), VISION.range, mode);
     }
     wedge.update(state.d);
     m.position.set(x, 0, z);

@@ -11,7 +11,7 @@ const RAY_STRIDE = HIDESEEK_RAY_SNAPSHOT.stride;
 export type ObservationReader = (match: HideSeekMatch, agent: number) => ArrayLike<number>;
 
 /**
- * Streams Hide and Seek arenas to the main thread: 28 floats per arena,
+ * Streams Hide and Seek arenas to the main thread: one HIDESEEK_SNAPSHOT per arena,
  * optional ray hit points, and the inputs of one inspected agent. The
  * inspected agent is addressed as arena * 2 + agent (0 hider, 1 seeker)
  * across the whole merged stream, so the main thread does not need to know

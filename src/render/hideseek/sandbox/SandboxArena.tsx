@@ -2,7 +2,7 @@
 
 import { useFrame, useThree } from '@react-three/fiber';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { sandboxBoxAt, sandboxBoxCount, sandboxHiderCount, sandboxSeekerCount } from '@/engine/hideseek/sandbox/snapshot';
+import { sandboxBoxCount, sandboxHiderCount, sandboxSeekerCount } from '@/engine/hideseek/sandbox/snapshot';
 import { DEFAULT_HIDESEEK_PHYSICS, type BoxKind } from '@/engine/hideseek/physics';
 import { roomWallRects } from '@/engine/hideseek/sandbox/room';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
@@ -13,7 +13,7 @@ import { RoomMesh } from '../showcase/ArenaRoom';
 import { SandboxAgent } from './SandboxAgent';
 import { SandboxBoxes } from './SandboxBoxes';
 import { SandboxCones } from './SandboxCones';
-import { isLocked, isPlank, readPlayer, sandboxFrame, sandboxPlayerCount } from './sandboxRead';
+import { boxBits, isLocked, readPlayer, sandboxBoxKind, sandboxFrame, sandboxPlayerCount } from './sandboxRead';
 import { useSandboxRoom } from './useSandboxRoom';
 import { SeenMarkers } from './SeenMarkers';
 
@@ -28,13 +28,11 @@ interface Shape {
   kinds: BoxKind[];
 }
 
-const kindOf = (bits: number): BoxKind => (isPlank(bits) ? 'plank' : 'cube');
-
 /** Whether a frame still has the players and box kinds React last drew. Checked every frame, so it allocates nothing. */
 function sameShape(shape: Shape | null, curr: Float32Array): boolean {
   if (!shape || shape.hiders !== sandboxHiderCount(curr) || shape.seekers !== sandboxSeekerCount(curr) || shape.kinds.length !== sandboxBoxCount(curr)) return false;
   const players = shape.hiders + shape.seekers;
-  for (let b = 0; b < shape.kinds.length; b++) if (kindOf(curr[sandboxBoxAt(players, b) + 3]) !== shape.kinds[b]) return false;
+  for (let b = 0; b < shape.kinds.length; b++) if (sandboxBoxKind(boxBits(curr, players, b)) !== shape.kinds[b]) return false;
   return true;
 }
 
@@ -61,7 +59,7 @@ export function SandboxArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO r
     (index: number) => {
       const curr = sandboxFrame(frame);
       if (!curr || !onToggleLock) return;
-      onToggleLock(index, !isLocked(curr[sandboxBoxAt(sandboxPlayerCount(curr), index) + 3]));
+      onToggleLock(index, !isLocked(boxBits(curr, sandboxPlayerCount(curr), index)));
     },
     [frame, onToggleLock],
   );
@@ -73,11 +71,11 @@ export function SandboxArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO r
     const boxes = sandboxBoxCount(curr);
     // A new shape is built only when the players or boxes change, which is when React must re-render.
     if (!sameShape(shape, curr)) {
-      const kinds = Array.from({ length: boxes }, (_, b) => kindOf(curr[sandboxBoxAt(players, b) + 3]));
+      const kinds = Array.from({ length: boxes }, (_, b) => sandboxBoxKind(boxBits(curr, players, b)));
       setShape({ hiders: sandboxHiderCount(curr), seekers: sandboxSeekerCount(curr), kinds });
     }
     let locked = 0;
-    for (let b = 0; b < boxes; b++) if (isLocked(curr[sandboxBoxAt(players, b) + 3])) locked++;
+    for (let b = 0; b < boxes; b++) if (isLocked(boxBits(curr, players, b))) locked++;
     sandboxStats.agents = players;
     sandboxStats.boxes = boxes;
     sandboxStats.locked = locked;

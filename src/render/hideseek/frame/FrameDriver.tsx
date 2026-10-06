@@ -11,7 +11,7 @@ import type { ArenaFeed } from '@/workers/client/arenaFeed';
 import { latticeFor } from '../layout/gridLattice';
 import { previewFeed } from './previewFeed';
 import { useHsScene } from './sceneContext';
-import { STRIDE } from './snapshotRead';
+import { arenaInPrep, arenaTime, STRIDE } from './snapshotRead';
 
 /** Room shown before anything has streamed: the round's, else the run's first. */
 function idleLayout(s: HideSeekLabState): HideSeekLayoutId {
@@ -70,8 +70,9 @@ export function FrameDriver() {
     frame.focusSlot = focusSlot;
     frame.dim = focusSlot >= 0 && count > 1 ? 0.8 : 1;
     frame.epoch = feed.epoch;
-    frame.matchTime = curr.buffer[first * STRIDE] ?? 0;
-    frame.prep = (curr.buffer[first * STRIDE + 1] ?? 1) === 1;
+    const shown = curr.buffer.length >= (first + 1) * STRIDE;
+    frame.matchTime = shown ? arenaTime(curr.buffer, first) : 0;
+    frame.prep = shown ? arenaInPrep(curr.buffer, first) : true;
   }, -2);
   return null;
 }

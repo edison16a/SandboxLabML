@@ -3,7 +3,7 @@ import { HIDER } from '../agents/agent';
 import { STANDARD_HIDESEEK_INPUTS } from '../inputConfig';
 import { startMatch } from '../match/runMatch';
 import type { MatchSpec } from '../match/types';
-import { HIDESEEK_SNAPSHOT, readArenaSnapshot } from '../snapshot';
+import { HIDESEEK_SNAPSHOT, LOCK_HIDERS, readArenaSnapshot } from '../snapshot';
 import { createArenaPool, type ArenaPool } from '../world/pool';
 import { randomGenomes } from './helpers';
 
@@ -35,7 +35,7 @@ function playWithEdits() {
       m.moveAgent('seeker', -8, -8, 0);
       m.snapshot(snap);
       const s = readArenaSnapshot(snap);
-      seenRightAway.push(s.boxes[0].locked && s.agents[1].x === -8 && s.agents[1].z === -8);
+      seenRightAway.push(s.boxes[0].lock === LOCK_HIDERS && s.agents[1].x === -8 && s.agents[1].z === -8);
     }
     if (m.tick === 401) expect(Math.hypot(m.seeker.x + 8, m.seeker.z + 8)).toBeLessThan(0.2);
     if (m.tick === 600) m.setBoxLocked(0, false);

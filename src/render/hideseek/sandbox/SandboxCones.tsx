@@ -12,7 +12,7 @@ import { hasFlag } from '../frame/snapshotRead';
 import { HS } from '../palette';
 import { createConeMaterial } from '../showcase/coneMaterial';
 import { VisionWedge, WEDGE_SEGMENTS } from '../showcase/VisionWedge';
-import { readPlayer, sandboxFrame, sandboxSight, seekerIdle, SightBoxes } from './sandboxRead';
+import { playerElevation, readPlayer, sandboxFrame, sandboxSight, seekerIdle, SightBoxes } from './sandboxRead';
 
 const VISION = DEFAULT_HIDESEEK_PHYSICS.vision;
 const HEIGHT = 1.05;
@@ -37,9 +37,10 @@ function SeekerCone({ slot, walls, boxes, fade }: { slot: number; walls: Rect[];
     m.visible = !!curr && !seekerIdle(curr, flags);
     if (!m.visible || !curr) return;
     const { x, z, yaw } = state.pose;
+    const elevation = playerElevation(curr, slot);
     for (let k = 0; k <= WEDGE_SEGMENTS; k++) {
       const a = yaw + wedge.angle(k);
-      state.d[k] = sandboxSight(walls, boxes, x, z, Math.cos(a), -Math.sin(a), VISION.range);
+      state.d[k] = sandboxSight(walls, boxes, x, z, Math.cos(a), -Math.sin(a), VISION.range, flags, elevation);
     }
     wedge.update(state.d);
     m.position.set(x, 0, z);

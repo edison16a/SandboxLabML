@@ -1,5 +1,16 @@
 import { lerp, lerpAngle } from '@/engine/core/math';
-import { HIDESEEK_SNAPSHOT, SNAPSHOT_AGENTS_AT, SNAPSHOT_BOXES_AT, SNAPSHOT_ENTRY } from '@/engine/hideseek/snapshot';
+import {
+  AGENT_ELEVATION,
+  AGENT_FLAGS,
+  BOX_LOCK,
+  HIDESEEK_SNAPSHOT,
+  LOCK_FREE,
+  SNAPSHOT_PHASE,
+  SNAPSHOT_SEEN,
+  SNAPSHOT_TIME,
+  snapshotAgentAt,
+  snapshotBoxAt,
+} from '@/engine/hideseek/snapshot';
 
 /** Floats per arena in the arena stream. */
 export const STRIDE = HIDESEEK_SNAPSHOT.stride;
@@ -13,13 +24,34 @@ export interface FloorPose {
 
 /** Offset of agent `agent` (0 hider, 1 seeker) of arena `arena`. */
 export function agentAt(arena: number, agent: number): number {
-  return arena * STRIDE + SNAPSHOT_AGENTS_AT + agent * SNAPSHOT_ENTRY;
+  return snapshotAgentAt(agent, arena * STRIDE);
 }
 
-/** Offset of box `box` (0 and 1 cubes, 2 and 3 planks) of arena `arena`. */
+/** Offset of box `box` of arena `arena`. Its kind is BOX_KINDS[box]. */
 export function boxAt(arena: number, box: number): number {
-  return arena * STRIDE + SNAPSHOT_BOXES_AT + box * SNAPSHOT_ENTRY;
+  return snapshotBoxAt(box, arena * STRIDE);
 }
+
+/** Flags (FLAG_SEEN and friends) of the agent at offset `o`, from agentAt. */
+export const agentFlags = (buf: Float32Array, o: number): number => buf[o + AGENT_FLAGS];
+
+/** Elevation of the agent at offset `o` above the floor, m. */
+export const agentElevation = (buf: Float32Array, o: number): number => buf[o + AGENT_ELEVATION];
+
+/** Lock of the box at offset `o`, from boxAt: LOCK_FREE, LOCK_HIDERS or LOCK_SEEKERS. */
+export const boxLock = (buf: Float32Array, o: number): number => buf[o + BOX_LOCK];
+
+/** Whether the box at offset `o` is locked by either team. */
+export const boxLocked = (buf: Float32Array, o: number): boolean => buf[o + BOX_LOCK] !== LOCK_FREE;
+
+/** Match time of arena `arena`, s. */
+export const arenaTime = (buf: Float32Array, arena: number): number => buf[arena * STRIDE + SNAPSHOT_TIME];
+
+/** Whether arena `arena` is still in the prep phase. */
+export const arenaInPrep = (buf: Float32Array, arena: number): boolean => buf[arena * STRIDE + SNAPSHOT_PHASE] === 1;
+
+/** Whether the seeker of arena `arena` sees the hider. */
+export const arenaHiderSeen = (buf: Float32Array, arena: number): boolean => buf[arena * STRIDE + SNAPSHOT_SEEN] === 1;
 
 /** A jump this long between two frames is a teleport (a Sandbox drag), drawn without blending, m. */
 const TELEPORT = 2;
@@ -27,6 +59,7 @@ const TELEPORT = 2;
 /**
  * Blends a pose between two frames, 30 Hz snapshots drawn at 60 Hz. Yaw
  * takes the short way round, like a quaternion slerp about one axis.
+ * Agents and boxes both start with x, z and yaw, so `o` may be either.
  * Allocates nothing; the caller owns `out`.
  */
 export function blendFloorPose(prev: Float32Array | null, curr: Float32Array, o: number, alpha: number, out: FloorPose): FloorPose {

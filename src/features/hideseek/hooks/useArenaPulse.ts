@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { sandboxHiderCount } from '@/engine/hideseek/sandbox/snapshot';
 import { hideSeekSettingsOf } from '@/engine/training/hideseekRunConfig';
-import { STRIDE } from '@/render/hideseek/frame/snapshotRead';
+import { arenaHiderSeen, arenaInPrep, arenaTime } from '@/render/hideseek/frame/snapshotRead';
 import { hideSeekSession } from '../session/HideSeekSession';
 import { useHideSeekLab } from '../state/hideSeekStore';
 
@@ -48,12 +48,12 @@ function readPulse(): ArenaPulse {
   let seeking = 0;
   let hidden = 0;
   for (let i = 0; i < n; i++) {
-    if (buf[i * STRIDE + 1] === 1) continue;
+    if (arenaInPrep(buf, i)) continue;
     seeking++;
-    if (buf[i * STRIDE + 2] === 0) hidden++;
+    if (!arenaHiderSeen(buf, i)) hidden++;
   }
-  const a = Math.min(feed.count - 1, s.focus ?? 0) * STRIDE;
-  return { ...EMPTY, arenas: n, time: buf[a], prep: buf[a + 1] === 1, seeking, hidden };
+  const a = Math.min(feed.count - 1, s.focus ?? 0);
+  return { ...EMPTY, arenas: n, time: arenaTime(buf, a), prep: arenaInPrep(buf, a), seeking, hidden };
 }
 
 const same = (a: ArenaPulse, b: ArenaPulse) => (Object.keys(a) as Array<keyof ArenaPulse>).every((k) => a[k] === b[k]);

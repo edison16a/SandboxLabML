@@ -6,7 +6,7 @@ import { BOX_COUNT, BOX_KINDS, boxSize, DEFAULT_HIDESEEK_PHYSICS } from '@/engin
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { HsBox, type BoxDrive } from '../boxes/HsBox';
 import { useHsScene } from '../frame/sceneContext';
-import { blendFloorPose, boxAt } from '../frame/snapshotRead';
+import { blendFloorPose, boxAt, boxLock } from '../frame/snapshotRead';
 
 const SIZES = Array.from({ length: BOX_COUNT }, (_, i) => boxSize(DEFAULT_HIDESEEK_PHYSICS, i));
 
@@ -31,7 +31,7 @@ export function ShowcaseBoxes({ arena, tier, onBoxPointerDown, onBoxDoubleClick 
         d.x = pose.x;
         d.z = pose.z;
         d.yaw = pose.yaw;
-        d.locked = curr[o + 3] === 1;
+        d.lock = boxLock(curr, o);
       }),
     [frame, arena, pose],
   );

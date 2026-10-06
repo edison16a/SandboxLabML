@@ -1,5 +1,5 @@
 import type { HsFrame } from './sceneContext';
-import { agentAt, blendFloorPose, type FloorPose } from './snapshotRead';
+import { agentAt, agentFlags, blendFloorPose, type FloorPose } from './snapshotRead';
 
 /**
  * Where agent `agent` (0 hider, 1 seeker) of drawn slot `slot` stands,
@@ -13,5 +13,5 @@ export function followedAgent(frame: HsFrame, slot: number, agent: number, out: 
   if (!curr) return -1;
   const o = agentAt(frame.first + slot, agent);
   blendFloorPose(frame.prev, curr, o, frame.alpha, out);
-  return curr[o + 3];
+  return agentFlags(curr, o);
 }

@@ -1,4 +1,4 @@
-import { STRIDE } from '../frame/snapshotRead';
+import { arenaHiderSeen, arenaInPrep, arenaTime } from '../frame/snapshotRead';
 import { MAX_ARENAS } from './scratch';
 
 /**
@@ -20,13 +20,13 @@ export class ArenaBalance {
       this.last.fill(-1);
     }
     for (let k = 0; k < count && k < MAX_ARENAS; k++) {
-      const o = (first + k) * STRIDE;
-      const time = curr[o];
+      const arena = first + k;
+      const time = arenaTime(curr, arena);
       if (time < this.last[k]) {
         this.hidden[k] = this.seen[k] = 0;
-      } else if (time > this.last[k] && this.last[k] >= 0 && curr[o + 1] === 0) {
+      } else if (time > this.last[k] && this.last[k] >= 0 && !arenaInPrep(curr, arena)) {
         const dt = time - this.last[k];
-        if (curr[o + 2] === 1) this.seen[k] += dt;
+        if (arenaHiderSeen(curr, arena)) this.seen[k] += dt;
         else this.hidden[k] += dt;
       }
       this.last[k] = time;

@@ -8,7 +8,7 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { TEAM_BODY } from '../characters/characterMaterials';
 import { instancedCharacterGeometry } from '../characters/instancedCharacter';
 import { useHsScene } from '../frame/sceneContext';
-import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
+import { agentAt, agentFlags, blendFloorPose, hasFlag } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
 import { HS } from '../palette';
 import { commit, GRID_LAYER, makeScratch, MAX_ARENAS } from './scratch';
@@ -49,7 +49,7 @@ export function GridAgents({ onPick }: { onPick: (slot: number) => void }) {
       for (let a = 0; a < 2; a++) {
         const o = agentAt(arena, a);
         blendFloorPose(prev, curr, o, frame.alpha, t.pose);
-        const flags = curr[o + 3];
+        const flags = agentFlags(curr, o);
         const frozen = hasFlag(flags, FLAG_FROZEN);
         const step = prev && prev.length > o + 1 ? Math.hypot(curr[o] - prev[o], curr[o + 1] - prev[o + 1]) : 0;
         const speed = step < 1 ? step / SNAPSHOT_SECONDS : 0;

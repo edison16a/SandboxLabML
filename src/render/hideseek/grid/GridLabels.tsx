@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import { useMemo, useRef, useState } from 'react';
 import { useHsScene } from '../frame/sceneContext';
-import { STRIDE } from '../frame/snapshotRead';
+import { arenaHiderSeen, arenaInPrep } from '../frame/snapshotRead';
 import { arenaOrigin, ARENA_SPAN } from '../layout/gridLattice';
 
 /** Above this many arenas, labels would be unreadable clutter, so none are drawn. */
@@ -48,8 +48,8 @@ export function GridLabels() {
       // The showcase labels the focused arena itself, so its DOM label would only sit in the way.
       const card = cards.current[k];
       if (card) card.style.display = k === frame.focusSlot ? 'none' : 'flex';
-      const o = (frame.first + k) * STRIDE;
-      const phase: Phase = curr[o + 1] === 1 ? 'prep' : curr[o + 2] === 1 ? 'seen' : 'hidden';
+      const arena = frame.first + k;
+      const phase: Phase = arenaInPrep(curr, arena) ? 'prep' : arenaHiderSeen(curr, arena) ? 'seen' : 'hidden';
       const chip = chips.current[k];
       if (chip && state.phases[k] !== phase) {
         state.phases[k] = phase;

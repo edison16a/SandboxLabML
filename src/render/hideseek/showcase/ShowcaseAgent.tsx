@@ -7,7 +7,7 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { HsCharacter } from '../characters/HsCharacter';
 import type { CharacterDrive } from '../characters/types';
 import { useHsScene } from '../frame/sceneContext';
-import { agentAt, blendFloorPose, hasFlag } from '../frame/snapshotRead';
+import { agentAt, agentFlags, blendFloorPose, hasFlag } from '../frame/snapshotRead';
 import { teamColor } from '../palette';
 import { MotionTrail } from './MotionTrail';
 
@@ -36,7 +36,7 @@ export function ShowcaseAgent({ arena, agent, tier }: { arena: number; agent: 0 
         d.teleported = true;
         trail.reset();
       }
-      const flags = curr[o + 3];
+      const flags = agentFlags(curr, o);
       d.x = x;
       d.z = z;
       d.yaw = yaw;
