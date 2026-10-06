@@ -71,6 +71,8 @@ export function SettingsMenu() {
           label="Quality"
           value={quality === 'ultra' ? 'high' : quality}
           onChange={set.setQuality}
+          // The choice on screen may be the GPU default or a pin from the address. Clicking it records it as a pick.
+          reselect
           options={[
             { value: 'low', label: 'Low' },
             { value: 'medium', label: 'Medium' },

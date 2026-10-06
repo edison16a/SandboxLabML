@@ -19,16 +19,26 @@ interface SegmentedProps<V extends string> {
   className?: string;
   /** Use light text, for controls drawn over the 3D viewport. */
   overlay?: boolean;
+  /**
+   * Also report a click on the choice that is already on. Settings needs it:
+   * the quality shown there can be a default nobody picked, and clicking it
+   * is how someone picks it.
+   */
+  reselect?: boolean;
   'data-tour'?: string;
 }
 
 /** A row of mutually exclusive buttons, like the speed bar and view switch. */
-export function Segmented<V extends string>({ value, options, onChange, label, size = 'md', className, overlay = false, ...rest }: SegmentedProps<V>) {
+export function Segmented<V extends string>({ value, options, onChange, label, size = 'md', className, overlay = false, reselect = false, ...rest }: SegmentedProps<V>) {
   return (
     <ToggleGroup.Root
       type="single"
       value={value}
-      onValueChange={(v) => v && onChange(v as V)}
+      // Radix sends an empty value when the active item is clicked again.
+      onValueChange={(v) => {
+        if (v) onChange(v as V);
+        else if (reselect) onChange(value);
+      }}
       aria-label={label}
       data-tour={rest['data-tour']}
       className={cn('inline-flex items-center gap-0.5 rounded-md border border-border bg-surface-2 p-0.5', className)}

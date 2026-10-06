@@ -25,6 +25,14 @@ describe('gridCapped', () => {
     expect(gridCapped({ weakGpu: false, quality: null, pinned: null })).toBe(false);
     expect(qualityChosen({ quality: null, pinned: null })).toBe(false);
   });
+
+  it('lifts the cap when the shown default is picked', () => {
+    useSettings.setState({ weakGpu: true, quality: null, pinned: null });
+    expect(resolvedQuality(useSettings.getState())).toBe('medium');
+    expect(gridCapped(useSettings.getState())).toBe(true);
+    useSettings.getState().setQuality('medium');
+    expect(gridCapped(useSettings.getState())).toBe(false);
+  });
 });
 
 describe('hideSeekTier', () => {
