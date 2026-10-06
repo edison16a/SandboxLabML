@@ -21,7 +21,7 @@ const CHIPS: Array<[number, number, number, number]> = [
   [222, 208, 197, 0.1],
   [152, 150, 147, 0.04],
 ];
-const BASE: [number, number, number] = [224, 221, 215];
+const BASE: [number, number, number] = [226, 224, 220];
 
 function pickChip(r: number): [number, number, number, number] {
   let acc = 0;

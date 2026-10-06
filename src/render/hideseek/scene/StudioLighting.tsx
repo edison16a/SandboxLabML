@@ -60,7 +60,7 @@ export function StudioLighting({ tier, shadows }: { tier: HsQualityTier; shadows
         ref={light}
         target={target}
         intensity={2.9}
-        color="#fff6ec"
+        color="#fff9f2"
         castShadow={shadows}
         shadow-mapSize={[mapSize, mapSize]}
         shadow-bias={-0.00025}

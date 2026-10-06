@@ -22,7 +22,7 @@ export function ArenaRoom({ layout, ao = 0.5 }: { layout: number; /** Strength o
   const floor = useDisposable(() => floorGeometry(FLOOR_TILE_METERS), []);
   const floorMat = useDisposable(() => {
     const maps = sharedFloorMaps();
-    return new THREE.MeshPhysicalMaterial({
+    return new THREE.MeshStandardMaterial({
       color: HS_COLORS.floor,
       map: maps.map,
       normalMap: maps.normalMap,
@@ -30,11 +30,9 @@ export function ArenaRoom({ layout, ao = 0.5 }: { layout: number; /** Strength o
       roughnessMap: maps.roughnessMap,
       roughness: 1,
       metalness: 0,
-      // A thin polished coat: soft reflections of the walls and the sky. Kept faint, or the floor
-      // turns to glare in the first person views, which see it at a grazing angle.
-      clearcoat: 0.15,
-      clearcoatRoughness: 0.25,
-      envMapIntensity: 0.45,
+      // Polished, so it mirrors a little of the sky. Kept faint, or the floor turns to glare in
+      // the first person views, which see it at a grazing angle.
+      envMapIntensity: 0.3,
     });
   }, []);
   const wallMat = useDisposable(() => {

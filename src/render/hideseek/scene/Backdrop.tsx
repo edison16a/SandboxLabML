@@ -55,7 +55,7 @@ export function Backdrop() {
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow material={groundMat} raycast={() => null}>
         <planeGeometry args={[3000, 3000]} />
       </mesh>
-      <instancedMesh ref={mesh} args={[geometry, blockMat, blocks.length]} frustumCulled={false} castShadow receiveShadow raycast={() => null} />
+      <instancedMesh ref={mesh} args={[geometry, blockMat, blocks.length]} frustumCulled={false} raycast={() => null} />
     </group>
   );
 }

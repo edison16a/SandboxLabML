@@ -26,9 +26,9 @@ function plasterMaps(seed = 29): SurfaceMaps {
       const m = mid(x, y);
       const f = fine(x, y);
       const v = 1 + ((b - 0.5) * 10 + (f - 0.5) * 4) / 240;
-      albedo[i * 4] = 241 * v;
-      albedo[i * 4 + 1] = 239 * v;
-      albedo[i * 4 + 2] = 235 * v;
+      albedo[i * 4] = 242 * v;
+      albedo[i * 4 + 1] = 241 * v;
+      albedo[i * 4 + 2] = 238 * v;
       albedo[i * 4 + 3] = 255;
       const r = 0.82 + (m - 0.5) * 0.14 - Math.max(0, b - 0.6) * 0.16;
       rough[i * 4] = rough[i * 4 + 1] = rough[i * 4 + 2] = r * 255;
