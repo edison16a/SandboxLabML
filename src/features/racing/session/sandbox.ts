@@ -22,9 +22,10 @@ export async function enterSandbox(session: SandboxHost, pool: WorkerPool): Prom
   if (s.status === 'running') await session.pause();
   const last = s.records.length - 1;
   const kept = s.sandboxField.filter((e) => e.generation <= last);
+  const first = s.sandboxTrack ? null : structuredClone(s.trackSpec ?? s.run.racing.track);
   s.set({
     mode: 'sandbox',
-    sandboxTrack: s.sandboxTrack ?? structuredClone(s.trackSpec ?? s.run.racing.track),
+    ...(first && { sandboxTrack: first, sandboxPicked: first }),
     sandboxField: kept.length ? kept : fieldFromGenerations(selectGhosts(s.ghostSelection, s.records.length)),
     view: 'overlay',
     lesions: {},
@@ -72,6 +73,7 @@ export interface SandboxControls {
   /** Puts every car back on the grid and starts the race again. */
   restart(): Promise<void>;
   setField(field: FieldEntry[]): void;
+  /** Races on a track picked from the gallery, which also becomes the base edits are measured against. */
   setTrack(spec: TrackSpec): void;
 }
 
@@ -91,7 +93,7 @@ export function sandboxControls(pool: WorkerPool): SandboxControls {
       scheduleSandboxScene(pool, 60);
     },
     setTrack(spec) {
-      store().set({ sandboxTrack: spec, selectedHandle: null });
+      store().set({ sandboxTrack: spec, sandboxPicked: spec, selectedHandle: null });
       scheduleSandboxScene(pool, 60);
     },
   };

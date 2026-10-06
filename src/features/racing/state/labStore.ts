@@ -36,6 +36,7 @@ export function openedRunState(run: RunConfig, records: GenerationRecord[], live
     selectedHandle: null,
     lesions: {},
     sandboxTrack: null,
+    sandboxPicked: null,
     sandboxField: [],
     sandboxPaused: false,
   };
@@ -89,6 +90,8 @@ export interface RacingLabState {
   /** Train runs the population; Sandbox replays champions on an editable track. */
   mode: 'train' | 'sandbox';
   sandboxTrack: TrackSpec | null;
+  /** The gallery entry the Sandbox track was picked from. Any edit makes the two differ. */
+  sandboxPicked: TrackSpec | null;
   /** Champions racing in the Sandbox and how many copies of each. Empty until the Sandbox first opens for a run. */
   sandboxField: FieldEntry[];
   sandboxPaused: boolean;
@@ -132,6 +135,7 @@ export const useRacingLab = create<RacingLabState>((set, get) => ({
   editingTrack: false,
   mode: 'train',
   sandboxTrack: null,
+  sandboxPicked: null,
   sandboxField: [],
   sandboxPaused: false,
   lesions: {},
