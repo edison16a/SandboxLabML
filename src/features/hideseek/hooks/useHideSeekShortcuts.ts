@@ -37,7 +37,7 @@ export function useHideSeekShortcuts(onNewRun: () => void) {
       const key = e.key.toLowerCase();
       if (s.mode === 'sandbox' && (key === ' ' || key === 'r')) {
         e.preventDefault();
-        if (key === ' ') void session.sandbox?.setPlaying(!s.sandbox.playing);
+        if (key === ' ') void session.sandbox?.toggle();
         else void session.sandbox?.restart();
       } else if (key === ' ') {
         e.preventDefault();

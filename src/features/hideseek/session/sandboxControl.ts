@@ -32,6 +32,7 @@ export class SandboxControl {
     const last = s.records[s.records.length - 1].generation;
     s.setSandbox({ hiderGeneration: last, seekerGeneration: last, playing: false, lesions: [] });
     s.set({ mode: 'sandbox', focus: 0 });
+    await this.pool.replay.sandboxClearLesions();
     await this.reload();
   }
 
@@ -59,9 +60,21 @@ export class SandboxControl {
     }
   }
 
+  /** Runs or pauses the match. Running a match that is over plays it again from the start. */
   async setPlaying(playing: boolean): Promise<void> {
     this.store.setSandbox({ playing });
+    if (playing && this.over) return this.restart();
     await this.pool.replay.setSandboxPaused(!playing);
+  }
+
+  /** Space and the Run button: pause a running match, else run it (again, if it is over). */
+  toggle(): Promise<void> {
+    return this.setPlaying(!(this.store.sandbox.playing && !this.over));
+  }
+
+  /** The match on screen has played to its end (see the Sandbox frame header). */
+  get over(): boolean {
+    return this.pool.sandbox.curr?.buffer[3] === 1;
   }
 
   /** Plays the same setup again from the start. It keeps playing if it was. */

@@ -1,16 +1,15 @@
 'use client';
 
-import { useSandboxPulse } from './useSandboxPulse';
+import type { SandboxPulse } from './useSandboxPulse';
 
 /**
  * One line on how the match stands: the prep countdown, then the seek
  * clock and how many hiders are in sight, then the final count.
  */
-export function SandboxStatus() {
-  const p = useSandboxPulse();
+export function SandboxStatus({ pulse: p }: { pulse: SandboxPulse }) {
   if (!p.hiders) return null;
   const seen = `${p.hidersSeen} of ${p.hiders} seen`;
-  const text = p.over ? `Match over, ${seen}` : p.prep ? `Prep, ${p.time.toFixed(1)} s` : `Seeking, ${p.time.toFixed(1)} s`;
+  const text = p.over ? `Match over, ${seen}` : `${p.prep ? 'Prep' : 'Seek'} ${p.time.toFixed(1)} s`;
   return (
     <span role="status" className="flex items-center gap-2 text-[11px] text-white/70">
       {!p.prep && !p.over && (
