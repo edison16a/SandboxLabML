@@ -1,5 +1,6 @@
 import { SIM_DT } from './params';
 import { createCar, type CarState } from './dynamics';
+import { gridSlot, slotPose } from './startGrid';
 import { nearestSample, project, type TrackPosition } from '../track/locate';
 import type { Track } from '../track/types';
 import { trackHeading } from '../track/buildTrack';
@@ -54,17 +55,24 @@ export interface RacingCar {
   crashY: number;
 }
 
-export function createRacingCar(index: number, track: Track, rayCount: number, seed = index): RacingCar {
-  const heading = trackHeading(track, 0);
-  const car = createCar(track.cx[0], track.cy[0], heading);
-  const pos: TrackPosition = { index: 0, s: 0, lateral: 0 };
+/**
+ * A car on the grid, ready to go. Training only ever uses slot 0, the start
+ * line itself. The Sandbox lines extra cars up behind it, and those start
+ * with negative progress so their first lap counts from the line like
+ * everyone else's.
+ */
+export function createRacingCar(index: number, track: Track, rayCount: number, seed = index, slot = 0): RacingCar {
+  const grid = gridSlot(track, slot);
+  const start = slotPose(track, grid);
+  const car = createCar(start.x, start.y, start.heading);
+  const pos: TrackPosition = { index: grid.index, s: track.s[grid.index], lateral: grid.lateral };
   return {
     index,
     seed,
     car,
     pos,
-    progress: 0,
-    maxProgress: 0,
+    progress: 0 - grid.back,
+    maxProgress: 0 - grid.back,
     checkpointsPassed: 0,
     checkpointPassed: false,
     lapCompleted: false,
@@ -77,7 +85,7 @@ export function createRacingCar(index: number, track: Track, rayCount: number, s
     noProgress: 0,
     time: 0,
     headingError: 0,
-    checkpointDistance: track.spacing * (track.checkpoints[1] ?? 10),
+    checkpointDistance: track.spacing * (track.checkpoints[1] ?? 10) + grid.back,
     rays: new Float64Array(rayCount),
     status: STATUS_DRIVING,
     stopReason: null,

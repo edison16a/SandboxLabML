@@ -59,11 +59,15 @@ export class RacingEnv {
     return racingInputSchema(this.opts.inputs, this.opts.car, this.opts.customSensors);
   }
 
-  /** Starts a fresh episode with one car per brain. `seeds` drive per-car sensor noise. */
-  reset(brains: Network[], seeds: number[] = []): void {
+  /**
+   * Starts a fresh episode with one car per brain. `seeds` drive per-car
+   * sensor noise. `slots` places cars on a staggered grid; training leaves
+   * it out, so every car starts on the line as before.
+   */
+  reset(brains: Network[], seeds: number[] = [], slots: number[] = []): void {
     const { track, inputs } = this.opts;
     this.brains = brains;
-    this.cars = brains.map((_, i) => createRacingCar(i, track, inputs.rays.count, seeds[i] ?? i));
+    this.cars = brains.map((_, i) => createRacingCar(i, track, inputs.rays.count, seeds[i] ?? i, slots[i] ?? 0));
     this.obs = brains.map(() => new Float64Array(this.inputCount));
     this.actions = brains.map(() => new Float64Array(2));
     this.noise = brains.map((_, i) => (inputs.noise > 0 ? new Rng(seeds[i] ?? i) : null));
