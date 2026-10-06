@@ -6,6 +6,7 @@ import { Environment, Sky } from '@react-three/drei';
 import { useMemo, useRef } from 'react';
 import { grassTexture } from '@/render/shared/textures';
 import type { QualityTier } from '@/features/racing/state/labStore';
+import { Highlights, ReflectedGround } from './environmentShapes';
 
 /** Low afternoon sun: long shadows read well and the paint picks up highlights. */
 const SUN = new THREE.Vector3(120, 140, 80).normalize();
@@ -49,8 +50,10 @@ export function RacingEnvironment({ tier, focus }: Props) {
       <color attach="background" args={[HORIZON]} />
       <fog attach="fog" args={[HORIZON, 320, 1500]} />
       {tier !== 'low' && <Sky distance={4000} sunPosition={SUN.clone().multiplyScalar(100)} turbidity={2.6} rayleigh={1.6} mieCoefficient={0.003} mieDirectionalG={0.82} />}
-      <Environment resolution={tier === 'low' ? 128 : 256} frames={1} environmentIntensity={0.45} background={tier === 'low'}>
+      <Environment resolution={tier === 'high' ? 512 : tier === 'medium' ? 256 : 128} frames={1} environmentIntensity={0.45} background={tier === 'low'}>
         <Sky distance={4000} sunPosition={SUN.clone().multiplyScalar(100)} turbidity={2.6} rayleigh={1.6} />
+        <ReflectedGround />
+        {tier !== 'low' && <Highlights sun={SUN} />}
       </Environment>
       <hemisphereLight args={['#dbe8ff', '#4d6b3a', 0.35]} />
       <primitive object={target} />
