@@ -54,7 +54,7 @@ export function StudioLighting({ tier, shadows }: { tier: HsQualityTier; shadows
     <>
       <color attach="background" args={[HS_COLORS.background]} />
       <fog attach="fog" args={[HS_COLORS.background, 160, 620]} />
-      <hemisphereLight args={['#eef3fb', '#e2ded8', 0.45]} />
+      <hemisphereLight args={['#eef3fb', '#e2ded8', 0.6]} />
       <primitive object={target} />
       <directionalLight
         ref={light}
