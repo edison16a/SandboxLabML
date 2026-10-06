@@ -21,15 +21,16 @@ export const SCRIPT_ENVS: readonly EnvId[] = ['racing', 'hideseek'];
 
 export type BlockScope = 'tick' | 'generation';
 
-const byEnv = new Map<EnvId, ReadonlyMap<string, RegistryEntry>>();
-const renamesByEnv = new Map<EnvId, ReadonlyMap<string, RegistryEntry>>();
+const byEnv = new Map<EnvId | null, ReadonlyMap<string, RegistryEntry>>();
+const renamesByEnv = new Map<EnvId | null, ReadonlyMap<string, RegistryEntry>>();
 
-function visible(env: EnvId): RegistryEntry[] {
+/** Core entries plus the slice for `env`. A null env (an unknown header) sees only core. */
+function visible(env: EnvId | null): RegistryEntry[] {
   return SLICES.filter((s) => s.env === 'core' || s.env === env).flatMap((s) => s.entries);
 }
 
 /** Entries a script for `env` can see, by name. Maps are used so names like "constructor" never hit Object.prototype. */
-export function entriesByName(env: EnvId): ReadonlyMap<string, RegistryEntry> {
+export function entriesByName(env: EnvId | null): ReadonlyMap<string, RegistryEntry> {
   let map = byEnv.get(env);
   if (!map) {
     map = new Map(visible(env).map((e) => [e.name, e]));
@@ -39,7 +40,7 @@ export function entriesByName(env: EnvId): ReadonlyMap<string, RegistryEntry> {
 }
 
 /** Old names that still work in scripts for `env`, mapped to their current entry. */
-export function renamesFor(env: EnvId): ReadonlyMap<string, RegistryEntry> {
+export function renamesFor(env: EnvId | null): ReadonlyMap<string, RegistryEntry> {
   let map = renamesByEnv.get(env);
   if (!map) {
     map = new Map(visible(env).flatMap((e) => (e.renamedFrom ?? []).map((old) => [old, e] as const)));
@@ -53,7 +54,7 @@ export function inScope(e: RegistryEntry, scope: BlockScope): boolean {
 }
 
 /** Entries usable inside one kind of block, in registry order. */
-export function entriesFor(env: EnvId, scope: BlockScope): RegistryEntry[] {
+export function entriesFor(env: EnvId | null, scope: BlockScope): RegistryEntry[] {
   return [...entriesByName(env).values()].filter((e) => inScope(e, scope));
 }
 
@@ -62,7 +63,7 @@ export function findAnywhere(name: string): RegistryEntry | undefined {
   return REGISTRY.find((e) => e.name === name);
 }
 
-export function sliceFor(env: EnvId): RegistrySlice | undefined {
+export function sliceFor(env: EnvId | null): RegistrySlice | undefined {
   return SLICES.find((s) => s.env === env);
 }
 
