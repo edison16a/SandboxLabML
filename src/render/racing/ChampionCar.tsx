@@ -6,7 +6,8 @@ import { useMemo, useRef } from 'react';
 import { RACING_SNAPSHOT } from '@/engine/racing/env';
 import { springStep } from '@/render/shared/interpolate';
 import { useDisposable } from '@/render/shared/useDisposable';
-import { bodyGeometry, cabinGeometry, CAR, lightGeometry, rimGeometry, spoilerGeometry, wheelGeometry } from './carGeometry';
+import { bodyGeometry, cabinGeometry, CAR, lightGeometry, spoilerGeometry, trimGeometry } from './carGeometry';
+import { rimGeometry, tireGeometry } from './wheelGeometry';
 import { ghostColor, speciesColor } from './palette';
 import { useRacingScene } from './sceneContext';
 
@@ -23,7 +24,7 @@ export function ChampionCar() {
   const body = useRef<THREE.Group>(null);
   const wheels = useRef<Array<THREE.Group | null>>([]);
   const geo = useDisposable(() => {
-    const g = { body: bodyGeometry(), cabin: cabinGeometry(), spoiler: spoilerGeometry(), wheel: wheelGeometry(), rim: rimGeometry(), tail: lightGeometry(false), head: lightGeometry(true) };
+    const g = { body: bodyGeometry(), cabin: cabinGeometry(), trim: trimGeometry(), spoiler: spoilerGeometry(), tire: tireGeometry(), rim: rimGeometry(), tail: lightGeometry(false), head: lightGeometry(true) };
     return { ...g, dispose: () => Object.values(g).forEach((x) => x.dispose()) };
   }, []);
   const paint = useDisposable(() => new THREE.MeshPhysicalMaterial({ color: '#4c9aff', metalness: 0.55, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.08 }), []);
@@ -90,6 +91,9 @@ export function ChampionCar() {
         <mesh geometry={geo.cabin} castShadow>
           <meshPhysicalMaterial color="#0b111a" metalness={0.2} roughness={0.05} clearcoat={1} />
         </mesh>
+        <mesh geometry={geo.trim} castShadow>
+          <meshStandardMaterial color="#121418" roughness={0.55} metalness={0.2} />
+        </mesh>
         <mesh geometry={geo.spoiler} castShadow>
           <meshStandardMaterial color="#14161b" roughness={0.4} metalness={0.5} />
         </mesh>
@@ -100,9 +104,10 @@ export function ChampionCar() {
       </group>
       {wheelSpots.map(([x, z], i) => (
         <group key={i} position={[x, CAR.wheelRadius, z]} ref={(el) => void (wheels.current[i] = el)}>
-          <group>
-            <mesh geometry={geo.wheel} castShadow>
-              <meshStandardMaterial color="#111214" roughness={0.85} />
+          {/* Wheels on the far side are mirrored so their spokes face out. */}
+          <group scale={[1, 1, z < 0 ? -1 : 1]}>
+            <mesh geometry={geo.tire} castShadow>
+              <meshStandardMaterial color="#141518" roughness={0.88} />
             </mesh>
             <mesh geometry={geo.rim}>
               <meshStandardMaterial color="#b9bec6" metalness={0.9} roughness={0.25} />
@@ -111,8 +116,8 @@ export function ChampionCar() {
         </group>
       ))}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
-        <ringGeometry args={[2.9, 3.15, 48]} />
-        <meshBasicMaterial color="#4c9aff" transparent opacity={0.55} toneMapped={false} />
+        <ringGeometry args={[3.0, 3.1, 64]} />
+        <meshBasicMaterial color="#4c9aff" transparent opacity={0.4} toneMapped={false} />
       </mesh>
     </group>
   );
