@@ -9,35 +9,59 @@ export function startTestWorker(name: string): { worker: Worker; api: Comlink.Re
   return { worker, api: Comlink.wrap<TestRunApi>(worker) };
 }
 
-/** Runs one call in a fresh worker. Aborting terminates the worker, which stops even a script stuck in a long loop. */
-function inFreshWorker<T>(signal: AbortSignal, call: (api: Comlink.Remote<TestRunApi>) => Promise<T>): Promise<T> {
-  const { worker, api } = startTestWorker('studio-test-run');
+type TestWorker = ReturnType<typeof startTestWorker>;
+
+/**
+ * The last worker that finished cleanly, kept for the next run. A Hide and
+ * Seek match first loads the physics engine and warms up the JIT, which
+ * takes about a second; a warm worker skips both and also times ticks more
+ * steadily. A worker that was cancelled or failed is never reused.
+ */
+let warm: TestWorker | null = null;
+
+/** Runs one call in the warm worker or a new one. Aborting terminates the worker, which stops even a script stuck in a long loop. */
+function inWorker<T>(signal: AbortSignal, call: (api: Comlink.Remote<TestRunApi>) => Promise<T>): Promise<T> {
+  const w = warm ?? startTestWorker('studio-test-run');
+  warm = null;
   return new Promise<T>((resolve, reject) => {
+    const drop = () => w.worker.terminate();
     const stop = () => {
-      worker.terminate();
+      drop();
       reject(new DOMException('The test run was cancelled.', 'AbortError'));
+    };
+    const failed = (e: ErrorEvent) => {
+      drop();
+      reject(new Error(e.message || 'The test worker failed to start.'));
     };
     if (signal.aborted) return stop();
     signal.addEventListener('abort', stop, { once: true });
-    worker.addEventListener('error', (e) => {
-      worker.terminate();
-      reject(new Error(e.message || 'The test worker failed to start.'));
-    });
-    call(api)
-      .then(resolve, reject)
+    w.worker.addEventListener('error', failed);
+    call(w.api)
+      .then(
+        (value) => {
+          // Keep it for next time unless another finished worker got there first.
+          if (warm) drop();
+          else warm = w;
+          resolve(value);
+        },
+        (err) => {
+          drop();
+          reject(err);
+        },
+      )
       .finally(() => {
         signal.removeEventListener('abort', stop);
-        worker.terminate();
+        w.worker.removeEventListener('error', failed);
       });
   });
 }
 
-/** Runs one racing test episode in a fresh worker. */
+/** Runs one racing test episode in a test worker. */
 export function runInWorker(req: TestRunRequest, signal: AbortSignal): Promise<TestRunResult> {
-  return inFreshWorker<TestRunResult>(signal, async (api) => api.run(req));
+  return inWorker<TestRunResult>(signal, async (api) => api.run(req));
 }
 
-/** Plays one Hide and Seek test match in a fresh worker. */
+/** Plays one Hide and Seek test match in a test worker. */
 export function runMatchInWorker(req: MatchTestRequest, signal: AbortSignal): Promise<MatchTestResult> {
-  return inFreshWorker<MatchTestResult>(signal, async (api) => api.match(req));
+  return inWorker<MatchTestResult>(signal, async (api) => api.match(req));
 }
