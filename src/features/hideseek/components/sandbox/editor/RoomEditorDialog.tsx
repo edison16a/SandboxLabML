@@ -89,7 +89,7 @@ export function RoomEditorDialog({ room, saved, onSave, onDelete, onClose }: Pro
           <div className="mx-auto w-full max-w-[min(62vh,640px)]">
             <EditorBoard ref={board} draft={draft} tool={tool} plankYaw={plankYaw} />
           </div>
-          <p role="status" className={`flex min-h-5 items-start gap-1.5 text-[12px] ${draft.notice ? 'text-warn' : 'text-fg/80'}`}>
+          <p role="status" className={`flex min-h-[2.6em] items-start gap-1.5 text-[12px] leading-[1.3] ${draft.notice ? 'text-warn' : 'text-fg/80'}`}>
             {draft.notice ? <TriangleAlert className="mt-px size-3.5 shrink-0" /> : <Info className="mt-px size-3.5 shrink-0 text-muted" />}
             {draft.notice ?? info.hint}
           </p>
