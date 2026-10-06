@@ -44,6 +44,22 @@ describe('Sandbox match', () => {
     expect(() => sandbox(R, { hider: wrong })).toThrow(/inputs/);
   });
 
+  it('adds the run script sensors the brain was trained with, one controller per player', () => {
+    const base = hideSeekBrainInputs(inputs);
+    const seeds: number[] = [];
+    const sensors = (seed: number) => {
+      seeds.push(seed);
+      return { customSensorCount: 1, sensors: (_a: unknown, out: Float64Array, at: number) => void (out[at] = 0.625), tick: () => {} };
+    };
+    const m = sandbox(R, { hiders: 2, seekers: 1, hider: { brain: () => idleBrain(base + 1), inputs, sensors } });
+    m.step();
+    expect(m.observation(0)[base]).toBe(0.625);
+    expect(m.observation(1)[base]).toBe(0.625);
+    expect(new Set(seeds).size).toBe(2);
+    m.dispose();
+    expect(() => sandbox(R, { hider: { brain: () => idleBrain(base), inputs, sensors } })).toThrow(/inputs/);
+  });
+
   it('replays exactly from the same seed, and spawns differently from another', () => {
     const a = trace(sandbox(R, { seed: 21 }), 400);
     const b = trace(sandbox(R, { seed: 21 }), 400);

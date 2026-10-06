@@ -63,6 +63,9 @@ export class SandboxPlayer {
     this.stop();
     const pool = await this.arenas();
     if (runId !== this.run) return;
+    // A script with sensors gives each player its own controller, seeded per player; only its sensors are read.
+    const scripted = this.hosts.controllers(scene.scriptSource, scene.seed);
+    const sensors = (t: Team): SandboxTeamSetup['sensors'] => (scripted[t] ? (seed) => this.hosts.controllers(scene.scriptSource, seed)[t] ?? scripted[t]! : null);
     const team = (t: Team): SandboxTeamSetup => ({
       inputs: scene[t].inputs,
       brain: () => {
@@ -70,7 +73,7 @@ export class SandboxPlayer {
         for (const [i, v] of this.lesions[t === 'hider' ? 0 : 1]) brain.setLesion(i, v);
         return brain;
       },
-      sensors: this.hosts.controllers(scene.scriptSource, scene.seed)[t] ? (seed) => this.hosts.controllers(scene.scriptSource, seed)[t]! : null,
+      sensors: sensors(t),
     });
     this.match = new SandboxMatch(pool.rapier, {
       room: scene.room,
