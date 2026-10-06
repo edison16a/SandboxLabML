@@ -1,7 +1,9 @@
 import { blueprintShape } from '../../blueprints/shape';
 import type { HideSeekAgent } from '../../hideseek/agents/agent';
+import type { HideSeekMatch } from '../../hideseek/match/match';
 import { startMatch } from '../../hideseek/match/runMatch';
 import type { MatchSpec } from '../../hideseek/match/types';
+import type { ArenaPool } from '../../hideseek/world/pool';
 import { Population } from '../../neat/population';
 import type { PreparedHideSeek } from '../prepare';
 import type { TestMatchMetrics } from './metrics';
@@ -12,6 +14,9 @@ import { TestHider, testSeekerBrain, withTestBrain } from './testPlayers';
 export const TEST_MATCH_SEED = 12;
 /** Seed of the stand-in genomes. Their outputs are replaced by the test players, so only their shape matters. */
 const TEST_GENOME_SEED = 0x7e57;
+
+/** What a test match needs from a prepared script. The Studio fills in its own room, so it is not a whole PreparedHideSeek. */
+export type TestMatchScript = Pick<PreparedHideSeek, 'script' | 'blueprint' | 'rules'>;
 
 /** Adds up how far each player walks, tick by tick. */
 function odometer(agents: readonly HideSeekAgent[]): { step: () => void; meters: number[] } {
@@ -27,28 +32,39 @@ function odometer(agents: readonly HideSeekAgent[]): { step: () => void; meters:
 }
 
 /**
- * One match in the script's first room, played by the two fixed test
- * players (see testPlayers.ts) instead of trained brains. The script's own
- * each tick block runs for both every tick, so its act line, rewards and
- * stop rules are exactly what the players live by. Same numbers every
- * time. Returns null if the signal aborts.
+ * Sets up the test match on a pooled world, ready to step: the two fixed
+ * test players (see testPlayers.ts) in the script's room, with the
+ * script's own each tick block running for both. Lesson checks, the
+ * lesson preview and the Studio's test run all start here, so they play
+ * the same match. Call `release()` on it when done.
  */
-export async function playTestMatch(prepared: PreparedHideSeek, signal?: AbortSignal): Promise<TestMatchMetrics | null> {
+export function startTestMatch(prepared: TestMatchScript, pool: ArenaPool, seed = TEST_MATCH_SEED): HideSeekMatch {
   const blueprint = prepared.blueprint;
   if (!blueprint) throw new Error('Test matches need a Hide and Seek brain.');
   const { script, rules } = prepared;
   const genome = Population.create(blueprintShape(blueprint, script.sensors.length), TEST_GENOME_SEED, { populationSize: 1 }).genomes[0];
   const team = { genome, inputs: blueprint.inputs };
-  const spec: MatchSpec = { layout: rules.layout, seed: TEST_MATCH_SEED, hider: team, seeker: team };
+  const spec: MatchSpec = { layout: rules.layout, seed, hider: team, seeker: team };
   if (rules.prepSeconds !== undefined) spec.prepSeconds = rules.prepSeconds;
   const hider = new TestHider();
-  const pool = await lessonArenaPool();
   const match = startMatch(spec, pool, {
-    hider: withTestBrain(script.createController<HideSeekAgent>({ seed: spec.seed }), hider.brain),
-    seeker: withTestBrain(script.createController<HideSeekAgent>({ seed: spec.seed }), testSeekerBrain()),
+    hider: withTestBrain(script.createController<HideSeekAgent>({ seed }), hider.brain),
+    seeker: withTestBrain(script.createController<HideSeekAgent>({ seed }), testSeekerBrain()),
   });
+  hider.watch(match.state.boxes);
+  return match;
+}
+
+/**
+ * One match in the script's first room, played by the test players
+ * instead of trained brains. Their act line, rewards and stop rules are
+ * exactly what the script says. Same numbers every time. Returns null if
+ * the signal aborts.
+ */
+export async function playTestMatch(prepared: PreparedHideSeek, signal?: AbortSignal): Promise<TestMatchMetrics | null> {
+  if (!prepared.blueprint) throw new Error('Test matches need a Hide and Seek brain.');
+  const match = startTestMatch(prepared, await lessonArenaPool());
   try {
-    hider.watch(match.state.boxes);
     const walked = odometer(match.state.agents);
     if (!(await playMatch(match, signal, walked.step))) return null;
     const r = match.result();
@@ -63,7 +79,7 @@ export async function playTestMatch(prepared: PreparedHideSeek, signal?: AbortSi
       grabs: r.hiderGrabs + r.seekerGrabs,
       locks: r.locksPlaced,
       boxesMoved: r.boxesMoved,
-      inputs: genome.inputs.length,
+      inputs: match.observation(0).length,
     };
   } finally {
     match.release();
