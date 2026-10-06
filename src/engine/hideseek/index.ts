@@ -13,6 +13,7 @@ export { hideSeekRayAngles, SensorRays } from './sensing/rays';
 export { HideSeekObserver } from './sensing/observe';
 export { SightLines } from './sensing/vision';
 export * from './rewards';
+export { scriptedSeekerController } from './scriptedSeeker';
 export * from './snapshot';
 export * from './match/types';
 export type { AgentControl, BoxState, MatchState, MatchTally } from './match/state';
