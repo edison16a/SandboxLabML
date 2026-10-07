@@ -25,14 +25,15 @@ interface Props {
  * The two corner cards over the live scene: on the left what is playing,
  * with real numbers from the run or the match clock, and on the right the
  * brain in charge, lighting up live. During Hide and Seek the hider's
- * brain shows while hiders hide and the seeker's once seekers wake.
+ * brain shows while hiders hide and the seeker's once seekers wake. Below
+ * 1280 px the cards are narrower, so they stay clear of the centered text.
  */
 export function HeroPanels({ scene, pool, car, arena, match }: Props) {
   const showArena = scene === 'arena' && arena;
   const team = match.prep ? 0 : 1;
   return (
     <div className="absolute inset-x-6 bottom-6 flex items-end justify-between gap-6">
-      <div key={`caption-${scene}`} className={`${CARD} max-w-[280px] animate-fade-in px-4 py-3 2xl:max-w-[300px]`}>
+      <div key={`caption-${scene}`} className={`${CARD} max-w-[240px] animate-fade-in px-4 py-3 xl:max-w-[280px] 2xl:max-w-[300px]`}>
         <div className="flex items-center gap-2 text-[12px] font-medium">
           <span className="size-1.5 rounded-full bg-success" />
           <span className="text-fg">Live</span>

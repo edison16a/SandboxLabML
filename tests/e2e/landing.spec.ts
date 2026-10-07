@@ -7,6 +7,24 @@ declare global {
   }
 }
 
+/**
+ * Runs in the page: the hero text a corner card covers, as a list of the
+ * covered lines. Text is measured by its line boxes rather than its block,
+ * since a centered paragraph's block is far wider than its words.
+ */
+function cardsOverText(): string[] {
+  const cards = [...document.querySelectorAll('[data-hero-panels] > div > div')].map((c) => c.getBoundingClientRect());
+  const hit = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+  const covered: string[] = [];
+  for (const el of document.querySelectorAll('[data-hero-content] > *')) {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const boxes = el.tagName === 'P' || el.tagName === 'H1' ? [...range.getClientRects()] : [el.getBoundingClientRect()];
+    if (boxes.some((b) => cards.some((c) => hit(b, c)))) covered.push(el.textContent || el.tagName);
+  }
+  return covered;
+}
+
 test.describe('Landing hero', () => {
   test.setTimeout(300_000);
 
@@ -46,6 +64,12 @@ test.describe('Landing hero', () => {
     await expect(page.locator('[data-hero-scene="car"]')).toBeAttached({ timeout: 240_000 });
     await expect(page.locator('[data-hero-panels]')).toContainText('Car brain');
     expect(workers).toHaveLength(1);
+
+    // On a small laptop the corner cards stay clear of the centered words and the button.
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await expect(page.locator('[data-hero-panels]')).toBeVisible();
+    await expect.poll(() => page.evaluate(cardsOverText)).toEqual([]);
+    await page.setViewportSize({ width: 1440, height: 900 });
     const heroWorker = workers[0];
     const closed = new Promise<void>((resolve) => heroWorker.once('close', () => resolve()));
     // The hero's scenes draw on canvases in the page. Off-page contexts belong to libraries that keep one for the
