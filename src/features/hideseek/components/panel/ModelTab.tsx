@@ -5,7 +5,9 @@ import { blueprintShape } from '@/engine/blueprints/shape';
 import type { HideSeekRecord } from '@/engine/training/hideseekRecords';
 import { hideSeekBlueprints } from '@/engine/training/hideseekRunConfig';
 import type { GenerationRecord } from '@/engine/training/records';
+import { inputGroups } from '@/features/modelcard/inputGroups';
 import { ModelCard } from '@/features/modelcard/ModelCard';
+import { useTeamSchemas } from '../../hooks/useTeamSchema';
 import { useHideSeekLab } from '../../state/hideSeekStore';
 import type { Team } from '../../state/types';
 import { TeamToggle } from './TeamToggle';
@@ -37,13 +39,15 @@ function cardRecords(records: HideSeekRecord[], team: Team): GenerationRecord[] 
   });
 }
 
-/** The model card of either team's latest champion. */
+/** The model card of either team's latest champion, with what that team's brain senses. */
 export function ModelTab() {
   const run = useHideSeekLab((s) => s.run);
   const records = useHideSeekLab((s) => s.records);
   const team = useHideSeekLab((s) => s.modelTeam);
   const set = useHideSeekLab((s) => s.set);
   const cards = useMemo(() => cardRecords(records, team), [records, team]);
+  const schemas = useTeamSchemas();
+  const senses = useMemo(() => inputGroups(schemas[team === 'hider' ? 0 : 1]), [schemas, team]);
   const blueprint = run?.env === 'hideseek' ? hideSeekBlueprints(run)[team] : null;
   const reference = useMemo(() => {
     if (!blueprint) return 0;
@@ -62,7 +66,7 @@ export function ModelTab() {
       {!run || !latest || !blueprint ? (
         <div className="p-4 text-[13px] text-muted">The model card fills in after the first generation.</div>
       ) : (
-        <ModelCard runId={run.id} genome={latest.genome} records={cards} reference={reference} blueprintName={blueprint.name} />
+        <ModelCard runId={run.id} genome={latest.genome} records={cards} reference={reference} blueprintName={blueprint.name} senses={senses} />
       )}
     </div>
   );
