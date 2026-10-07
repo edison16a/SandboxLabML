@@ -25,6 +25,11 @@ export interface FloorPose {
   yaw: number;
 }
 
+/** An agent's floor pose and the height of its feet above the floor, m: up a ramp or in a jump. */
+export interface AgentPose extends FloorPose {
+  elevation: number;
+}
+
 /** Offset of agent `agent` (0 hider, 1 seeker) of arena `arena`. */
 export function agentAt(arena: number, agent: number): number {
   return snapshotAgentAt(agent, arena * STRIDE);
@@ -69,7 +74,7 @@ export function blendFloorPose(prev: Float32Array | null, curr: Float32Array, o:
   const x = o + AGENT_X;
   const z = o + AGENT_Z;
   const yaw = o + AGENT_YAW;
-  if (!prev || prev.length <= yaw || Math.abs(prev[x] - curr[x]) + Math.abs(prev[z] - curr[z]) > TELEPORT) {
+  if (!blendable(prev, curr, o)) {
     out.x = curr[x];
     out.z = curr[z];
     out.yaw = curr[yaw];
@@ -78,6 +83,19 @@ export function blendFloorPose(prev: Float32Array | null, curr: Float32Array, o:
   out.x = lerp(prev[x], curr[x], alpha);
   out.z = lerp(prev[z], curr[z], alpha);
   out.yaw = lerpAngle(prev[yaw], curr[yaw], alpha);
+  return out;
+}
+
+/** Whether the pose at `o` can blend from `prev`: there is one, it reaches that far, and the move is no teleport. */
+function blendable(prev: Float32Array | null, curr: Float32Array, o: number): prev is Float32Array {
+  return !!prev && prev.length > o + AGENT_YAW && Math.abs(prev[o + AGENT_X] - curr[o + AGENT_X]) + Math.abs(prev[o + AGENT_Z] - curr[o + AGENT_Z]) <= TELEPORT;
+}
+
+/** blendFloorPose for an agent, with its elevation blended the same way. Allocates nothing. */
+export function blendAgentPose(prev: Float32Array | null, curr: Float32Array, o: number, alpha: number, out: AgentPose): AgentPose {
+  blendFloorPose(prev, curr, o, alpha, out);
+  const e = o + AGENT_ELEVATION;
+  out.elevation = blendable(prev, curr, o) && prev.length > e ? lerp(prev[e], curr[e], alpha) : curr[e];
   return out;
 }
 
