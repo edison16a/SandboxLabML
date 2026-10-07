@@ -12,7 +12,7 @@ import { hasFlag } from '../frame/snapshotRead';
 import { HS } from '../palette';
 import { createConeMaterial } from '../showcase/coneMaterial';
 import { VisionWedge, WEDGE_SEGMENTS } from '../showcase/VisionWedge';
-import { playerElevation, readPlayer, sandboxFrame, sandboxSight, seekerIdle, SightBoxes } from './sandboxRead';
+import { readPlayer, sandboxFrame, sandboxSight, seekerIdle, SightBoxes } from './sandboxRead';
 
 const VISION = DEFAULT_HIDESEEK_PHYSICS.vision;
 const HEIGHT = 1.05;
@@ -27,7 +27,7 @@ function SeekerCone({ slot, walls, boxes, fade }: { slot: number; walls: Rect[];
   const mesh = useRef<THREE.Mesh>(null);
   const wedge = useDisposable(() => new VisionWedge(VISION.fov, VISION.range, HEIGHT), []);
   const material = useDisposable(() => createConeMaterial(HS.seeker, HEIGHT), []);
-  const state = useMemo(() => ({ pose: { x: 0, z: 0, yaw: 0 }, d: new Float32Array(WEDGE_SEGMENTS + 1), glow: 0 }), []);
+  const state = useMemo(() => ({ pose: { x: 0, z: 0, yaw: 0, elevation: 0 }, d: new Float32Array(WEDGE_SEGMENTS + 1), glow: 0 }), []);
 
   useFrame((_, dt) => {
     const m = mesh.current;
@@ -36,14 +36,14 @@ function SeekerCone({ slot, walls, boxes, fade }: { slot: number; walls: Rect[];
     const flags = curr ? readPlayer(frame, curr, slot, state.pose) : FLAG_FROZEN;
     m.visible = !!curr && !seekerIdle(curr, flags);
     if (!m.visible || !curr) return;
-    const { x, z, yaw } = state.pose;
-    const elevation = playerElevation(curr, slot);
+    const { x, z, yaw, elevation } = state.pose;
     for (let k = 0; k <= WEDGE_SEGMENTS; k++) {
       const a = yaw + wedge.angle(k);
       state.d[k] = sandboxSight(walls, boxes, x, z, Math.cos(a), -Math.sin(a), VISION.range, flags, elevation);
     }
     wedge.update(state.d);
-    m.position.set(x, 0, z);
+    // The cone rides up a ramp and through a jump with the seeker's eyes.
+    m.position.set(x, elevation, z);
     m.rotation.y = yaw;
     const target = (hasFlag(flags, FLAG_SEEING) ? 1.4 : 0.75) * fade;
     state.glow += (target - state.glow) * Math.min(1, dt * 6);

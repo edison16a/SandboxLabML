@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import { FLAG_FROZEN, FLAG_HOLDING, FLAG_SEEING, FLAG_SEEN } from '@/engine/hideseek/snapshot';
+import { FLAG_AIRBORNE, FLAG_CLIMBING, FLAG_FROZEN, FLAG_HOLDING, FLAG_SEEING, FLAG_SEEN } from '@/engine/hideseek/snapshot';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { HsCharacter } from '../characters/HsCharacter';
@@ -31,14 +31,14 @@ interface Props {
 export function SandboxAgent({ slot, team, tier }: Props) {
   const { frame } = useHsScene();
   const trail = useDisposable(() => new MotionTrail(teamColor(team)), [team]);
-  const state = useMemo(() => ({ pose: { x: 0, z: 0, yaw: 0 }, epoch: Number.NaN }), []);
+  const state = useMemo(() => ({ pose: { x: 0, z: 0, yaw: 0, elevation: 0 }, epoch: Number.NaN }), []);
 
   const read = useCallback(
     (d: CharacterDrive) => {
       const curr = sandboxFrame(frame);
       if (!curr) return false;
       const flags = readPlayer(frame, curr, slot, state.pose);
-      const { x, z, yaw } = state.pose;
+      const { x, z, yaw, elevation } = state.pose;
       if (state.epoch !== frame.epoch || Math.hypot(x - d.x, z - d.z) > TELEPORT) {
         state.epoch = frame.epoch;
         d.teleported = true;
@@ -51,7 +51,10 @@ export function SandboxAgent({ slot, team, tier }: Props) {
       d.seen = team === 0 && hasFlag(flags, FLAG_SEEN);
       d.seeing = team === 1 && hasFlag(flags, FLAG_SEEING);
       d.holding = hasFlag(flags, FLAG_HOLDING);
-      trail.update(x, z, d.frozen ? 0 : 1);
+      d.elevation = elevation;
+      d.climbing = hasFlag(flags, FLAG_CLIMBING);
+      d.airborne = hasFlag(flags, FLAG_AIRBORNE);
+      trail.update(x, z, elevation, !d.airborne, d.frozen ? 0 : 1);
     },
     [frame, slot, team, state, trail],
   );

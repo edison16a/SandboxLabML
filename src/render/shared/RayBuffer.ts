@@ -49,8 +49,11 @@ export class RayBuffer {
     this.n = 0;
   }
 
-  /** Adds a ray from (x0, z0) to (x1, z1) at height y. `closeness` is 0 for nothing hit and 1 for touching. */
-  add(x0: number, z0: number, x1: number, z1: number, y: number, closeness: number, highlighted: boolean, hit: boolean): void {
+  /**
+   * Adds a ray from (x0, z0) at height y to (x1, z1) at height y1 (y unless
+   * given). `closeness` is 0 for nothing hit and 1 for touching.
+   */
+  add(x0: number, z0: number, x1: number, z1: number, y: number, closeness: number, highlighted: boolean, hit: boolean, y1 = y): void {
     if (this.n >= this.capacity) return;
     const i = this.n++;
     // Written element by element: thousands of rays a frame must not allocate.
@@ -59,7 +62,7 @@ export class RayBuffer {
     p[i * 6 + 1] = y;
     p[i * 6 + 2] = z0;
     p[i * 6 + 3] = x1;
-    p[i * 6 + 4] = y;
+    p[i * 6 + 4] = y1;
     p[i * 6 + 5] = z1;
     if (highlighted) this.c.copy(this.hot);
     else this.c.copy(FAR).lerp(NEAR, Math.min(1, Math.max(0, closeness)));
@@ -73,7 +76,7 @@ export class RayBuffer {
     c[i * 6 + 5] = b;
     const d = this.dotPos.array as Float32Array;
     d[i * 3] = hit ? x1 : x0;
-    d[i * 3 + 1] = hit ? y : -1000;
+    d[i * 3 + 1] = hit ? y1 : -1000;
     d[i * 3 + 2] = hit ? z1 : z0;
     const dc = this.dotCol.array as Float32Array;
     dc[i * 3] = r;

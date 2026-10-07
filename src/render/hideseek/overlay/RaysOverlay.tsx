@@ -9,7 +9,7 @@ import { RayBuffer } from '@/render/shared/RayBuffer';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
 import { followedAgent } from '../frame/followedAgent';
-import { agentAt, agentFlags, blendFloorPose, hasFlag } from '../frame/snapshotRead';
+import { agentAt, agentElevation, agentFlags, blendAgentPose, hasFlag } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
 import { MAX_ARENAS } from '../grid/scratch';
 import { HS_COLORS } from '../palette';
@@ -27,14 +27,15 @@ export const overlayCounts = { rays: 0, sightLines: 0 };
  * each arena whose seeker sees its hider, and with the inputs overlay on,
  * sensor rays. Rays come from the schema: the inspected agent's rays with a
  * distance label each (hovering an input highlights its ray), or the hit
- * points of every agent in every arena.
+ * points of every agent in every arena. Rays run at sight height over the
+ * agent's feet, so they rise up a ramp with it.
  */
 export function RaysOverlay() {
   const { frame, schemas } = useHsScene();
   const buffer = useDisposable(() => new RayBuffer(CAPACITY, HS_COLORS.rayHighlight), []);
   const labels = useRef<RayLabelsHandle>(null);
   const rayRange = schemas[0].find((s) => s.ray)?.ray?.maxLength ?? 12;
-  const t = useMemo(() => ({ o: { x: 0, z: 0 }, s: { x: 0, z: 0, yaw: 0 }, h: { x: 0, z: 0, yaw: 0 } }), []);
+  const t = useMemo(() => ({ o: { x: 0, z: 0 }, s: { x: 0, z: 0, yaw: 0, elevation: 0 }, h: { x: 0, z: 0, yaw: 0, elevation: 0 } }), []);
 
   useFrame(() => {
     const curr = frame.curr;
@@ -47,9 +48,9 @@ export function RaysOverlay() {
         const arena = frame.first + k;
         if (k === frame.focusSlot || !hasFlag(agentFlags(curr, agentAt(arena, 1)), FLAG_SEEING)) continue;
         arenaOrigin(k, frame.lattice, t.o);
-        blendFloorPose(frame.prev, curr, agentAt(arena, 1), frame.alpha, t.s);
-        blendFloorPose(frame.prev, curr, agentAt(arena, 0), frame.alpha, t.h);
-        buffer.add(t.o.x + t.s.x, t.o.z + t.s.z, t.o.x + t.h.x, t.o.z + t.h.z, Y, 1, false, false);
+        blendAgentPose(frame.prev, curr, agentAt(arena, 1), frame.alpha, t.s);
+        blendAgentPose(frame.prev, curr, agentAt(arena, 0), frame.alpha, t.h);
+        buffer.add(t.o.x + t.s.x, t.o.z + t.s.z, t.o.x + t.h.x, t.o.z + t.h.z, Y + t.s.elevation, 1, false, false, Y + t.h.elevation);
         overlayCounts.sightLines++;
       }
     }
@@ -66,13 +67,14 @@ export function RaysOverlay() {
             if (hasFlag(agentFlags(curr, o), FLAG_FROZEN)) continue;
             const ax = curr[o + AGENT_X];
             const az = curr[o + AGENT_Z];
+            const y = Y + agentElevation(curr, o);
             const base = arena * RAY_STRIDE + a * SNAPSHOT_RAYS * 2;
             for (let r = 0; r < SNAPSHOT_RAYS; r++) {
               const hx = rays[base + 2 * r];
               const hz = rays[base + 2 * r + 1];
               const d = Math.hypot(hx - ax, hz - az);
               if (d < 1e-3) continue;
-              buffer.add(t.o.x + ax, t.o.z + az, t.o.x + hx, t.o.z + hz, Y, 1 - d / rayRange, false, d < rayRange - 0.02);
+              buffer.add(t.o.x + ax, t.o.z + az, t.o.x + hx, t.o.z + hz, y, 1 - d / rayRange, false, d < rayRange - 0.02);
               overlayCounts.rays++;
             }
           }
@@ -87,6 +89,7 @@ export function RaysOverlay() {
         arenaOrigin(slot, frame.lattice, t.o);
         const x = t.o.x + t.s.x;
         const z = t.o.z + t.s.z;
+        const y = Y + t.s.elevation;
         // Distance labels only where they can be read: on the arena in the showcase.
         let label = slot === frame.focusSlot ? 0 : MAX_RAY_LABELS;
         const schema = schemas[agent];
@@ -98,9 +101,9 @@ export function RaysOverlay() {
           const ang = t.s.yaw + spec.ray.angle;
           const ex = x + Math.cos(ang) * len;
           const ez = z - Math.sin(ang) * len;
-          buffer.add(x, z, ex, ez, Y, 1 - v, hoveredInput === spec.index, v < 0.999);
+          buffer.add(x, z, ex, ez, y, 1 - v, hoveredInput === spec.index, v < 0.999);
           overlayCounts.rays++;
-          if (label < MAX_RAY_LABELS) labels.current?.show(label++, ex, Y + 0.45, ez, `${len.toFixed(1)} m`);
+          if (label < MAX_RAY_LABELS) labels.current?.show(label++, ex, y + 0.45, ez, `${len.toFixed(1)} m`);
         }
       }
     }

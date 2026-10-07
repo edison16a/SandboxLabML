@@ -7,7 +7,7 @@ import { useCallback, useMemo, useRef } from 'react';
 import { configureTextBuilder } from 'troika-three-text';
 import { FLAG_SEEN } from '@/engine/hideseek/snapshot';
 import { useHsScene, type HsFrame } from '../frame/sceneContext';
-import { agentAt, agentFlags, blendFloorPose, hasFlag, type FloorPose } from '../frame/snapshotRead';
+import { agentAt, agentFlags, blendAgentPose, hasFlag, type AgentPose } from '../frame/snapshotRead';
 import { GRID_LAYER } from '../grid/scratch';
 
 /**
@@ -22,15 +22,17 @@ export const SDF_FONT = '/fonts/Geist-SemiBold.ttf';
 // the main thread costs nothing.
 configureTextBuilder({ useWorker: false, defaultFontURL: SDF_FONT });
 
+/** Height of the word over the hider's feet, m: clear of its head, and it rises with a hider up a ramp. */
+const HOVER = 2.3;
 /** Pushed past 1 so bloom gives the word a glow. */
 const RED = new THREE.Color('#ff5f6d').multiplyScalar(2.4);
 
 /**
- * Where a hider stands in the frame on screen, written into `out`, and
- * whether a seeker has it in sight right now. Each scene reads its own
- * stream: the showcase arena snapshot, or a Sandbox frame by slot.
+ * Where a hider stands in the frame on screen and how high, written into
+ * `out`, and whether a seeker has it in sight right now. Each scene reads
+ * its own stream: the showcase arena snapshot, or a Sandbox frame by slot.
  */
-export type SeenReader = (frame: HsFrame, out: FloorPose) => boolean;
+export type SeenReader = (frame: HsFrame, out: AgentPose) => boolean;
 
 /**
  * "SEEN" floating over a hider whenever a seeker has it in sight. It
@@ -42,7 +44,7 @@ export type SeenReader = (frame: HsFrame, out: FloorPose) => boolean;
 export function SeenWord({ read, scale = 1 }: { read: SeenReader; scale?: number }) {
   const { frame } = useHsScene();
   const group = useRef<THREE.Group>(null);
-  const state = useMemo(() => ({ pose: { x: 0, z: 0, yaw: 0 }, show: 0, since: 0 }), []);
+  const state = useMemo(() => ({ pose: { x: 0, z: 0, yaw: 0, elevation: 0 }, show: 0, since: 0 }), []);
 
   useFrame((three, dt) => {
     const g = group.current;
@@ -57,7 +59,7 @@ export function SeenWord({ read, scale = 1 }: { read: SeenReader; scale?: number
     // A short overshoot when the word appears: 0.7 to about 1.12 and back to 1 in a quarter second.
     const t = Math.min(1, state.since / 0.25);
     const pop = seen ? 0.7 + 0.3 * t + 0.42 * Math.sin(t * Math.PI) * (1 - t) : 1;
-    g.position.set(state.pose.x, 2.3, state.pose.z);
+    g.position.set(state.pose.x, HOVER + state.pose.elevation, state.pose.z);
     g.scale.setScalar(pop * (0.5 + 0.5 * state.show) * scale);
   });
 
@@ -79,7 +81,7 @@ export function SeenBillboard({ arena }: { arena: number }) {
       const curr = frame.curr;
       if (!curr) return false;
       const o = agentAt(arena, 0);
-      blendFloorPose(frame.prev, curr, o, frame.alpha, out);
+      blendAgentPose(frame.prev, curr, o, frame.alpha, out);
       return hasFlag(agentFlags(curr, o), FLAG_SEEN);
     },
     [arena],

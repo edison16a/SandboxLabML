@@ -1,13 +1,13 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import { FLAG_FROZEN, FLAG_HOLDING, FLAG_SEEING, FLAG_SEEN } from '@/engine/hideseek/snapshot';
+import { FLAG_AIRBORNE, FLAG_CLIMBING, FLAG_FROZEN, FLAG_HOLDING, FLAG_SEEING, FLAG_SEEN } from '@/engine/hideseek/snapshot';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { HsCharacter } from '../characters/HsCharacter';
 import type { CharacterDrive } from '../characters/types';
 import { useHsScene } from '../frame/sceneContext';
-import { agentAt, agentFlags, blendFloorPose, hasFlag } from '../frame/snapshotRead';
+import { agentAt, agentFlags, blendAgentPose, hasFlag } from '../frame/snapshotRead';
 import { teamColor } from '../palette';
 import { MotionTrail } from './MotionTrail';
 
@@ -22,15 +22,15 @@ const TELEPORT = 1.5;
 export function ShowcaseAgent({ arena, agent, tier }: { arena: number; agent: 0 | 1; tier: HsQualityTier }) {
   const { frame } = useHsScene();
   const trail = useDisposable(() => new MotionTrail(teamColor(agent)), [agent]);
-  const state = useMemo(() => ({ pose: { x: 0, z: 0, yaw: 0 }, epoch: Number.NaN }), []);
+  const state = useMemo(() => ({ pose: { x: 0, z: 0, yaw: 0, elevation: 0 }, epoch: Number.NaN }), []);
 
   const read = useCallback(
     (d: CharacterDrive) => {
       const curr = frame.curr;
       if (!curr) return false;
       const o = agentAt(arena, agent);
-      blendFloorPose(frame.prev, curr, o, frame.alpha, state.pose);
-      const { x, z, yaw } = state.pose;
+      blendAgentPose(frame.prev, curr, o, frame.alpha, state.pose);
+      const { x, z, yaw, elevation } = state.pose;
       if (state.epoch !== frame.epoch || Math.hypot(x - d.x, z - d.z) > TELEPORT) {
         state.epoch = frame.epoch;
         d.teleported = true;
@@ -44,7 +44,10 @@ export function ShowcaseAgent({ arena, agent, tier }: { arena: number; agent: 0 
       d.seen = agent === 0 && hasFlag(flags, FLAG_SEEN);
       d.seeing = agent === 1 && hasFlag(flags, FLAG_SEEING);
       d.holding = hasFlag(flags, FLAG_HOLDING);
-      trail.update(x, z, d.frozen ? 0 : 1);
+      d.elevation = elevation;
+      d.climbing = hasFlag(flags, FLAG_CLIMBING);
+      d.airborne = hasFlag(flags, FLAG_AIRBORNE);
+      trail.update(x, z, elevation, !d.airborne, d.frozen ? 0 : 1);
     },
     [frame, arena, agent, state, trail],
   );

@@ -32,7 +32,7 @@ export function CameraRig() {
   const scene = useThree((s) => s.scene);
   const controls = useRef<Controls>(null);
   const fly = useMemo(
-    () => ({ key: Number.NaN, started: false, t: 1, fromPos: new THREE.Vector3(), fromTarget: new THREE.Vector3(), toPos: new THREE.Vector3(), toTarget: new THREE.Vector3(), o: { x: 0, z: 0 }, pose: { x: 0, z: 0, yaw: 0 }, look: new THREE.Vector3(), haze: { near: 0, far: 0 } }),
+    () => ({ key: Number.NaN, started: false, t: 1, fromPos: new THREE.Vector3(), fromTarget: new THREE.Vector3(), toPos: new THREE.Vector3(), toTarget: new THREE.Vector3(), o: { x: 0, z: 0 }, pose: { x: 0, z: 0, yaw: 0, elevation: 0 }, look: new THREE.Vector3(), haze: { near: 0, far: 0 } }),
     [],
   );
 
@@ -109,8 +109,10 @@ export function CameraRig() {
     arenaOrigin(slot, frame.lattice, fly.o);
     const fx = Math.cos(fly.pose.yaw);
     const fz = -Math.sin(fly.pose.yaw);
-    camera.position.set(fly.o.x + fly.pose.x + fx * 0.5, EYE, fly.o.z + fly.pose.z + fz * 0.5);
-    fly.look.set(camera.position.x + fx * 6, 0.9, camera.position.z + fz * 6);
+    // Eyes ride up a ramp and through a jump with the agent.
+    const lift = fly.pose.elevation;
+    camera.position.set(fly.o.x + fly.pose.x + fx * 0.5, EYE + lift, fly.o.z + fly.pose.z + fz * 0.5);
+    fly.look.set(camera.position.x + fx * 6, 0.9 + lift, camera.position.z + fz * 6);
     camera.lookAt(fly.look);
     // Leaving first person flies back from wherever the eye was.
     fly.key = Number.NaN;

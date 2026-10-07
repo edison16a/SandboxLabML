@@ -17,7 +17,7 @@ import {
 } from '@/engine/hideseek/sandbox/snapshot';
 import { rayAabb, rayBox } from '@/engine/hideseek/sensing/raycast2d';
 import type { HsFrame } from '../frame/sceneContext';
-import { blendFloorPose, type FloorPose } from '../frame/snapshotRead';
+import { blendAgentPose, blendFloorPose, type AgentPose, type FloorPose } from '../frame/snapshotRead';
 
 export { sandboxBoxKind, sandboxBoxLock } from '@/engine/hideseek/sandbox/snapshot';
 
@@ -44,10 +44,10 @@ function prevOf(frame: HsFrame, curr: Float32Array): Float32Array | null {
   return frame.prev && frame.prev.length === curr.length ? frame.prev : null;
 }
 
-/** Blends player `slot` into `out` and returns its flags. */
-export function readPlayer(frame: HsFrame, curr: Float32Array, slot: number, out: FloorPose): number {
+/** Blends player `slot`, elevation included, into `out` and returns its flags. */
+export function readPlayer(frame: HsFrame, curr: Float32Array, slot: number, out: AgentPose): number {
   const o = sandboxAgentAt(slot);
-  blendFloorPose(prevOf(frame, curr), curr, o, frame.alpha, out);
+  blendAgentPose(prevOf(frame, curr), curr, o, frame.alpha, out);
   return curr[o + AGENT_FLAGS];
 }
 

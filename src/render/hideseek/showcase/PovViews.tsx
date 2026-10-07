@@ -61,7 +61,7 @@ export function PovViews() {
       },
     };
   }, [w, h]);
-  const state = useMemo(() => ({ turn: 0, o: { x: 0, z: 0 }, pose: { x: 0, z: 0, yaw: 0 } }), []);
+  const state = useMemo(() => ({ turn: 0, o: { x: 0, z: 0 }, pose: { x: 0, z: 0, yaw: 0, elevation: 0 } }), []);
 
   useFrame(() => {
     const curr = frame.curr;
@@ -72,8 +72,10 @@ export function PovViews() {
     followedAgent(frame, frame.focusSlot, PIP_AGENTS[k], state.pose);
     const fx = Math.cos(state.pose.yaw);
     const fz = -Math.sin(state.pose.yaw);
-    cam.position.set(state.o.x + state.pose.x + fx * 0.45, EYE, state.o.z + state.pose.z + fz * 0.45);
-    cam.lookAt(cam.position.x + fx * 5, 0.95, cam.position.z + fz * 5);
+    // Eyes ride up a ramp and through a jump with the agent.
+    const lift = state.pose.elevation;
+    cam.position.set(state.o.x + state.pose.x + fx * 0.45, EYE + lift, state.o.z + state.pose.z + fz * 0.45);
+    cam.lookAt(cam.position.x + fx * 5, 0.95 + lift, cam.position.z + fz * 5);
     gl.setRenderTarget(built.targets[k]);
     gl.clear();
     gl.render(scene, cam);

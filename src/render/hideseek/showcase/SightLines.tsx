@@ -11,7 +11,7 @@ import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { FLAG_FROZEN } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
-import { agentAt, agentFlags, arenaInPrep, blendFloorPose, hasFlag } from '../frame/snapshotRead';
+import { agentAt, agentFlags, arenaInPrep, blendAgentPose, hasFlag } from '../frame/snapshotRead';
 import { wallsOfLayout } from '../layout/arenaWalls';
 import { sightClear, sightMode } from '../overlay/sight2d';
 import { HS } from '../palette';
@@ -41,7 +41,7 @@ export function SightLines({ arena, layout }: { arena: number; layout: number })
     lines.raycast = () => {};
     return { lines, geometry, material, dispose: () => (geometry.dispose(), material.dispose()) };
   }, []);
-  const state = useMemo(() => ({ s: { x: 0, z: 0, yaw: 0 }, h: { x: 0, z: 0, yaw: 0 } }), []);
+  const state = useMemo(() => ({ s: { x: 0, z: 0, yaw: 0, elevation: 0 }, h: { x: 0, z: 0, yaw: 0, elevation: 0 } }), []);
 
   useFrame(() => {
     const curr = frame.curr;
@@ -51,8 +51,8 @@ export function SightLines({ arena, layout }: { arena: number; layout: number })
     if (!curr) return;
     const so = agentAt(arena, 1);
     if (hasFlag(agentFlags(curr, so), FLAG_FROZEN) || arenaInPrep(curr, arena)) return;
-    blendFloorPose(frame.prev, curr, so, frame.alpha, state.s);
-    blendFloorPose(frame.prev, curr, agentAt(arena, 0), frame.alpha, state.h);
+    blendAgentPose(frame.prev, curr, so, frame.alpha, state.s);
+    blendAgentPose(frame.prev, curr, agentAt(arena, 0), frame.alpha, state.h);
     const dx = state.h.x - state.s.x;
     const dz = state.h.z - state.s.z;
     const d = Math.hypot(dx, dz);
@@ -62,7 +62,9 @@ export function SightLines({ arena, layout }: { arena: number; layout: number })
     const pos = start.data.array as Float32Array;
     const col = colorStart.data.array as Float32Array;
     const walls = wallsOfLayout(layout);
-    const y = P.rayHeight;
+    // Each end sits at sight height over that agent's feet, so a line from a ramp slopes down to the floor.
+    const y0 = P.rayHeight + state.s.elevation;
+    const y1 = P.rayHeight + state.h.elevation;
     const mode = sightMode(curr, arena, 1, 0);
     const sx = (-dz / d) * P.agent.radius;
     const sz = (dx / d) * P.agent.radius;
@@ -72,10 +74,10 @@ export function SightLines({ arena, layout }: { arena: number; layout: number })
       const tz = state.h.z + sz * side;
       const c = sightClear(walls, curr, arena, state.s.x, state.s.z, tx, tz, mode) ? CLEAR : BLOCKED;
       pos[k * 6] = state.s.x;
-      pos[k * 6 + 1] = y;
+      pos[k * 6 + 1] = y0;
       pos[k * 6 + 2] = state.s.z;
       pos[k * 6 + 3] = tx;
-      pos[k * 6 + 4] = y;
+      pos[k * 6 + 4] = y1;
       pos[k * 6 + 5] = tz;
       for (let e = 0; e < 2; e++) {
         col[k * 6 + e * 3] = c.r;
