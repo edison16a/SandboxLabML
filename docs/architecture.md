@@ -55,7 +55,7 @@ The Sandbox races stored champions on any track through the replay worker, and t
 
 ## Hide and Seek ramps and locks
 
-Every room has five boxes in `BOX_KINDS` order: two cubes, two planks and a ramp. A ramp is a wedge 2.4 m long and 1.2 m wide whose top rises from the floor at its foot to 1.2 m at its lip. Its collider is the convex hull of that wedge, so a sight ray hits exactly the drawn slope. Its mass sits at the center of its footprint with a crate's inertia, so it is grabbed, carried, pushed and locked like any box. Every ramp and climbing number lives in `HideSeekPhysics` (`box.ramp` and the `climb` group), so it hashes into the rules.
+Every room has five boxes in `BOX_KINDS` order: two cubes, two planks and a ramp. A ramp is a wedge 2.4 m long and 1.2 m wide whose top rises from the floor at its foot to 1.2 m at its lip. Its collider is the convex hull of that wedge, so a sight ray hits exactly the drawn slope. Its mass sits at the center of its footprint with a crate's inertia, so it is grabbed, carried, pushed and locked like any box. Every ramp and climbing number lives in `HideSeekPhysics` (`box.ramp`, and the `climb` group in `climbRules.ts` with the reason for each value), so it hashes into the rules.
 
 * Both teams lock. An agent that is free to act, empty handed and on the floor locks the nearest free box in front of it, and only its own team can unlock it. The other team can neither unlock, grab nor push it. Seekers are frozen during prep, so they lock in the seek phase.
 * An agent at the foot of a ramp that drives forward facing within 45 degrees of uphill mounts it (`agents/climb`). On the slope its collider touches nothing and the engine moves it: the move output sets its progress, it faces uphill, and its position comes from the ramp pose every tick, so a pushed or carried ramp takes it along. Backing past the foot steps off if there is room.
@@ -64,7 +64,7 @@ Every room has five boxes in `BOX_KINDS` order: two cubes, two planks and a ramp
 
 ## Snapshot layout
 
-The engine writes snapshots and the renderer only reads them, through named offsets and the helpers in `src/render/hideseek/frame/snapshotRead.ts` and `sandboxRead.ts`. Nothing reads a raw index.
+The engine writes snapshots and the renderer only reads them, through named offsets (`SNAPSHOT_PHASE`, `AGENT_ELEVATION`, `BOX_LOCK`, `SANDBOX_HIDERS` and the rest) and the helpers in `src/render/hideseek/frame/snapshotRead.ts` and `sandboxRead.ts`. Nothing reads a raw index.
 
 | Stream | Header | Per agent | Per box |
 | --- | --- | --- | --- |
