@@ -44,8 +44,9 @@ function fenceGeometry(track: Track, layout: StadiumLayout, offset: number): { m
   const uv: number[] = [];
   const posts: THREE.BufferGeometry[] = [];
   let run = 0;
-  const from = Math.floor(lo / track.spacing);
-  const to = Math.ceil(hi / track.spacing);
+  // The stands are measured from the stadium's own sample on the straight.
+  const from = layout.index + Math.floor(lo / track.spacing);
+  const to = layout.index + Math.ceil(hi / track.spacing);
   for (let k = from; k < to; k++) {
     const i = (k + track.count) % track.count;
     const j = (k + 1 + track.count) % track.count;

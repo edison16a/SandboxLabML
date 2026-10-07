@@ -10,6 +10,9 @@ const BLUE = new THREE.Color('#2f6fd0');
 /** Floor heights, m. */
 export const PIT_GROUND = 4.6;
 export const PIT_TOP = 8.6;
+/** How far the roof's canopy reaches over the pit lane, and the lane's width, m. */
+export const PIT_CANOPY = 4.2;
+export const PIT_LANE = 7.2;
 /** Garage width along the building, m. */
 const BAY = 5.2;
 
@@ -45,8 +48,8 @@ export function pitShell(length: number, depth: number): THREE.BufferGeometry {
     for (let z = 2.2; z < depth - 1; z += 2.4) b.box(0.16, PIT_TOP - PIT_GROUND - 0.6, 0.14, x, (PIT_GROUND + PIT_TOP) / 2 + 0.1, z, GREY);
   }
   // Roof deck and a cantilevered canopy over the pit lane, with a dark fascia; no posts, so a pit lane camera has a clear view.
-  b.box(length + 1.2, 0.45, depth + 4.2, 0, PIT_TOP + 0.22, depth / 2 - 2.1, WHITE);
-  b.box(length + 1.2, 0.9, 0.12, 0, PIT_TOP + 0.1, -4.2, DARK);
+  b.box(length + 1.2, 0.45, depth + PIT_CANOPY, 0, PIT_TOP + 0.22, (depth - PIT_CANOPY) / 2, WHITE);
+  b.box(length + 1.2, 0.9, 0.12, 0, PIT_TOP + 0.1, -PIT_CANOPY, DARK);
   return b.build();
 }
 

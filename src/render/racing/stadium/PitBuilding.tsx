@@ -5,10 +5,7 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { withHaze } from '../world/atmosphere';
 import { brandTexture } from './brandTexture';
 import type { StadiumLayout } from './layout';
-import { PIT_TOP, pitGlass, pitMullions, pitShell } from './pitGeometry';
-
-/** Width of the pit lane between the wall and the garages, m. */
-const LANE = 7.2;
+import { PIT_LANE as LANE, PIT_TOP, pitGlass, pitMullions, pitShell } from './pitGeometry';
 
 /**
  * The pit building on the infield side of the main straight, facing the
@@ -35,6 +32,7 @@ export function PitBuilding({ layout }: { layout: StadiumLayout }) {
   if (!pit || !built) return null;
   const { geo, mat } = built;
   const sign = Math.min(20, pit.length * 0.45);
+  const lane = (pit.laneHalf ?? pit.length / 2) * 2;
   return (
     <group position={[layout.x, 0, layout.z]} rotation={[0, layout.yaw, 0]}>
       {/* Turned half round on the far side, so the building's own -z faces the road. */}
@@ -47,10 +45,10 @@ export function PitBuilding({ layout }: { layout: StadiumLayout }) {
           <planeGeometry args={[sign, sign / 10]} />
         </mesh>
         <mesh position={[0, 0.008, -LANE / 2]} rotation={[-Math.PI / 2, 0, 0]} material={mat.lane} receiveShadow>
-          <planeGeometry args={[pit.length + 10, LANE]} />
+          <planeGeometry args={[lane, LANE]} />
         </mesh>
         <mesh position={[0, 0.014, -LANE * 0.62]} rotation={[-Math.PI / 2, 0, 0]} material={mat.line}>
-          <planeGeometry args={[pit.length + 10, 0.18]} />
+          <planeGeometry args={[lane, 0.18]} />
         </mesh>
       </group>
     </group>

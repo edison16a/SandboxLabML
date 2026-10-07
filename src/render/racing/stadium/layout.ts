@@ -1,6 +1,9 @@
 import { RUNOFF } from '@/engine/racing/car/runtime';
 import type { Track } from '@/engine/racing/track/types';
 import { distanceAt, type TrackField } from '../world/trackField';
+import { straightAnchor } from './anchor';
+import { roofFront } from './grandstandGeometry';
+import { PIT_CANOPY, PIT_LANE } from './pitGeometry';
 
 /** A level rectangle in world space: the terrain flattens under it and scenery keeps off it. */
 export interface Pad {
@@ -18,6 +21,8 @@ export interface Placed {
   /** Distance from the centerline to the building's road side, m. */
   offset: number;
   depth: number;
+  /** For the pits: half the pit lane's length, m, trimmed so the lane stays behind the wall. */
+  laneHalf?: number;
 }
 
 /**
@@ -31,6 +36,8 @@ export interface StadiumLayout {
   x: number;
   z: number;
   yaw: number;
+  /** Track sample the frame sits on, in the middle of the main straight. */
+  index: number;
   /** Which local z side is outside the loop: grandstands go there, the pits go opposite. */
   side: 1 | -1;
   stands: Placed[];
@@ -38,8 +45,8 @@ export interface StadiumLayout {
   pads: Pad[];
 }
 
-/** Which side of the start line faces away from the circuit's middle. */
-export function outsideSign(track: Track): 1 | -1 {
+/** Which side of the frame at sample `at` faces away from the circuit's middle. */
+export function outsideSign(track: Track, at = 0): 1 | -1 {
   let mx = 0;
   let my = 0;
   for (let i = 0; i < track.count; i++) {
@@ -49,7 +56,7 @@ export function outsideSign(track: Track): 1 | -1 {
   mx /= track.count;
   my /= track.count;
   // Left of the start tangent, in track coordinates, is local -Z once drawn.
-  const left = -track.ty[0] * (mx - track.cx[0]) + track.tx[0] * (my - track.cy[0]);
+  const left = -track.ty[at] * (mx - track.cx[at]) + track.tx[at] * (my - track.cy[at]);
   return left > 0 ? 1 : -1;
 }
 
@@ -62,43 +69,69 @@ export function padOf(l: Pick<StadiumLayout, 'x' | 'z' | 'yaw'>, side: number, p
   return { x: l.x + p.along * c + lz * s, z: l.z - p.along * s + lz * c, yaw: l.yaw, halfLength: p.length / 2 + grow, halfDepth: p.depth / 2 + grow };
 }
 
-/** True when every point of the pad keeps `clear` meters from the road. */
-function fits(field: TrackField, pad: Pad, clear: number): boolean {
-  const c = Math.cos(pad.yaw);
-  const s = Math.sin(pad.yaw);
-  for (let u = -1; u <= 1; u += 0.25) {
-    for (let v = -1; v <= 1; v += 0.5) {
-      const lx = u * pad.halfLength;
-      const lz = v * pad.halfDepth;
-      if (distanceAt(field, pad.x + lx * c + lz * s, pad.z - lx * s + lz * c) < clear) return false;
+/**
+ * True when every point of a rectangle keeps `clear` meters from the road.
+ * The rectangle is in a building's own frame: x along the road from the
+ * building's middle, z away from the road from its front face, so a roof
+ * reaching over the front has a negative `z0`.
+ */
+function fits(field: TrackField, l: Pick<StadiumLayout, 'x' | 'z' | 'yaw'>, side: number, p: Placed, halfLength: number, z0: number, z1: number, clear: number): boolean {
+  const c = Math.cos(l.yaw);
+  const s = Math.sin(l.yaw);
+  const steps = Math.max(4, Math.ceil(halfLength / 3));
+  for (let u = -steps; u <= steps; u++) {
+    for (let v = 0; v <= 4; v++) {
+      const along = p.along + (u / steps) * halfLength;
+      const across = side * (p.offset + z0 + ((z1 - z0) * v) / 4);
+      if (distanceAt(field, l.x + along * c + across * s, l.z - along * s + across * c) < clear) return false;
     }
   }
   return true;
 }
 
+/**
+ * Places the buildings on the main straight. A stand counts with its roof,
+ * which reaches toward the road, and the pits with their canopy and the
+ * pit lane in front, so nothing ever hangs over the wall or the kerbs.
+ */
 export function stadiumLayout(track: Track, field: TrackField): StadiumLayout {
-  const base = { x: track.cx[0], z: -track.cy[0], yaw: Math.atan2(track.ty[0], track.tx[0]) };
-  const side = outsideSign(track);
+  const a = straightAnchor(track);
+  const base = { x: a.x, z: a.z, yaw: a.yaw };
+  const side = outsideSign(track, a.index);
   const hw = track.halfWidth;
   const clear = hw + RUNOFF + 2.5;
+  // The lane may tuck under the back of the wall, but never reach past the wall's foot on the road side.
+  const laneClear = hw + RUNOFF + 1.1;
+  const roof = roofFront().z;
+  // A main straight is rarely ruler straight, so each building may step back a few meters to clear it.
+  const PUSH = [0, 1, 2, 3, 4];
   const stands: Placed[] = [];
-  // Two stands either side of the line with a gap for the tunnel, falling back to shorter ones on tight tracks.
+  // Two stands either side of the middle with a gap for the tunnel, falling back to shorter ones on tight tracks.
   for (const [along, length] of [[-26, 46], [26, 46], [-20, 30], [20, 30]] as const) {
     if (stands.some((p) => Math.sign(p.along) === Math.sign(along))) continue;
-    const p: Placed = { along, length, offset: hw + RUNOFF + 5.5, depth: 15 };
-    if (fits(field, padOf(base, side, p), clear)) stands.push(p);
-  }
-  let pit: Placed | null = null;
-  for (const length of [64, 44, 30]) {
-    const p: Placed = { along: 4, length, offset: hw + RUNOFF + 9, depth: 13 };
-    if (fits(field, padOf(base, -side, p), clear)) {
-      pit = p;
+    for (const push of PUSH) {
+      const p: Placed = { along, length, offset: hw + RUNOFF + 5.5 + push, depth: 15 };
+      if (!fits(field, base, side, p, length / 2 + 0.6, Math.min(0, roof), p.depth, clear)) continue;
+      stands.push(p);
       break;
     }
   }
+  let pit: Placed | null = null;
+  for (const length of [64, 44, 30]) {
+    for (const push of PUSH) {
+      const p: Placed = { along: 4, length, offset: hw + RUNOFF + 9 + push, depth: 13 };
+      if (!fits(field, base, -side, p, length / 2 + 0.6, -PIT_CANOPY, p.depth, clear)) continue;
+      // The lane runs a few meters past each end of the building where the wall allows, and never less than its length.
+      const ext = [5, 3, 1, 0].find((e) => fits(field, base, -side, p, length / 2 + e, -PIT_LANE, 0, laneClear));
+      if (ext === undefined) continue;
+      pit = { ...p, laneHalf: length / 2 + ext };
+      break;
+    }
+    if (pit) break;
+  }
   const pads = stands.map((p) => padOf(base, side, p, 7));
   if (pit) pads.push(padOf(base, -side, pit, 7));
-  return { ...base, side, stands, pit, pads };
+  return { ...base, index: a.index, side, stands, pit, pads };
 }
 
 /** How much a pad flattens the ground at (x, z): 1 inside, easing to 0 over `soft` meters outside. */
