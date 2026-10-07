@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { onScreen, scrollNeeded } from './reveal';
+import { clampScroll, onScreen, scrollNeeded } from './reveal';
 
 describe('scrollNeeded', () => {
   it('leaves a target that already shows alone', () => {
@@ -28,5 +28,16 @@ describe('onScreen', () => {
     const [start, end] = onScreen(600, 1190, 844);
     expect(end).toBe(844);
     expect(scrollNeeded(980, 1160, start, end)).toBe(328);
+  });
+});
+
+describe('clampScroll', () => {
+  it('passes on a step the box can take', () => {
+    expect(clampScroll(120, 0, 300)).toBe(120);
+  });
+
+  it('stops at the end of the box, leaving the rest to the box around it', () => {
+    expect(clampScroll(348, 0, 141)).toBe(141);
+    expect(clampScroll(-200, 50, 300)).toBe(-50);
   });
 });
