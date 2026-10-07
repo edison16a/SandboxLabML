@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import { useCallback, useMemo } from 'react';
 import type { InputSpec } from '@/engine/env/types';
+import { BOX_COUNT } from '@/engine/hideseek/physics';
 import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
 import { FramePacer } from '@/render/shared/FramePacer';
 import { useFrameLoop } from '@/render/shared/frameLoop';
@@ -55,7 +56,7 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
     () => ({
       arenas: frame.count,
       agents: frame.count * 2,
-      boxes: frame.count * 4,
+      boxes: frame.count * BOX_COUNT,
       showcase: frame.focusSlot >= 0 ? 1 : 0,
       rays: overlayCounts.rays,
       sightLines: overlayCounts.sightLines,

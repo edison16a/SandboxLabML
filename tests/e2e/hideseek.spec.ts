@@ -25,6 +25,8 @@ test('the grid shows 50 arenas, the inputs overlay draws rays and a click focuse
   await page.addInitScript(() => window.localStorage.setItem('sandboxlab.tour.hideseek', '1'));
   await page.goto('/lab/hide-seek?quality=low');
   await expect.poll(instances(page, 'arenas'), { timeout: 120_000 }).toBe(50);
+  // Five boxes an arena: two cubes, two planks and a ramp.
+  await expect.poll(instances(page, 'boxes'), { timeout: 10_000 }).toBe(250);
   const grid = await stats(page);
   expect(grid?.drawCalls ?? Infinity).toBeLessThan(60);
   expect(grid?.triangles ?? Infinity).toBeLessThan(150_000);
