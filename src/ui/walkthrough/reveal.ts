@@ -10,6 +10,15 @@ export function scrollNeeded(start: number, end: number, boxStart: number, boxEn
 }
 
 /**
+ * The part of a box's span that lies on screen. On a phone the side panel
+ * reaches past the bottom of the window, so a target scrolled into the box
+ * could still sit below the screen.
+ */
+export function onScreen(start: number, end: number, viewEnd: number): [number, number] {
+  return [Math.max(start, 0), Math.min(end, viewEnd)];
+}
+
+/**
  * Scrolls the boxes around a step's target until it shows, like a toolbar
  * that scrolls sideways on a phone and hides its last buttons. Only boxes
  * that scroll on purpose move, never the page frame around them.
@@ -23,8 +32,8 @@ export function revealTarget(selector: string, smooth: boolean): void {
     if (!sideways && !down) continue;
     const r = el.getBoundingClientRect();
     const b = box.getBoundingClientRect();
-    const left = sideways ? scrollNeeded(r.left, r.right, b.left, b.right) : 0;
-    const top = down ? scrollNeeded(r.top, r.bottom, b.top, b.bottom) : 0;
+    const left = sideways ? scrollNeeded(r.left, r.right, ...onScreen(b.left, b.right, window.innerWidth)) : 0;
+    const top = down ? scrollNeeded(r.top, r.bottom, ...onScreen(b.top, b.bottom, window.innerHeight)) : 0;
     if (left || top) box.scrollBy({ left, top, behavior: smooth ? 'smooth' : 'auto' });
     // The nearest scrolling box is the one that hides it. The boxes further out are left alone.
     return;

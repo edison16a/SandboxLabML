@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { scrollNeeded } from './reveal';
+import { onScreen, scrollNeeded } from './reveal';
 
 describe('scrollNeeded', () => {
   it('leaves a target that already shows alone', () => {
@@ -16,5 +16,17 @@ describe('scrollNeeded', () => {
 
   it('lines up the start of a target bigger than the box', () => {
     expect(scrollNeeded(-50, 600, 0, 390)).toBe(-62);
+  });
+});
+
+describe('onScreen', () => {
+  it('keeps a box that fits the window as it is', () => {
+    expect(onScreen(100, 600, 844)).toEqual([100, 600]);
+  });
+
+  it('cuts a phone side panel off at the bottom of the screen, so its chart scrolls up into sight', () => {
+    const [start, end] = onScreen(600, 1190, 844);
+    expect(end).toBe(844);
+    expect(scrollNeeded(980, 1160, start, end)).toBe(328);
   });
 });
