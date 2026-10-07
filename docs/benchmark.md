@@ -115,37 +115,37 @@ Each reference champion has a rating, fitted once when the reference file is bui
 
 Scores only compare within one `HIDESEEK_BENCHMARK_VERSION` (in `src/engine/core/version.ts`). It is separate from the Racing version, so changing one exam never forces the other file to be rebuilt. Changing a room, the starts, the match count or anything in `src/engine/bench/hideseek/scoring.ts` changes scores, so it must bump the version. The reference champions are part of the exam too. Training is deterministic, so they only change when the engine, a Hide and Seek preset or the generator settings change. When a regenerated file ships different champions, bump the version in the same change. A change to the Hide and Seek simulation bumps `HIDESEEK_ENGINE_VERSION`, which is separate from the Racing `ENGINE_VERSION`.
 
-Version 4 came with ramps. Every exam room gained a ramp, both teams can lock, agents climb and vault, and the preset brains sense the nearest ramp, so the engine moved to `HIDESEEK_ENGINE_VERSION` 2. Champions trained before never met a ramp and lack the ramp inputs the presets now have, so they no longer stand for the presets. The reference file must be regenerated with `npm run refs -- --env hideseek`, and until it is, the tests that read it fail on purpose. The lock number in a result counts only the model hider's locks, as it did before seekers could lock.
+Version 4 came with ramps. Every exam room gained a ramp, both teams can lock, agents climb and vault, and the preset brains sense the nearest ramp, so the engine moved to `HIDESEEK_ENGINE_VERSION` 2. Champions trained before never met a ramp and lack the ramp inputs the presets now have, so they no longer stand for the presets. The reference file was regenerated for it. The lock number in a result counts only the model hider's locks, as it did before seekers could lock.
 
 ## Reference results
 
 `public/references/hideseek.json` holds a curve and a champion pair for each of the three Hide and Seek script presets. For each preset, `scripts/references/hideseek/generate.ts` trains several seeds with 50 per team, exactly as the lab would with that preset. Each tier's reference champion is the final pair of its middle seed, ranked by hidden plus seen share against the hand-written agents, so it is typical of the preset rather than its luckiest run. The three pairs are rated against each other, then every pair kept every 10 generations of every run plays the exam against them, and the median and the 25% to 75% band of those scores make the curves.
 
-The shipped file uses the generator's defaults, the same numbers the nightly workflow runs: 5 seeds of 60 generations per preset. It took 53 minutes on four worker threads. The table below is from the file made for version 3, before rooms had ramps, and regenerating for version 4 replaces it:
+The shipped file uses the generator's defaults, the same numbers the nightly workflow runs: 5 seeds of 60 generations per preset. It takes about 110 minutes on four worker threads:
 
     npm run refs -- --env hideseek --workers 4
 
-| Preset | Final median score | Rating | Reference champion |
+| Preset | Final score | Rating | Reference champion |
 | --- | --- | --- | --- |
-| Beginner | 47.0 | 1427 | seed 1, generation 60 |
-| Intermediate | 50.7 | 1523 | seed 1, generation 60 |
-| Advanced | 55.7 | 1550 | seed 1, generation 60 |
+| Beginner | 45.8 | 1550 | seed 2, generation 60 |
+| Intermediate | 47.0 | 1496 | seed 2, generation 60 |
+| Advanced | 45.8 | 1454 | seed 1, generation 60 |
 
 Median score at each checkpoint:
 
 | Generation | 0 | 10 | 20 | 30 | 40 | 50 | 60 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Beginner | 42.1 | 59.6 | 56.8 | 60.5 | 50.0 | 57.9 | 47.0 |
-| Intermediate | 39.5 | 55.1 | 57.6 | 58.6 | 58.0 | 60.0 | 50.7 |
-| Advanced | 36.4 | 44.4 | 55.2 | 44.8 | 59.6 | 52.3 | 55.7 |
+| Beginner | 35.3 | 44.5 | 50.6 | 49.6 | 38.8 | 43.6 | 52.0 |
+| Intermediate | 32.8 | 45.8 | 48.9 | 53.7 | 46.3 | 49.9 | 47.0 |
+| Advanced | 34.6 | 44.5 | 43.2 | 43.2 | 52.1 | 45.7 | 44.9 |
 
-Single champions are noisy. A generation's champion pair is the one with the best co-evolved fitness, which depends on who it happened to meet, so a tier's median can swing ten points between checkpoints. The bands are there to show that spread, and a user's score is read against them at the same generation.
+Single champions are noisy. A generation's champion pair is the one with the best co-evolved fitness, which depends on who it happened to meet, so one run can swing 10 to 25 points between checkpoints. The bands are there to show that spread, and a user's score is read against them at the same generation. For the same reason a preset's final score is the median of every seed's scores at the last three checkpoints (generations 40, 50 and 60), so 15 scores instead of 5. Racing keeps the last checkpoint alone.
 
 ## What the references show
 
-The small Beginner brain learns fast and peaks early, then drifts as the two teams chase each other's latest tricks. Intermediate and Advanced start slower, because evolution needs longer to find the few inputs that matter among 55 or 63, and Advanced only catches up after generation 30. The tiers end in order, but only just, and only at the nightly budget: at 40 generations Intermediate was still ahead of Advanced (57.5 against 54.7).
+With ramps in every room, the three presets end within about a point of each other: Beginner 45.8, Intermediate 47.0 and Advanced 45.8. All three learn, from about 34 at generation 0 to about 46 by the end. What they no longer show is that the bigger presets' extra rewards and inputs buy a stronger pair in 60 generations. The small Beginner brain learns fastest, and its champion pair is the strongest of the three (it scores 56.0 against all of them).
 
-Getting there took one change to the Advanced preset. It used to mirror the hiders' cover rewards for seekers, which stopped penalizing a seeker as soon as it had a line of sight to the hider. That made actually turning to see the hider worth half as much, and the first references ranked Advanced last, below Beginner. Single seed experiments against those references, at generation 40:
+Before ramps the tiers did end in order, only just: Beginner 47.0, Intermediate 50.7 and Advanced 55.7. Getting there took one change to the Advanced preset. It used to mirror the hiders' cover rewards for seekers, which stopped penalizing a seeker as soon as it had a line of sight to the hider. That made actually turning to see the hider worth half as much, and the first references ranked Advanced last, below Beginner. Single seed experiments against those references, at generation 40:
 
 | Run | Win rate | Seen share |
 | --- | --- | --- |
@@ -154,4 +154,16 @@ Getting there took one change to the Advanced preset. It used to mirror the hide
 
 Advanced seekers now keep the v1 rewards (plus one per second in sight, minus one per second out of sight after prep), and hiders keep the cover rewards. Starting the bigger brains with sparse wiring was tried too and made no clear difference.
 
-A test checks that Beginner ranks below Intermediate below Advanced. If a regenerated file breaks the order, look at the curves before changing the exam: the order depends on the presets and on the budget, not on the scoring.
+Ramps took a second change. The Advanced preset used to spar with the scripted agents for its first 30 generations. Against the first version 4 references, its seekers found the reference hiders about half as often as Beginner's (seen share 0.21 against 0.43). Experiments against those references, pooling the scores of generations 40 to 60:
+
+| Advanced variant | Seeds | Pooled score |
+| --- | --- | --- |
+| Sparring for 30 generations, plus a reward for each vault | 2 | 43.3 |
+| Sparring for the first 10 generations only | 3 | 41.9 |
+| Beginner style seeker rewards | 1 | 45.4 |
+| The Standard brain | 1 | 45.4 |
+| Hall of fame opponents from the start | 2 | 51.0 |
+
+Advanced now plays the hall of fame from the start. That lifted it against the old champions, but once its own new champion joined the opponents the three presets came out level again.
+
+A test checks that every preset learns: each ends at least 8 points above where its runs started. It used to check that the tiers rank in order. If a later change makes them rank cleanly again, bring that check back.
