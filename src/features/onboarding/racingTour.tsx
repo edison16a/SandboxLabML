@@ -167,7 +167,7 @@ export const RACING_TOUR: Tour = {
       target: '[data-tour="nav-studio"]',
       prefer: ['bottom'],
       title: 'Write the rules yourself',
-      body: 'In the Studio you write the training script: what earns fitness and when a run ends. The lessons take you through it one step at a time. To see this tour again, use the ? button in the toolbar.',
+      body: 'In the Studio you write the training script: what earns fitness and when a run ends. The lessons take you through it. To see this tour again, use the ? button in the toolbar.',
       links: [{ label: 'Start the first lesson', href: '/studio?lesson=racing-01-drive-straight' }],
     },
   ],
