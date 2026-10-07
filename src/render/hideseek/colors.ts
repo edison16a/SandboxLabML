@@ -18,9 +18,13 @@ export const HS_COLORS = {
   /** The walls, a touch greyer than the tiles so their faces read against the floor. */
   wall: '#d2d5db',
   gridWall: '#d2d5db',
-  /** The city blocks round the arenas, from the lightest to the darkest. */
-  blockLight: '#e1e4e8',
-  blockDark: '#b0b5bd',
+  /**
+   * The city blocks round the arenas, from the lightest to the darkest.
+   * Even the lightest sits a little under the floor tiles, so the rooms
+   * read first, as in the classic footage.
+   */
+  blockLight: '#bcc1c8',
+  blockDark: '#858b95',
   hider: '#4c9aff',
   seeker: '#ff5f6d',
   /** The characters' bodies: the team colors deepened and saturated, since lit glossy color washes out on the bright floor. */

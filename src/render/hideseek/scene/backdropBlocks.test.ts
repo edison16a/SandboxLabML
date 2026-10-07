@@ -43,6 +43,14 @@ describe('the block city', () => {
     }
   });
 
+  it('shades a block sunk among taller ones darker, and keeps the rest close in tone', () => {
+    const blocks = cityBlocks(HALF, HALF, 2);
+    const tones = blocks.map((b) => b.tone).sort((a, b) => a - b);
+    // Most blocks share nearly one tone; only the sunk ones darken.
+    expect(tones[Math.floor(tones.length * 0.5)]).toBeLessThan(0.3);
+    expect(tones[tones.length - 1]).toBeGreaterThan(0.35);
+  });
+
   it('measures distance from the clear area and rises with it', () => {
     expect(distanceToClear(3, -4, 10, 10)).toBe(0);
     expect(distanceToClear(13, 0, 10, 10)).toBeCloseTo(3);

@@ -1,3 +1,5 @@
+import { bakeOcclusion } from './cityShade';
+
 /** One block of the city: a footprint on the ground, a height and a tone from 0 (lightest) to 1. */
 export interface BackdropBlock {
   x: number;
@@ -112,6 +114,7 @@ export function cityBlocks(hx: number, hz: number, base: number, limit = 8000): 
   };
   const n = Math.ceil(reach / top);
   for (let j = -n; j < n; j++) for (let i = -n; i < n; i++) visit(i * top, j * top, top, LEVELS);
+  bakeOcclusion(out, base);
   return out;
 }
 
