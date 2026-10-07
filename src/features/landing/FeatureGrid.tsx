@@ -1,45 +1,45 @@
-import { BookOpen, Boxes, Car, Code2, Gauge, ShieldCheck, Users, Waypoints } from 'lucide-react';
+import { BookOpen, Boxes, Car, Code2, FlaskConical, Gauge, Users, Waypoints } from 'lucide-react';
 
 const FEATURES = [
   {
     icon: Car,
     title: 'Racing with real grip',
-    body: 'A bicycle car model with a friction circle. Braking and turning share the tires, so cars have to learn braking points before every corner.',
+    body: 'Braking and turning share the same tire grip, so cars must learn to brake before corners.',
   },
   {
     icon: Waypoints,
     title: 'Overlay generations',
-    body: 'Past champions drive as ghosts beside the live population, with a speed trace that shows braking points moving later as they learn.',
+    body: 'Past champions drive as ghosts beside the live cars, so you see the laps get faster.',
   },
   {
     icon: Users,
     title: 'Hide and Seek in 3D',
-    body: 'Hiders lock boxes into forts, seekers push ramps to jump the walls. Watch all 50 matches of a round at once, then click one to see it up close.',
+    body: 'Hiders lock boxes into forts. Seekers push ramps to jump the walls.',
   },
   {
     icon: Code2,
     title: 'Script Studio',
-    body: 'Write the training loop as blocks or code. Both views edit one script, with docs, autocorrect and a test run built in.',
+    body: 'Write the training rules as blocks or code. Both views edit the same script.',
   },
   {
     icon: Boxes,
     title: 'Brains you can read',
-    body: 'Pick a blueprint, add sensors, and see every neuron fire live. The model card tracks parameters and size as the brain grows.',
+    body: 'Pick what the agents sense and watch every neuron fire live.',
   },
   {
     icon: BookOpen,
     title: 'Guided courses',
-    body: 'Short lessons that build a training script step by step, each one checked by running it.',
+    body: 'Short lessons that build a training script step by step.',
   },
   {
     icon: Gauge,
     title: 'A fair benchmark',
-    body: 'Score any model on held-out tracks and compare it with reference runs, whatever reward or sensors it was trained with.',
+    body: 'Scores a champion on tracks it never trained on, so runs compare fairly.',
   },
   {
-    icon: ShieldCheck,
-    title: 'Private and local',
-    body: 'Training runs in Web Workers and runs are saved in your browser. Export a run as a file whenever you want to share it.',
+    icon: FlaskConical,
+    title: 'Sandboxes',
+    body: 'Race your champions on a track you draw, or drop them in a room you build.',
   },
 ];
 
