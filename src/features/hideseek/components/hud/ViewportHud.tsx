@@ -33,13 +33,13 @@ export function ViewportHud({ viewport }: { viewport: React.RefObject<HTMLDivEle
         {replay && (
           <span className="flex items-center gap-1.5 rounded-md border border-white/10 bg-black/50 px-2 py-1 text-[11px] text-white/75 backdrop-blur-sm">
             <Repeat className="size-3" />
-            Turbo trains headless. This is a replay of generation {replay.generation + 1}, round {replay.round + 1}.
+            Replay of generation {replay.generation + 1}, round {replay.round + 1}
           </span>
         )}
         {held && (
           <span className="flex items-center gap-1.5 rounded-md border border-white/10 bg-black/50 px-2 py-1 text-[11px] text-white/75 backdrop-blur-sm">
             <Gauge className="size-3" />
-            Max gives every core to training, so the arenas hold still. Pick Turbo to watch replays.
+            Paused while Max trains. Pick Turbo to watch.
           </span>
         )}
       </div>
@@ -61,7 +61,7 @@ export function ViewportHud({ viewport }: { viewport: React.RefObject<HTMLDivEle
         {mode === 'sandbox' && (
           <div className="@max-[50rem]:hidden">
             <Hint>
-              <MousePointerClick className="size-3" /> Drag a box or ramp to move it. Double click it to lock it for the hiders or free it.
+              <MousePointerClick className="size-3" /> Drag a box to move it. Double click to lock or free it.
             </Hint>
           </div>
         )}

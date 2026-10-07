@@ -34,7 +34,7 @@ export function PhotoBar({ viewport }: { viewport: React.RefObject<HTMLDivElemen
   const dof = effects && (tier === 'high' || tier === 'ultra');
   return (
     <div className="absolute top-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-lg border border-white/10 bg-black/55 p-1.5 pl-3 text-white backdrop-blur-md">
-      <span className="text-[12px] text-white/80">{dof ? 'Photo mode, depth of field on' : 'Photo mode. Depth of field needs High quality and effects on.'}</span>
+      <span className="text-[12px] text-white/80">{dof ? 'Photo mode' : 'Photo mode. Depth of field needs High quality and effects on.'}</span>
       <Button size="sm" variant="primary" onClick={() => savePng(viewport.current)}>
         <Download />
         Save PNG
