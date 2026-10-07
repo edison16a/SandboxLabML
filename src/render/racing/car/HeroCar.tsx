@@ -1,9 +1,9 @@
 'use client';
 
-import type * as THREE from 'three';
+import * as THREE from 'three';
 import type { QualityTier } from '@/features/racing/state/labStore';
 import { useDisposable } from '@/render/shared/useDisposable';
-import { CAR, WHEEL_SPOTS } from './dimensions';
+import { CAR, WHEEL, WHEEL_SPOTS } from './dimensions';
 import { buildBody } from './geometry/assemble';
 import { DETAIL, type Slot } from './geometry/parts';
 import { buildWheel, caliper } from './geometry/wheels';
@@ -29,7 +29,12 @@ interface HeroGeometry {
   body: Array<[Slot, THREE.BufferGeometry]>;
   wheel: Array<[Slot, THREE.BufferGeometry]>;
   caliper: THREE.BufferGeometry;
+  /** The disc of smeared spokes laid over each wheel's face at speed. */
+  blur: THREE.BufferGeometry;
 }
+
+/** Where the blur disc sits: just proud of the spoke faces, inside the rim's lip. */
+const BLUR_Z = WHEEL.width / 2 - 0.004;
 
 /**
  * Built geometry by tier. The design never changes, so a quality step back
@@ -41,7 +46,7 @@ const built = new Map<QualityTier, HeroGeometry>();
 function heroGeometry(tier: QualityTier): HeroGeometry {
   let geo = built.get(tier);
   if (!geo) {
-    geo = { body: [...buildBody(DETAIL[tier])], wheel: [...buildWheel(DETAIL[tier])], caliper: caliper(DETAIL[tier]) };
+    geo = { body: [...buildBody(DETAIL[tier])], wheel: [...buildWheel(DETAIL[tier])], caliper: caliper(DETAIL[tier]), blur: new THREE.CircleGeometry(WHEEL.rim - 0.004, 40) };
     built.set(tier, geo);
   }
   return geo;
@@ -55,7 +60,7 @@ function heroGeometry(tier: QualityTier): HeroGeometry {
 export function HeroCar({ tier, materials, rig }: Props) {
   const geo = useDisposable(() => {
     const g = heroGeometry(tier);
-    const all = [...g.body, ...g.wheel].map(([, part]) => part).concat(g.caliper);
+    const all = [...g.body, ...g.wheel].map(([, part]) => part).concat(g.caliper, g.blur);
     return { ...g, dispose: () => all.forEach((part) => part.dispose()) };
   }, [tier]);
 
@@ -75,6 +80,7 @@ export function HeroCar({ tier, materials, rig }: Props) {
               ))}
             </group>
             <mesh geometry={geo.caliper} material={materials.slots.caliper} />
+            <mesh geometry={geo.blur} material={materials.blur} position-z={BLUR_Z} renderOrder={2} />
           </group>
         </group>
       ))}

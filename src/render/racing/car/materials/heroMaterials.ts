@@ -5,6 +5,7 @@ import { carbonColor, carbonFibers, carbonNormal } from '../textures/carbon';
 import { discMap, DISC_REPEAT } from '../textures/disc';
 import { flakeNormalMap } from '../textures/flakes';
 import { HONEYCOMB_ASPECT, honeycombColor, honeycombNormal } from '../textures/grille';
+import { wheelBlurMap } from '../textures/wheelBlur';
 
 export interface HeroMaterials {
   slots: Record<Slot, THREE.Material>;
@@ -12,6 +13,8 @@ export interface HeroMaterials {
   paint: THREE.MeshPhysicalMaterial;
   /** Tail lamps, which flare when the car brakes. */
   tail: THREE.MeshStandardMaterial;
+  /** The smeared spokes drawn over each wheel at speed; the driver sets its opacity. */
+  blur: THREE.MeshStandardMaterial;
   dispose(): void;
 }
 
@@ -73,6 +76,7 @@ export function createHeroMaterials(tier: QualityTier): HeroMaterials {
 
   const disc = new THREE.MeshStandardMaterial({ map: keep(repeat(discMap(128), DISC_REPEAT, 1)), roughness: 0.55, metalness: 0.3 });
   const tail = new THREE.MeshStandardMaterial({ color: '#2a0303', emissive: '#ff1a10', emissiveIntensity: TAIL_GLOW.idle, roughness: 0.3, toneMapped: false });
+  const blur = new THREE.MeshStandardMaterial({ map: keep(wheelBlurMap(high ? 256 : 128)), transparent: true, opacity: 0, depthWrite: false, metalness: 0.55, roughness: 0.4, envMapIntensity: 0.7, side: THREE.DoubleSide });
 
   const slots: Record<Slot, THREE.Material> = {
     paint,
@@ -95,8 +99,10 @@ export function createHeroMaterials(tier: QualityTier): HeroMaterials {
     slots,
     paint,
     tail,
+    blur,
     dispose: () => {
       Object.values(slots).forEach((m) => m.dispose());
+      blur.dispose();
       textures.forEach((t) => t.dispose());
     },
   };

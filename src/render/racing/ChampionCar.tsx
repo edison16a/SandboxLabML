@@ -15,10 +15,13 @@ import { useCarReflections } from './car/materials/useCarReflections';
 import { bodyMotion, FLAT_ROAD, stepBody } from './motion/bodyModel';
 import { ghostColor, speciesColor } from './palette';
 import { useRacingScene } from './sceneContext';
+import { smoothstep as smooth } from './world/noise';
 
 const STRIDE = RACING_SNAPSHOT.stride;
 /** Height the body pitches and rolls about, m: roughly the car's center of mass. */
 const PIVOT = 0.45;
+/** Largest wheel turn drawn per frame, rad: under half the 72 degrees between the five spokes. */
+const MAX_TURN = ((Math.PI * 2) / 5) * 0.45;
 
 /** Options for drawing the car outside the Racing lab, such as the landing hero. The lab passes none. */
 interface ChampionCarProps {
@@ -49,7 +52,7 @@ export function ChampionCar({ tier: pinnedTier, ring = true }: ChampionCarProps)
     m.paint.color.copy(state.color);
     return m;
   }, [tier]);
-  useCarReflections(Object.values(materials.slots));
+  useCarReflections([...Object.values(materials.slots), materials.blur]);
 
   useFrame((_, dt) => {
     const g = root.current;
@@ -95,11 +98,17 @@ export function ChampionCar({ tier: pinnedTier, ring = true }: ChampionCarProps)
         pivot.position.y = CAR.wheelRadius + contact.lift[i];
       }
       // Each wheel rolls at its own ground speed: in a left turn the right side (positive z) covers more road.
-      state.spin[i] -= ((speed + yawRate * z) * step) / CAR.wheelRadius;
+      // A camera samples the spokes once a frame, so beyond half a spoke's turn per frame they would appear to
+      // stand still or run backward; the drawn turn is capped there and the blur disc takes over.
+      const turn = ((speed + yawRate * z) * step) / CAR.wheelRadius;
+      state.spin[i] -= Math.sign(turn) * Math.min(Math.abs(turn), MAX_TURN);
       const spinner = rig.spin.current[i];
       // A spin about the axle reads the same through the left wheels' mirror, so all four use the same sign.
       if (spinner) spinner.rotation.z = state.spin[i];
     }
+    // Spokes smear from about 35 km/h and are a full blur by 60, as they would be to the eye.
+    const revs = Math.abs(speed) / (Math.PI * 2 * CAR.wheelRadius);
+    materials.blur.opacity = 0.92 * smooth(4.5, 8, revs);
     materials.tail.emissiveIntensity = buf[o + 5] < -0.1 ? TAIL_GLOW.brake : TAIL_GLOW.idle;
     if (stream === ghosts) ghostColor(1, state.color);
     else speciesColor(stream.tags[frame.focusIndex] ?? 0, state.color);
