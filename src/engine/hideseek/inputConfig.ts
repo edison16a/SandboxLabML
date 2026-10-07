@@ -24,8 +24,15 @@ export interface HideSeekInputConfig {
   opponentVisible: boolean;
   /** Bearing to where the opponent was last seen (1 value). */
   opponentLastSeen: boolean;
-  /** Relative x, z, distance and locked flag of the nearest boxes (4 values each). */
+  /** Relative x, z, distance and locked flag of the nearest cubes and planks (4 values each). */
   nearestBoxes: number;
+  /**
+   * The nearest ramp: ahead and to the right in the agent frame and its
+   * distance, how squarely the agent faces uphill on it, its lock seen
+   * from this agent (own team +1, other team -1, free 0), and the agent's
+   * own elevation as a share of the ramp height (6 values).
+   */
+  ramp: boolean;
   /** Gaussian sensor noise as a fraction of each input's range, 0 to 0.1. */
   noise: number;
 }
@@ -40,8 +47,18 @@ export const STANDARD_HIDESEEK_INPUTS: HideSeekInputConfig = {
   opponentVisible: true,
   opponentLastSeen: true,
   nearestBoxes: 0,
+  ramp: true,
   noise: 0,
 };
+
+/**
+ * An input config read back from storage, made whole. Blueprints, runs
+ * and checkpoints saved before ramps have no `ramp` field, and their
+ * brains were shaped without those inputs, so a missing field means off.
+ */
+export function normalizeHideSeekInputs(c: HideSeekInputConfig): HideSeekInputConfig {
+  return c.ramp === undefined ? { ...c, ramp: false } : c;
+}
 
 /** Outputs: move forward or back, turn, grab (when > 0), lock (when > 0). */
 export const HIDESEEK_OUTPUT_COUNT = 4;
@@ -55,6 +72,7 @@ export function hideSeekInputCount(c: HideSeekInputConfig): number {
     (c.time ? 1 : 0) +
     (c.opponentVisible ? 1 : 0) +
     (c.opponentLastSeen ? 1 : 0) +
-    c.nearestBoxes * 4
+    c.nearestBoxes * 4 +
+    (c.ramp ? 6 : 0)
   );
 }

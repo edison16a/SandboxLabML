@@ -1,5 +1,6 @@
 import { HIDESEEK_LAYOUT_IDS } from '../layouts/presets';
-import { DEFAULT_HIDESEEK_PHYSICS } from '../physics';
+import { normalizeHideSeekInputs } from '../inputConfig';
+import { DEFAULT_HIDESEEK_PHYSICS, normalizeHideSeekPhysics } from '../physics';
 import type { HideSeekRewardId } from '../rewards';
 import type { HideSeekOpponents, HideSeekSetupId, HideSeekTrainerOptions, ResolvedTrainerOptions } from './types';
 
@@ -98,12 +99,22 @@ export function resolveTrainerOptions(o: HideSeekTrainerOptions): ResolvedTraine
  */
 export function upgradeStoredOptions(stored: ResolvedTrainerOptions): ResolvedTrainerOptions {
   const o = stored as Partial<ResolvedTrainerOptions> & ResolvedTrainerOptions;
-  if (o.setup && o.opponents && o.mixLayouts !== undefined && o.sharedSeeds !== undefined) return stored;
+  const rules = withRampFields(stored);
+  if (o.setup && o.opponents && o.mixLayouts !== undefined && o.sharedSeeds !== undefined) return rules;
   return {
-    ...stored,
+    ...rules,
     setup: o.setup ?? 'v1',
     opponents: o.opponents ?? fromRounds(o.rounds, HIDESEEK_SETUPS.v1),
     mixLayouts: o.mixLayouts ?? false,
     sharedSeeds: o.sharedSeeds ?? false,
   };
+}
+
+/** Checkpoints written before ramps lack the ramp inputs flag and the climbing rules. Unchanged options come back as they are. */
+function withRampFields(o: ResolvedTrainerOptions): ResolvedTrainerOptions {
+  const hiderInputs = normalizeHideSeekInputs(o.hiderInputs);
+  const seekerInputs = normalizeHideSeekInputs(o.seekerInputs);
+  const physics = normalizeHideSeekPhysics(o.physics);
+  if (hiderInputs === o.hiderInputs && seekerInputs === o.seekerInputs && physics === o.physics) return o;
+  return { ...o, hiderInputs, seekerInputs, physics };
 }

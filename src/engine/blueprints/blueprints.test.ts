@@ -6,9 +6,9 @@ const expected: Record<string, number> = {
   'racing-starter': 4,
   'racing-standard': 11,
   'racing-advanced': 15,
-  'hideseek-starter': 11,
-  'hideseek-standard': 55,
-  'hideseek-advanced': 63,
+  'hideseek-starter': 17,
+  'hideseek-standard': 61,
+  'hideseek-advanced': 69,
 };
 
 describe('preset blueprints', () => {

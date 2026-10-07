@@ -1,4 +1,4 @@
-import type { HideSeekInputConfig } from '../../hideseek/inputConfig';
+import { normalizeHideSeekInputs, type HideSeekInputConfig } from '../../hideseek/inputConfig';
 import { base64ToBytes, bytesToBase64, decodeGenome, encodeGenome } from '../../neat/serialize';
 import type { Genome } from '../../neat/types';
 import { REFERENCE_TIERS } from '../references';
@@ -9,8 +9,10 @@ import type { ExamOpponent, ExamTeam } from './types';
 /** A shipped brain as an exam team. Reference presets add no script sensors. */
 function teamOf(role: 'hider' | 'seeker', brain: ReferenceBrain): ExamTeam {
   const genome = decodeGenome(base64ToBytes(brain.genome));
-  checkTeam(role, genome, brain.inputs, 0);
-  return { genome, inputs: brain.inputs, sensors: null };
+  // Reference files written before ramps have no ramp flag; their brains never had those inputs.
+  const inputs = normalizeHideSeekInputs(brain.inputs);
+  checkTeam(role, genome, inputs, 0);
+  return { genome, inputs, sensors: null };
 }
 
 /** One shipped champion pair as an opponent. */

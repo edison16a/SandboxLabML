@@ -174,6 +174,15 @@ export function hideSeekPhysics(overrides: HideSeekPhysicsOverrides = {}): HideS
   };
 }
 
+/**
+ * Rules read back from storage, made whole: physics saved before ramps has
+ * no ramp size and no climb group, so those take the defaults. Complete
+ * rules come back as the same object.
+ */
+export function normalizeHideSeekPhysics(p: HideSeekPhysics): HideSeekPhysics {
+  return p.climb && p.box.ramp ? p : hideSeekPhysics(p);
+}
+
 /** Stable fingerprint of the rules. Stored genomes carry it so replays can refuse a mismatch. */
 export function hideSeekPhysicsHash(p: HideSeekPhysics = DEFAULT_HIDESEEK_PHYSICS): string {
   return hashObject({ env: 'hideseek', ...p });

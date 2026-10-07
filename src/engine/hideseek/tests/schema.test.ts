@@ -43,6 +43,7 @@ function randomConfig(rng: Rng): HideSeekInputConfig {
     opponentVisible: rng.chance(0.5),
     opponentLastSeen: rng.chance(0.5),
     nearestBoxes: rng.int(6),
+    ramp: rng.chance(0.5),
     noise: rng.chance(0.5) ? 0.05 : 0,
   };
 }
@@ -65,8 +66,9 @@ describe('input schema', () => {
     });
   }
 
-  it('matches the preset sizes: starter 11, standard 55, advanced 63', () => {
-    expect(HIDESEEK_BLUEPRINTS.map((b) => hideSeekInputSchema(b.inputs).length)).toEqual([11, 55, 63]);
+  it('matches the preset sizes: starter 17, standard 61, advanced 69', () => {
+    expect(HIDESEEK_BLUEPRINTS.map((b) => hideSeekInputSchema(b.inputs).length)).toEqual([17, 61, 69]);
+    expect(HIDESEEK_BLUEPRINTS.every((b) => b.inputs.ramp)).toBe(true);
     expect(HIDESEEK_OUTPUTS.map((o) => o.key)).toEqual(['move', 'turn', 'grab', 'lock']);
   });
 
@@ -93,6 +95,7 @@ describe('input schema', () => {
       [{ opponentVisible: false }, 1, /^opponentVisible$/],
       [{ opponentLastSeen: false }, 1, /^opponentLastSeen$/],
       [{ nearestBoxes: 0 }, 8, /^box:/],
+      [{ ramp: false }, 6, /^ramp:/],
     ];
     for (const [change, removed, keys] of cases) {
       const smaller = hideSeekInputSchema({ ...base, ...change });

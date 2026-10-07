@@ -33,7 +33,7 @@ describe('Hide and Seek test matches', () => {
   it('measure the same numbers every time', async () => {
     const a = await playTestMatch(prepared(PLAYING));
     expect(await playTestMatch(prepared(PLAYING))).toEqual(a);
-    expect(a?.inputs).toBe(55);
+    expect(a?.inputs).toBe(61);
     expect(a?.hiderDistance).toBeGreaterThan(5);
     expect(a?.seekerDistance).toBeGreaterThan(5);
     expect(a?.grabs).toBeGreaterThan(0);

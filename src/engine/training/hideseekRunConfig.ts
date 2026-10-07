@@ -5,7 +5,8 @@ import { hashObject } from '../core/hash';
 import { HIDESEEK_ENGINE_VERSION } from '../core/version';
 import { HIDESEEK_LAYOUT_IDS } from '../hideseek/layouts/presets';
 import type { HideSeekLayoutId } from '../hideseek/layouts/types';
-import { DEFAULT_HIDESEEK_PHYSICS, hideSeekPhysicsHash, type HideSeekPhysics } from '../hideseek/physics';
+import { DEFAULT_HIDESEEK_PHYSICS, hideSeekPhysicsHash, normalizeHideSeekPhysics, type HideSeekPhysics } from '../hideseek/physics';
+import { normalizeHideSeekBlueprint } from '../blueprints/normalize';
 import type { HideSeekRewardId } from '../hideseek/rewards';
 import { neatConfig } from '../neat/config';
 import { newRunId, type RunConfig } from './runConfig';
@@ -108,15 +109,15 @@ export function hideSeekSettingsOf(config: RunConfig): HideSeekSettings {
     populationPerTeam: s.populationPerTeam ?? config.neat.populationSize,
     reward: s.reward ?? 'v1',
     setup: s.setup ?? 'v1',
-    physics: s.physics ?? DEFAULT_HIDESEEK_PHYSICS,
+    physics: s.physics ? normalizeHideSeekPhysics(s.physics) : DEFAULT_HIDESEEK_PHYSICS,
     hallOfFameSize: s.hallOfFameSize ?? 20,
-    ...(s.seekerBlueprint ? { seekerBlueprint: s.seekerBlueprint } : {}),
+    ...(s.seekerBlueprint ? { seekerBlueprint: normalizeHideSeekBlueprint(s.seekerBlueprint) } : {}),
   };
 }
 
 /** Blueprints of both teams. Seekers fall back to the run blueprint. */
 export function hideSeekBlueprints(config: RunConfig): { hider: HideSeekBlueprint; seeker: HideSeekBlueprint } {
   const settings = hideSeekSettingsOf(config);
-  const hider = config.blueprint as HideSeekBlueprint;
+  const hider = normalizeHideSeekBlueprint(config.blueprint as HideSeekBlueprint);
   return { hider, seeker: settings.seekerBlueprint ?? hider };
 }

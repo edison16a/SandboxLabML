@@ -1,3 +1,4 @@
+import { normalizeBlueprint } from '@/engine/blueprints/normalize';
 import type { Blueprint } from '@/engine/blueprints/types';
 import type { EnvId } from '@/engine/env/types';
 import { db } from './db';
@@ -5,7 +6,7 @@ import { db } from './db';
 /** The user's own blueprints. Presets live in code and are never stored. */
 export async function listBlueprints(env: EnvId): Promise<Blueprint[]> {
   const rows = await db().blueprints.where('env').equals(env).toArray();
-  return rows.sort((a, b) => b.updatedAt - a.updatedAt).map((r) => r.blueprint);
+  return rows.sort((a, b) => b.updatedAt - a.updatedAt).map((r) => normalizeBlueprint(r.blueprint));
 }
 
 export async function saveBlueprint(b: Blueprint): Promise<void> {

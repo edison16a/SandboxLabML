@@ -77,8 +77,8 @@ describe('scripts in the trainer', () => {
       `script "s" for hideseek v1\nsensor near "Opponent near" in 0 m .. 20 m = agent.opponentDistance\n\neach tick {\n  ${HIDESEEK_ACT}\n  reward +1 * dt when agent.isHider and agent.hidden\n}\n`,
     );
     const trainer = scriptedRun(host, 'hideseek-starter', { physics: hideSeekPhysics({ matchSeconds: 3 }) });
-    // Starter has 11 built-in inputs; the sensor adds one for each team.
-    expect([trainer.hiders.genomes[0].inputs.length, trainer.seekers.genomes[0].inputs.length]).toEqual([12, 12]);
+    // Starter has 17 built-in inputs; the sensor adds one for each team.
+    expect([trainer.hiders.genomes[0].inputs.length, trainer.seekers.genomes[0].inputs.length]).toEqual([18, 18]);
     expect(() => trainer.runGeneration(pool, (spec) => host.createHideSeekControllers(spec.seed), host)).not.toThrow();
   });
 });

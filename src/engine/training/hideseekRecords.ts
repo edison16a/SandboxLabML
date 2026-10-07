@@ -1,7 +1,7 @@
-import type { HideSeekInputConfig } from '../hideseek/inputConfig';
+import { normalizeHideSeekInputs, type HideSeekInputConfig } from '../hideseek/inputConfig';
 import type { HideSeekLayoutId } from '../hideseek/layouts/types';
 import type { MatchSpec } from '../hideseek/match/types';
-import { DEFAULT_HIDESEEK_PHYSICS, type HideSeekPhysics } from '../hideseek/physics';
+import { DEFAULT_HIDESEEK_PHYSICS, normalizeHideSeekPhysics, type HideSeekPhysics } from '../hideseek/physics';
 import type { HideSeekRewardId } from '../hideseek/rewards';
 import type { HideSeekGenerationStats } from '../hideseek/trainer/types';
 import type { Genome } from '../neat/types';
@@ -106,14 +106,18 @@ export function buildRoundReplay(round: MatchSpec[], info: ReplayInfo, limit = R
 
 /** Turns a stored replay back into match specs, in the order they were played. */
 export function replaySpecs(replay: RoundReplay): MatchSpec[] {
+  // Replays stored before ramps lack their fields; such runs are blocked from replaying, but the specs stay well formed.
+  const hiderInputs = normalizeHideSeekInputs(replay.hiderInputs);
+  const seekerInputs = normalizeHideSeekInputs(replay.seekerInputs);
+  const physics = normalizeHideSeekPhysics(replay.physics);
   return replay.matches.map((m, index) => ({
     layout: m.layout,
     seed: m.seed,
-    hider: { genome: replay.genomes[m.hider], inputs: replay.hiderInputs, slot: -1, ...(m.hiderScripted ? { scripted: true } : {}) },
-    seeker: { genome: replay.genomes[m.seeker], inputs: replay.seekerInputs, slot: -1, ...(m.seekerScripted ? { scripted: true } : {}) },
+    hider: { genome: replay.genomes[m.hider], inputs: hiderInputs, slot: -1, ...(m.hiderScripted ? { scripted: true } : {}) },
+    seeker: { genome: replay.genomes[m.seeker], inputs: seekerInputs, slot: -1, ...(m.seekerScripted ? { scripted: true } : {}) },
     ...(m.prepSeconds !== undefined ? { prepSeconds: m.prepSeconds } : {}),
     reward: replay.reward,
-    physics: replay.physics,
+    physics,
     round: replay.round,
     index,
   }));

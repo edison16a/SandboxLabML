@@ -4,6 +4,7 @@ import { bearing, localAhead, localLeft } from '../frame';
 import type { HideSeekInputConfig } from '../inputConfig';
 import type { PlayState } from '../match/state';
 import type { HideSeekPhysics } from '../physics';
+import { writeRamp } from './observeRamp';
 
 /**
  * Writes one agent's built-in inputs, normalized, in the exact order of
@@ -56,14 +57,16 @@ export class HideSeekObserver {
       out[n++] = seenOnce ? bearing(a.lastSeenX - a.x, a.lastSeenZ - a.z, a.yaw) / Math.PI : 0;
     }
     if (cfg.nearestBoxes > 0) n = this.writeBoxes(s, i, out, n);
+    if (cfg.ramp) n = writeRamp(s, i, out, n);
     if (noise && cfg.noise > 0) for (let k = 0; k < n; k++) out[k] += noise.gaussian() * cfg.noise;
     return n;
   }
 
   /**
-   * Nearest boxes first, ties by index. Each gives x ahead and z to the
-   * right in the agent frame, the distance, all over the room size, and a
-   * locked flag. Slots past the number of boxes read as far away.
+   * Nearest cubes and planks first, ties by index. Each gives x ahead and
+   * z to the right in the agent frame, the distance, all over the room
+   * size, and a locked flag. Slots past the number of boxes read as far
+   * away. Ramps have their own group.
    */
   private writeBoxes(s: PlayState, i: number, out: Float64Array, n: number): number {
     const a = s.agents[i];
@@ -75,8 +78,11 @@ export class HideSeekObserver {
     }
     const d = this.distances;
     const order = this.order;
+    let crates = 0;
     for (let b = 0; b < count; b++) {
-      d[b] = Math.hypot(s.boxes[b].x - a.x, s.boxes[b].z - a.z);
+      // Ramps sort after every crate, so they never take a box slot from one.
+      d[b] = s.boxes[b].kind === 'ramp' ? Infinity : Math.hypot(s.boxes[b].x - a.x, s.boxes[b].z - a.z);
+      if (d[b] !== Infinity) crates++;
       // Insertion sort: stable and allocation free, and the lists are short.
       let j = b;
       while (j > 0 && d[order[j - 1]] > d[b]) {
@@ -86,7 +92,7 @@ export class HideSeekObserver {
       order[j] = b;
     }
     for (let k = 0; k < this.cfg.nearestBoxes; k++) {
-      if (k >= count) {
+      if (k >= crates) {
         out[n++] = 0;
         out[n++] = 0;
         out[n++] = 1;

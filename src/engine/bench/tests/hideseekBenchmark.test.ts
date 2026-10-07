@@ -107,7 +107,7 @@ describe('runBenchmark for Hide and Seek', () => {
     expect(seen[seen.length - 1]).toBe(1);
     const ctrl = new AbortController();
     expect(await runBenchmark(intermediate, model, { references, pool, signal: ctrl.signal, onProgress: () => ctrl.abort() })).toBeNull();
-    await expect(runBenchmark(intermediate, { hider: model.seeker, seeker: model.seeker }, { references, pool })).rejects.toThrow(/hider brain has 11 inputs/);
+    await expect(runBenchmark(intermediate, { hider: model.seeker, seeker: model.seeker }, { references, pool })).rejects.toThrow(/hider brain has 17 inputs/);
     expect(await runBenchmark(intermediate, model.hider, { references, pool })).toBeNull();
     await expect(runBenchmark(intermediate, model, { references: { ...references, champions: [] }, pool })).rejects.toThrow(/no Hide and Seek champions/);
   });
