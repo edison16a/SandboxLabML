@@ -10,6 +10,7 @@ import { broadleafGeometry, broadleafLodGeometry } from './broadleafGeometry';
 import { instanceSet } from './instances';
 import { LodTrees } from './LodTrees';
 import { PINE_HEIGHT, pineGeometry, pineLodGeometry } from './pineGeometry';
+import { detailNoise, releaseDetailNoise } from '../detailNoise';
 import { createWindMaterial } from './windMaterial';
 
 /** Full detail radius per tier, m. Low draws every tree as its simple silhouette. */
@@ -34,9 +35,10 @@ export function Forest({ flora, tier }: { flora: Flora; tier: QualityTier }) {
     return { ...g, dispose: () => Object.values(g).flat().forEach((x) => x.dispose()) };
   }, []);
   const mats = useDisposable(() => {
-    const pine = createWindMaterial(PINE_HEIGHT, 0.45);
-    const broad = createWindMaterial(8, 0.3);
-    return { pine, broad, dispose: () => (pine.material.dispose(), broad.material.dispose()) };
+    const grain = detailNoise();
+    const pine = createWindMaterial(PINE_HEIGHT, 0.45, grain);
+    const broad = createWindMaterial(8, 0.3, grain);
+    return { pine, broad, dispose: () => (pine.material.dispose(), broad.material.dispose(), releaseDetailNoise()) };
   }, []);
   const sets = useMemo(
     () => ({

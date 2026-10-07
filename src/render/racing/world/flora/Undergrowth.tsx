@@ -44,9 +44,10 @@ export function Undergrowth({ flora, tufts, tier }: { flora: Flora; tufts: Float
     return { shrub: g.slice(0, 2), rock: g.slice(2, 4), tuft: g[4], dispose: () => g.forEach((x) => x.dispose()) };
   }, []);
   const mats = useDisposable(() => {
-    const shrub = createWindMaterial(1.2, 0.05);
+    const noise = detailNoise();
+    const shrub = createWindMaterial(1.2, 0.05, noise);
     const grass = createWindMaterial(0.7, 0.07);
-    const rock = withHaze(createRockMaterial(detailNoise()));
+    const rock = withHaze(createRockMaterial(noise));
     return { shrub, grass, rock, dispose: () => (shrub.material.dispose(), grass.material.dispose(), rock.dispose(), releaseDetailNoise()) };
   }, []);
   const grass = useMemo(() => (tier === 'low' ? null : instanceSet(tufts, tier === 'high' ? -1 : 0, TUFT_LOOK)), [tufts, tier]);
@@ -65,7 +66,7 @@ export function Undergrowth({ flora, tufts, tier }: { flora: Flora; tufts: Float
   const shadow = tier === 'high';
   return (
     <group>
-      {/* Low keeps only the lighter of the two shrub shapes, half the shrubs at a third of the triangles. */}
+      {/* Low keeps only one of the two shrub shapes: half the shrubs. */}
       {(tier === 'low' ? [0] : [0, 1]).map((v) => (
         <Scatter key={`s${v}`} set={sets.shrub[v]} geometry={geo.shrub[v]} material={mats.shrub.material} castShadow={shadow} />
       ))}
