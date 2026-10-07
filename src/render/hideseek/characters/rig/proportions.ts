@@ -34,7 +34,7 @@ export const RIG = {
   forearmRadius: 0.038,
   handRadius: 0.058,
   /** Eyes: direction from the head's center (azimuth to each side, elevation up), eyeball radius and how deep it sits. */
-  eye: { azimuth: 0.36, elevation: 0.1, radius: 0.088, sink: 0.032 },
+  eye: { azimuth: 0.33, elevation: 0.1, radius: 0.09, sink: 0.046 },
 } as const;
 
 /** Full leg reach from hip to ankle, m, with a hair of bend kept so a knee never snaps straight. */
