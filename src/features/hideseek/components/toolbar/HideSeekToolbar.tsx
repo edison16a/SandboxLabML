@@ -6,6 +6,7 @@ import { Button } from '@/ui/primitives/Button';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import { hideSeekSession } from '../../session/HideSeekSession';
 import { useHideSeekLab } from '../../state/hideSeekStore';
+import { HsHelpMenu } from './HsHelpMenu';
 import { HsSpeedBar } from './HsSpeedBar';
 
 function formatDuration(seconds: number): string {
@@ -33,7 +34,7 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
     <div className="no-scrollbar @container flex h-14 shrink-0 items-center gap-3 overflow-x-auto border-t border-border bg-bg px-3 [&>*]:shrink-0">
       {/* In the Sandbox, Space runs the match instead, so the Train button shows no key there. */}
       <Tooltip content={running ? 'Pause training' : 'Start training'} shortcut={mode === 'sandbox' ? undefined : 'Space'}>
-        <Button variant="primary" size="lg" className="w-28 justify-center" onClick={() => void (running ? session.pause() : session.start())} disabled={!run} aria-label={running ? 'Pause' : 'Train'}>
+        <Button data-tour="train" variant="primary" size="lg" className="w-28 justify-center" onClick={() => void (running ? session.pause() : session.start())} disabled={!run} aria-label={running ? 'Pause' : 'Train'}>
           {running ? <Pause /> : <Play />}
           {running ? 'Pause' : 'Train'}
         </Button>
@@ -63,6 +64,7 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
         )}
         <Tooltip content={mode === 'sandbox' ? 'Back to training' : 'Play trained champions, as many as you like, in a preset room or one you build'}>
           <Button
+            data-tour="sandbox"
             variant={mode === 'sandbox' ? 'secondary' : 'outline'}
             onClick={() => void (mode === 'sandbox' ? session.exitSandbox() : session.enterSandbox())}
             disabled={!run || !records.length || !!blocked}
@@ -73,6 +75,7 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
             <span className="@max-[52rem]:hidden">Sandbox</span>
           </Button>
         </Tooltip>
+        <HsHelpMenu />
         <Tooltip content="Start a new run" shortcut="N">
           <Button variant="outline" onClick={onNewRun} aria-label="New run">
             <Plus />
