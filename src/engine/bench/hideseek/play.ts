@@ -47,7 +47,7 @@ export function playGame(pool: ArenaPool, start: ExamStart, model: ExamSide, opp
     seed: start.seed,
     hidden: hiding.hiddenShare,
     covered: 1 - (hiding.exposedShare ?? 0),
-    locks: hiding.locksPlaced,
+    locks: hiding.hiderLocks,
     seen: seeking.seenShare,
   };
 }

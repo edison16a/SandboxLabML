@@ -79,8 +79,11 @@ export interface MatchResult {
   exposedShare?: number;
   /** Seconds into the seek phase of the first sighting, or -1 if the hider was never seen. */
   firstSeenAt: number;
-  /** Locks the hider placed (each lock event, even if later unlocked). */
+  /** Locks placed by both teams (each lock event, even if later unlocked). */
   locksPlaced: number;
+  /** Locks each team placed. */
+  hiderLocks: number;
+  seekerLocks: number;
   unlocks: number;
   /** Boxes still locked at the end. */
   lockedAtEnd: number;

@@ -38,7 +38,7 @@ export const HIDESEEK_BOX_ENTRIES: RegistryEntry[] = [
       range: [0, BOX_COUNT],
       summary: 'How many boxes this agent\'s team has locked right now.',
       description:
-        'Only hiders can lock boxes, so seekers always read 0. A locked box cannot be pushed or carried by anyone, which makes it the way to build a shelter that stays built.',
+        'Both teams can lock boxes, ramps included. A locked box cannot be pushed or carried by anyone, and only the team that locked it can unlock it, which makes it the way to build a shelter that stays built.',
       example: 'reward +0.2 * dt * agent.boxesLocked when agent.isHider and agent.hidden',
       explain: 'the number of boxes locked by the team',
       label: 'boxes locked',
@@ -74,8 +74,8 @@ export const HIDESEEK_BOX_ENTRIES: RegistryEntry[] = [
     {
       name: 'agent.justLocked',
       unit: '',
-      summary: 'True on the tick a hider locks a box.',
-      description: 'True for exactly one tick each time the lock output switches on in front of a free box. Only hiders can lock, so it never fires for seekers.',
+      summary: 'True on the tick the agent locks a box.',
+      description: 'True for exactly one tick each time the lock output switches on in front of a free box. Both teams can lock, but not while carrying a box or climbing a ramp.',
       example: 'reward +0.2 when agent.justLocked and agent.prep',
       explain: 'the agent locks a box',
       label: 'just locked',
@@ -86,8 +86,8 @@ export const HIDESEEK_BOX_ENTRIES: RegistryEntry[] = [
     {
       name: 'agent.justUnlocked',
       unit: '',
-      summary: 'True on the tick a hider unlocks a box.',
-      description: 'Pressing lock again in front of a box the team locked frees it. A small penalty stops hiders from flicking locks on and off.',
+      summary: 'True on the tick the agent unlocks a box.',
+      description: 'Pressing lock again in front of a box the team locked frees it. A box the other team locked stays locked. A small penalty stops agents from flicking locks on and off.',
       example: 'reward -0.2 when agent.justUnlocked',
       explain: 'the agent unlocks a box',
       label: 'just unlocked',

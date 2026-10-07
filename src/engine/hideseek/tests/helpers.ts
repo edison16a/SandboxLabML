@@ -91,11 +91,28 @@ export function placedMatch(
   const m = scriptedMatch(pool, layout, idle(reward), idle(reward), physics);
   m.moveAgent('seeker', sx, sz, seekerYaw);
   m.moveAgent('hider', hx, hz, FACE_SOUTH);
-  m.moveBox(0, -8.5, 8.5);
-  m.moveBox(1, 8.5, 8.5);
-  m.moveBox(2, -7.5, -8.5);
-  m.moveBox(3, 7.5, -8.5);
+  parkBoxes(m);
   return m;
+}
+
+/** Spots along the outer walls where tests park the boxes they do not use, one per box index. */
+const PARKING: ReadonlyArray<readonly [number, number]> = [
+  [-8.5, 8.5],
+  [8.5, 8.5],
+  [-7.5, -8.5],
+  [7.5, -8.5],
+  [0, 8.5],
+];
+
+/** Parks every box but `keep` in its spot by the walls, out of the way. */
+export function parkBoxes(m: HideSeekMatch, keep = -1): void {
+  for (let b = 0; b < m.state.boxes.length; b++) if (b !== keep) m.moveBox(b, PARKING[b][0], PARKING[b][1]);
+}
+
+/** Moves box `index` to (x, z) and parks every other box. */
+export function stageBox(m: HideSeekMatch, index: number, x: number, z: number): void {
+  parkBoxes(m, index);
+  m.moveBox(index, x, z);
 }
 
 /** Plays a spec to the end, keeping every tick's snapshot. */

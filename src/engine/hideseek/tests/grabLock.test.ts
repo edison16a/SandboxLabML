@@ -3,7 +3,7 @@ import { HIDER } from '../agents/agent';
 import { distanceToBox } from '../layouts/geometry';
 import type { HideSeekMatch } from '../match/match';
 import { createArenaPool, type ArenaPool } from '../world/pool';
-import { idle, NO_PREP, scripted, scriptedMatch } from './helpers';
+import { idle, NO_PREP, scripted, scriptedMatch, stageBox } from './helpers';
 
 let pool: ArenaPool;
 beforeAll(async () => {
@@ -11,13 +11,8 @@ beforeAll(async () => {
 });
 afterAll(() => pool.dispose());
 
-/** Puts cube 0 at (x, z) and parks the other three boxes in corners, out of the way. */
-function stage(m: HideSeekMatch, x: number, z: number): void {
-  m.moveBox(0, x, z);
-  m.moveBox(1, -8, 8);
-  m.moveBox(2, 7, -8);
-  m.moveBox(3, 7, 8);
-}
+/** Puts cube 0 at (x, z) and parks the other boxes by the walls, out of the way. */
+const stage = (m: HideSeekMatch, x: number, z: number) => stageBox(m, 0, x, z);
 
 describe('grab', () => {
   it('an agent driven at a cube with grab on picks it up and carries it', () => {
@@ -129,16 +124,4 @@ describe('lock', () => {
     m.release();
   });
 
-  it('a seeker cannot lock', () => {
-    const m = scriptedMatch(pool, 'open', idle(), pulses, NO_PREP);
-    m.moveAgent('hider', 8, 0, 0);
-    m.moveAgent('seeker', -6, 0, 0);
-    stage(m, -4.6, 0);
-    for (let t = 0; t < 20; t++) {
-      m.step();
-      expect(m.state.boxes[0].lockedBy).toBe(-1);
-    }
-    expect(m.result().locksPlaced).toBe(0);
-    m.release();
-  });
 });

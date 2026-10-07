@@ -29,6 +29,8 @@ export function buildResult(s: MatchState, layout: HideSeekLayoutId, seed: numbe
     exposedShare: seek > 0 ? t.exposedTicks / seek : 0,
     firstSeenAt: t.firstSeenTick < 0 ? -1 : (t.firstSeenTick - s.prepTicks) * s.physics.dt,
     locksPlaced: t.locks,
+    hiderLocks: hider.locks,
+    seekerLocks: seeker.locks,
     unlocks: t.unlocks,
     lockedAtEnd: locked,
     hiderGrabs: hider.grabs,

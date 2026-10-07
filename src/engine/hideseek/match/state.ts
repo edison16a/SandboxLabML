@@ -30,7 +30,7 @@ export interface BoxState {
   z: number;
   yaw: number;
   readonly kind: BoxKind;
-  /** Team index (see HideSeekAgent.index) of the team that locked it, or -1. Only hiders lock, so it is HIDER or -1. */
+  /** Team index (see HideSeekAgent.index) of the team that locked it and owns the lock, or -1 while free. */
   lockedBy: number;
   /** Agent slot holding it, or -1. */
   heldBy: number;
@@ -49,6 +49,7 @@ export interface MatchTally {
   exposedTicks: number;
   /** Tick of the first sighting in the seek phase, or -1. */
   firstSeenTick: number;
+  /** Lock and unlock events of both teams. */
   locks: number;
   unlocks: number;
 }

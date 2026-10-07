@@ -1,6 +1,7 @@
 import type { RigidBody } from '@dimforge/rapier3d-compat';
 import { localAhead, localLeft, type Pose } from '../frame';
-import type { MatchState, PlayState } from './state';
+import type { HideSeekAgent } from '../agents/agent';
+import type { BoxState, MatchState, PlayState } from './state';
 
 /**
  * Copies the world after a physics step into the match state: agent and
@@ -56,6 +57,18 @@ export function updateClock(s: PlayState): void {
   }
 }
 
+/** Boxes locked by the agent's team and by the other team, for scripts. Shared with the Sandbox. */
+export function countLocks(boxes: readonly BoxState[], a: HideSeekAgent): void {
+  let own = 0;
+  let other = 0;
+  for (const b of boxes) {
+    if (b.lockedBy === a.index) own++;
+    else if (b.lockedBy >= 0) other++;
+  }
+  a.boxesLockedByTeam = own;
+  a.boxesLockedByOpponent = other;
+}
+
 /** Distances and counts that scripts read directly, for a 1 v 1 match. The Sandbox has its own. */
 export function updateDerived(s: MatchState): void {
   const [h, k] = s.agents;
@@ -63,13 +76,9 @@ export function updateDerived(s: MatchState): void {
   h.opponentDistance = d;
   k.opponentDistance = d;
   for (const a of s.agents) {
+    countLocks(s.boxes, a);
     let nearest = Infinity;
-    let locked = 0;
-    for (const b of s.boxes) {
-      nearest = Math.min(nearest, Math.hypot(b.x - a.x, b.z - a.z));
-      if (b.lockedBy === a.index) locked++;
-    }
+    for (const b of s.boxes) nearest = Math.min(nearest, Math.hypot(b.x - a.x, b.z - a.z));
     a.nearestBoxDistance = nearest;
-    a.boxesLockedByTeam = locked;
   }
 }

@@ -1,3 +1,4 @@
+import { countLocks } from '../match/sync';
 import type { SandboxState } from './state';
 
 /**
@@ -12,13 +13,9 @@ export function updateSandboxDerived(s: SandboxState): void {
     const a = s.agents[i];
     const t = s.targets[i];
     a.opponentDistance = t >= 0 ? Math.hypot(s.agents[t].x - a.x, s.agents[t].z - a.z) : far;
+    countLocks(s.boxes, a);
     let nearest = Infinity;
-    let locked = 0;
-    for (const b of s.boxes) {
-      nearest = Math.min(nearest, Math.hypot(b.x - a.x, b.z - a.z));
-      if (b.lockedBy === a.index) locked++;
-    }
+    for (const b of s.boxes) nearest = Math.min(nearest, Math.hypot(b.x - a.x, b.z - a.z));
     a.nearestBoxDistance = nearest === Infinity ? far : nearest;
-    a.boxesLockedByTeam = locked;
   }
 }

@@ -7,10 +7,10 @@ import type { BoxState, PlayState } from '../match/state';
  */
 export type BoxFilter = (box: BoxState, team: number) => boolean;
 
-/** Free boxes only: not locked by anyone and not held by another agent. */
+/** Free boxes only: not locked by anyone (a lock holds even against its own team) and not held by another agent. */
 export const canGrab: BoxFilter = (b) => b.lockedBy < 0 && b.heldBy < 0;
 
-/** Boxes nobody holds that are free or already locked by this agent's own team. */
+/** Boxes nobody holds that are free or locked by this agent's own team. A lock belongs to the team that placed it. */
 export const canToggleLock: BoxFilter = (b, team) => b.heldBy < 0 && (b.lockedBy < 0 || b.lockedBy === team);
 
 /**
