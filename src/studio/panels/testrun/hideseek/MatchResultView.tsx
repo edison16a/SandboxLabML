@@ -37,7 +37,7 @@ export function MatchResultView({ result, estimate }: { result: MatchTestOk; est
         <Stat label="Grabs" value={result.grabs} hint="Boxes picked up, by both players together" />
         <Stat label="Hidden" value={share(result.hiddenShare)} hint="Share of the seek phase the hider spent out of the seeker's sight" />
         <Stat label="Seen" value={share(result.seenShare)} hint="Share of the seek phase the seeker had the hider in sight" />
-        <Stat label="Locks" value={result.locks} hint="Boxes the hider locked" />
+        <Stat label="Locks" value={result.locks} hint="Boxes locked, by both players together" />
       </div>
       <Section title="Reward" hint={`${(result.ticks * TICK_SECONDS).toFixed(1)} s in the ${HIDESEEK_LAYOUTS[result.layout].name.toLowerCase()} with ${players}`}>
         <TeamRewardChart log={result.log} prepSeconds={result.prepTicks * TICK_SECONDS} />
