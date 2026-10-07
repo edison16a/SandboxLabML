@@ -2,6 +2,8 @@
 
 /* Short windows, such as a phone held sideways. The landing hero tightens up under it so its button stays on the first screen. */
 @custom-variant short (@media (max-height: 500px));
+/* Windows with room for the landing hero's corner cards beside its text. Matches LIVE_MIN_WIDTH and LIVE_MIN_HEIGHT in heroMode.ts. */
+@custom-variant hero-cards (@media (min-width: 1024px) and (min-height: 560px));
 
 /*
  * Design tokens. The app is dark first: the 3D viewports read best on a dark

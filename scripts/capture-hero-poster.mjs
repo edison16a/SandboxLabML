@@ -61,10 +61,11 @@ async function main() {
       const info = await sharp(wide).resize({ width: w }).webp({ quality: 72, effort: 6 }).toFile(file);
       console.log(`${file}: ${info.width} x ${info.height}, ${(info.size / 1024).toFixed(0)} KB`);
     }
-    // Portrait for phones. The window is wide enough for the live scene to run, and tall like a phone.
-    const tall = await capture(browser, 900, 1648, 1);
+    // Portrait for phones and tablets. The window is just wide enough for the live scene to run (LIVE_MIN_WIDTH)
+    // and tall like a phone, and the frame is scaled to 900 x 1600: the shot depends only on the shape.
+    const tall = await capture(browser, 1024, 1868, 1);
     const file = join(out, 'poster-portrait.webp');
-    const info = await sharp(tall).webp({ quality: 70, effort: 6 }).toFile(file);
+    const info = await sharp(tall).resize({ width: 900 }).webp({ quality: 70, effort: 6 }).toFile(file);
     console.log(`${file}: ${info.width} x ${info.height}, ${(info.size / 1024).toFixed(0)} KB`);
   } finally {
     await browser.close();

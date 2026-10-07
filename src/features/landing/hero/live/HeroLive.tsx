@@ -88,7 +88,7 @@ export default function HeroLive({ active, onScene }: HeroLiveProps) {
         )}
       </div>
       {pool && live && (
-        <div aria-hidden="true" data-hero-panels className="pointer-events-none absolute inset-0 z-20 hidden animate-fade-in lg:block">
+        <div aria-hidden="true" data-hero-panels className="pointer-events-none absolute inset-0 z-20 hidden animate-fade-in hero-cards:block">
           <HeroPanels scene={scene} pool={pool} car={car} arena={arena} match={match} />
         </div>
       )}
