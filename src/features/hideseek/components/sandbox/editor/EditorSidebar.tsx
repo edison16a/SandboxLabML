@@ -31,7 +31,7 @@ const UPHILL = [
 /** One "which way" row: a label, the turn key when it applies to this row, and the choice. */
 function DirectionRow({ label, turns, children }: { label: string; turns: boolean; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-2 text-[12px] text-muted">
+    <div className="flex h-7 items-center justify-between gap-2 text-[12px] text-fg/80">
       <span className="flex items-center gap-1.5">
         {label}
         {turns && <Kbd>{TURN_KEY}</Kbd>}
@@ -74,7 +74,8 @@ export function EditorSidebar({ draft, tool, onTool, yaws, onYaws }: Props) {
         })}
       </div>
       <div className="flex flex-col gap-1.5">
-        <DirectionRow label="New planks" turns={tool !== 'ramp'}>
+        <span className="text-[12px] font-medium text-muted">Direction of new boxes</span>
+        <DirectionRow label="Planks" turns={tool !== 'ramp'}>
           <Segmented
             label="New plank direction"
             size="sm"
@@ -86,7 +87,7 @@ export function EditorSidebar({ draft, tool, onTool, yaws, onYaws }: Props) {
             ]}
           />
         </DirectionRow>
-        <DirectionRow label="New ramps" turns={tool === 'ramp'}>
+        <DirectionRow label="Ramps" turns={tool === 'ramp'}>
           <Segmented label="New ramp uphill direction" size="sm" value={String(Math.round(yaws.ramp / (Math.PI / 2)) % 4)} onChange={(v) => onYaws({ ...yaws, ramp: (Number(v) * Math.PI) / 2 })} options={UPHILL} />
         </DirectionRow>
       </div>
