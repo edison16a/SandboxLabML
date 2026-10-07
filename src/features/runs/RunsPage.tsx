@@ -50,13 +50,7 @@ export function RunsPage() {
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8 sm:px-8">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Runs</h1>
-            <p className="mt-1 text-[14px] text-muted">
-              Everything you trained, saved in this browser. Open a run to keep training, or branch,
-              rewind and export it.
-            </p>
-          </div>
+          <h1 className="text-2xl font-semibold tracking-tight">Runs</h1>
           <StorageMeter trashBytes={trashBytes} refreshKey={(runs?.length ?? 0) + trash.length} />
         </header>
         <div className="flex flex-wrap items-center gap-2">
@@ -106,9 +100,6 @@ export function RunsPage() {
           {runs !== null && shown.length === 0 && (
             <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border px-6 py-14 text-center">
               <p className="text-[15px] font-medium">No runs yet</p>
-              <p className="max-w-sm text-[13px] text-muted">
-                Runs appear here as soon as you start training in a lab.
-              </p>
               <div className="flex gap-2">
                 <Link
                   href="/lab/racing"
@@ -145,7 +136,7 @@ export function RunsPage() {
           </h2>
           <div className="flex items-center justify-between gap-4 rounded-lg border border-danger/30 px-4 py-3">
             <p className="text-[13px] text-muted">
-              Delete every run, script, blueprint and cache stored by SandboxLab in this browser.
+              Erase every run, script and blueprint.
             </p>
             <Button variant="danger" onClick={() => setOpen({ kind: 'deleteAll' })}>
               <Trash2 />

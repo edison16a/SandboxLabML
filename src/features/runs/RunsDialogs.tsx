@@ -53,7 +53,7 @@ export function RunsDialogs({ open, setOpen, actions, reload }: Props) {
       {open?.kind === 'reset' && (
         <ConfirmDialog
           title="Start over?"
-          body="A fresh run starts with the same blueprint, script and seed. The current run moves to Trash for 7 days."
+          body="Same blueprint, script and seed. The current run moves to Trash for 7 days."
           action="Start over"
           onClose={() => setOpen(null)}
           onConfirm={() => void actions.reset(open.run).then(() => setOpen(null))}
