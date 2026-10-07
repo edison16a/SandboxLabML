@@ -74,7 +74,8 @@ export function CameraRig() {
     else if (m === 'free') free(c);
     else preset(c, m);
     if (f.t < 1) {
-      f.step(camera, c, dt);
+      // A flight runs on wall time up to a quarter second a frame, so it lands on time on a slow machine but never jumps after a stalled tab.
+      f.step(camera, c, Math.min(rawDt, 0.25));
       invalidate();
     } else f.keepInBounds(camera, c, frame.lattice.width / 2 + PAN_MARGIN, frame.lattice.depth / 2 + PAN_MARGIN);
     if (camera.position.y < MIN_HEIGHT) camera.position.y = MIN_HEIGHT;

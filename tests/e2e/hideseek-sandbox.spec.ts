@@ -109,7 +109,8 @@ test('the Sandbox plays a room built in the editor with many players, and keeps 
   // Lock the cube from above with a double click.
   await page.getByRole('combobox', { name: 'Camera' }).click();
   await page.getByRole('option', { name: 'Top down' }).click();
-  await page.waitForTimeout(2500);
+  // Let the camera's flight from the close view land; software rendering draws only a few frames a second.
+  await page.waitForTimeout(4000);
   const cube = await topDown(page, 4, -4, 1);
   await page.mouse.dblclick(cube.x, cube.y);
   await expect.poll(instance(page, 'sandboxLocked'), { timeout: 30_000 }).toBe(1);
