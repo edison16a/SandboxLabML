@@ -10,7 +10,8 @@ import { listBlueprints } from '@/storage/blueprints';
 import { cn } from '@/ui/cn';
 import { Field } from '@/ui/primitives/Field';
 
-const choice = (selected: boolean) => cn('flex flex-col gap-0.5 rounded-md border p-2.5 text-left transition-colors', selected ? 'border-accent bg-accent-soft' : 'border-border hover:border-border-strong');
+const choice = (selected: boolean) =>
+  cn('flex flex-col gap-0.5 rounded-md border p-2.5 text-left transition-colors', selected ? 'border-accent bg-accent-soft' : 'border-border hover:border-border-strong');
 
 /** "Hide and Seek Standard" reads as "Standard" on its tile. The user's own names stay as typed. */
 const short = (b: HideSeekBlueprint) => b.name.replace('Hide and Seek ', '');
@@ -26,8 +27,10 @@ export function BlueprintPicker({ open, value, onChange }: { open: boolean; valu
   useEffect(() => {
     if (open) void listBlueprints('hideseek').then((list) => setCustom(list.filter((b): b is HideSeekBlueprint => b.env === 'hideseek')));
   }, [open]);
+  // A copy keeps the preset's teaching line, which no longer holds once its inputs change.
+  const hint = value.readonly ? value.teaches : 'Your own blueprint. Both teams sense what it says.';
   return (
-    <Field label="Brain blueprint" hint={value.teaches || 'Your own blueprint.'}>
+    <Field label="Brain blueprint" hint={hint}>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {[...HIDESEEK_BLUEPRINTS, ...custom].map((b) => (
           <button key={b.id} type="button" onClick={() => onChange(b)} className={choice(b.id === value.id)}>
@@ -35,7 +38,11 @@ export function BlueprintPicker({ open, value, onChange }: { open: boolean; valu
             <span className="text-[11px] text-muted">{blueprintInputCount(b)} inputs</span>
           </button>
         ))}
-        <button type="button" onClick={() => setEditing(true)} className="flex items-center justify-center gap-2 rounded-md border border-dashed border-border p-2.5 text-[13px] text-muted hover:border-border-strong hover:text-fg">
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="flex items-center justify-center gap-2 rounded-md border border-dashed border-border p-2.5 text-[13px] text-muted hover:border-border-strong hover:text-fg"
+        >
           <SlidersHorizontal className="size-4 shrink-0" />
           <span className="truncate">Customize {short(value)}</span>
         </button>

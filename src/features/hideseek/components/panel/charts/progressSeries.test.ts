@@ -4,7 +4,16 @@ import { boxAndRampSeries, legendOf } from './progressSeries';
 
 /** A history row with only the game numbers these charts read. */
 function row(game: Partial<HideSeekGenerationStats['game']>): { stats: HideSeekGenerationStats } {
-  const base = { matches: 1, hiddenShare: 0, seenShare: 0, currentHiddenShare: 0, locksPerMatch: 0, boxesMovedPerMatch: 0, grabsPerMatch: 0, hallOfFame: { hiders: 0, seekers: 0 } };
+  const base = {
+    matches: 1,
+    hiddenShare: 0,
+    seenShare: 0,
+    currentHiddenShare: 0,
+    locksPerMatch: 0,
+    boxesMovedPerMatch: 0,
+    grabsPerMatch: 0,
+    hallOfFame: { hiders: 0, seekers: 0 },
+  };
   return { stats: { game: { ...base, ...game } } as HideSeekGenerationStats };
 }
 

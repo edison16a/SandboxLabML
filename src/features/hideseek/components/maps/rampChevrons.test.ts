@@ -33,7 +33,13 @@ describe('ramp chevrons', () => {
   });
 
   it('writes SVG points', () => {
-    expect(chevronPoints([[0, -1], [1, 0], [0, 1]])).toBe('0,-1 1,0 0,1');
+    expect(
+      chevronPoints([
+        [0, -1],
+        [1, 0],
+        [0, 1],
+      ]),
+    ).toBe('0,-1 1,0 0,1');
   });
 
   it('turns the box frame the way the engine turns a yaw, so the chevrons point uphill on the map', () => {

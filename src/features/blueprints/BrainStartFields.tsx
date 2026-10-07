@@ -33,10 +33,21 @@ export function BrainStartFields<B extends Blueprint>({ value, onChange }: { val
       {/* The wiring choice takes the room its three labels need, so "Hidden layer" never wraps. */}
       <section className="grid gap-4 sm:grid-cols-[1fr_1fr_auto]">
         <Field label={`Sensor noise: ${Math.round(value.inputs.noise * 100)}%`} hint="Off by default. Noise makes brains more robust and slower to train.">
-          <Slider label="Sensor noise" min={0} max={10} value={Math.round(value.inputs.noise * 100)} onChange={(v) => set({ inputs: { ...value.inputs, noise: v / 100 } } as Partial<Blueprint>)} />
+          <Slider
+            label="Sensor noise"
+            min={0}
+            max={10}
+            value={Math.round(value.inputs.noise * 100)}
+            onChange={(v) => set({ inputs: { ...value.inputs, noise: v / 100 } } as Partial<Blueprint>)}
+          />
         </Field>
         <Field label="Activation" hint="Used by hidden neurons. Outputs always use tanh.">
-          <Select<Activation> label="Activation" value={value.activation} onChange={(v) => set({ activation: v })} options={ACTIVATIONS.map((a) => ({ value: a, label: a === 'relu' ? 'ReLU' : a[0].toUpperCase() + a.slice(1) }))} />
+          <Select<Activation>
+            label="Activation"
+            value={value.activation}
+            onChange={(v) => set({ activation: v })}
+            options={ACTIVATIONS.map((a) => ({ value: a, label: a === 'relu' ? 'ReLU' : a[0].toUpperCase() + a.slice(1) }))}
+          />
         </Field>
         <Field label="Starting wiring">
           <Segmented
@@ -44,7 +55,7 @@ export function BrainStartFields<B extends Blueprint>({ value, onChange }: { val
             size="sm"
             className="self-start"
             value={value.wiring}
-            onChange={(w) => set({ wiring: w, hiddenCount: w === 'hidden' ? value.hiddenCount ?? 4 : undefined })}
+            onChange={(w) => set({ wiring: w, hiddenCount: w === 'hidden' ? (value.hiddenCount ?? 4) : undefined })}
             options={[
               { value: 'direct', label: 'Direct' },
               { value: 'sparse', label: 'Sparse' },
