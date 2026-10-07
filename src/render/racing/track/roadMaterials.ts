@@ -14,7 +14,7 @@ vec4 asphalt(vec2 uv, vec3 wp, vec2 line, float dist) {
   vec4 grit = texture2D(uDetail, wp.xz * 3.7 + 0.5);
   vec4 blot = texture2D(uDetail, wp.xz * 0.045);
   float near = 1.0 - smoothstep(25.0, 140.0, dist);
-  vec3 c = vec3(0.15, 0.152, 0.158);
+  vec3 c = vec3(0.156, 0.151, 0.146);
   c *= 0.86 + blot.g * 0.3;
   c *= 1.0 + ((fine.r - 0.5) * 0.28 + (grit.r - 0.5) * 0.3) * near;
   // Pale aggregate stones catching the light.

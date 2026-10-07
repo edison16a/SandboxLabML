@@ -46,7 +46,8 @@ export function trackStations(world: WorldData): Station[] {
   const stands = layout.pads.slice(0, layout.stands.length);
   const pit = layout.pit ? padOf(layout, -layout.side, layout.pit, 0.5) : null;
   let flip = 1;
-  for (let i = 0; i < track.count; i += step) {
+  // Start a little past the line: the gantry's legs stand right beside it and would fill the lens.
+  for (let i = Math.round(30 / track.spacing); i < track.count; i += step) {
     // Prefer the outside of the bend, where the car swings toward the lens.
     const bend = Math.sign(track.curvature[(i + Math.round(25 / track.spacing)) % track.count]) || flip;
     flip = -flip;

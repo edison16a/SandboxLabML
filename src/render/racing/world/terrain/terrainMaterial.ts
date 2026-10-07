@@ -24,7 +24,10 @@ vec3 terrainDetail(vec3 base, vec3 wp, vec2 surf, float dist) {
   float strata = sin(wp.y * 2.3 + n2.g * 6.0) * 0.5 + 0.5;
   float crack = smoothstep(0.22, 0.05, abs(n1.b - 0.5));
   vec3 r = base * (0.86 + strata * 0.2 + (n3.r - 0.5) * 0.25) * (1.0 - crack * 0.3 * fade);
-  return mix(g, r, surf.x);
+  // Far away the fine detail is gone; broad patches of scrub and bare ground keep distant slopes from looking painted flat.
+  vec4 n4 = texture2D(uDetail, wp.xz * 0.0045 + 0.11);
+  float far = smoothstep(250.0, 900.0, dist);
+  return mix(g, r, surf.x) * (1.0 + (n4.g - 0.5) * 0.5 * far + (n2.r - 0.5) * 0.25 * far);
 }
 `;
 

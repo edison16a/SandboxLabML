@@ -63,7 +63,7 @@ export function OrbitCam({ world, target }: { world: WorldData | null; target: R
       // Opening shot: a three quarter view from behind and above, high enough to see the road ahead.
       const a = frame.focusYaw + Math.PI + 0.6;
       c.target.copy(focus).setY(0.8);
-      camera.position.set(focus.x + Math.cos(a) * 15, 7.5, focus.z - Math.sin(a) * 15);
+      camera.position.set(focus.x + Math.cos(a) * 14, 5.5, focus.z - Math.sin(a) * 14);
       last.ready = true;
     } else if (last.pos.distanceToSquared(focus) > 60 * 60) {
       // The focus jumped to another car: re-aim at it from the same angle.
