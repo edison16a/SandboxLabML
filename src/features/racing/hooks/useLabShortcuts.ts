@@ -7,7 +7,7 @@ import { racingSession } from '../session/RacingSession';
 import { useRacingLab, type CameraMode, type ViewMode } from '../state/labStore';
 
 const SPEEDS: SpeedMode[] = ['1x', '2x', '4x', 'turbo', 'max'];
-const CAMERAS: CameraMode[] = ['chase', 'orbit', 'top', 'free'];
+const CAMERAS: CameraMode[] = ['chase', 'orbit', 'trackside', 'top', 'free'];
 const VIEWS: ViewMode[] = ['population', 'overlay', 'both'];
 
 function next<T>(list: T[], current: T): T {

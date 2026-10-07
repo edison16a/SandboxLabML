@@ -10,7 +10,7 @@ import type { FieldEntry } from '../session/field';
 import type { GhostSelection } from '../session/ghostSelection';
 
 export type ViewMode = 'population' | 'overlay' | 'both';
-export type CameraMode = 'chase' | 'orbit' | 'top' | 'free';
+export type CameraMode = 'chase' | 'orbit' | 'trackside' | 'top' | 'free';
 export type QualityTier = 'low' | 'medium' | 'high';
 
 /** What the camera follows and what the inputs overlay inspects. */

@@ -87,18 +87,23 @@ export function ViewportHud({ population }: { population: SnapshotStream | null 
               Inputs
             </Button>
           </Tooltip>
-          <Select<CameraMode>
-            label="Camera"
-            value={camera}
-            onChange={(v) => set({ camera: v })}
-            className={`h-7 w-28 ${glass}`}
-            options={[
-              { value: 'chase', label: 'Chase cam' },
-              { value: 'orbit', label: 'Orbit' },
-              { value: 'top', label: 'Top down' },
-              { value: 'free', label: 'Free' },
-            ]}
-          />
+          <Tooltip content="Camera" shortcut="C">
+            <span>
+              <Select<CameraMode>
+                label="Camera"
+                value={camera}
+                onChange={(v) => set({ camera: v })}
+                className={`h-7 w-28 ${glass}`}
+                options={[
+                  { value: 'chase', label: 'Chase cam' },
+                  { value: 'orbit', label: 'Orbit' },
+                  { value: 'trackside', label: 'Trackside' },
+                  { value: 'top', label: 'Top down' },
+                  { value: 'free', label: 'Free' },
+                ]}
+              />
+            </span>
+          </Tooltip>
         </div>
       </div>
       <HeldNote />
