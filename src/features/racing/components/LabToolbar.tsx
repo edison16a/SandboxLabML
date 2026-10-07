@@ -46,7 +46,7 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
           {running ? 'Pause' : 'Train'}
         </Button>
       </Tooltip>
-      <Tooltip content="Run exactly one generation" shortcut="S">
+      <Tooltip content="Step one generation" shortcut="S">
         <Button size="icon" variant="outline" onClick={() => void session.start(1)} disabled={!run || running} aria-label="Step one generation">
           <SkipForward />
         </Button>
@@ -67,7 +67,7 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
       </div>
       <div className="ml-auto flex min-w-0 items-center gap-2">
         <RunSwitcher />
-        <Tooltip content="Replay champions on a track you can edit, and switch inputs off">
+        <Tooltip content="Race your champions on any track">
           <Button data-tour="sandbox" variant={mode === 'sandbox' ? 'primary' : 'outline'} onClick={() => void (mode === 'sandbox' ? session.exitSandbox() : session.enterSandbox())} disabled={!records.length} aria-label="Sandbox">
             <FlaskConical />
             <span className="@max-[52rem]:hidden">Sandbox</span>

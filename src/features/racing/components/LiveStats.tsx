@@ -68,7 +68,7 @@ export function LiveStats({ stream }: { stream: SnapshotStream | null }) {
       {watching && <Chip label="Leader" value={`${Math.round(live.leaderDistance)} m`} />}
       {watching && <Chip label="Speed" value={`${Math.round(live.leaderSpeed * 3.6)} km/h`} />}
       {!watching && <Chip label="Best distance" value={`${Math.round(bestDistance)} m`} />}
-      <Chip label="Best lap" value={bestLap > 0 ? `${bestLap.toFixed(2)} s` : 'none yet'} />
+      <Chip label="Best lap" value={bestLap > 0 ? `${bestLap.toFixed(2)} s` : '-'} />
     </div>
   );
 }
