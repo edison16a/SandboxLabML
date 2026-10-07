@@ -14,14 +14,6 @@ export function followedAgentOf(c: HsCamera): number {
 }
 
 /**
- * The follow shot: a drone a few meters off the agent's shoulder, high
- * enough to see over a wall, aimed at its chest. Stiffness (1/s) sets how
- * closely the aim trails a running agent: soft enough to feel like a
- * camera operator, firm enough that a sprint never leaves the frame.
- */
-export const FOLLOW = { distance: 9.5, elevation: (57 * Math.PI) / 180, height: 0.7, stiffness: 5 };
-
-/**
  * A number that changes whenever a set shot must be framed again: the view,
  * the focused arena and the grid's size and columns. A number, not a
  * string, because the rig checks it every frame.

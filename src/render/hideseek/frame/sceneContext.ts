@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { InputSpec } from '@/engine/env/types';
+import type { Rect } from '@/engine/hideseek/layouts/types';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
 import { latticeFor, type Lattice } from '../layout/gridLattice';
 import type { AgentPose } from './snapshotRead';
@@ -46,6 +47,8 @@ export interface HsFrame {
    * run on simulation time, so strides keep their real length.
    */
   timeScale: number;
+  /** Walls of the room drawn in full, in its own floor coordinates, set by the scene that draws it, so the follow camera can see round them. */
+  walls: readonly Rect[];
   /**
    * Set by a scene whose stream is not laid out as arenas (the Sandbox), so
    * the first person cameras and the inspected agent's rays know where to
@@ -72,6 +75,7 @@ export function createHsFrame(): HsFrame {
     prep: true,
     preview: true,
     timeScale: 1,
+    walls: [],
     agentPose: null,
   };
 }

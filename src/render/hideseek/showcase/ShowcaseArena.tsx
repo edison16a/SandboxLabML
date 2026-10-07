@@ -41,7 +41,7 @@ export function ShowcaseArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO 
     const layout = frame.layouts[frame.focusSlot] ?? 0;
     if (!shown || shown.arena !== arena || shown.layout !== layout) setShown({ arena, layout });
     field.readArena(frame, arena);
-    field.walls = wallsOfLayout(layout);
+    field.walls = frame.walls = wallsOfLayout(layout);
     arenaOrigin(frame.focusSlot, frame.lattice, origin);
     g.position.set(origin.x, 0, origin.z);
     g.visible = true;
