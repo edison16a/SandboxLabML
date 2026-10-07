@@ -43,3 +43,24 @@ export function springStep(value: number, velocity: number, target: number, omeg
   const nextValue = target + (change + temp) * exp;
   return [nextValue, nextVelocity];
 }
+
+/** One axis of a critically damped spring, kept between frames. */
+export interface Spring {
+  value: number;
+  velocity: number;
+}
+
+/**
+ * springStep for a spring held in an object: it steps the spring in place
+ * and returns the new value, so a camera that runs every frame allocates
+ * nothing.
+ */
+export function stepSpring(s: Spring, target: number, omega: number, dt: number): number {
+  const x = omega * dt;
+  const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+  const change = s.value - target;
+  const temp = (s.velocity + omega * change) * dt;
+  s.velocity = (s.velocity - omega * temp) * exp;
+  s.value = target + (change + temp) * exp;
+  return s.value;
+}
