@@ -32,7 +32,7 @@ const C = {
   wall: '#8a94a7',
   cube: '#bf9a3e',
   plank: '#c28d45',
-  ramp: '#5f9e7f',
+  ramp: '#4c8c70',
   hider: '#4c9aff',
   seeker: '#ff5f6d',
   cone: 'rgba(255, 95, 109, 0.09)',
