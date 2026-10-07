@@ -94,14 +94,14 @@ export class BodyDynamics {
     // Lean: balance against acceleration, lean into speed, square to a slope, into a box, slumped asleep.
     const walk = clamp(est.speed / 2, 0, 1) * grounded;
     const leanTarget =
-      clamp(0.055 * est.forward + 0.03 * est.forwardAccel, -0.28, 0.36) * grounded * (1 - b.climb) * (1 - b.push) +
+      clamp(0.035 * est.forward + 0.02 * est.forwardAccel, -0.2, 0.24) * grounded * (1 - b.climb) * (1 - b.push) +
       SLOPE_LEAN * b.climb +
       0.34 * b.push -
       0.1 * b.hold * clamp(-est.forward, 0, 1) +
       0.16 * b.air +
       0.14 * b.asleep +
       0.12 * b.crouch;
-    pose.lean = driveSpring(this.lean, leanTarget, 9, 0.48, dt);
+    pose.lean = driveSpring(this.lean, leanTarget, 8, 0.6, dt);
     // Bank into the turn's pull and sway over the stance foot.
     const rollTarget = clamp(0.045 * est.lateralAccel, -0.3, 0.3) * grounded + 0.045 * sway * walk * (1 - gait.run * 0.5);
     pose.roll = driveSpring(this.roll, rollTarget, 9, 0.55, dt);

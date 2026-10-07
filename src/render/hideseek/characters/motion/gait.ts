@@ -1,4 +1,5 @@
 import { lerpAngle } from '@/engine/core/math';
+import { RIG } from '../rig/proportions';
 import { copyVec, setVec, vec3, type Vec3 } from './vec';
 
 /** One foot: planted on the ground and still, or in the air on its way to the next footfall. */
@@ -44,6 +45,8 @@ const STANCE = { stand: 0.1, run: 0.065 };
 const LOST = 0.75;
 /** Below this effective speed the feet only step to tidy up the stance, m/s. */
 const IDLE = 0.08;
+/** Furthest a planted foot may trail from under its hip before the leg must step, m. */
+const REACH = 0.3;
 
 /** Cycles per second at an effective speed: quicker steps as it speeds up, like a small person breaking into a run. */
 export function cadence(speed: number): number {
@@ -99,11 +102,18 @@ export class Gait {
     const f = cadence(effective);
     const duty = dutyFactor(this.run);
     if (effective < IDLE && this.settled(g)) return;
-    this.phase = (this.phase + f * g.dt) % 1;
+    // A planted foot left too far behind (a burst of speed) hurries the stride: the swinging foot lands sooner so the trailing one can go.
+    const hurry = (this.feet[0].planted && this.overReached(0, g)) || (this.feet[1].planted && this.overReached(1, g)) ? 2.5 : 1;
+    this.phase = (this.phase + f * hurry * g.dt) % 1;
     const moving = effective >= IDLE ? 1 : 0;
     for (let side = 0; side < 2; side++) {
       const foot = this.feet[side];
-      const p = (this.phase - side * 0.5 + 1) % 1;
+      let p = (this.phase - side * 0.5 + 1) % 1;
+      // A leg stretched as far as it goes behind the hip has to step now, whatever the rhythm says: the first step off a standstill, a sudden burst.
+      if (p < duty && foot.planted && this.feet[1 - side].planted && this.overReached(side, g)) {
+        this.phase = (side * 0.5 + duty + 1e-4) % 1;
+        p = duty + 1e-4;
+      }
       if (p < duty) {
         if (!foot.planted) this.touchDown(foot, g);
         this.stance[side] = p / duty;
@@ -130,6 +140,13 @@ export class Gait {
       foot.yaw = lerpAngle(foot.fromYaw, this.home.yaw, e);
       foot.pitch = moving * (u < 0.5 ? -0.5 * Math.sin(Math.PI * u * 2) : 0.28 * Math.sin(Math.PI * (u - 0.5) * 2)) * Math.min(1, 0.4 + g.speed / 2);
     }
+  }
+
+  /** Whether planted foot `side` has fallen further from under its hip than a leg can reach. */
+  private overReached(side: number, g: GaitInput): boolean {
+    const w = side === 0 ? -RIG.hipZ : RIG.hipZ;
+    const foot = this.feet[side];
+    return Math.hypot(foot.pos.x - (g.x + Math.sin(g.yaw) * w), foot.pos.z - (g.z + Math.cos(g.yaw) * w)) > REACH;
   }
 
   /** A footfall: the foot stops dead where it is, flat on the ground under it. */
