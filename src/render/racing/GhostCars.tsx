@@ -49,7 +49,9 @@ export function GhostCars() {
     if (!m || !d) return;
     // Both meshes read the same instance matrices; only the count needs copying.
     if (d.instanceMatrix !== m.instanceMatrix) d.instanceMatrix = m.instanceMatrix;
-    const { view, hoveredGhost, run } = useRacingLab.getState();
+    const { view, hoveredGhost, run, camera } = useRacingLab.getState();
+    // Chase and trackside are about one car: ghosts sitting on top of it thin out so it stays clear.
+    const clearFocus = camera === 'chase' || camera === 'trackside';
     if (!ghosts?.curr || view === 'population') {
       m.count = d.count = 0;
       return;
@@ -78,7 +80,8 @@ export function GhostCars() {
       ghostColor(t, tmp.c);
       if (hover) tmp.c.set('#ffffff');
       m.setColorAt(i, tmp.c);
-      built.opacity.setX(i, (hover ? 0.9 : ghostOpacity(t)) * fade);
+      const near = clearFocus ? Math.min(1, Math.max(0, (Math.hypot(tmp.pose.x - frame.focusPos.x, -tmp.pose.y - frame.focusPos.z) - 2.2) / 2.6)) : 1;
+      built.opacity.setX(i, (hover ? 0.9 : ghostOpacity(t)) * fade * near);
     }
     m.count = d.count = n;
     m.instanceMatrix.needsUpdate = true;

@@ -11,7 +11,7 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { crowdGeometry } from './car/geometry/crowd';
 import { withCarSurface } from './car/materials/carSurface';
 import { useCarReflections } from './car/materials/useCarReflections';
-import { withNearFade } from './fleet/nearFade';
+import { nearFade, withNearFade } from './fleet/nearFade';
 import { FleetMotion } from './motion/fleetMotion';
 import { CRASHED_COLOR, speciesColor } from './palette';
 import { useRacingScene } from './sceneContext';
@@ -32,7 +32,7 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
   const tier = useRacingLab((s) => s.activeTier);
   const mesh = useRef<THREE.InstancedMesh>(null);
   const geometry = useDisposable(() => crowdGeometry(), []);
-  const fade = useMemo(() => ({ value: 0 }), []);
+  const fade = useMemo(() => nearFade(), []);
   // High adds a clear coat over the paint and glass; the lower tiers keep the cheaper standard shading.
   const material = useDisposable(
     () => withNearFade(withCarSurface(tier === 'high' ? new THREE.MeshPhysicalMaterial({ vertexColors: true, clearcoat: 1, clearcoatRoughness: 0.06, envMapIntensity: 0.85 }) : new THREE.MeshStandardMaterial({ vertexColors: true, envMapIntensity: 0.85 })), fade),
@@ -46,7 +46,9 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
     const m = mesh.current;
     if (!m) return;
     const { view, camera, run } = useRacingLab.getState();
-    fade.value = camera === 'chase' ? 1 : 0;
+    // The chase and trackside views are about one car: clear the pack off it there.
+    fade.strength.value = camera === 'chase' || camera === 'trackside' ? 1 : 0;
+    fade.focus.value.copy(frame.focusPos);
     if (!population?.curr || view === 'overlay') {
       m.count = 0;
       return;
