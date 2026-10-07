@@ -67,10 +67,28 @@ export function GhostTrails() {
       for (let k = 0; k < ring.filled - 1; k++) {
         const a = (ring.head - k + HISTORY) % HISTORY;
         const b = (a - 1 + HISTORY) % HISTORY;
+        const ax = ring.xs[i * HISTORY + a];
+        const az = ring.zs[i * HISTORY + a];
+        const bx = ring.xs[i * HISTORY + b];
+        const bz = ring.zs[i * HISTORY + b];
+        // A jump longer than any car covers in a tick is a restart on the grid: no line across the infield.
+        if ((ax - bx) ** 2 + (az - bz) ** 2 > 36) continue;
         const alphaA = 0.55 * (1 - k / HISTORY);
         const alphaB = 0.55 * (1 - (k + 1) / HISTORY);
-        p.set([ring.xs[i * HISTORY + a], 0.08, ring.zs[i * HISTORY + a], ring.xs[i * HISTORY + b], 0.08, ring.zs[i * HISTORY + b]], v * 3);
-        c.set([ring.c.r, ring.c.g, ring.c.b, alphaA, ring.c.r, ring.c.g, ring.c.b, alphaB], v * 4);
+        // Written field by field: no temporary arrays in a loop that runs thousands of times a frame.
+        const o = v * 3;
+        p[o] = ax;
+        p[o + 1] = 0.08;
+        p[o + 2] = az;
+        p[o + 3] = bx;
+        p[o + 4] = 0.08;
+        p[o + 5] = bz;
+        const q = v * 4;
+        c[q] = c[q + 4] = ring.c.r;
+        c[q + 1] = c[q + 5] = ring.c.g;
+        c[q + 2] = c[q + 6] = ring.c.b;
+        c[q + 3] = alphaA;
+        c[q + 7] = alphaB;
         v += 2;
       }
     }
