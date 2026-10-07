@@ -17,12 +17,20 @@ const ZOOM = 0.8;
 const LEAN = 0.9;
 /**
  * How far past the framed point the camera aims, as a share of its
- * distance. It sets the framed point about 84% down the hero, under the
- * page text and between the corner cards, like the car in the racing scene.
+ * distance. It sets the framed point about 80% down the hero, under the
+ * page text and between the corner cards, like the car in the racing
+ * scene, with room below for a player running toward the camera.
  */
-const LEAD = 0.34;
+const LEAD = 0.3;
 /** Radians per second the camera circles the room. A full turn takes over two minutes. */
 const SPIN = 0.045;
+/**
+ * Stiffness of the spring that follows the player, 1/s. A soft spring
+ * trails a running player by about twice their speed over this, so at 2.4
+ * a sprinting seeker stays within a few meters of the framed point while
+ * the switch from hider to seeker still glides across the room.
+ */
+const FOLLOW = 2.4;
 
 /**
  * A crane shot of the room for the landing page. It circles slowly and
@@ -56,8 +64,8 @@ export function HeroArenaCamera() {
       s.x.value = tx;
       s.z.value = tz;
     }
-    const cx = stepSpring(s.x, tx, 1.2, dt);
-    const cz = stepSpring(s.z, tz, 1.2, dt);
+    const cx = stepSpring(s.x, tx, FOLLOW, dt);
+    const cz = stepSpring(s.z, tz, FOLLOW, dt);
     const dx = Math.sin(angle);
     const dz = Math.cos(angle);
     const flat = Math.cos(ELEVATION) * distance;
