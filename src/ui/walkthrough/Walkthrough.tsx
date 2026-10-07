@@ -7,7 +7,8 @@ import { readMarker } from './doneMarker';
 import { announcement, shouldAutoStart, stepAt, textOf } from './flow';
 import { Spotlight } from './Spotlight';
 import { StepCard } from './StepCard';
-import type { Tour, WalkStep } from './types';
+import { revealTarget } from './reveal';
+import type { StepText, Tour, WalkStep } from './types';
 import { useReducedMotion } from './useReducedMotion';
 import { useStage } from './useStage';
 import { useWalkFocus } from './useWalkFocus';
@@ -27,6 +28,17 @@ function useActionWatch(step: WalkStep | null, acted: boolean): void {
     }, 150);
     return () => clearInterval(id);
   }, [step, acted]);
+}
+
+/** Scrolls a step's target into view when the step opens, as on a phone where toolbars scroll sideways. */
+function useReveal(text: StepText | null, key: string, reduced: boolean): void {
+  const target = text?.target;
+  const fallback = text?.fallback;
+  useEffect(() => {
+    if (!target) return;
+    const selector = document.querySelector(target) || !fallback ? target : fallback;
+    revealTarget(selector, !reduced);
+  }, [target, fallback, key, reduced]);
 }
 
 /** Marks the page while the tour is open, so CSS can keep tooltips from popping up under the dim layer. */
@@ -51,7 +63,9 @@ function Stage({ tour }: { tour: Tour }) {
   const card = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
 
-  useStage({ root, dim, ring, card }, { text: step ? textOf(step, acted) : null, reduced, key });
+  const text = step ? textOf(step, acted) : null;
+  useStage({ root, dim, ring, card }, { text, reduced, key });
+  useReveal(text, key, reduced);
   useWalkKeys(tour);
   useWalkFocus(card, key);
   useActionWatch(step, acted);
