@@ -20,16 +20,18 @@ export function MainPass() {
 
 /**
  * The renderer tone maps unless the effect composer does it, in which
- * case the renderer must hand over linear colors untouched.
+ * case the renderer must hand over linear colors untouched. The exposure
+ * applies either way, since the composer's tone mapping reads it from the
+ * renderer. A view that sets text over the scene can pass less than 1.
  */
-export function ToneMappingSync({ composer }: { composer: boolean }) {
+export function ToneMappingSync({ composer, exposure = 1 }: { composer: boolean; exposure?: number }) {
   const gl = useThree((s) => s.gl);
   const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
     gl.toneMapping = composer ? THREE.NoToneMapping : HS_TONE_MAPPING;
-    gl.toneMappingExposure = 1;
+    gl.toneMappingExposure = exposure;
     invalidate();
-  }, [gl, composer, invalidate]);
+  }, [gl, composer, exposure, invalidate]);
   return null;
 }
 

@@ -13,10 +13,34 @@ export interface DrawOptions {
   lesioned?: ReadonlySet<number>;
   showDisabled: boolean;
   margin: { left: number; right: number; top: number; bottom: number };
+  /** The label font family, from canvasFontFamily. A canvas cannot read the CSS variable itself. */
+  fontFamily: string;
 }
 
 const BLUE = [76, 154, 255];
 const ORANGE = [255, 159, 67];
+
+/** Positive weights and activations are blue and negative ones orange, matching the logo. */
+export const POSITIVE_COLOR = '#4c9aff';
+export const NEGATIVE_COLOR = '#ff9f43';
+
+/** Ring color per neuron kind: gold bias, blue hidden, white outputs, grey inputs. */
+export const NODE_RING = { bias: '#f5c451', hidden: '#4c9aff', output: '#e7ebf3', input: '#8a94a7' } as const;
+
+/** How strong a link looks, 0 to 1. Weights past 3 all read as full strength. */
+export function linkStrength(weight: number): number {
+  return Math.min(1, Math.abs(weight) / 3);
+}
+
+/** A link's opacity while an agent is live: strong links carrying a strong signal light up. */
+export function liveLinkAlpha(strength: number, source: number): number {
+  return 0.08 + 0.85 * strength * Math.min(1, Math.abs(source));
+}
+
+/** A neuron's fill opacity while live, from its activation. */
+export function liveNodeAlpha(value: number): number {
+  return 0.15 + 0.85 * Math.min(1, Math.abs(value));
+}
 
 function rgba(c: number[], a: number): string {
   return `rgba(${c[0]},${c[1]},${c[2]},${a.toFixed(3)})`;
@@ -45,9 +69,9 @@ export function drawNetwork(g: CanvasRenderingContext2D, genome: Genome, nodes: 
     const b = pos.get(c.to);
     if (!a || !b) continue;
     if (!c.enabled && !o.showDisabled) continue;
-    const mag = Math.min(1, Math.abs(c.weight) / 3);
+    const mag = linkStrength(c.weight);
     let alpha = 0.18 + 0.5 * mag;
-    if (o.activity) alpha = 0.08 + 0.85 * mag * Math.min(1, Math.abs(o.activity.get(c.from) ?? 0));
+    if (o.activity) alpha = liveLinkAlpha(mag, o.activity.get(c.from) ?? 0);
     if (hoveredId !== null) alpha = c.from === hoveredId ? 0.95 : alpha * 0.25;
     g.beginPath();
     const dx = (b[0] - a[0]) * 0.45;
@@ -71,7 +95,7 @@ export function drawNetwork(g: CanvasRenderingContext2D, genome: Genome, nodes: 
   }
   g.setLineDash([]);
 
-  g.font = '11px var(--font-geist-sans), sans-serif';
+  g.font = `11px ${o.fontFamily}`;
   g.textBaseline = 'middle';
   for (const n of nodes) {
     const [x, y] = pos.get(n.id) as [number, number];
@@ -79,11 +103,10 @@ export function drawNetwork(g: CanvasRenderingContext2D, genome: Genome, nodes: 
     const r = n.kind === 'hidden' ? 4.5 : 5.5;
     g.beginPath();
     g.arc(x, y, r, 0, Math.PI * 2);
-    const intensity = Math.min(1, Math.abs(v));
-    g.fillStyle = o.activity ? rgba(v >= 0 ? BLUE : ORANGE, 0.15 + 0.85 * intensity) : '#151a24';
+    g.fillStyle = o.activity ? rgba(v >= 0 ? BLUE : ORANGE, liveNodeAlpha(v)) : '#151a24';
     g.fill();
     g.lineWidth = n.id === hoveredId ? 2.5 : 1.4;
-    g.strokeStyle = n.kind === 'bias' ? '#f5c451' : n.kind === 'hidden' ? '#4c9aff' : n.kind === 'output' ? '#e7ebf3' : '#8a94a7';
+    g.strokeStyle = NODE_RING[n.kind];
     g.stroke();
     if (n.kind === 'input' || n.kind === 'bias') {
       const label = n.kind === 'bias' ? 'Bias' : (o.inputLabels[n.slot] ?? `Input ${n.slot + 1}`);

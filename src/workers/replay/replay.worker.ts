@@ -35,8 +35,8 @@ const api = {
   setGhostScene(setup: RacingSetup, specs: GhostSpec[]) {
     ghosts?.setScene(setup, specs);
   },
-  playGhosts(speed: number, loop: boolean) {
-    ghosts?.play(speed, loop);
+  playGhosts(speed: number, loop: boolean, warmup?: number) {
+    ghosts?.play(speed, loop, warmup);
   },
   setGhostSpeed(speed: number) {
     ghosts?.setSpeed(speed);

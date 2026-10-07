@@ -83,6 +83,18 @@ The Sandbox plays trained champions outside training: up to eight hiders and eig
 * The room editor works on immutable rooms through the rules in `roomEdit.ts`, so undo is a list of earlier rooms. Rooms the user saves live in their own IndexedDB table and belong to no run, so every model can play in every room.
 * The editor places cubes, planks and ramps. A ramp's yaw is its uphill direction, so it turns through all four quarter turns where a crate flips between two. Every 2D map (the editor board, the room thumbnails and the lesson preview) draws a ramp with chevrons toward its lip, from the shared geometry in `src/features/hideseek/components/maps/rampChevrons.ts`.
 
+## Landing hero
+
+The first screen of the landing page plays both labs live behind the page text, with real brains: a trained car laps the Grand Prix and the shipped Hide and Seek reference champions play two on two. Nothing in it is canned video.
+
+* The server HTML holds the text and a poster, a still of the racing scene captured from the real renderer (`npm run hero:poster`, WebP files in `public/hero/`). It paints before any script runs, and three.js, the renderers and Rapier are not part of the page's first load.
+* After the page has loaded and gone idle, `useHeroMode` decides whether the device goes live. Reduced motion, Save-Data, a window under 1024 x 560 px (where the brain card has no room beside the text, so the scene would play without the network that drives it), a phone (a touch screen whose shorter side is under 768 px, so a phone held sideways counts), no WebGL 2, fewer than 4 cores or under 4 GB of memory keep the poster. Otherwise `HeroLive` loads as its own chunk.
+* `HeroLive` starts one replay worker, the labs' own, and loads both scenes into it: the car from `public/hero/racer.json` as a ghost (trained by `npm run hero:car`, checked against `ENGINE_VERSION` before it plays), then, once the car is on screen, the reference pair from `public/references/hideseek.json` as a Sandbox match. The worker imports Rapier only when that first match loads (see `loadRapier`), so the car never waits for the physics download, and the arena's warm up never competes with the car's.
+* Two canvases draw the scenes with the labs' renderers and crossfade every 13 s. A scene draws and its worker player runs only while it shows or fades; the other is held and paused. Both stop while the hero is off screen or the tab is hidden. The quality follows Settings; when nobody picked one, the hero starts a step below the labs' default.
+* Before a scene first shows, `Prewarm` gets it ready without drawing: its logic steps until its data is in, then its shaders compile in the background through `KHR_parallel_shader_compile` and its textures upload. Getting the second scene ready never stalls the first.
+* The brain card runs the inputs the worker sends with each frame through a local copy of the network and repaints with `NetworkPainter`, which uses the graph's layout and colors but allocates nothing per paint. During Hide and Seek it shows the hider's brain while hiders hide and the seeker's once seekers wake, and the camera follows that player.
+* Leaving the page terminates the worker and R3F loses both WebGL contexts. A browser test checks both.
+
 ## Scripts
 
 SBL scripts are parsed with error recovery, checked against one API registry (names, kinds, units and scopes) and compiled into closure trees. Nothing ever evaluates generated JavaScript, so an imported run cannot carry code that runs on open. Generation operators like `speciate` and `breed` only fill a plan; the tested NEAT code does the work.

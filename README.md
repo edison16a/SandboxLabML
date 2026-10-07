@@ -75,6 +75,8 @@ The app is a standard Next.js project with no server code or environment variabl
 | `npm run e2e` | Playwright browser tests (builds must exist; run `npm run build` first) |
 | `npm run refs` | Regenerates the benchmark reference results |
 | `npm run icons` | Re-renders the PNG app icons from the SVG |
+| `npm run hero:car` | Trains the car the landing page shows driving |
+| `npm run hero:poster` | Captures the landing page poster from the live scene (needs a running build) |
 
 ### Project layout
 
@@ -89,6 +91,7 @@ src/storage/       IndexedDB (Dexie): runs, generations, checkpoints, scripts
 src/ui/            Design system on Radix primitives, logo and GitHub button
 content/lessons/   Lesson content
 public/references/ Benchmark reference results
+public/hero/       The landing page's trained car and its poster stills
 ```
 
 ### Stack

@@ -2,14 +2,14 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HIDESEEK_BLUEPRINTS } from '@/engine/blueprints/presets';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { presetRoom } from '@/engine/hideseek/sandbox/room';
-import { readSandboxSnapshot, sandboxCounts } from '@/engine/hideseek/sandbox/snapshot';
+import { readSandboxSnapshot, SANDBOX_OVER, sandboxCounts } from '@/engine/hideseek/sandbox/snapshot';
 import { HideSeekTrainer } from '@/engine/hideseek/trainer/trainer';
 import { createArenaPool, type ArenaPool } from '@/engine/hideseek/world/pool';
 import { Network } from '@/engine/neat/network';
 import { createHideSeekRunConfig } from '@/engine/training/hideseekRunConfig';
 import { hideSeekTrainerOptions } from '@/engine/training/hideseekSetup';
 import { HideSeekHostCache } from '../shared/hideSeekHost';
-import type { StreamOut } from '../shared/protocol';
+import type { StreamIn, StreamOut } from '../shared/protocol';
 import { StreamSender } from '../shared/streamPort';
 import { LesionNetwork } from './lesionNetwork';
 import { SandboxPlayer, type SandboxScene } from './sandboxPlayer';
@@ -90,6 +90,34 @@ describe('Sandbox player', () => {
     const inspect = last()!.inspect;
     expect(inspect?.index).toBe(1);
     expect(inspect?.obs[0]).toBeCloseTo(0.25, 6);
+    player.stop();
+  });
+});
+
+describe('Sandbox player end of match', () => {
+  it('delivers the frame that ends a match even when the page held every buffer as it ended', async () => {
+    const frames: StreamOut[] = [];
+    // A page that keeps every buffer until the test hands one back, like a main thread busy drawing.
+    const port = {
+      onmessage: null as ((e: { data: StreamIn }) => void) | null,
+      postMessage(msg: StreamOut) {
+        frames.push(msg.kind === 'frame' ? { ...msg, buffer: msg.buffer.slice() } : msg);
+      },
+    };
+    const sender = new StreamSender(port as unknown as MessagePort, 'sandbox');
+    const player = new SandboxPlayer(sender, async () => pool, new HideSeekHostCache());
+    await player.load({ ...scene(1, 1), physics: { ...DEFAULT_HIDESEEK_PHYSICS, matchSeconds: 2 } });
+    const held = [sender.ring.take(), sender.ring.take()];
+    player.setSpeed(Infinity);
+    player.setPaused(false);
+    await new Promise((r) => setTimeout(r, 1000));
+    const over = () => frames.filter((m) => m.kind === 'frame' && m.buffer[SANDBOX_OVER] === 1);
+    expect(over()).toHaveLength(0);
+    port.onmessage?.({ data: { kind: 'return', buffer: held[0]!.buffer as ArrayBuffer } });
+    expect(over()).toHaveLength(1);
+    // Later buffers are only recycled: the end goes out once.
+    port.onmessage?.({ data: { kind: 'return', buffer: held[1]!.buffer as ArrayBuffer } });
+    expect(over()).toHaveLength(1);
     player.stop();
   });
 });

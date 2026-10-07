@@ -9,6 +9,8 @@ export class StreamSender {
   readonly ring = new BufferRing(8);
   inspect: number | null = null;
   rays = false;
+  /** Waits for the next buffer the main thread hands back. See whenFree. */
+  private onFree: (() => void) | null = null;
 
   constructor(
     private readonly port: MessagePort,
@@ -16,12 +18,24 @@ export class StreamSender {
   ) {
     port.onmessage = (e: MessageEvent<StreamIn>) => {
       const msg = e.data;
-      if (msg.kind === 'return') this.ring.give(msg.buffer);
-      else if (msg.kind === 'subscribe' && msg.stream === stream) {
+      if (msg.kind === 'return') {
+        this.ring.give(msg.buffer);
+        const fn = this.onFree;
+        this.onFree = null;
+        fn?.();
+      } else if (msg.kind === 'subscribe' && msg.stream === stream) {
         this.inspect = msg.inspect;
         this.rays = msg.rays;
       }
     };
+  }
+
+  /**
+   * Runs `fn` once, when the main thread next hands a buffer back, for a
+   * frame that must not be dropped. One waits at a time; null cancels it.
+   */
+  whenFree(fn: (() => void) | null): void {
+    this.onFree = fn;
   }
 
   send(msg: StreamOut): void {

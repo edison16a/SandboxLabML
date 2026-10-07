@@ -4,7 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { sandboxBoxCount, sandboxHiderCount, sandboxSeekerCount } from '@/engine/hideseek/sandbox/snapshot';
 import { DEFAULT_HIDESEEK_PHYSICS, type BoxKind } from '@/engine/hideseek/physics';
-import { roomWallRects } from '@/engine/hideseek/sandbox/room';
+import { roomWallRects, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useHsScene } from '../frame/sceneContext';
 import { useBoxDrag } from '../interaction/useBoxDrag';
@@ -43,10 +43,11 @@ function sameShape(shape: Shape | null, curr: Float32Array): boolean {
  * boxes come from the Sandbox stream, whose header says how many there
  * are; React re-renders only when those counts or the room change.
  */
-export function SandboxArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO runs over the frame, so the baked wall foot shade can be lighter. */ aoPass: boolean }) {
+export function SandboxArena({ tier, aoPass, room: shownRoom }: { tier: HsQualityTier; /** N8AO runs over the frame, so the baked wall foot shade can be lighter. */ aoPass: boolean; /** The room being played, when it is not the lab's Sandbox room. */ room?: SandboxRoom }) {
   const { frame, getFeed, onMoveBox, onToggleLock } = useHsScene();
   const invalidate = useThree((s) => s.invalidate);
-  const room = useSandboxRoom();
+  const labRoom = useSandboxRoom();
+  const room = shownRoom ?? labRoom;
   const walls = useMemo(() => roomWallRects(room, P), [room]);
   const wallsKey = useMemo(() => JSON.stringify(room.walls), [room]);
   const [shape, setShape] = useState<Shape | null>(null);
