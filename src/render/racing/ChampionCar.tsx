@@ -17,12 +17,7 @@ import { useRacingScene } from './sceneContext';
 
 const STRIDE = RACING_SNAPSHOT.stride;
 
-/**
- * The full detail car for whichever car the camera follows: clear coated
- * paint, steerable front wheels, spinning wheels, tail lamps that flare
- * under braking and body roll and pitch from a spring on the car's
- * accelerations.
- */
+/** Options for drawing the car outside the Racing lab, such as the landing hero. The lab passes none. */
 interface ChampionCarProps {
   /** Draws at this tier instead of the Racing lab's, for a view outside the lab. */
   tier?: QualityTier;
@@ -30,6 +25,12 @@ interface ChampionCarProps {
   ring?: boolean;
 }
 
+/**
+ * The full detail car for whichever car the camera follows: clear coated
+ * paint, steerable front wheels, spinning wheels, tail lamps that flare
+ * under braking and body roll and pitch from a spring on the car's
+ * accelerations.
+ */
 export function ChampionCar({ tier: pinnedTier, ring = true }: ChampionCarProps) {
   const { population, ghosts, frame } = useRacingScene();
   const labTier = useRacingLab((s) => s.activeTier);
