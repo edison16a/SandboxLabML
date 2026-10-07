@@ -85,6 +85,7 @@ export function SandboxArena({ tier, aoPass, room: shownRoom }: { tier: HsQualit
       if (sandboxBoxKind(bits) === 'ramp') ramps++;
     }
     field.readSandbox(frame, curr, players, boxes);
+    field.walls = walls;
     sandboxStats.agents = players;
     sandboxStats.boxes = boxes;
     sandboxStats.locked = locked;

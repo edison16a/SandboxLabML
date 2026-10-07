@@ -5,7 +5,7 @@ import { FLAG_AIRBORNE, FLAG_CLIMBING, FLAG_FROZEN, FLAG_HOLDING, FLAG_SEEING, F
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { HsCharacter } from '../characters/HsCharacter';
-import { findContact, lookAt, worthALook } from '../characters/perception';
+import { blockedAhead, findContact, lookAt, worthALook } from '../characters/perception';
 import type { CharacterDrive } from '../characters/types';
 import { useHsScene } from '../frame/sceneContext';
 import type { SceneField } from '../frame/sceneField';
@@ -64,6 +64,7 @@ export function SandboxAgent({ slot, team, tier, field }: Props) {
       d.look = !!other && !other.frozen && worthALook(d, other.x, other.z, team === 0 ? d.seen : d.seeing);
       if (other && d.look) lookAt(d, other.x, other.z, other.elevation);
       findContact(d, field.boxes, field.boxCount);
+      d.blocked = blockedAhead(d, field.walls);
       trail.update(x, z, elevation, !d.airborne, d.frozen ? 0 : 1);
     },
     [frame, slot, team, state, trail, field],

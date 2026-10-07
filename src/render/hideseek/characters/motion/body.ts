@@ -24,6 +24,8 @@ export interface BodyInput {
   push: number;
   hold: number;
   crouch: number;
+  /** 1 with a wall or box right in front: a stop there is not braking, so the body does not lean back for it. */
+  blocked: number;
   /** Where the agent looks, relative to its facing (left positive) and up, rad, and how much it wants to. */
   lookYaw: number;
   lookPitch: number;
@@ -105,7 +107,7 @@ export class BodyDynamics {
     // Lean: balance against acceleration, lean into speed, square to a slope, into a box, slumped asleep.
     const walk = clamp(est.speed / 2, 0, 1) * grounded;
     const leanTarget =
-      clamp(0.035 * est.forward + 0.02 * est.forwardAccel, -0.2, 0.24) * grounded * (1 - b.climb) * (1 - b.push) +
+      clamp(0.035 * est.forward + 0.02 * est.forwardAccel * (1 - b.blocked), -0.2, 0.24) * grounded * (1 - b.climb) * (1 - b.push) +
       SLOPE_LEAN * b.climb +
       0.34 * b.push -
       0.1 * b.hold * clamp(-est.forward, 0, 1) +

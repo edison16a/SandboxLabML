@@ -53,6 +53,8 @@ export interface CharacterDrive {
   contactNX: number;
   contactNZ: number;
   contactHeight: number;
+  /** Something solid (a wall, a box) is right in front of it, so a sudden stop is a collision. */
+  blocked: boolean;
 }
 
 export function createCharacterDrive(): CharacterDrive {
@@ -78,5 +80,6 @@ export function createCharacterDrive(): CharacterDrive {
     contactNX: 1,
     contactNZ: 0,
     contactHeight: 1,
+    blocked: false,
   };
 }

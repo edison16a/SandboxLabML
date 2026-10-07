@@ -1,3 +1,5 @@
+import { distanceToRect } from '@/engine/hideseek/layouts/geometry';
+import type { Rect } from '@/engine/hideseek/layouts/types';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { CONTACT_HOLD, CONTACT_NONE, CONTACT_PUSH, type CharacterDrive } from './types';
 
@@ -71,6 +73,22 @@ export function findContact(d: CharacterDrive, boxes: readonly BoxShape[], count
     d.contactHeight = b.ramp ? b.height * Math.min(1, Math.max(0.15, (px + hx) / b.length)) : b.height;
     d.contact = d.holding ? CONTACT_HOLD : CONTACT_PUSH;
   }
+}
+
+/** How far ahead of an agent's middle the collision probe sits, m: just past its front, where a wall would stop it. */
+const PROBE = P.agent.radius + 0.08;
+
+/**
+ * Whether a wall or a box stands right in front of the agent, so that a
+ * sudden stop reads as running into it. Uses the contact found by
+ * findContact for boxes, so call that first.
+ */
+export function blockedAhead(d: CharacterDrive, walls: readonly Rect[]): boolean {
+  if (d.contact === CONTACT_PUSH) return true;
+  const px = d.x + Math.cos(d.yaw) * PROBE;
+  const pz = d.z - Math.sin(d.yaw) * PROBE;
+  for (let i = 0; i < walls.length; i++) if (distanceToRect(px, pz, walls[i]) < 0.05) return true;
+  return false;
 }
 
 /** Points the eyes at another agent standing at (x, z), `elevation` m up. */

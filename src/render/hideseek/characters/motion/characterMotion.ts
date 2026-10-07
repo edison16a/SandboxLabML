@@ -15,8 +15,8 @@ const RAMP = DEFAULT_HIDESEEK_PHYSICS.box.ramp;
 const GRADE = RAMP.height / RAMP.length;
 /** Eye height over the ground, m, to aim the head at something. */
 const EYES = 1.15;
-/** Deceleration past this is a collision rather than braking, m/s². Braking peaks near 10; running into a wall goes past 20. */
-const BUMP = 15;
+/** A stop sharper than this against something solid is a collision, m/s² as the motion estimate smooths it: a run into a wall peaks near 14. */
+const BUMP = 8;
 
 /**
  * The motion of one character, as a renderer reads it: every frame it
@@ -95,10 +95,10 @@ export class CharacterMotion {
     this.gait.update({ x: d.x, z: d.z, yaw: d.yaw, ground: d.elevation, vx: est.vx, vz: est.vz, speed: est.speed, yawRate: est.yawRate, grade: GRADE * this.climb, uphillX: ux, uphillZ: uz, airborne: d.airborne, frozen: d.frozen, dt: step });
 
     if (this.wasAirborne && !d.airborne) this.body.kick(Math.min(0, est.rise) * 0.45 - 0.5);
-    // A stop far sharper than any braking is a collision: bump and recoil.
+    // Brains steer by velocity, so they can stop dead anywhere; only a hard stop with something solid in front is a collision.
     this.bumpWait = Math.max(0, this.bumpWait - step);
-    if (est.forwardAccel < -BUMP && this.bumpWait === 0 && !d.airborne && !d.frozen) {
-      this.body.bump(Math.min(2.2, (-est.forwardAccel - BUMP) * 0.12 + 0.8));
+    if (est.forwardAccel < -BUMP && d.blocked && this.bumpWait === 0 && !d.airborne && !d.frozen) {
+      this.body.bump(Math.min(3, (-est.forwardAccel - BUMP) * 0.2 + 1.4));
       this.bumpWait = 0.6;
     }
     this.wasAirborne = d.airborne;
@@ -106,7 +106,7 @@ export class CharacterMotion {
     this.wasSeen = d.seen;
 
     this.body.update(
-      { yaw: d.yaw, x: d.x, z: d.z, ground: d.elevation, climb: this.climb, air: b.air, asleep: b.asleep, push: b.push, hold: b.hold, crouch: b.crouch, lookYaw, lookPitch, looking: this.looking, time, seed: this.seed, dt: step },
+      { yaw: d.yaw, x: d.x, z: d.z, ground: d.elevation, climb: this.climb, air: b.air, asleep: b.asleep, push: b.push, hold: b.hold, crouch: b.crouch, blocked: d.blocked ? 1 : 0, lookYaw, lookPitch, looking: this.looking, time, seed: this.seed, dt: step },
       est,
       this.gait,
       p,

@@ -6,6 +6,7 @@ import { Suspense, useMemo, useRef, useState } from 'react';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useHsScene } from '../frame/sceneContext';
 import { SceneField } from '../frame/sceneField';
+import { wallsOfLayout } from '../layout/arenaWalls';
 import { arenaOrigin } from '../layout/gridLattice';
 import { ArenaContactShadows } from './ArenaContactShadows';
 import { ArenaRoom } from './ArenaRoom';
@@ -40,6 +41,7 @@ export function ShowcaseArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO 
     const layout = frame.layouts[frame.focusSlot] ?? 0;
     if (!shown || shown.arena !== arena || shown.layout !== layout) setShown({ arena, layout });
     field.readArena(frame, arena);
+    field.walls = wallsOfLayout(layout);
     arenaOrigin(frame.focusSlot, frame.lattice, origin);
     g.position.set(origin.x, 0, origin.z);
     g.visible = true;

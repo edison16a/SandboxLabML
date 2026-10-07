@@ -1,5 +1,6 @@
 import { BOX_COUNT, BOX_KINDS, boxKindSize, DEFAULT_HIDESEEK_PHYSICS, type BoxKind } from '@/engine/hideseek/physics';
 import { sandboxAgentAt, sandboxBoxAt, sandboxBoxKind, sandboxHiderCount } from '@/engine/hideseek/sandbox/snapshot';
+import type { Rect } from '@/engine/hideseek/layouts/types';
 import { SANDBOX_LIMITS } from '@/engine/hideseek/sandbox/room';
 import { AGENT_FLAGS, FLAG_FROZEN } from '@/engine/hideseek/snapshot';
 import { boxShape, type BoxShape } from '../characters/perception';
@@ -27,6 +28,8 @@ export interface FieldAgent extends AgentPose {
 export class SceneField {
   readonly boxes: BoxShape[] = Array.from({ length: MAX_BOXES }, boxShape);
   readonly agents: FieldAgent[] = Array.from({ length: MAX_PLAYERS }, () => ({ x: 0, z: 0, yaw: 0, elevation: 0, team: 0, frozen: false }));
+  /** The walls of the room on screen, set by the scene that owns them; never copied. */
+  walls: readonly Rect[] = [];
   boxCount = 0;
   agentCount = 0;
 
