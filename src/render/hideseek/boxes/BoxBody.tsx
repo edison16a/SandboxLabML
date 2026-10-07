@@ -6,6 +6,7 @@ import { useMemo, useRef } from 'react';
 import type { BoxKind, BoxSize } from '@/engine/hideseek/physics';
 import { LOCK_FREE, LOCK_SEEKERS } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
+import { POSE_PRIORITY } from '../frame/sceneContext';
 import { boxExtras, boxParts } from './boxKit';
 import { BoxMotion, tipOffset } from './boxMotion';
 import { BoxMaterials } from './boxMaterials';
@@ -107,7 +108,7 @@ export function BoxBody({ kind, size, read, full = true, shadows = false, blob =
     // While paused the canvas only draws on demand, so ask for the next
     // frame until a lock or unlock has fully played out.
     if (k !== target || w.moving) three.invalidate();
-  });
+  }, POSE_PRIORITY);
 
   return (
     <group ref={root}>

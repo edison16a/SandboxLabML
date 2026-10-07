@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef, type ReactNode } from 'react';
 import { useDisposable } from '@/render/shared/useDisposable';
+import { POSE_PRIORITY } from '../frame/sceneContext';
 import { characterKit } from './characterKit';
 import { CharacterMaterials } from './characterMaterials';
 import { CharacterMotion } from './motion/characterMotion';
@@ -83,7 +84,7 @@ export function HsCharacter({ team, read, detail = 'full', shadows = false, blob
       shadow.current.scale.setScalar(1 / (1 + d.elevation * BLOB_SHRINK));
     }
     if (ring.current) ring.current.visible = !d.airborne;
-  });
+  }, POSE_PRIORITY);
 
   return (
     <>

@@ -82,6 +82,14 @@ export interface HsSceneValue {
 
 export const HsSceneContext = createContext<HsSceneValue | null>(null);
 
+/**
+ * Priority of the frame callbacks that pose characters and boxes: after
+ * the frame driver (-2) and the scene field (-1), and before anything that
+ * draws the scene on its own (the contact shadows at 0, the first person
+ * views at 0.5), so no pass ever draws them where the last frame left them.
+ */
+export const POSE_PRIORITY = -0.5;
+
 export function useHsScene(): HsSceneValue {
   const v = useContext(HsSceneContext);
   if (!v) throw new Error('useHsScene must be used inside HsSceneContext');
