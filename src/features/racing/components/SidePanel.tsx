@@ -16,7 +16,7 @@ export function SidePanel({ network, inputs, model }: { network: React.ReactNode
           <Activity />
           Progress
         </TabsTrigger>
-        <TabsTrigger value="network">
+        <TabsTrigger value="network" data-tour="tab-network">
           <Network />
           Network
         </TabsTrigger>

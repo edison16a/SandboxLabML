@@ -9,10 +9,10 @@ import { GitHubButton } from '@/ui/brand/GitHubButton';
 import { cn } from '@/ui/cn';
 
 const NAV = [
-  { href: '/lab/racing', label: 'Racing', icon: Car },
-  { href: '/lab/hide-seek', label: 'Hide and Seek', icon: Users },
-  { href: '/studio', label: 'Studio', icon: Code2 },
-  { href: '/runs', label: 'Runs', icon: FolderOpen },
+  { href: '/lab/racing', label: 'Racing', icon: Car, tour: 'nav-racing' },
+  { href: '/lab/hide-seek', label: 'Hide and Seek', icon: Users, tour: 'nav-hideseek' },
+  { href: '/studio', label: 'Studio', icon: Code2, tour: 'nav-studio' },
+  { href: '/runs', label: 'Runs', icon: FolderOpen, tour: 'nav-runs' },
 ] as const;
 
 /** Top bar shared by every page: logo on the left, sections, then GitHub and Settings. */
@@ -25,12 +25,13 @@ export function AppHeader({ right }: { right?: React.ReactNode }) {
         <Logo wordmarkClassName="max-sm:hidden" />
       </Link>
       <nav className="no-scrollbar flex min-w-0 items-center gap-0.5 overflow-x-auto" aria-label="Sections">
-        {NAV.map(({ href, label, icon: Icon }) => {
+        {NAV.map(({ href, label, icon: Icon, tour }) => {
           const active = pathname?.startsWith(href);
           return (
             <Link
               key={href}
               href={href}
+              data-tour={tour}
               // Lab routes carry three.js and Rapier; prefetching them would make every page heavy.
               prefetch={false}
               aria-current={active ? 'page' : undefined}

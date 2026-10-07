@@ -6,9 +6,9 @@ import { BenchmarkChart } from '@/features/charts/BenchmarkChart';
 import { Stat } from '@/ui/primitives/Panel';
 import { useRacingLab } from '../state/labStore';
 
-function Section({ title, children, hint }: { title: string; children: React.ReactNode; hint?: string }) {
+function Section({ title, children, hint, tour }: { title: string; children: React.ReactNode; hint?: string; tour?: string }) {
   return (
-    <section className="flex flex-col gap-2">
+    <section data-tour={tour} className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between">
         <h3 className="text-[12px] font-semibold tracking-wide text-muted uppercase">{title}</h3>
         {hint && <span className="text-[11px] text-subtle">{hint}</span>}
@@ -30,13 +30,13 @@ export function ProgressTab() {
         <Stat label="Species" value={last ? last.stats.species.length : 0} />
         <Stat label="Avg links" value={last ? last.stats.meanConnections.toFixed(1) : '0'} hint="Mean enabled connections per brain" />
       </div>
-      <Section title="Fitness" hint="best, median, mean">
+      <Section title="Fitness" hint="best, median, mean" tour="fitness">
         {records.length > 0 ? <FitnessChart records={records} /> : <Empty />}
       </Section>
       <Section title="Benchmark" hint="held-out roads, 0 to 100">
         <BenchmarkChart records={records} />
       </Section>
-      <Section title="Species" hint="share of the population">
+      <Section title="Species" hint="share of the population" tour="species">
         {records.length > 0 ? <SpeciesChart records={records} /> : <Empty />}
       </Section>
       <Section title="Recent champions">

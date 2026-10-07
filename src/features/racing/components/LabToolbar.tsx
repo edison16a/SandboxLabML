@@ -55,7 +55,7 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
         <SpeedBar value={speed} onChange={(v) => void session.setSpeed(v)} />
       </span>
       <div className="hidden min-w-0 items-center gap-4 pl-2 @min-[56rem]:flex">
-        <div className="flex flex-col leading-tight">
+        <div data-tour="generation" className="flex flex-col leading-tight">
           <span className="text-[11px] text-muted">Generation</span>
           <span className="tabular font-mono text-[15px] font-semibold">{gen + 1}</span>
         </div>

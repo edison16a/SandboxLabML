@@ -30,6 +30,7 @@ export function ViewControls() {
         <Tooltip content={weak ? 'Arenas on screen. This GPU shows up to 25 until you pick a quality in Settings.' : 'Arenas on screen'} shortcut="G">
           <span>
             <Segmented<`${GridSize}`>
+              data-tour="arenas"
               label="Arenas on screen"
               size="sm"
               overlay
@@ -54,7 +55,7 @@ export function ViewControls() {
         ]}
       />
       <Tooltip content="Show what the agents sense" shortcut="I">
-        <Button size="sm" variant="secondary" className={inputs ? on : glass} onClick={() => set({ inputsOverlay: !inputs })} aria-pressed={inputs}>
+        <Button data-tour="inputs" size="sm" variant="secondary" className={inputs ? on : glass} onClick={() => set({ inputsOverlay: !inputs })} aria-pressed={inputs}>
           <ScanEye />
           Inputs
         </Button>
