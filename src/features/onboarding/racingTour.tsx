@@ -91,8 +91,8 @@ export const RACING_TOUR: Tour = {
       title: 'Train faster',
       body: '1x to 4x let you watch every car. Turbo and Max train flat out on every core of your computer.',
       action: {
+        // No shortcut shown: its key is 4, which reads as the 4x button right beside Turbo.
         prompt: 'Pick Turbo',
-        shortcut: '4',
         done: racingFlatOut,
         doneLabel: 'Training flat out',
         then: {

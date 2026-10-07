@@ -36,8 +36,9 @@ function ActionRow({ step, acted }: { step: WalkStep; acted: boolean }) {
         <span className="relative inline-flex size-2 rounded-full bg-accent" />
       </span>
       <span className="text-[13px] font-medium text-fg">{action.prompt}</span>
+      {/* A phone or tablet has no keys to press, so the shortcut only shows with a mouse. */}
       {action.shortcut && (
-        <span className="ml-auto flex items-center gap-1.5 text-[11px] text-subtle">
+        <span className="ml-auto flex items-center gap-1.5 text-[11px] text-subtle pointer-coarse:hidden">
           or <Kbd>{action.shortcut}</Kbd>
         </span>
       )}
