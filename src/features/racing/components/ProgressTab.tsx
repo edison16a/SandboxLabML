@@ -23,21 +23,28 @@ export function ProgressTab() {
   const records = useRacingLab((s) => s.records);
   const last = records[records.length - 1];
   const recent = records.slice(-8).reverse();
+  if (!last) {
+    return (
+      <div className="p-4">
+        <Empty />
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-6 p-4">
       <div className="grid grid-cols-3 gap-3">
-        <Stat label="Best fitness" value={last ? last.stats.best.toFixed(1) : '0'} />
-        <Stat label="Species" value={last ? last.stats.species.length : 0} />
-        <Stat label="Avg links" value={last ? last.stats.meanConnections.toFixed(1) : '0'} hint="Mean enabled connections per brain" />
+        <Stat label="Best fitness" value={last.stats.best.toFixed(1)} />
+        <Stat label="Species" value={last.stats.species.length} />
+        <Stat label="Avg links" value={last.stats.meanConnections.toFixed(1)} hint="Mean enabled connections per brain" />
       </div>
       <Section title="Fitness" hint="best, median, mean">
-        {records.length > 0 ? <FitnessChart records={records} /> : <Empty />}
+        <FitnessChart records={records} />
       </Section>
-      <Section title="Benchmark" hint="held-out roads, 0 to 100">
+      <Section title="Benchmark" hint="unseen tracks, 0 to 100">
         <BenchmarkChart records={records} />
       </Section>
       <Section title="Species" hint="share of the population">
-        {records.length > 0 ? <SpeciesChart records={records} /> : <Empty />}
+        <SpeciesChart records={records} />
       </Section>
       <Section title="Recent champions">
         <table className="w-full text-[12px]">
@@ -62,12 +69,17 @@ export function ProgressTab() {
             ))}
           </tbody>
         </table>
-        {!recent.length && <Empty />}
       </Section>
     </div>
   );
 }
 
+/** The one placeholder the tab shows until the first generation is done. */
 function Empty() {
-  return <div className="flex h-24 items-center justify-center rounded-md border border-dashed border-border text-[12px] text-subtle">Press Train to start the first generation.</div>;
+  const running = useRacingLab((s) => s.status === 'running');
+  return (
+    <div className="flex h-24 items-center justify-center rounded-md border border-dashed border-border text-[12px] text-subtle">
+      {running ? 'First generation running' : 'Press Train to start'}
+    </div>
+  );
 }
