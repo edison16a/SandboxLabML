@@ -20,7 +20,7 @@ import { SeenMarkers } from './SeenMarkers';
 const P = DEFAULT_HIDESEEK_PHYSICS;
 
 /** What is on the field, published with the render stats for tests. */
-export const sandboxStats = { agents: 0, boxes: 0, locked: 0 };
+export const sandboxStats = { agents: 0, boxes: 0, locked: 0, ramps: 0 };
 
 interface Shape {
   hiders: number;
@@ -75,10 +75,16 @@ export function SandboxArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO r
       setShape({ hiders: sandboxHiderCount(curr), seekers: sandboxSeekerCount(curr), kinds });
     }
     let locked = 0;
-    for (let b = 0; b < boxes; b++) if (isLocked(boxBits(curr, players, b))) locked++;
+    let ramps = 0;
+    for (let b = 0; b < boxes; b++) {
+      const bits = boxBits(curr, players, b);
+      if (isLocked(bits)) locked++;
+      if (sandboxBoxKind(bits) === 'ramp') ramps++;
+    }
     sandboxStats.agents = players;
     sandboxStats.boxes = boxes;
     sandboxStats.locked = locked;
+    sandboxStats.ramps = ramps;
   }, -1);
 
   useEffect(() => {
@@ -95,7 +101,7 @@ export function SandboxArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO r
     return () => {
       frame.agentPose = null;
       off?.();
-      Object.assign(sandboxStats, { agents: 0, boxes: 0, locked: 0 });
+      Object.assign(sandboxStats, { agents: 0, boxes: 0, locked: 0, ramps: 0 });
     };
   }, [frame, getFeed, invalidate]);
 

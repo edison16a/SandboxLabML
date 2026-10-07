@@ -31,8 +31,9 @@ async function topDown(page: Page, x: number, z: number, y: number) {
 
 /**
  * The Hide and Seek Sandbox end to end: train a tiny run on Max, open the
- * Sandbox, build a room with the keyboard, spawn more players, run, pause
- * and restart, lock a crate, and find the room again after a reload.
+ * Sandbox, build a room with a ramp using the keyboard, spawn more
+ * players, run, pause and restart, lock a crate, and find the room again
+ * after a reload.
  */
 test('the Sandbox plays a room built in the editor with many players, and keeps the room', async ({ page }) => {
   test.setTimeout(420_000);
@@ -57,7 +58,7 @@ test('the Sandbox plays a room built in the editor with many players, and keeps 
   }
   await expect.poll(instance(page, 'sandboxAgents'), { timeout: 60_000 }).toBe(4);
 
-  // A wall from (-2, 0) to (-2, -4) and a cube at (4, -4), placed with the keyboard cursor.
+  // A wall from (-2, 0) to (-2, -4), a cube at (4, -4) and a ramp at (4, 6), placed with the keyboard cursor.
   await page.getByRole('button', { name: 'New room' }).click();
   const board = page.getByRole('application', { name: /Room editor board/ });
   await board.focus();
@@ -75,6 +76,12 @@ test('the Sandbox plays a room built in the editor with many players, and keeps 
   await page.keyboard.press('c');
   for (let i = 0; i < 12; i++) await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Enter');
+  // R picks the ramp tool; a ramp at (4, 6), clear of both spawn areas, with its uphill side turned once by T.
+  await page.keyboard.press('r');
+  await expect(page.getByRole('radio', { name: /Ramp/ })).toHaveAttribute('aria-checked', 'true');
+  await page.keyboard.press('t');
+  for (let i = 0; i < 20; i++) await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
   await page.getByRole('textbox', { name: 'Name' }).fill('Test fort');
   await page.getByRole('button', { name: 'Save and play' }).click();
   await expect(page.getByRole('radio', { name: 'Test fort' })).toHaveAttribute('aria-checked', 'true');
@@ -84,7 +91,8 @@ test('the Sandbox plays a room built in the editor with many players, and keeps 
     while (Number(await spin.getAttribute('aria-valuenow')) < (team === 'hiders' ? 4 : 3)) await page.getByRole('button', { name: `More ${team}` }).click();
   }
   await expect.poll(instance(page, 'sandboxAgents'), { timeout: 60_000 }).toBe(7);
-  await expect.poll(instance(page, 'sandboxBoxes'), { timeout: 30_000 }).toBe(1);
+  await expect.poll(instance(page, 'sandboxBoxes'), { timeout: 30_000 }).toBe(2);
+  await expect.poll(instance(page, 'sandboxRamps'), { timeout: 30_000 }).toBe(1);
 
   await page.getByRole('button', { name: 'Run', exact: true }).click();
   // The 9 s prep counts down from the start, so any other reading means the match is running.
