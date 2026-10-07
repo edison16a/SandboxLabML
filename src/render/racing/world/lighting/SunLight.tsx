@@ -13,7 +13,17 @@ interface Props {
 }
 
 /** Shadow box half size per tier, m. High covers more road so tree shadows reach across it. */
-const SHADOW_BOX = { low: 40, medium: 42, high: 55 } as const;
+const SHADOW_BOX = { low: 40, medium: 46, high: 60 } as const;
+
+/**
+ * The shadow camera's own right and up axes. It looks down SUN_DIR with
+ * world up, exactly as three's lookAt builds it, so snapping a point's
+ * coordinates on these axes to whole texels lines it up with the shadow
+ * map's grid. Snapping world x and z instead still slides the grid by part
+ * of a texel, because the grid is turned against the world.
+ */
+const RIGHT = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), SUN_DIR).normalize();
+const UP = new THREE.Vector3().crossVectors(SUN_DIR, RIGHT);
 
 /**
  * The sun and the sky's fill light. The sun casts the only real shadows,
@@ -24,19 +34,27 @@ const SHADOW_BOX = { low: 40, medium: 42, high: 55 } as const;
 export function SunLight({ tier, focus }: Props) {
   const light = useRef<THREE.DirectionalLight>(null);
   const target = useMemo(() => new THREE.Object3D(), []);
+  const tmp = useMemo(() => ({ center: new THREE.Vector3(), look: new THREE.Vector3() }), []);
   const size = SHADOW_BOX[tier];
   const map = tier === 'high' ? 2048 : 1024;
   // One texel of the shadow map in world meters: the box snaps to it so shadows never crawl as the camera moves.
   const texel = (size * 2) / map;
 
-  useFrame(() => {
+  useFrame(({ camera }) => {
     const l = light.current;
     const f = focus.current;
     if (!l || !f) return;
-    const sx = Math.round(f.x / texel) * texel;
-    const sz = Math.round(f.z / texel) * texel;
-    target.position.set(sx, 0, sz);
-    l.position.set(sx + SUN_DIR.x * 220, SUN_DIR.y * 220, sz + SUN_DIR.z * 220);
+    // Center the box a little ahead of the target, where the camera is looking, so more of what is on screen gets shadows.
+    camera.getWorldDirection(tmp.look).setY(0);
+    if (tmp.look.lengthSq() > 1e-6) tmp.look.normalize();
+    const c = tmp.center.copy(f).addScaledVector(tmp.look, size * 0.4).setY(0);
+    // Snap on the shadow camera's own axes, keeping the distance along the sun as it is.
+    const a = Math.round(c.dot(RIGHT) / texel) * texel;
+    const b = Math.round(c.dot(UP) / texel) * texel;
+    const d = c.dot(SUN_DIR);
+    c.copy(RIGHT).multiplyScalar(a).addScaledVector(UP, b).addScaledVector(SUN_DIR, d);
+    target.position.copy(c);
+    l.position.copy(c).addScaledVector(SUN_DIR, 220);
     target.updateMatrixWorld();
   });
 
