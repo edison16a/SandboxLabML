@@ -14,7 +14,7 @@ describe('Sandbox rooms', () => {
     expect(PRESET_ROOMS.map((r) => r.id)).toEqual(['open', 'shelter', 'corridor']);
     const shelter = presetRoom('shelter');
     expect(shelter.walls).toEqual(HIDESEEK_LAYOUTS.shelter.walls);
-    expect(shelter.boxes.map((b) => b.kind)).toEqual(['cube', 'cube', 'plank', 'plank']);
+    expect(shelter.boxes.map((b) => b.kind)).toEqual(['cube', 'cube', 'plank', 'plank', 'ramp']);
     expect(shelter.hiderSpawn).toEqual(HIDESEEK_LAYOUTS.shelter.hiderSpawn);
   });
 

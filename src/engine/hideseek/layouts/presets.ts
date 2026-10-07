@@ -5,7 +5,8 @@ const QUARTER = Math.PI / 2;
 /**
  * The built-in rooms. All share the 20 x 20 m outer walls, so x and z run
  * from -10 to 10. Box spots keep at least a meter of clearance from walls,
- * which leaves room for the spawn jitter.
+ * which leaves room for the spawn jitter. Every room has one ramp, put
+ * where a seeker can make use of it.
  */
 export const OPEN_LAYOUT: ArenaLayout = {
   id: 'open',
@@ -17,6 +18,8 @@ export const OPEN_LAYOUT: ArenaLayout = {
     { x: 4, z: -4, yaw: 0 },
     { x: -4, z: -4, yaw: 0 },
     { x: 4, z: 4, yaw: QUARTER },
+    // Halfway between the two spawn areas, so neither team starts closer.
+    { x: 0, z: 6.5, yaw: 0 },
   ],
   hiderSpawn: { minX: -8, maxX: -2, minZ: -3, maxZ: 3 },
   seekerSpawn: { minX: 2, maxX: 8, minZ: -3, maxZ: 3 },
@@ -29,7 +32,7 @@ export const OPEN_LAYOUT: ArenaLayout = {
 export const SHELTER_LAYOUT: ArenaLayout = {
   id: 'shelter',
   name: 'Shelter',
-  description: 'A half room in the corner with one doorway. A plank can close it.',
+  description: 'A half room in the corner with one doorway. A plank can close it, and the ramp outside can beat its walls.',
   walls: [
     { from: [-3, -10], to: [-3, -3] },
     { from: [-10, -3], to: [-7.2, -3] },
@@ -40,6 +43,8 @@ export const SHELTER_LAYOUT: ArenaLayout = {
     { x: 3, z: -5, yaw: 0 },
     { x: -6.3, z: -1.5, yaw: 0 },
     { x: 4, z: 5, yaw: QUARTER },
+    // Outside the half room, its lip toward the east wall: push it up to the wall, run up and jump in.
+    { x: 1.5, z: -7.5, yaw: Math.PI },
   ],
   hiderSpawn: { minX: -2, maxX: 2, minZ: 0, maxZ: 4 },
   seekerSpawn: { minX: 5, maxX: 9, minZ: 5, maxZ: 9 },
@@ -53,7 +58,7 @@ export const SHELTER_LAYOUT: ArenaLayout = {
 export const CORRIDOR_LAYOUT: ArenaLayout = {
   id: 'corridor',
   name: 'Corridors',
-  description: 'Four lanes joined at alternating ends. Planks can close the gaps.',
+  description: 'Four lanes joined at alternating ends. Planks can close the gaps, and a ramp in the seeker lane can cross a wall.',
   walls: [
     { from: [-10, -5], to: [7, -5] },
     { from: [-7, 0], to: [10, 0] },
@@ -64,6 +69,8 @@ export const CORRIDOR_LAYOUT: ArenaLayout = {
     { x: 5, z: 7.5, yaw: 0 },
     { x: 0, z: -2.5, yaw: 0 },
     { x: 0, z: 2.5, yaw: 0 },
+    // In the seekers' lane, its lip toward the wall of the hiders' lane.
+    { x: -4.5, z: 2.5, yaw: QUARTER },
   ],
   hiderSpawn: { minX: -8, maxX: -2.5, minZ: -4, maxZ: -1 },
   seekerSpawn: { minX: 2.5, maxX: 8, minZ: 1, maxZ: 4 },

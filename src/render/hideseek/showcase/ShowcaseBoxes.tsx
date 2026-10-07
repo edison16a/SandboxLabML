@@ -14,8 +14,9 @@ const SIZES = Array.from({ length: BOX_COUNT }, (_, i) => boxSize(DEFAULT_HIDESE
 export type BoxPointerHandler = (index: number, e: ThreeEvent<PointerEvent>) => void;
 
 /**
- * The four crates of the showcase arena, fed from the arena stream. A
- * locked crate lights its braces and raises a padlock hologram. In the
+ * The boxes of the showcase arena, fed from the arena stream (the ramp is
+ * drawn as a crate of its footprint for now). A locked box lights its
+ * braces and raises a padlock hologram in its owner's color. In the
  * Sandbox a crate can be dragged, and a double click locks or frees it.
  */
 export function ShowcaseBoxes({ arena, tier, onBoxPointerDown, onBoxDoubleClick }: { arena: number; tier: HsQualityTier; onBoxPointerDown?: BoxPointerHandler; onBoxDoubleClick?: (index: number) => void }) {

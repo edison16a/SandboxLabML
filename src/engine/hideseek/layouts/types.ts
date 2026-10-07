@@ -26,15 +26,15 @@ export interface Region {
 
 /**
  * One room. The outer walls come from the physics config; a layout adds
- * interior walls, where the four boxes start and where each team spawns.
+ * interior walls, where the five boxes start and where each team spawns.
  */
 export interface ArenaLayout {
   id: HideSeekLayoutId;
   name: string;
   description: string;
   walls: WallSegment[];
-  /** Exactly four spots. Boxes 0 and 1 are cubes, 2 and 3 are planks. */
-  boxes: [Pose, Pose, Pose, Pose];
+  /** One spot per box, in BOX_KINDS order: cubes 0 and 1, planks 2 and 3, and the ramp 4 (yaw points uphill). */
+  boxes: [Pose, Pose, Pose, Pose, Pose];
   hiderSpawn: Region;
   seekerSpawn: Region;
 }

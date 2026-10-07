@@ -1,5 +1,5 @@
 import type { Region, WallSegment } from '../layouts/types';
-import { DEFAULT_HIDESEEK_PHYSICS } from '../physics';
+import { boxKindSize, DEFAULT_HIDESEEK_PHYSICS } from '../physics';
 import { SANDBOX_LIMITS, type SandboxBox, type SandboxRoom } from './room';
 
 const HALF = DEFAULT_HIDESEEK_PHYSICS.arena.size / 2;
@@ -29,7 +29,7 @@ function wall(raw: unknown): WallSegment | null {
  * poking through a wall whichever way it is turned.
  */
 export function boxMargins(kind: SandboxBox['kind'], yaw: number): { x: number; z: number } {
-  const s = kind === 'cube' ? DEFAULT_HIDESEEK_PHYSICS.box.cube : DEFAULT_HIDESEEK_PHYSICS.box.plank;
+  const s = boxKindSize(DEFAULT_HIDESEEK_PHYSICS, kind);
   const c = Math.abs(Math.cos(yaw));
   const n = Math.abs(Math.sin(yaw));
   return { x: (s.length * c + s.width * n) / 2 + 0.05, z: (s.length * n + s.width * c) / 2 + 0.05 };
@@ -37,7 +37,7 @@ export function boxMargins(kind: SandboxBox['kind'], yaw: number): { x: number; 
 
 function box(raw: unknown): SandboxBox | null {
   const b = raw as Partial<SandboxBox> | null;
-  if (!b || !num(b.x) || !num(b.z) || (b.kind !== 'cube' && b.kind !== 'plank')) return null;
+  if (!b || !num(b.x) || !num(b.z) || (b.kind !== 'cube' && b.kind !== 'plank' && b.kind !== 'ramp')) return null;
   const yaw = num(b.yaw) ? b.yaw : 0;
   const m = boxMargins(b.kind, yaw);
   return { x: clamp(b.x, -HALF + m.x, HALF - m.x), z: clamp(b.z, -HALF + m.z, HALF - m.z), yaw, kind: b.kind };

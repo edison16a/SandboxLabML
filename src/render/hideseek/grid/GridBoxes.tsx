@@ -18,20 +18,22 @@ const BRACE = new THREE.Color(BOX_LOOK.brace);
 /** Pushed past 1 so a locked crate's braces read as lit even from far away. */
 const LOCKED = new THREE.Color(BOX_LOOK.lockGlow).multiplyScalar(1.5);
 const SEEKER_LOCKED = new THREE.Color(BOX_LOOK.seekerLockGlow).multiplyScalar(1.5);
-/** Box indexes of each kind: two cubes, then two planks. */
+/** Box indexes of each kind: two cubes, two planks and a ramp. */
 const OF_KIND: Record<BoxKind, number[]> = { cube: [], plank: [], ramp: [] };
 BOX_KINDS.forEach((k, i) => OF_KIND[k].push(i));
 
 /**
  * Every crate of every grid arena, one instanced draw call per kind: the
- * cubes, then the planks. Locked crates light their braces in the hider
- * color, which is all the grid needs to show a fort.
+ * cubes, the planks, then the ramps, drawn for now as crates of their
+ * footprint. Locked crates light their braces in the color of the team
+ * that owns the lock, which is all the grid needs to show a fort.
  */
 export function GridBoxes({ onPick }: { onPick: (slot: number) => void }) {
   return (
     <group>
       <CrateKind kind="cube" onPick={onPick} />
       <CrateKind kind="plank" onPick={onPick} />
+      <CrateKind kind="ramp" onPick={onPick} />
     </group>
   );
 }

@@ -35,7 +35,7 @@ export function roomHalf(p: HideSeekPhysics): number {
   return p.arena.size / 2;
 }
 
-/** A built-in layout as a Sandbox room: its walls, its four boxes and both spawn areas. */
+/** A built-in layout as a Sandbox room: its walls, its boxes and both spawn areas. */
 export function presetRoom(id: HideSeekLayoutId): SandboxRoom {
   const l = HIDESEEK_LAYOUTS[id];
   return {

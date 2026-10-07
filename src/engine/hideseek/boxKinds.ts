@@ -3,8 +3,8 @@ import type { BoxSize, HideSeekPhysics } from './physics';
 /** What a box is. Cubes and planks are crates; a ramp is a wedge agents can run up (see HideSeekPhysics.box.ramp). */
 export type BoxKind = 'cube' | 'plank' | 'ramp';
 
-/** The kinds of a 1 v 1 arena's boxes, in index order: two cubes, then two planks. */
-export const BOX_KINDS: readonly BoxKind[] = ['cube', 'cube', 'plank', 'plank'];
+/** The kinds of a 1 v 1 arena's boxes, in index order: two cubes, two planks, then a ramp. */
+export const BOX_KINDS: readonly BoxKind[] = ['cube', 'cube', 'plank', 'plank', 'ramp'];
 export const BOX_COUNT = BOX_KINDS.length;
 
 /** Size of box `index` of a 1 v 1 match, whose kinds follow BOX_KINDS. */

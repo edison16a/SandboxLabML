@@ -59,7 +59,7 @@ describe('Sandbox player', () => {
     const player = new SandboxPlayer(sender, async () => pool, new HideSeekHostCache());
     await player.load(scene(3, 2));
     expect(frames[0].kind).toBe('start');
-    expect(sandboxCounts(last()!.buffer)).toEqual({ hiders: 3, seekers: 2, boxes: 4 });
+    expect(sandboxCounts(last()!.buffer)).toEqual({ hiders: 3, seekers: 2, boxes: 5 });
     player.moveBox(2, 3.5, -2.25);
     let snap = readSandboxSnapshot(last()!.buffer);
     expect(snap.boxes[2].x).toBeCloseTo(3.5, 5);
