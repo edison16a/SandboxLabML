@@ -1,10 +1,11 @@
 'use client';
 
-import * as THREE from 'three';
+import type * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useMemo, useRef } from 'react';
 import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
+import type { HsCamera } from '@/features/hideseek/state/types';
 import { stepSpring } from '@/render/shared/interpolate';
 import { useHsScene } from '../frame/sceneContext';
 import { followedAgent } from '../frame/followedAgent';
@@ -12,28 +13,29 @@ import { boxDrag } from '../interaction/useBoxDrag';
 import { arenaOrigin, ARENA_SPAN } from '../layout/gridLattice';
 import { firstPersonAgent, FOLLOW, followedAgentOf, presetShot, shotKey } from './cameraViews';
 import { fitDepthRange } from './depthRange';
-import { CLOSE_AZIMUTH, easeInOutCubic, orbitShot, type Shot } from './framing';
+import { Flight } from './flight';
+import { CLOSE_AZIMUTH, orbitShot } from './framing';
 
-/** How long a change of view or focus takes to fly, s. */
-const FLY_SECONDS = 0.6;
 /** Eye height of the first person cameras, m: just under the top of a 1.5 m agent. */
 const EYE = 1.32;
 /** The camera never dips below this, m, so no view ever looks up through the floor. */
 const MIN_HEIGHT = 0.3;
 /** An aim this far from its agent means the agent jumped (a new round), m: the follow camera flies there instead of trailing. */
 const RESPAWN = 4;
+/** How far past the arenas the orbit point may be panned, m. */
+const PAN_MARGIN = 12;
 /** Key of the free view: it has no shot of its own, it only follows the focused arena when that changes. */
 const FREE = -1;
 
 type Controls = React.ComponentRef<typeof OrbitControls>;
 
 /**
- * Every camera view of the lab. Set shots fly into place over 600 ms
- * whenever the view, the focus or the grid changes; follow views keep an
- * agent in frame on a soft spring while you orbit round it; the free view
- * never moves by itself and carries over to a newly focused arena; first
- * person views ride on an agent. Orbit, pan and zoom work in every view but
- * first person.
+ * Every camera view of the lab. Set shots fly into place whenever the
+ * view, the focus or the grid changes; follow views keep an agent in frame
+ * on a soft spring while you orbit round it; the free view never moves by
+ * itself and carries over to a newly focused arena; first person views
+ * ride on an agent. Orbit, pan and zoom work in every view but first
+ * person, and never take the camera under the floor or far off the arenas.
  */
 export function CameraRig() {
   const { frame } = useHsScene();
@@ -45,17 +47,9 @@ export function CameraRig() {
   const controls = useRef<Controls>(null);
   const r = useMemo(
     () => ({
-      key: Number.NaN,
-      started: false,
-      t: 1,
-      fromPos: new THREE.Vector3(),
-      fromTarget: new THREE.Vector3(),
-      toPos: new THREE.Vector3(),
-      toTarget: new THREE.Vector3(),
-      look: new THREE.Vector3(),
-      delta: new THREE.Vector3(),
-      /** The follow camera's place relative to its aim, kept through a fly. */
-      offset: new THREE.Vector3(),
+      flight: new Flight(),
+      /** The follow camera's place relative to its aim, kept through a flight. */
+      offset: { x: 0, y: 0, z: 0 },
       o: { x: 0, z: 0 },
       origin: { x: 0, z: 0 },
       pose: { x: 0, z: 0, yaw: 0, elevation: 0 },
@@ -63,14 +57,15 @@ export function CameraRig() {
     }),
     [],
   );
+  const f = r.flight;
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.1);
     const c = controls.current;
     const m = useHideSeekLab.getState().camera;
     const eyes = firstPersonAgent(m);
-    if (c) c.enabled = eyes < 0 && r.t >= 1 && !boxDrag.active;
-    const target = c?.target ?? r.toTarget;
+    if (c) c.enabled = eyes < 0 && f.t >= 1 && !boxDrag.active;
+    const target = c?.target ?? f.toTarget;
     fitDepthRange(camera, scene, frame, eyes >= 0 ? 0 : camera.position.distanceTo(target), target);
     if (eyes >= 0) return firstPerson(eyes);
     if (!c) return;
@@ -78,7 +73,10 @@ export function CameraRig() {
     if (team >= 0 && agentInWorld(team)) follow(c, m, dt);
     else if (m === 'free') free(c);
     else preset(c, m);
-    if (r.t < 1) stepFly(c, dt);
+    if (f.t < 1) {
+      f.step(camera, c, dt);
+      invalidate();
+    } else f.keepInBounds(camera, c, frame.lattice.width / 2 + PAN_MARGIN, frame.lattice.depth / 2 + PAN_MARGIN);
     if (camera.position.y < MIN_HEIGHT) camera.position.y = MIN_HEIGHT;
   });
 
@@ -99,40 +97,13 @@ export function CameraRig() {
     return true;
   }
 
-  function startFly(c: Controls, shot: Shot): void {
-    r.fromPos.copy(camera.position);
-    r.fromTarget.copy(c.target);
-    r.toPos.set(shot.px, shot.py, shot.pz);
-    r.toTarget.set(shot.tx, shot.ty, shot.tz);
-    // The very first framing jumps; later ones fly.
-    r.t = r.started ? 0 : 1;
-    r.started = true;
-    if (r.t >= 1) {
-      camera.position.copy(r.toPos);
-      c.target.copy(r.toTarget);
-      camera.lookAt(r.toTarget);
-      c.update();
-    }
-  }
-
-  function stepFly(c: Controls, dt: number): void {
-    r.t = Math.min(1, r.t + dt / FLY_SECONDS);
-    const e = easeInOutCubic(r.t);
-    camera.position.lerpVectors(r.fromPos, r.toPos, e);
-    r.look.lerpVectors(r.fromTarget, r.toTarget, e);
-    c.target.copy(r.look);
-    camera.lookAt(r.look);
-    c.update();
-    invalidate();
-  }
-
-  function preset(c: Controls, m: typeof mode): void {
+  function preset(c: Controls, m: HsCamera): void {
     // A follow view with nobody to follow shows the close shot under a key of its own, so it flies to the agent once one turns up.
     const key = shotKey(m, frame.focusSlot, frame.count, frame.lattice.cols) + (followedAgentOf(m) >= 0 ? 0.5 : 0);
-    if (key === r.key) return;
-    r.key = key;
+    if (key === f.key) return;
+    f.key = key;
     const focus = frame.focusSlot >= 0 ? focusOrigin() : null;
-    startFly(c, presetShot(m, focus, frame.lattice, ARENA_SPAN, camera.fov, size.width / Math.max(1, size.height)));
+    f.start(camera, c, presetShot(m, focus, frame.lattice, ARENA_SPAN, camera.fov, size.width / Math.max(1, size.height)));
   }
 
   /**
@@ -140,79 +111,67 @@ export function CameraRig() {
    * the aim trail the agent on a critically damped spring. Camera and aim
    * move together, so whatever angle and distance you orbit to are kept.
    */
-  function follow(c: Controls, m: typeof mode, dt: number): void {
+  function follow(c: Controls, m: HsCamera, dt: number): void {
     const ax = r.pose.x;
     const ay = FOLLOW.height + r.pose.elevation * 0.8;
     const az = r.pose.z;
+    const o = r.offset;
     const key = shotKey(m, frame.focusSlot, frame.count, frame.lattice.cols);
-    if (key !== r.key) {
-      r.key = key;
+    if (key !== f.key) {
+      f.key = key;
       const shot = orbitShot(ax, az, FOLLOW.distance, FOLLOW.elevation, CLOSE_AZIMUTH, ay);
-      r.offset.set(shot.px - ax, shot.py - ay, shot.pz - az);
-      startFly(c, shot);
+      o.x = shot.px - ax;
+      o.y = shot.py - ay;
+      o.z = shot.pz - az;
+      f.start(camera, c, shot);
+    } else if (f.t >= 1 && Math.hypot(ax - r.aim.x.value, az - r.aim.z.value) > RESPAWN) {
+      // The agent jumped (a new round, a respawn): fly over to it, keeping the angle and distance you had.
+      o.x = camera.position.x - c.target.x;
+      o.y = camera.position.y - c.target.y;
+      o.z = camera.position.z - c.target.z;
+      f.start(camera, c, { px: ax + o.x, py: ay + o.y, pz: az + o.z, tx: ax, ty: ay, tz: az });
     }
-    if (r.t < 1) {
-      // Mid flight the destination moves with the agent.
-      r.toTarget.set(ax, ay, az);
-      r.toPos.set(ax, ay, az).add(r.offset);
+    if (f.t < 1) {
+      // Mid flight the destination moves with the agent, and the aim waits there for the flight to land.
+      f.toTarget.set(ax, ay, az);
+      f.toPos.set(ax + o.x, ay + o.y, az + o.z);
       r.aim.x.value = ax;
       r.aim.y.value = ay;
       r.aim.z.value = az;
       r.aim.x.velocity = r.aim.y.velocity = r.aim.z.velocity = 0;
       return;
     }
-    if (Math.hypot(ax - r.aim.x.value, az - r.aim.z.value) > RESPAWN) {
-      // The agent jumped (a new round, a respawn): fly over to it, keeping the angle and distance you had.
-      r.offset.copy(camera.position).sub(c.target);
-      startFly(c, { px: ax + r.offset.x, py: ay + r.offset.y, pz: az + r.offset.z, tx: ax, ty: ay, tz: az });
-      return;
-    }
-    r.delta.set(stepSpring(r.aim.x, ax, FOLLOW.stiffness, dt), stepSpring(r.aim.y, ay, FOLLOW.stiffness, dt), stepSpring(r.aim.z, az, FOLLOW.stiffness, dt)).sub(c.target);
-    c.target.add(r.delta);
-    camera.position.add(r.delta);
+    const nx = stepSpring(r.aim.x, ax, FOLLOW.stiffness, dt);
+    const ny = stepSpring(r.aim.y, ay, FOLLOW.stiffness, dt);
+    const nz = stepSpring(r.aim.z, az, FOLLOW.stiffness, dt);
+    f.carry(camera, c, nx - c.target.x, ny - c.target.y, nz - c.target.z);
     invalidate();
   }
 
   /** The free view keeps wherever you put it; a new focus carries it over by the same offset. */
   function free(c: Controls): void {
     const o = focusOrigin();
-    if (r.key !== FREE) {
-      r.key = FREE;
-      r.t = 1;
-    } else if (o.x !== r.origin.x || o.z !== r.origin.z) {
-      r.delta.set(o.x - r.origin.x, 0, o.z - r.origin.z);
-      camera.position.add(r.delta);
-      c.target.add(r.delta);
-    }
+    if (f.key !== FREE) {
+      f.key = FREE;
+      f.t = 1;
+    } else if (o.x !== r.origin.x || o.z !== r.origin.z) f.carry(camera, c, o.x - r.origin.x, 0, o.z - r.origin.z);
     r.origin.x = o.x;
     r.origin.z = o.z;
   }
 
   function firstPerson(agent: number): void {
     // Leaving first person flies back from wherever the eye was.
-    r.key = Number.NaN;
+    f.key = Number.NaN;
     if (!agentInWorld(agent)) return;
     const fx = Math.cos(r.pose.yaw);
     const fz = -Math.sin(r.pose.yaw);
     // Eyes ride up a ramp and through a jump with the agent.
     const lift = r.pose.elevation;
     camera.position.set(r.pose.x + fx * 0.5, EYE + lift, r.pose.z + fz * 0.5);
-    r.look.set(camera.position.x + fx * 6, 0.9 + lift, camera.position.z + fz * 6);
-    camera.lookAt(r.look);
+    f.look.set(camera.position.x + fx * 6, 0.9 + lift, camera.position.z + fz * 6);
+    camera.lookAt(f.look);
   }
 
-  const free_ = mode === 'free';
-  return (
-    <OrbitControls
-      ref={controls}
-      makeDefault
-      enableDamping
-      dampingFactor={0.09}
-      screenSpacePanning={false}
-      zoomToCursor={free_}
-      maxPolarAngle={free_ ? 1.48 : 1.5}
-      minDistance={free_ ? 1.2 : 2.5}
-      maxDistance={700}
-    />
-  );
+  const loose = mode === 'free';
+  return <OrbitControls ref={controls} makeDefault enableDamping dampingFactor={0.09} screenSpacePanning={false} zoomToCursor={loose} maxPolarAngle={loose ? 1.48 : 1.5} minDistance={loose ? 1.2 : 2.5} maxDistance={700} />;
 }
