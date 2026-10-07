@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef, type ReactNode } from 'react';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { POSE_PRIORITY, useHsScene } from '../frame/sceneContext';
+import { XRAY_LAYER } from '../grid/scratch';
 import { characterKit } from './characterKit';
 import { CharacterMaterials } from './characterMaterials';
 import { CharacterMotion } from './motion/characterMotion';
@@ -40,7 +41,8 @@ const BLOB_SHRINK = 0.45;
  * CharacterMotion from what `read` reports: feet planted on the floor,
  * knees and elbows bent by IK, a trunk that leans and banks with its real
  * momentum, eyes and head turned to what it sees, and a mood on its face.
- * Seekers stand in a glowing ring.
+ * Seekers stand in a glowing ring. Behind a wall it still shows to the
+ * main camera as a faint silhouette in its team color.
  */
 export function HsCharacter({ team, read, detail = 'full', shadows = false, blob = true, seed = 0, children }: HsCharacterProps) {
   const { frame } = useHsScene();
@@ -50,14 +52,20 @@ export function HsCharacter({ team, read, detail = 'full', shadows = false, blob
     const { root, bones, skeleton } = createSkeleton();
     const body = new THREE.SkinnedMesh(kit.body, mats.body);
     const face = new THREE.SkinnedMesh(kit.face, mats.face);
-    for (const m of [body, face]) {
+    const ghost = new THREE.SkinnedMesh(kit.body, mats.ghost);
+    // The silhouette draws after everything opaque and before the face, so it sees walls and boxes but not the eyes.
+    ghost.renderOrder = 3;
+    face.renderOrder = 4;
+    ghost.layers.set(XRAY_LAYER);
+    ghost.raycast = () => {};
+    for (const m of [body, face, ghost]) {
       m.bind(skeleton);
       // The bind pose has every part at the origin, so the computed bounds would be wrong; the character is always drawn.
       m.frustumCulled = false;
       m.receiveShadow = shadows;
     }
     body.castShadow = shadows;
-    return { root, body, face, poser: new CharacterPoser(bones), dispose: () => skeleton.dispose() };
+    return { root, body, face, ghost, poser: new CharacterPoser(bones), dispose: () => skeleton.dispose() };
   }, [kit, mats, shadows]);
   const state = useMemo(() => ({ drive: createCharacterDrive(), motion: new CharacterMotion(seed) }), [seed]);
   const group = useRef<THREE.Group>(null);
@@ -93,6 +101,7 @@ export function HsCharacter({ team, read, detail = 'full', shadows = false, blob
         <primitive object={rig.root} />
         <primitive object={rig.body} />
         <primitive object={rig.face} />
+        <primitive object={rig.ghost} />
         <mesh ref={shadow} geometry={kit.blob} material={mats.blob} renderOrder={1} raycast={() => null} />
         {team === 'seeker' && <mesh ref={ring} geometry={kit.ring} material={mats.ring} renderOrder={2} raycast={() => null} />}
       </group>

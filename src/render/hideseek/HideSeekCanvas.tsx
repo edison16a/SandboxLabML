@@ -14,7 +14,7 @@ import { CameraRig } from './camera/CameraRig';
 import { FrameDriver } from './frame/FrameDriver';
 import { createHsFrame, HsSceneContext } from './frame/sceneContext';
 import { GridScene } from './grid/GridScene';
-import { GRID_LAYER } from './grid/scratch';
+import { GRID_LAYER, XRAY_LAYER } from './grid/scratch';
 import { overlayCounts, RaysOverlay } from './overlay/RaysOverlay';
 import { SandboxArena, sandboxStats } from './sandbox/SandboxArena';
 import { Backdrop } from './scene/Backdrop';
@@ -78,6 +78,7 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
       onCreated={({ gl, camera, raycaster }) => {
         gl.outputColorSpace = THREE.SRGBColorSpace;
         camera.layers.enable(GRID_LAYER);
+        camera.layers.enable(XRAY_LAYER);
         raycaster.layers.enable(GRID_LAYER);
       }}
       className="touch-none"

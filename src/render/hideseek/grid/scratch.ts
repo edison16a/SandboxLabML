@@ -18,6 +18,13 @@ export const GRID_LAYER = 1;
 export const BACKDROP_LAYER = 2;
 
 /**
+ * The characters' see through silhouettes draw on layer 3. Only the main
+ * camera sees them: a first person view must show what the agent really
+ * sees, never a hider through a wall.
+ */
+export const XRAY_LAYER = 3;
+
+/**
  * Reusable math objects for one instanced component, so filling hundreds
  * of instances every frame allocates nothing.
  */
