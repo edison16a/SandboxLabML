@@ -84,6 +84,16 @@ export class RayBuffer {
     dc[i * 3 + 2] = b;
   }
 
+  /** Paints the end dot of the ray added last, e.g. in the color of what it hit. */
+  tintDot(color: THREE.Color): void {
+    if (this.n === 0) return;
+    const dc = this.dotCol.array as Float32Array;
+    const i = (this.n - 1) * 3;
+    dc[i] = color.r;
+    dc[i + 1] = color.g;
+    dc[i + 2] = color.b;
+  }
+
   end(): void {
     this.lines.geometry.setDrawRange(0, this.n * 2);
     this.dots.geometry.setDrawRange(0, this.n);

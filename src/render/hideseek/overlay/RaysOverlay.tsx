@@ -13,6 +13,8 @@ import { agentAt, agentElevation, agentFlags, blendAgentPose, hasFlag } from '..
 import { arenaOrigin } from '../layout/gridLattice';
 import { MAX_ARENAS } from '../grid/scratch';
 import { HS_COLORS } from '../palette';
+import { sandboxFrame } from '../sandbox/sandboxRead';
+import { arenaHitColor, sandboxHitColor } from './rayHits';
 import { MAX_RAY_LABELS, RayLabels, type RayLabelsHandle } from './RayLabels';
 
 const Y = DEFAULT_HIDESEEK_PHYSICS.rayHeight;
@@ -28,7 +30,8 @@ export const overlayCounts = { rays: 0, sightLines: 0 };
  * sensor rays. Rays come from the schema: the inspected agent's rays with a
  * distance label each (hovering an input highlights its ray), or the hit
  * points of every agent in every arena. Rays run at sight height over the
- * agent's feet, so they rise up a ramp with it.
+ * agent's feet, so they rise up a ramp with it, and a ray that ends on a
+ * box, a ramp or an agent ends in a dot of that thing's color.
  */
 export function RaysOverlay() {
   const { frame, schemas } = useHsScene();
@@ -74,7 +77,10 @@ export function RaysOverlay() {
               const hz = rays[base + 2 * r + 1];
               const d = Math.hypot(hx - ax, hz - az);
               if (d < 1e-3) continue;
-              buffer.add(t.o.x + ax, t.o.z + az, t.o.x + hx, t.o.z + hz, y, 1 - d / rayRange, false, d < rayRange - 0.02);
+              const hit = d < rayRange - 0.02;
+              buffer.add(t.o.x + ax, t.o.z + az, t.o.x + hx, t.o.z + hz, y, 1 - d / rayRange, false, hit);
+              const color = hit ? arenaHitColor(curr, arena, a, hx, hz) : null;
+              if (color) buffer.tintDot(color);
               overlayCounts.rays++;
             }
           }
@@ -90,6 +96,8 @@ export function RaysOverlay() {
         const x = t.o.x + t.s.x;
         const z = t.o.z + t.s.z;
         const y = Y + t.s.elevation;
+        // The Sandbox stream is not laid out as arenas, so its hits are read from its own frame.
+        const sandbox = frame.agentPose ? sandboxFrame(frame) : null;
         // Distance labels only where they can be read: on the arena in the showcase.
         let label = slot === frame.focusSlot ? 0 : MAX_RAY_LABELS;
         const schema = schemas[agent];
@@ -101,7 +109,10 @@ export function RaysOverlay() {
           const ang = t.s.yaw + spec.ray.angle;
           const ex = x + Math.cos(ang) * len;
           const ez = z - Math.sin(ang) * len;
-          buffer.add(x, z, ex, ez, y, 1 - v, hoveredInput === spec.index, v < 0.999);
+          const hit = v < 0.999;
+          buffer.add(x, z, ex, ez, y, 1 - v, hoveredInput === spec.index, hit);
+          const color = !hit ? null : sandbox ? sandboxHitColor(sandbox, agent, ex - t.o.x, ez - t.o.z) : frame.agentPose ? null : arenaHitColor(curr, arena, agent, ex - t.o.x, ez - t.o.z);
+          if (color && hoveredInput !== spec.index) buffer.tintDot(color);
           overlayCounts.rays++;
           if (label < MAX_RAY_LABELS) labels.current?.show(label++, ex, y + 0.45, ez, `${len.toFixed(1)} m`);
         }
