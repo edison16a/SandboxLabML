@@ -1,9 +1,9 @@
 import { clamp } from '@/engine/core/math';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { CONTACT_HOLD, CONTACT_NONE, CONTACT_PUSH, type CharacterDrive } from '../types';
-import { BodyDynamics } from './body';
-import { FaceDynamics } from './face';
-import { Gait } from './gait';
+import { BodyDynamics, type BodyInput } from './body';
+import { FaceDynamics, type FaceInput } from './face';
+import { Gait, type GaitInput } from './gait';
 import { MotionEstimate } from './kinematics';
 import { Limbs, type ArmBlend } from './limbs';
 import { createPose, type CharacterPose } from './pose';
@@ -37,6 +37,10 @@ export class CharacterMotion {
   private readonly face = new FaceDynamics();
   private readonly limbs = new Limbs();
   private readonly blend: ArmBlend = { raise: 0, air: 0, push: 0, hold: 0, asleep: 0, crouch: 0 };
+  // Inputs for the parts, filled in place every frame so a frame allocates nothing.
+  private readonly gaitIn: GaitInput = { x: 0, z: 0, yaw: 0, ground: 0, vx: 0, vz: 0, speed: 0, yawRate: 0, grade: 0, uphillX: 1, uphillZ: 0, airborne: false, frozen: false, dt: 0 };
+  private readonly bodyIn: BodyInput;
+  private readonly faceIn: FaceInput;
   private readonly flat = { x: 0, z: 0 };
   private climb = 0;
   private looking = 0;
@@ -49,6 +53,8 @@ export class CharacterMotion {
   /** `seed` staggers idle motion so a crowd does not breathe or blink in step. */
   constructor(seed = 0) {
     this.seed = seed;
+    this.bodyIn = { yaw: 0, x: 0, z: 0, ground: 0, climb: 0, air: 0, asleep: 0, push: 0, hold: 0, crouch: 0, blocked: 0, lookYaw: 0, lookPitch: 0, looking: 0, time: 0, seed, dt: 0 };
+    this.faceIn = { frozen: false, seen: false, seeing: false, straining: false, lookYaw: 0, lookPitch: 0, looking: 0, time: 0, seed, dt: 0 };
   }
 
   /** Advances by `dt` seconds of wall time at clock `time` and returns the pose, which it owns. */
@@ -92,7 +98,22 @@ export class CharacterMotion {
     const up = est.rise >= 0 ? 1 : -1;
     const ux = moving ? (up * est.vx) / est.speed : Math.cos(d.yaw);
     const uz = moving ? (up * est.vz) / est.speed : -Math.sin(d.yaw);
-    this.gait.update({ x: d.x, z: d.z, yaw: d.yaw, ground: d.elevation, vx: est.vx, vz: est.vz, speed: est.speed, yawRate: est.yawRate, grade: GRADE * this.climb, uphillX: ux, uphillZ: uz, airborne: d.airborne, frozen: d.frozen, dt: step });
+    const g = this.gaitIn;
+    g.x = d.x;
+    g.z = d.z;
+    g.yaw = d.yaw;
+    g.ground = d.elevation;
+    g.vx = est.vx;
+    g.vz = est.vz;
+    g.speed = est.speed;
+    g.yawRate = est.yawRate;
+    g.grade = GRADE * this.climb;
+    g.uphillX = ux;
+    g.uphillZ = uz;
+    g.airborne = d.airborne;
+    g.frozen = d.frozen;
+    g.dt = step;
+    this.gait.update(g);
 
     if (this.wasAirborne && !d.airborne) this.body.kick(Math.min(0, est.rise) * 0.45 - 0.5);
     // Brains steer by velocity, so they can stop dead anywhere; only a hard stop with something solid in front is a collision.
@@ -105,16 +126,36 @@ export class CharacterMotion {
     if (d.seen && !this.wasSeen && d.contact === CONTACT_NONE) this.body.kick(1.3);
     this.wasSeen = d.seen;
 
-    this.body.update(
-      { yaw: d.yaw, x: d.x, z: d.z, ground: d.elevation, climb: this.climb, air: b.air, asleep: b.asleep, push: b.push, hold: b.hold, crouch: b.crouch, blocked: d.blocked ? 1 : 0, lookYaw, lookPitch, looking: this.looking, time, seed: this.seed, dt: step },
-      est,
-      this.gait,
-      p,
-    );
-    this.face.update(
-      { frozen: d.frozen, seen: d.seen, seeing: d.seeing, straining: d.contact !== CONTACT_NONE, lookYaw: lookYaw - p.headYaw - p.twist, lookPitch: lookPitch - p.headPitch, looking: this.looking, time, seed: this.seed, dt: step },
-      p,
-    );
+    const bi = this.bodyIn;
+    bi.yaw = d.yaw;
+    bi.x = d.x;
+    bi.z = d.z;
+    bi.ground = d.elevation;
+    bi.climb = this.climb;
+    bi.air = b.air;
+    bi.asleep = b.asleep;
+    bi.push = b.push;
+    bi.hold = b.hold;
+    bi.crouch = b.crouch;
+    bi.blocked = d.blocked ? 1 : 0;
+    bi.lookYaw = lookYaw;
+    bi.lookPitch = lookPitch;
+    bi.looking = this.looking;
+    bi.time = time;
+    bi.dt = step;
+    this.body.update(bi, est, this.gait, p);
+    const fi = this.faceIn;
+    fi.frozen = d.frozen;
+    fi.seen = d.seen;
+    fi.seeing = d.seeing;
+    fi.straining = d.contact !== CONTACT_NONE;
+    // The eyes take up whatever turn the head and body have not.
+    fi.lookYaw = lookYaw - p.headYaw - p.twist;
+    fi.lookPitch = lookPitch - p.headPitch;
+    fi.looking = this.looking;
+    fi.time = time;
+    fi.dt = step;
+    this.face.update(fi, p);
     this.limbs.update(d, d.elevation, this.gait, est, b, step, p);
     return p;
   }
