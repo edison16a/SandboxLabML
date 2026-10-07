@@ -40,7 +40,7 @@ export function ProblemsTab() {
       {a.diagnostics.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center text-[13px] text-muted">
           <CircleCheck className="size-6 text-success" />
-          No problems. The script is ready to train.
+          No problems
         </div>
       ) : (
         <ul className="min-h-0 flex-1 overflow-y-auto p-2" aria-label="Problems">

@@ -30,7 +30,7 @@ export function ScriptRow({ entry, active, onOpen, onDuplicate, onRename, onDele
   const items: MenuItem[] = [{ label: 'Duplicate', icon: <Copy />, onSelect: onDuplicate }];
   if (onRename) items.push({ label: 'Rename', icon: <Pencil />, onSelect: onRename });
   if (onDelete) items.push({ label: 'Delete', icon: <Trash2 />, onSelect: onDelete, danger: true, separatorBefore: true });
-  const sub = entry.readonly ? `${ENV_LABELS[entry.env]} preset` : `${ENV_LABELS[entry.env]}, ${when(entry.updatedAt)}`;
+  const sub = entry.readonly ? ENV_LABELS[entry.env] : `${ENV_LABELS[entry.env]}, ${when(entry.updatedAt)}`;
   return (
     <li className={cn('group flex items-center rounded-md', active ? 'bg-surface-3' : 'hover:bg-surface-2')}>
       <button type="button" onClick={onOpen} aria-current={active ? 'true' : undefined} className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-left" title={entry.description || entry.name}>
