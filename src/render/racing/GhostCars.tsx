@@ -17,6 +17,26 @@ import { useRacingScene } from './sceneContext';
 import { GhostTrails } from './GhostTrails';
 
 const MAX_GHOSTS = 64;
+
+/**
+ * How much of a ghost to keep in views about one car: none right at the
+ * lens or across the line of sight to the followed car, and little when it
+ * sits on top of it. The same rules as the population's dither.
+ */
+function clearance(x: number, z: number, focus: THREE.Vector3, cam: THREE.Vector3): number {
+  const cx = x - cam.x;
+  const cz = z - cam.z;
+  const fx = focus.x - cam.x;
+  const fz = focus.z - cam.z;
+  const fLen = Math.hypot(fx, fz) || 1e-3;
+  const along = (cx * fx + cz * fz) / fLen;
+  const ramp = (v: number, a: number, b: number) => Math.min(1, Math.max(0, (v - a) / (b - a)));
+  let keep = ramp(Math.hypot(cx, cz), 5.6, 6.4);
+  // Across the line of sight in front of the followed car: it would veil it.
+  if (along > 0 && along < fLen - 1.2) keep = Math.min(keep, ramp(Math.abs(cx * fz - cz * fx) / fLen, 2.3, 2.7));
+  if (along < fLen + 0.5) keep = Math.min(keep, ramp(Math.hypot(x - focus.x, z - focus.z), 3, 3.6));
+  return keep;
+}
 const STRIDE = RACING_SNAPSHOT.stride;
 
 /**
@@ -75,13 +95,15 @@ export function GhostCars() {
       const since = stopped ? now - tmp.stopAt[i] : 0;
       const fade = since < 1 ? 1 : Math.max(0.12, 1 - (since - 1) / 0.6);
       const hover = hoveredGhost === ghosts.tags[i];
-      fleet.compose(i, tmp.pose.x, 0.01, -tmp.pose.y, tmp.pose.heading, i === frame.hiddenGhost ? 0 : 1, tmp.m);
+      const clear = clearFocus ? clearance(tmp.pose.x, -tmp.pose.y, frame.focusPos, state.camera.position) : 1;
+      const opacity = (hover ? 0.9 : ghostOpacity(t)) * fade * clear;
+      // A fully faded ghost is dropped outright, so its depth pass cannot hide smoke or other ghosts behind it.
+      fleet.compose(i, tmp.pose.x, 0.01, -tmp.pose.y, tmp.pose.heading, i === frame.hiddenGhost || opacity < 0.02 ? 0 : 1, tmp.m);
       m.setMatrixAt(i, tmp.m);
       ghostColor(t, tmp.c);
       if (hover) tmp.c.set('#ffffff');
       m.setColorAt(i, tmp.c);
-      const near = clearFocus ? Math.min(1, Math.max(0, (Math.hypot(tmp.pose.x - frame.focusPos.x, -tmp.pose.y - frame.focusPos.z) - 2.2) / 2.6)) : 1;
-      built.opacity.setX(i, (hover ? 0.9 : ghostOpacity(t)) * fade * near);
+      built.opacity.setX(i, opacity);
     }
     m.count = d.count = n;
     m.instanceMatrix.needsUpdate = true;
