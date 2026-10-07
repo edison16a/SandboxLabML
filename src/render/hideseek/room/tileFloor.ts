@@ -11,6 +11,8 @@ const BEVEL = 0.035;
 const BEVEL_DROP = 0.004;
 /** How dark the grout is against the tiles: a thin crisp line, not a heavy grid. */
 const GROUT_SHADE = 0.6;
+/** Strength of the sky's sheen on the tiles, in linear light. */
+const SHEEN = 0.38;
 
 const PARS = /* glsl */ `
 varying vec2 vTile;
@@ -81,6 +83,24 @@ const NORMAL = /* glsl */ `
 `;
 
 /**
+ * A satin sheen: the bright band of sky low over the horizon, seen in the
+ * tiles. A real tile reflects only a few percent of the sky head on, too
+ * little to show against a bright floor, so the band is added by hand from
+ * the reflected view direction. It is strongest where that direction runs
+ * low (the far side of the room) and fades out as it climbs (right under
+ * the camera), which gives the floor a soft gradient from any orbit. Grout
+ * and rough tiles take less of it.
+ */
+const SHEEN_LIGHT = /* glsl */ `
+{
+  vec3 sky = inverseTransformDirection(reflect(-geometryViewDir, normal), viewMatrix);
+  float band = smoothstep(0.05, 0.4, sky.y) * (1.0 - smoothstep(0.55, 0.9, sky.y));
+  float gloss = clamp((1.0 - roughnessFactor) / 0.8, 0.0, 1.0);
+  reflectedLight.indirectSpecular += vec3(0.95, 0.97, 1.0) * (${SHEEN.toFixed(3)} * band * gloss * tileCover);
+}
+`;
+
+/**
  * The floor of every room: light grey square tiles in a crisp grid with a
  * soft satin sheen, generated in the shader from the floor position, so
  * there is no texture to blur or tile and it works on the instanced grid
@@ -88,14 +108,15 @@ const NORMAL = /* glsl */ `
  * Expects a horizontal floor whose local x and z are the room's.
  */
 export function tileFloorMaterial(params: THREE.MeshStandardMaterialParameters = {}): THREE.MeshStandardMaterial {
-  const m = new THREE.MeshStandardMaterial({ color: HS_COLORS.floor, roughness: 0.34, metalness: 0, envMapIntensity: 0.55, ...params });
+  const m = new THREE.MeshStandardMaterial({ color: HS_COLORS.floor, roughness: 0.22, metalness: 0, envMapIntensity: 0.55, ...params });
   m.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vTile;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvTile = position.xz;');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>\n${PARS}`)
       .replace('#include <map_fragment>', `#include <map_fragment>\n${PATTERN}`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>\n${ROUGHNESS}`)
-      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>\n${NORMAL}`);
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>\n${NORMAL}`)
+      .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>\n${SHEEN_LIGHT}`);
   };
   m.customProgramCacheKey = () => 'hs-tile-floor';
   return m;

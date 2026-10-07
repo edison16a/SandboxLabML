@@ -11,11 +11,11 @@ export const HS_COLORS = {
   /** Sky and haze: the background and the fog the far city fades into. */
   background: '#dfe3e9',
   /** The open ground the arenas and the city stand on, a shade darker than the tiles so each room reads. */
-  ground: '#cfd2d7',
-  /** Albedo of the floor tiles; the grout is a darker shade of it. */
-  floor: '#dadde2',
-  gridFloor: '#dadde2',
-  /** The walls, a touch greyer than the tiles so their faces read against the floor. */
+  ground: '#b2b7be',
+  /** Albedo of the floor tiles, a light grey that leaves room for the sheen; the grout is a darker shade of it. */
+  floor: '#bfc4cb',
+  gridFloor: '#bfc4cb',
+  /** The walls, lighter than the tiles, so their tops catch the light and frame each room as in the classic footage. */
   wall: '#d2d5db',
   gridWall: '#d2d5db',
   /**
