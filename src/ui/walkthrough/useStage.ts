@@ -45,9 +45,13 @@ function frameOf(text: StepText | null, view: { w: number; h: number }): Box | n
 
 const asArray = (b: Box) => [b.x, b.y, b.w, b.h];
 
-/** A modal dialog of the page, like New run opened with N. The tour steps aside until it closes. */
+/**
+ * A modal dialog of the page, like New run opened with N. The tour steps
+ * aside until it closes. Popovers are dialogs too, but they sit in a
+ * popper wrapper and stay put.
+ */
 function pageDialogOpen(): boolean {
-  return !!document.querySelector('[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]');
+  return !!document.querySelector('[role="dialog"][data-state="open"]:not([data-radix-popper-content-wrapper] *), [role="alertdialog"][data-state="open"]');
 }
 
 /**

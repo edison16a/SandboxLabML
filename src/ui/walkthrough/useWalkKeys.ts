@@ -1,17 +1,18 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { isTyping } from '@/ui/typing';
 import { finishTour, goBack, goNext } from './controls';
 import type { Tour } from './types';
 
 /**
  * A menu, popover or dialog of the page itself that is open. While one is,
- * its own keys win: Escape closes it and the arrows move inside it.
- * Tooltips live in the same kind of wrapper but take no keys.
+ * its own keys win: Escape closes it and the arrows move inside it. A
+ * tooltip is never "open" in this sense, and a popover that is closing
+ * already says "closed", so neither holds the tour's keys back.
  */
 function otherLayerOpen(): boolean {
-  return !!document.querySelector('[data-radix-popper-content-wrapper]:not(:has([role="tooltip"])), [role="dialog"][data-state="open"], [role="alertdialog"]');
+  return !!document.querySelector('[data-radix-popper-content-wrapper] > [data-state="open"], [role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]');
 }
 
 /** Enter on a focused button or link should press it, not move the tour on. */
@@ -26,7 +27,8 @@ function onControl(target: EventTarget | null): boolean {
  * ask for them.
  */
 export function useWalkKeys(tour: Tour): void {
-  useEffect(() => {
+  // Attached as the card mounts, before it paints, so a key pressed the moment it shows is never lost.
+  useLayoutEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target) || otherLayerOpen()) return;
       if (e.key === 'ArrowRight' || (e.key === 'Enter' && !onControl(e.target))) goNext(tour);
