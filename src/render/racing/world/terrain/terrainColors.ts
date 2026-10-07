@@ -16,8 +16,8 @@ const C = {
   dirt: new THREE.Color('#a5805a'),
   rock: new THREE.Color('#bd9369'),
   rockDark: new THREE.Color('#8d6a4d'),
-  verge: new THREE.Color('#8b9447'),
-  vergeDry: new THREE.Color('#b0a259'),
+  verge: new THREE.Color('#939549'),
+  vergeDry: new THREE.Color('#b6a35d'),
 };
 
 /** Per vertex albedo plus a `surface` pair (rock amount, verge amount) the shader uses for close up detail. */

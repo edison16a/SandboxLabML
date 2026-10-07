@@ -35,7 +35,7 @@ export function RacingWorld({ track, tier, focus, editing = false }: Props) {
       {world ? <Terrain world={world} tier={tier} /> : <FlatGround />}
       <TrackMesh track={track} />
       {world && <Forest flora={world.flora} tier={tier} />}
-      {world && <Undergrowth flora={world.flora} tier={tier} />}
+      {world && <Undergrowth flora={world.flora} tufts={world.tufts} tier={tier} />}
       {world && <Stadium world={world} tier={tier} />}
     </>
   );

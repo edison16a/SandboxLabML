@@ -10,9 +10,11 @@ import { detailNoise, releaseDetailNoise } from '../detailNoise';
 import { createRockMaterial, rockGeometry, shrubGeometry } from './groundCover';
 import { instanceSet, withColors, writeInstance, type InstanceSet } from './instances';
 import type { Flora } from './placement';
+import { tuftGeometry } from './tufts';
 import { createWindMaterial } from './windMaterial';
 
-const SHRUB_LOOK = { sink: 0.15, stretch: 0.2, from: new THREE.Color(0.78, 0.8, 0.7), to: new THREE.Color(1.3, 1.12, 0.8) };
+const SHRUB_LOOK = { sink: 0.15, stretch: 0.2, from: new THREE.Color(0.8, 0.78, 0.62), to: new THREE.Color(1.15, 1.02, 0.7) };
+const TUFT_LOOK = { sink: 0.05, stretch: 0.3, from: new THREE.Color(0.82, 0.82, 0.76), to: new THREE.Color(1.15, 1.08, 0.86) };
 const ROCK_LOOK = { sink: 0.22, stretch: 0.25, from: new THREE.Color(0.86, 0.84, 0.82), to: new THREE.Color(1.1, 1.04, 0.98) };
 
 /** Static instances: every item written once when the set changes. */
@@ -31,17 +33,23 @@ function Scatter({ set, geometry, material, castShadow }: { set: InstanceSet; ge
   return <instancedMesh key={set.count} ref={ref} args={[geometry, material, set.count]} castShadow={castShadow} receiveShadow frustumCulled={false} />;
 }
 
-/** Shrubs and boulders scattered over the hills. Shrubs sway a little in the same breeze as the trees. */
-export function Undergrowth({ flora, tier }: { flora: Flora; tier: QualityTier }) {
+/**
+ * Shrubs, boulders and verge grass scattered over the hills. Shrubs and
+ * grass sway a little in the same breeze as the trees. Low skips the
+ * grass, Medium draws every other tuft.
+ */
+export function Undergrowth({ flora, tufts, tier }: { flora: Flora; tufts: Float32Array; tier: QualityTier }) {
   const geo = useDisposable(() => {
-    const g = [shrubGeometry(0), shrubGeometry(1), rockGeometry(0), rockGeometry(1)];
-    return { shrub: g.slice(0, 2), rock: g.slice(2), dispose: () => g.forEach((x) => x.dispose()) };
+    const g = [shrubGeometry(0), shrubGeometry(1), rockGeometry(0), rockGeometry(1), tuftGeometry()];
+    return { shrub: g.slice(0, 2), rock: g.slice(2, 4), tuft: g[4], dispose: () => g.forEach((x) => x.dispose()) };
   }, []);
   const mats = useDisposable(() => {
     const shrub = createWindMaterial(1.2, 0.05);
+    const grass = createWindMaterial(0.7, 0.07);
     const rock = withHaze(createRockMaterial(detailNoise()));
-    return { shrub, rock, dispose: () => (shrub.material.dispose(), rock.dispose(), releaseDetailNoise()) };
+    return { shrub, grass, rock, dispose: () => (shrub.material.dispose(), grass.material.dispose(), rock.dispose(), releaseDetailNoise()) };
   }, []);
+  const grass = useMemo(() => (tier === 'low' ? null : instanceSet(tufts, tier === 'high' ? -1 : 0, TUFT_LOOK)), [tufts, tier]);
   const sets = useMemo(
     () => ({
       shrub: [instanceSet(flora.shrubs, 0, SHRUB_LOOK), instanceSet(flora.shrubs, 1, SHRUB_LOOK)],
@@ -49,13 +57,18 @@ export function Undergrowth({ flora, tier }: { flora: Flora; tier: QualityTier }
     }),
     [flora],
   );
-  useFrame((_, dt) => void (mats.shrub.time.value += Math.min(dt, 0.1)));
+  useFrame((_, dt) => {
+    const step = Math.min(dt, 0.1);
+    mats.shrub.time.value += step;
+    mats.grass.time.value += step;
+  });
   const shadow = tier === 'high';
   return (
     <group>
       {[0, 1].map((v) => (
         <Scatter key={`s${v}`} set={sets.shrub[v]} geometry={geo.shrub[v]} material={mats.shrub.material} castShadow={shadow} />
       ))}
+      {grass && <Scatter set={grass} geometry={geo.tuft} material={mats.grass.material} castShadow={false} />}
       {[0, 1].map((v) => (
         <Scatter key={`r${v}`} set={sets.rock[v]} geometry={geo.rock[v]} material={mats.rock} castShadow={tier !== 'low'} />
       ))}
