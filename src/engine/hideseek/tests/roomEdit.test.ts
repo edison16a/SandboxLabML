@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { emptyRoom, SANDBOX_LIMITS, type SandboxRoom } from '../sandbox/room';
-import { addWall, eraseAt, moveBox, placeBox, setSpawn, snap, spawnAround, straightWall, turnBox } from '../sandbox/roomEdit';
+import { addWall, eraseAt, moveBox, placeBox, quarterTurn, setSpawn, snap, spawnAround, straightWall, turnBox } from '../sandbox/roomEdit';
 import { sanitizeRoom } from '../sandbox/validate';
 
 const base = emptyRoom('r', 'Room');
@@ -35,6 +35,28 @@ describe('room editing', () => {
     room = ok(placeBox(room, 'plank', 3, 5, Math.PI / 2));
     const turned = turnBox(room, 1);
     expect(turned.room?.boxes[1].yaw).toBe(0);
+  });
+
+  it('places ramps like crates and turns them through all four uphill directions', () => {
+    expect(quarterTurn(0)).toBe(Math.PI / 2);
+    expect(quarterTurn(Math.PI)).toBe((3 * Math.PI) / 2);
+    expect(quarterTurn((3 * Math.PI) / 2)).toBe(0);
+    expect(quarterTurn(-Math.PI / 2)).toBe(0);
+    let room = ok(placeBox(base, 'ramp', 0, 0, 0));
+    expect(room.boxes[0]).toEqual({ x: 0, z: 0, yaw: 0, kind: 'ramp' });
+    // A ramp is 2.4 m long, so a cube right next to its lip does not fit.
+    expect(placeBox(room, 'cube', 1.5, 0, 0).error).toMatch(/No space/);
+    const yaws = [];
+    for (let i = 0; i < 4; i++) {
+      room = ok(turnBox(room, 0));
+      yaws.push(room.boxes[0].yaw);
+    }
+    expect(yaws).toEqual([Math.PI / 2, Math.PI, (3 * Math.PI) / 2, 0]);
+    // Turned toward the outer wall, it stays inside the room.
+    room = ok(placeBox(base, 'ramp', 10, 0, Math.PI / 2));
+    room = ok(turnBox(room, 0));
+    expect(room.boxes[0].x + 1.2).toBeLessThanOrEqual(10);
+    expect(sanitizeRoom(JSON.parse(JSON.stringify(room)))).toEqual(room);
   });
 
   it('moves a box only where it fits, and erases the box or wall under a point', () => {
