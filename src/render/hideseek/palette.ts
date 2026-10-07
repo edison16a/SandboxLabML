@@ -18,11 +18,11 @@ export function teamColor(agent: number): THREE.Color {
   return agent === 0 ? HS.hider : HS.seeker;
 }
 
-const NEUTRAL = new THREE.Color('#bdb5a8');
+const NEUTRAL = new THREE.Color('#aeb4bd');
 
 /**
  * Border tint for an arena from its running balance, -1 (seeker ahead) to
- * +1 (hider ahead). Near zero it stays a quiet stone grey, so only a clear
+ * +1 (hider ahead). Near zero it stays a quiet cool grey, so only a clear
  * lead shows color.
  */
 export function balanceColor(balance: number, out: THREE.Color): THREE.Color {
