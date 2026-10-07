@@ -24,7 +24,8 @@ export function TracksideCam({ world, target }: { world: WorldData | null; targe
   const rig = useMemo(() => ({ station: -1, x: { value: 0, velocity: 0 }, y: { value: 0, velocity: 0 }, z: { value: 0, velocity: 0 }, look: new THREE.Vector3() }), []);
 
   useFrame((_, rawDt) => {
-    const dt = Math.min(rawDt, 0.25);
+    // Only a real stall is clamped, so the pan keeps up with the car even at a low frame rate.
+    const dt = Math.min(rawDt, 1);
     const focus = frame.focusPos;
     target.current?.copy(focus);
     if (!stations.length) return;
@@ -49,7 +50,7 @@ export function TracksideCam({ world, target }: { world: WorldData | null; targe
     );
     camera.lookAt(rig.look);
     const dist = camera.position.distanceTo(focus);
-    const fov = THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan(FRAMING / Math.max(1, dist))), 10, 55);
+    const fov = THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan(FRAMING / Math.max(1, dist))), 6, 55);
     if (Math.abs(camera.fov - fov) > 0.01) {
       camera.fov = fov;
       camera.updateProjectionMatrix();
