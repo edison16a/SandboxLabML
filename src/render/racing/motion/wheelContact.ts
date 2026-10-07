@@ -18,13 +18,50 @@ export interface WheelContact {
   /** World position of each contact patch, x and z. */
   at: Float32Array;
   road: RoadInput;
+  /** The car's own distance along the road, m, and the sample it was found near. */
+  s: number;
+  centerHint: number;
+  /** Where the car stood last frame (sim coordinates), to spot a jump. */
+  lastX: number;
+  lastY: number;
 }
 
 export function wheelContact(): WheelContact {
-  return { lift: new Float32Array(4), surface: new Uint8Array(4), hint: new Int32Array(4).fill(-1), at: new Float32Array(8), road: { lift: 0, side: 0, front: 0 } };
+  return { lift: new Float32Array(4), surface: new Uint8Array(4), hint: new Int32Array(4).fill(-1), at: new Float32Array(8), road: { lift: 0, side: 0, front: 0 }, s: 0, centerHint: -1, lastX: 0, lastY: 0 };
+}
+
+/** Forgets every search hint, for when the followed car changes or jumps. */
+export function resetContact(c: WheelContact): void {
+  c.hint.fill(-1);
+  c.centerHint = -1;
 }
 
 const pos: TrackPosition = { index: 0, s: 0, lateral: 0 };
+/** Samples a hinted search looks either way, the engine's own default. */
+const WINDOW = 12;
+/** A car further than this from its last spot, m, jumped (a restart, a new car, Turbo or a slow frame). */
+const JUMP = 10;
+
+/**
+ * Nearest sample to (x, y) and the projection onto it. The hinted search
+ * only looks 12 m either way, so when its answer lands on the window's edge
+ * or far off the road, the car has moved further than that and the whole
+ * track is searched instead. Without this a stale hint reads a car in the
+ * middle of the lane as off the road for many frames.
+ */
+export function locate(track: Track, x: number, y: number, hint: number, out: TrackPosition): number {
+  let idx = nearestSample(track, x, y, hint, WINDOW);
+  project(track, x, y, idx, out);
+  if (hint < 0) return idx;
+  const n = track.count;
+  let d = (((idx - hint) % n) + n) % n;
+  if (d > n / 2) d -= n;
+  if (Math.abs(d) >= WINDOW || Math.abs(out.lateral) > track.halfWidth + JUMP) {
+    idx = nearestSample(track, x, y, -1);
+    project(track, x, y, idx, out);
+  }
+  return idx;
+}
 
 /**
  * Finds what is under each of a car's four tires from its simulated pose
@@ -36,14 +73,18 @@ export function readContact(track: Track, x: number, y: number, heading: number,
   const fx = Math.cos(heading);
   const fy = Math.sin(heading);
   const hw = track.halfWidth;
+  if ((x - out.lastX) ** 2 + (y - out.lastY) ** 2 > JUMP * JUMP) resetContact(out);
+  out.lastX = x;
+  out.lastY = y;
+  out.centerHint = locate(track, x, y, out.centerHint, pos);
+  out.s = pos.s;
   for (let w = 0; w < 4; w++) {
     const [lx, lz] = WHEEL_SPOTS[w];
     // Local +z is the car's right, which is minus its left normal (-fy, fx).
     const wx = x + fx * lx + fy * lz;
     const wy = y + fy * lx - fx * lz;
-    const idx = nearestSample(track, wx, wy, out.hint[w]);
+    const idx = locate(track, wx, wy, out.hint[w], pos);
     out.hint[w] = idx;
-    project(track, wx, wy, idx, pos);
     const across = Math.abs(pos.lateral) - hw;
     let lift = 0;
     let surface: number = SURFACE.asphalt;

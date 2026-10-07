@@ -62,4 +62,18 @@ describe('car motion', () => {
     expect(c.surface[0]).toBe(SURFACE.asphalt);
     expect(c.road.side).toBeGreaterThan(0.02);
   });
+
+  it('finds the road again after the car jumps further than the search window', () => {
+    for (const spec of BUILT_IN_TRACKS) {
+      const track = buildTrack(spec);
+      const c = wheelContact();
+      const on = (i: number) => readContact(track, track.cx[i], track.cy[i], Math.atan2(track.ty[i], track.tx[i]), c);
+      on(0);
+      // Half a lap in one frame (a new car followed, a restart, Turbo) and then 15 m a frame: every wheel stays on the asphalt.
+      const half = Math.floor(track.count / 2);
+      expect(Array.from(on(half).surface)).toEqual([0, 0, 0, 0]);
+      expect(Math.abs(c.s - track.s[half])).toBeLessThan(2);
+      for (let i = half; i < half + track.count; i += 15) expect(Array.from(on(i % track.count).surface)).toEqual([0, 0, 0, 0]);
+    }
+  });
 });

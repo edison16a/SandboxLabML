@@ -27,6 +27,8 @@ export interface RacingFrame {
   motion: TickMotion;
   /** What the followed car's tires touch this frame. */
   contact: WheelContact;
+  /** Which car `contact` was last read for (stream and index in one number), so a switch resets its search. */
+  contactOwner: number;
   /** Snapshot tick and car `motion` was read from, so it is worked out once per tick. */
   motionTick: number;
   motionIndex: number;
@@ -45,6 +47,7 @@ export function createFrame(): RacingFrame {
     rayCount: 0,
     motion: tickMotion(),
     contact: wheelContact(),
+    contactOwner: -1,
     motionTick: -1,
     motionIndex: -1,
   };

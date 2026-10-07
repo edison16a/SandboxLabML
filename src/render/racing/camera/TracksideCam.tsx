@@ -29,8 +29,8 @@ export function TracksideCam({ world, target }: { world: WorldData | null; targe
     const focus = frame.focusPos;
     target.current?.copy(focus);
     if (!stations.length) return;
-    const carS = track.s[Math.max(0, frame.contact.hint[0])] ?? 0;
-    const next = pickStation(stations, rig.station, carS, track.length);
+    // The car's own place on the road, found fresh each frame, so a jump never leaves the director on a stale camera.
+    const next = pickStation(stations, rig.station, frame.contact.s, track.length);
     const st = stations[next];
     if (next !== rig.station) {
       // A cut: snap the pan straight onto the car, as a director would.

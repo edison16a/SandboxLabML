@@ -4,7 +4,7 @@ import type { Track } from '@/engine/racing/track/types';
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
 import type { RacingFrame } from '../sceneContext';
 import { readTickMotion } from './tickMotion';
-import { readContact } from './wheelContact';
+import { readContact, resetContact } from './wheelContact';
 
 /** Gaps between snapshots longer than this many ticks are a restart or a stall, not motion. */
 const MAX_GAP = 20;
@@ -17,6 +17,12 @@ const MAX_GAP = 20;
  */
 export function updateFocusMotion(frame: RacingFrame, stream: SnapshotStream | null, index: number, track: Track, car: CarParams = DEFAULT_CAR): void {
   const m = frame.motion;
+  // A different car: its wheels are somewhere else entirely, so the old search hints mean nothing.
+  const owner = index < 0 ? -1 : index + (stream?.name === 'ghosts' ? 100000 : 0);
+  if (owner !== frame.contactOwner) {
+    frame.contactOwner = owner;
+    resetContact(frame.contact);
+  }
   const curr = stream?.curr;
   const prev = stream?.prev;
   if (!curr || !prev || index < 0) {
