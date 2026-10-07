@@ -15,6 +15,8 @@ const RAMP = DEFAULT_HIDESEEK_PHYSICS.box.ramp;
 const GRADE = RAMP.height / RAMP.length;
 /** Eye height over the ground, m, to aim the head at something. */
 const EYES = 1.15;
+/** Deceleration past this is a collision rather than braking, m/s². Braking peaks near 10; running into a wall goes past 20. */
+const BUMP = 15;
 
 /**
  * The motion of one character, as a renderer reads it: every frame it
@@ -40,6 +42,8 @@ export class CharacterMotion {
   private looking = 0;
   private wasAirborne = false;
   private wasSeen = false;
+  /** Seconds before another bump can start, so one collision is one bump. */
+  private bumpWait = 0;
   private readonly seed: number;
 
   /** `seed` staggers idle motion so a crowd does not breathe or blink in step. */
@@ -91,6 +95,12 @@ export class CharacterMotion {
     this.gait.update({ x: d.x, z: d.z, yaw: d.yaw, ground: d.elevation, vx: est.vx, vz: est.vz, speed: est.speed, yawRate: est.yawRate, grade: GRADE * this.climb, uphillX: ux, uphillZ: uz, airborne: d.airborne, frozen: d.frozen, dt: step });
 
     if (this.wasAirborne && !d.airborne) this.body.kick(Math.min(0, est.rise) * 0.45 - 0.5);
+    // A stop far sharper than any braking is a collision: bump and recoil.
+    this.bumpWait = Math.max(0, this.bumpWait - step);
+    if (est.forwardAccel < -BUMP && this.bumpWait === 0 && !d.airborne && !d.frozen) {
+      this.body.bump(Math.min(2.2, (-est.forwardAccel - BUMP) * 0.12 + 0.8));
+      this.bumpWait = 0.6;
+    }
     this.wasAirborne = d.airborne;
     if (d.seen && !this.wasSeen && d.contact === CONTACT_NONE) this.body.kick(1.3);
     this.wasSeen = d.seen;

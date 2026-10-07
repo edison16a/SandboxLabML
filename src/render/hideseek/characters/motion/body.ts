@@ -61,6 +61,17 @@ export class BodyDynamics {
     this.height.velocity += velocity;
   }
 
+  /**
+   * A hard stop against something: the trunk's momentum pitches it forward
+   * by `strength` rad/s, the head nods after it and the knees give a
+   * little, and the springs bring it all back with a small recoil.
+   */
+  bump(strength: number): void {
+    this.lean.velocity += strength;
+    this.headPitch.velocity += strength * 0.8;
+    this.height.velocity -= strength * 0.12;
+  }
+
   update(b: BodyInput, est: MotionEstimate, gait: Gait, pose: CharacterPose): void {
     const dt = b.dt;
     const grounded = 1 - b.air;
