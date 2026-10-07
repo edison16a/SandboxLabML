@@ -18,7 +18,7 @@ test.describe('Walkthrough', () => {
     await expect(card).toBeFocused();
     await card.getByRole('button', { name: 'Start the tour' }).click();
     await expect(title('Every car has a brain')).toBeVisible();
-    await expect(card).toContainText('1 / 9');
+    await expect(card).toContainText('1 / 10');
 
     // Back returns to the welcome card, and the right arrow moves on again.
     await card.getByRole('button', { name: 'Back' }).click();
@@ -36,7 +36,7 @@ test.describe('Walkthrough', () => {
     // Enter goes on, the left arrow comes back to the step as it is now.
     await page.keyboard.press('Enter');
     await expect(title('The best become parents')).toBeVisible();
-    await expect(card).toContainText('2 / 9');
+    await expect(card).toContainText('2 / 10');
     await page.keyboard.press('ArrowLeft');
     await expect(title('Fitness is the score')).toBeVisible();
     // Space still reaches the lab, so training pauses and the software renderer gets the CPU back.
