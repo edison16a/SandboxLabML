@@ -19,12 +19,12 @@ function SubLink({ href, children }: { href: string; children: React.ReactNode }
  */
 export function HeroContent() {
   return (
-    <div data-hero-content className="relative z-20 flex w-full max-w-3xl flex-col items-center px-6 text-center">
+    <div data-hero-content className="relative z-20 flex w-full max-w-4xl flex-col items-center px-6 text-center">
       <LogoMark size={64} pulse className="max-sm:size-12" />
-      <h1 id="hero-title" className="mt-6 text-[44px] leading-none font-semibold tracking-tight text-fg sm:text-7xl">
+      <h1 id="hero-title" className="mt-6 text-[44px] leading-none font-semibold tracking-tight text-fg sm:text-7xl 2xl:text-[88px]">
         SandboxLab<span className="text-accent">ML</span>
       </h1>
-      <p className="mt-5 max-w-2xl text-[18px] leading-snug text-balance text-fg/90 sm:text-[21px]">Train your own model with machine learning, right in your browser.</p>
+      <p className="mt-5 max-w-3xl text-[18px] leading-snug text-balance text-fg/90 sm:text-[21px] 2xl:text-[22px]">Train your own model with machine learning, right in your browser.</p>
       <Link
         href="/lab/racing"
         prefetch={false}
