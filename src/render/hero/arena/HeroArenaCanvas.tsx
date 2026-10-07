@@ -31,12 +31,14 @@ interface Props {
 }
 
 /**
- * The room is drawn a little darker than in the lab. Its tiles and the
- * city are pale grey and the page text sits over them; a darker frame
- * keeps the words readable without a heavier scrim graying it out, while
- * the glossy players and gold crates still carry their color.
+ * The page text sits over this scene, under a dark scrim. Only the city
+ * is darkened (see CITY_SHADE), which gives the headline a dark field; the
+ * room itself is drawn a little brighter than in the lab, so under the
+ * scrim the gold crates stay gold and the players keep their blue and red.
  */
-const EXPOSURE = 0.74;
+const EXPOSURE = 1.05;
+/** Brightness of the city blocks and the ground between them against the lab's. */
+const CITY_SHADE = 0.55;
 
 /** The hero draws no input overlay, so neither team needs its input schema. */
 const NO_SCHEMAS: [InputSpec[], InputSpec[]] = [[], []];
@@ -78,7 +80,7 @@ export function HeroArenaCanvas({ room, stream, tier, running, onShown }: Props)
         <HeroArenaDriver />
         <ToneMappingSync composer={composer} exposure={EXPOSURE} />
         <StudioLighting tier={tier} shadows={tier !== 'low'} />
-        <Backdrop />
+        <Backdrop shade={CITY_SHADE} />
         <SandboxArena tier={tier} aoPass={composer} room={room} />
         <HeroArenaCamera />
         {composer && <ShowcaseEffects tier={tier} photo={false} />}

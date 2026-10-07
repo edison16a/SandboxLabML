@@ -22,13 +22,13 @@ const DARK = new THREE.Color(HS_COLORS.blockDark);
  * fades into the haze, on open ground. One instanced draw call; the blocks
  * are rebuilt only when the arena grid changes size.
  */
-export function Backdrop() {
+export function Backdrop({ shade = 1 }: { /** Brightness of the blocks, 1 in the lab. The landing page darkens only the city, so its headline sits on a dark field while the room keeps its color. */ shade?: number }) {
   const { frame } = useHsScene();
   const mesh = useRef<THREE.InstancedMesh>(null);
   const geometry = useDisposable(() => openUnitBox(), []);
   const blockMat = useDisposable(() => groundedMaterial({ color: '#ffffff', roughness: 0.82, metalness: 0, envMapIntensity: 0.6 }, 0.62, 1.4), []);
-  const groundMat = useDisposable(() => new THREE.MeshStandardMaterial({ color: HS_COLORS.ground, roughness: 0.9, metalness: 0, envMapIntensity: 0.4 }), []);
-  const t = useMemo(() => ({ ...makeScratch(), w: -1, d: -1, n: -1 }), []);
+  const groundMat = useDisposable(() => new THREE.MeshStandardMaterial({ color: new THREE.Color(HS_COLORS.ground).multiplyScalar(shade), roughness: 0.9, metalness: 0, envMapIntensity: 0.4 }), [shade]);
+  const t = useMemo(() => ({ ...makeScratch(), w: -1, d: -1, n: -1, light: LIGHT.clone().multiplyScalar(shade), dark: DARK.clone().multiplyScalar(shade) }), [shade]);
   const camera = useThree((s) => s.camera);
   useEffect(() => void camera.layers.enable(BACKDROP_LAYER), [camera]);
 
@@ -43,7 +43,7 @@ export function Backdrop() {
     for (let i = 0; i < blocks.length; i++) {
       const b = blocks[i];
       placeInstance(m, i, t, b.x, 0, b.z, 0, b.w, b.h, b.d);
-      m.setColorAt(i, t.c.copy(LIGHT).lerp(DARK, b.tone));
+      m.setColorAt(i, t.c.copy(t.light).lerp(t.dark, b.tone));
     }
     commit(m, blocks.length);
   });
