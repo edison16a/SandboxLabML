@@ -5,12 +5,12 @@ import { EMBLEM_GLSL, EMBLEM_SHARE, EMBLEM_SIZE } from './emblem';
 /** Side of one floor tile, m. 25 tiles span the 20 m room, so a crate covers about a tile and a quarter. */
 export const TILE_METERS = 0.8;
 /** Full width of a grout line, m. */
-const GROUT = 0.016;
+const GROUT = 0.022;
 /** The rounded edge of a tile: how far in from the grout it starts, and how far it drops, m. */
 const BEVEL = 0.035;
 const BEVEL_DROP = 0.004;
 /** How dark the grout is against the tiles: a thin crisp line, not a heavy grid. */
-const GROUT_SHADE = 0.66;
+const GROUT_SHADE = 0.6;
 
 const PARS = /* glsl */ `
 varying vec2 vTile;
