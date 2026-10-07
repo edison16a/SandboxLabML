@@ -31,11 +31,12 @@ interface Props {
 }
 
 /**
- * The room is drawn a little darker than in the lab. Its plaster and
- * terrazzo are nearly white, and the page text sits over it; a darker
- * frame keeps the words readable without a heavier scrim graying it out.
+ * The room is drawn a little darker than in the lab. Its tiles and the
+ * city are pale grey and the page text sits over them; a darker frame
+ * keeps the words readable without a heavier scrim graying it out, while
+ * the glossy players and gold crates still carry their color.
  */
-const EXPOSURE = 0.6;
+const EXPOSURE = 0.74;
 
 /** The hero draws no input overlay, so neither team needs its input schema. */
 const NO_SCHEMAS: [InputSpec[], InputSpec[]] = [[], []];
