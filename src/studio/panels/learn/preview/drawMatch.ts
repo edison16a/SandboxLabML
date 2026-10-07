@@ -18,6 +18,7 @@ import {
   snapshotBoxAt,
 } from '@/engine/hideseek/snapshot';
 import type { MatchPreview } from '@/engine/lessons/preview/types';
+import { rampChevrons } from '@/features/hideseek/components/maps/rampChevrons';
 import { frameAt, lerp, lerpAngle, secondsAt } from './playback';
 import { fitView, px, py, type View } from './view';
 
@@ -37,7 +38,33 @@ const C = {
   seeker: '#ff5f6d',
   cone: 'rgba(255, 95, 109, 0.09)',
   face: '#f2f4f8',
+  rampMark: 'rgba(8, 20, 14, 0.62)',
 };
+
+/** The ramp's uphill chevrons, worked out once: the same marks the room maps draw. */
+const RAMP_CHEVRONS = rampChevrons(P.box.ramp, 2);
+
+/** Chevrons toward the lip and a line along it, in a canvas already turned into the ramp's frame. */
+function drawRampMarks(g: CanvasRenderingContext2D, scale: number): void {
+  const hx = (P.box.ramp.length / 2) * scale;
+  const hz = (P.box.ramp.width / 2) * scale;
+  g.strokeStyle = C.rampMark;
+  g.lineCap = 'round';
+  g.lineJoin = 'round';
+  g.lineWidth = 2;
+  g.beginPath();
+  g.moveTo(hx - 2, -hz + 2);
+  g.lineTo(hx - 2, hz - 2);
+  g.stroke();
+  g.lineWidth = 1.5;
+  g.beginPath();
+  for (const [a, tip, b] of RAMP_CHEVRONS) {
+    g.moveTo(a[0] * scale, a[1] * scale);
+    g.lineTo(tip[0] * scale, tip[1] * scale);
+    g.lineTo(b[0] * scale, b[1] * scale);
+  }
+  g.stroke();
+}
 
 /** A pose between two frames, read from x, z and yaw stored in a row at offsets `a` and `b`. */
 function pose(f: Float32Array, a: number, b: number, t: number): { x: number; z: number; yaw: number } {
@@ -62,7 +89,7 @@ function drawRoom(g: CanvasRenderingContext2D, v: View, p: MatchPreview): void {
   for (const r of arenaWallRects(getLayout(p.layout), P)) g.fillRect(px(v, r.x - r.hx), py(v, r.z - r.hz), 2 * r.hx * v.scale, 2 * r.hz * v.scale);
 }
 
-/** A box turned to its yaw. Its local x runs along its length; a locked box keeps its fill and gets an edge in its owner team's color. */
+/** A box turned to its yaw. Its local x runs along its length, uphill for a ramp; a locked box keeps its fill and gets an edge in its owner team's color. */
 function drawBox(g: CanvasRenderingContext2D, v: View, index: number, at: { x: number; z: number; yaw: number }, lock: number): void {
   const size = boxSize(P, index);
   const l = size.length * v.scale;
@@ -73,6 +100,7 @@ function drawBox(g: CanvasRenderingContext2D, v: View, index: number, at: { x: n
   g.rotate(-at.yaw);
   g.fillStyle = C[BOX_KINDS[index]];
   g.fillRect(-l / 2, -w / 2, l, w);
+  if (BOX_KINDS[index] === 'ramp') drawRampMarks(g, v.scale);
   if (lock !== LOCK_FREE) {
     g.strokeStyle = lock === LOCK_SEEKERS ? C.seeker : C.hider;
     g.lineWidth = 2;
@@ -118,8 +146,8 @@ function drawAgent(g: CanvasRenderingContext2D, v: View, at: { x: number; z: num
 
 /**
  * Draws the test match at a playhead, in ticks: walls, boxes (locked ones
- * edged in blue), the seeker's view cone once it is loose, a red sight line
- * while it sees the hider, and both players.
+ * edged in the locking team's color), the seeker's view cone once it is
+ * loose, a red sight line while it sees the hider, and both players.
  */
 export function drawMatch(g: CanvasRenderingContext2D, w: number, h: number, p: MatchPreview, pos: number): void {
   const half = P.arena.size / 2 + P.arena.outerWallThickness;

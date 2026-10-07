@@ -5,12 +5,10 @@ import { BenchmarkChart } from '@/features/charts/BenchmarkChart';
 import { Stat } from '@/ui/primitives/Panel';
 import { useHideSeekLab } from '../../state/hideSeekStore';
 import { HsLineChart, Legend } from './charts/HsLineChart';
+import { boxAndRampSeries, legendOf, PROGRESS_COLORS } from './charts/progressSeries';
 import { SpeciesBands } from './charts/SpeciesBands';
 
-const HIDER = '#4c9aff';
-const SEEKER = '#ff5f6d';
-const AMBER = '#ffb547';
-const MUTED = '#8a94a7';
+const { hider: HIDER, seeker: SEEKER, amber: AMBER, muted: MUTED } = PROGRESS_COLORS;
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -33,7 +31,13 @@ function Empty() {
   );
 }
 
-/** Both teams' fitness, the benchmark, how long hiders stay hidden, how much the boxes get used, and species. */
+/** The locks stat's tooltip: who placed them, once the history says. */
+function lockSplit(g: { hiderLocksPerMatch?: number; seekerLocksPerMatch?: number }): string {
+  if (g.hiderLocksPerMatch === undefined || g.seekerLocksPerMatch === undefined) return 'Boxes locked per match, latest generation';
+  return `Hiders ${g.hiderLocksPerMatch.toFixed(2)}, seekers ${g.seekerLocksPerMatch.toFixed(2)} per match`;
+}
+
+/** Both teams' fitness, the benchmark, how long hiders stay hidden, how much the boxes and ramps get used, and species. */
 export function ProgressTab() {
   const records = useHideSeekLab((s) => s.records);
   const last = records[records.length - 1];
@@ -60,10 +64,7 @@ export function ProgressTab() {
         { label: 'Hiders vs scripted seeker', color: HIDER, values: records.map((r) => opt(r.stats.game.scriptedHiddenShare)), width: 2 },
         { label: 'Seekers vs scripted hider', color: SEEKER, values: records.map((r) => opt(r.stats.game.scriptedSeenShare)), width: 2 },
       ],
-      boxes: [
-        { label: 'Locks', color: AMBER, values: records.map((r) => r.stats.game.locksPerMatch), width: 2 },
-        { label: 'Boxes moved', color: MUTED, values: records.map((r) => r.stats.game.boxesMovedPerMatch), width: 1.5 },
-      ],
+      ...boxAndRampSeries(records),
     };
   }, [records]);
   const hasExposed = records.some((r) => r.stats.game.exposedShare !== undefined);
@@ -79,7 +80,7 @@ export function ProgressTab() {
     <div className="flex flex-col gap-6 p-4">
       <div className="grid grid-cols-3 gap-3">
         <Stat label="Hidden" value={`${Math.round(last.stats.game.currentHiddenShare * 100)}%`} hint="Share of seek time hiders stayed out of sight, current teams" />
-        <Stat label="Locks a match" value={last.stats.game.locksPerMatch.toFixed(2)} />
+        <Stat label="Locks a match" value={last.stats.game.locksPerMatch.toFixed(2)} hint={lockSplit(last.stats.game)} />
         <Stat label="Species" value={`${last.stats.hiders.species.length} / ${last.stats.seekers.species.length}`} hint="Hider species / seeker species" />
       </div>
       <Section title="Fitness" hint="per team">
@@ -101,8 +102,14 @@ export function ProgressTab() {
       )}
       <Section title="Box use" hint="per match">
         <HsLineChart generations={charts.gens} series={charts.boxes} yLabel="Count" height={120} />
-        <Legend items={charts.boxes.map((s) => ({ label: s.label, color: s.color }))} />
+        <Legend items={legendOf(charts.boxes)} />
       </Section>
+      {charts.ramps && (
+        <Section title="Ramps" hint="per match">
+          <HsLineChart generations={charts.gens} series={charts.ramps} yLabel="Count" height={110} />
+          <Legend items={legendOf(charts.ramps)} />
+        </Section>
+      )}
       <Section title="Species" hint="share of each team">
         <SpeciesBands stats={records.map((r) => r.stats.hiders)} hue={214} label="Hider species per generation" />
         <SpeciesBands stats={records.map((r) => r.stats.seekers)} hue={354} label="Seeker species per generation" />

@@ -18,7 +18,8 @@ import { Field, TextInput } from '@/ui/primitives/Field';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { HS_LAST_RUN_KEY } from '../../hooks/useHideSeekBootstrap';
 import { hideSeekSession } from '../../session/HideSeekSession';
-import { RoomThumb } from '../RoomThumb';
+import { RoomThumb } from '../maps/RoomThumb';
+import { BlueprintPicker } from './BlueprintPicker';
 
 interface Props {
   open: boolean;
@@ -114,16 +115,7 @@ export function NewRunDialog({ open, onOpenChange, initialScript }: Props) {
             This script trains the <span className="font-medium text-fg">{scriptBrain.name}</span> brain, {blueprintInputCount(scriptBrain)} inputs.
           </p>
         ) : (
-          <Field label="Brain blueprint" hint={blueprint.teaches}>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              {HIDESEEK_BLUEPRINTS.map((b) => (
-                <button key={b.id} type="button" onClick={() => setBlueprint(b)} className={cn(choice(b.id === blueprint.id), 'flex flex-col gap-0.5')}>
-                  <span className="text-[13px] font-medium">{b.name.replace('Hide and Seek ', '')}</span>
-                  <span className="text-[11px] text-muted">{blueprintInputCount(b)} inputs</span>
-                </button>
-              ))}
-            </div>
-          </Field>
+          <BlueprintPicker open={open} value={blueprint} onChange={setBlueprint} />
         )}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Agents per team" hint={pop === '20' ? 'Lighter, for slower machines.' : 'Fills the 50 arena grid.'}>

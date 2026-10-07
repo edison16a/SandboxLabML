@@ -19,6 +19,11 @@ const STEPS: TourStep[] = [
     body: 'In a focused arena, the corner views show each agent in first person. The red wedge is the field of view of the seeker.',
   },
   {
+    target: 'button[aria-label="Sandbox"]',
+    title: 'Locks and ramps',
+    body: 'Either team can lock a box, and only that team can free it. The padlock shows whose lock it is, blue or red. A seeker can push the ramp to a wall, run up it and jump over. Try it with your champions in the Sandbox.',
+  },
+  {
     target: '[aria-label="Simulation speed"]',
     title: 'Fast forward',
     body: 'Turbo trains flat out on every core and replays the latest round for you to watch.',

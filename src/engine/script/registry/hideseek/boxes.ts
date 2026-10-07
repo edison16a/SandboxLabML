@@ -46,6 +46,20 @@ export const HIDESEEK_BOX_ENTRIES: RegistryEntry[] = [
     },
     (v) => agent(v).boxesLockedByTeam,
   ),
+  numSensor(
+    {
+      name: 'agent.boxesLockedByOpponent',
+      unit: '',
+      range: [0, BOX_COUNT],
+      summary: 'How many boxes the other team has locked right now.',
+      description:
+        'A box the other team locked cannot be moved or unlocked by this agent. A seeker that finds the ramp locked by the hiders has to find another way in, and a hider can tell that seekers are locking boxes to trap it.',
+      example: 'reward +0.5 when agent.isSeeker and agent.justVaulted and agent.boxesLockedByOpponent > 0',
+      explain: 'the number of boxes locked by the other team',
+      label: 'boxes locked by the other team',
+    },
+    (v) => agent(v).boxesLockedByOpponent,
+  ),
   boolSensor(
     {
       name: 'agent.justGrabbed',

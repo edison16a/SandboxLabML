@@ -84,11 +84,25 @@ export function moveBox(room: SandboxRoom, index: number, x: number, z: number):
   return { room: { ...room, boxes: room.boxes.map((b, i) => (i === index ? box : b)) } };
 }
 
-/** Turns a box a quarter turn in place, if it still fits. */
+/**
+ * The yaw a quarter turn counterclockwise from `yaw` (seen from above),
+ * snapped to 0, PI/2, PI or 3PI/2. A ramp's yaw is its uphill direction,
+ * so a ramp needs all four; see turnBox.
+ */
+export function quarterTurn(yaw: number): number {
+  const q = (((Math.round(yaw / (Math.PI / 2)) + 1) % 4) + 4) % 4;
+  return (q * Math.PI) / 2;
+}
+
+/**
+ * Turns a box a quarter turn in place, if it still fits. A crate looks the
+ * same both ways round, so it flips between along x and along z. A ramp
+ * steps through all four uphill directions.
+ */
 export function turnBox(room: SandboxRoom, index: number): EditResult {
   const old = room.boxes[index];
   if (!old) return { error: 'That box is gone.' };
-  const yaw = Math.abs(Math.sin(old.yaw)) > 0.5 ? 0 : Math.PI / 2;
+  const yaw = old.kind === 'ramp' ? quarterTurn(old.yaw) : Math.abs(Math.sin(old.yaw)) > 0.5 ? 0 : Math.PI / 2;
   const box = inside({ ...old, yaw });
   if (!fits(room, box, index)) return { error: 'No space to turn it there.' };
   return { room: { ...room, boxes: room.boxes.map((b, i) => (i === index ? box : b)) } };

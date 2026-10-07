@@ -14,7 +14,7 @@ const FEATURES = [
   {
     icon: Users,
     title: 'Hide and Seek in 3D',
-    body: 'Hiders grab and lock boxes, seekers hunt them. Watch all 50 matches of a round at once, then click one to see it up close.',
+    body: 'Hiders lock boxes into forts, seekers push ramps to jump the walls. Watch all 50 matches of a round at once, then click one to see it up close.',
   },
   {
     icon: Code2,

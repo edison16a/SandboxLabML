@@ -3,7 +3,7 @@
 import { forwardRef, useCallback, useRef, useState } from 'react';
 import { boxAtPoint, placeBox, snap, straightWall, wallAtPoint } from '@/engine/hideseek/sandbox/roomEdit';
 import { BOARD_COLORS, BoardBox, BoardGrid, BoardRoom, HALF, SpawnArea } from './BoardLayers';
-import type { EditorTool } from './editorTools';
+import { isBoxTool, placeYaw, type EditorTool, type PlaceYaws } from './editorTools';
 import { regionOf, snapped, type BoardInput, type Point } from './useBoardInput';
 import type { RoomDraft } from './useRoomDraft';
 
@@ -15,7 +15,7 @@ interface Props {
   /** Owned by the dialog, which needs the wall in progress to decide what Escape does. */
   input: BoardInput;
   tool: EditorTool;
-  plankYaw: number;
+  yaws: PlaceYaws;
 }
 
 /**
@@ -24,7 +24,7 @@ interface Props {
  * the previews: the wall being dragged, the box about to be placed (red
  * when it does not fit), the spawn area being drawn and the keyboard cursor.
  */
-export const EditorBoard = forwardRef<SVGSVGElement, Props>(function EditorBoard({ draft, input, tool, plankYaw }, ref) {
+export const EditorBoard = forwardRef<SVGSVGElement, Props>(function EditorBoard({ draft, input, tool, yaws }, ref) {
   const svg = useRef<SVGSVGElement | null>(null);
   /** The cursor shows only while the keyboard drives the board, so it never sits under the mouse. */
   const [keys, setKeys] = useState(false);
@@ -43,9 +43,10 @@ export const EditorBoard = forwardRef<SVGSVGElement, Props>(function EditorBoard
   const erasing = tool === 'erase' && hover && !g;
   const eraseBox = erasing ? boxAtPoint(room, hover[0], hover[1]) : -1;
   const eraseWall = erasing && eraseBox < 0 ? wallAtPoint(room, hover[0], hover[1]) : -1;
-  const placing = (tool === 'cube' || tool === 'plank') && hover && !g && boxAtPoint(room, hover[0], hover[1]) < 0;
+  const boxTool = isBoxTool(tool) ? tool : null;
+  const placing = boxTool && hover && !g && boxAtPoint(room, hover[0], hover[1]) < 0;
   const ghostAt = placing ? snapped(hover) : null;
-  const ghost = ghostAt ? { x: ghostAt[0], z: ghostAt[1], yaw: tool === 'plank' ? plankYaw : 0, kind: tool as 'cube' | 'plank' } : null;
+  const ghost = ghostAt && boxTool ? { x: ghostAt[0], z: ghostAt[1], yaw: placeYaw(boxTool, yaws), kind: boxTool } : null;
   const ghostBad = ghost ? !!placeBox(room, ghost.kind, ghost.x, ghost.z, ghost.yaw).error : false;
   const moving = g?.kind === 'move' && g.moved ? room.boxes[g.box] : null;
   const wall = g?.kind === 'wall' ? straightWall(g.start, g.current) : input.pendingWall ? straightWall(input.pendingWall, input.cursor) : null;

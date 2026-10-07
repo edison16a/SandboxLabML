@@ -81,6 +81,7 @@ The Sandbox plays trained champions outside training: up to eight hiders and eig
 * A hider counts as seen when any seeker sees it. Brain outputs drive players directly and nothing is rewarded, like the benchmark, so the Sandbox cannot change a training result.
 * Its stream has its own port, because a frame's size follows the number of players and boxes. An 8 float header says how many of each follow; its first three fields match an arena snapshot, so the HUD reads either.
 * The room editor works on immutable rooms through the rules in `roomEdit.ts`, so undo is a list of earlier rooms. Rooms the user saves live in their own IndexedDB table and belong to no run, so every model can play in every room.
+* The editor places cubes, planks and ramps. A ramp's yaw is its uphill direction, so it turns through all four quarter turns where a crate flips between two. Every 2D map (the editor board, the room thumbnails and the lesson preview) draws a ramp with chevrons toward its lip, from the shared geometry in `src/features/hideseek/components/maps/rampChevrons.ts`.
 
 ## Scripts
 

@@ -6,6 +6,7 @@ import type { Genome } from '@/engine/neat/types';
 import type { GenerationRecord } from '@/engine/training/records';
 import { runStorage, type StorageBreakdown } from '@/storage/meter';
 import { GrowthChart } from './GrowthChart';
+import type { InputGroup } from './inputGroups';
 
 interface Props {
   runId: string;
@@ -14,6 +15,8 @@ interface Props {
   /** Parameter count of the blueprint's starting brain. */
   reference: number;
   blueprintName: string;
+  /** What the brain senses, by group. Hover a row for each input's label. Left out, the card skips the section. */
+  senses?: InputGroup[];
 }
 
 function Row({ label, value, hint }: { label: string; value: React.ReactNode; hint?: string }) {
@@ -38,7 +41,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
  * The model card: what the champion brain is made of, what it costs to run,
  * how much space the run takes and how it got here.
  */
-export function ModelCard({ runId, genome, records, reference, blueprintName }: Props) {
+export function ModelCard({ runId, genome, records, reference, blueprintName, senses }: Props) {
   const m = modelMetrics(genome);
   const [disk, setDisk] = useState<StorageBreakdown | null>(null);
   const generations = records.length;
@@ -73,6 +76,13 @@ export function ModelCard({ runId, genome, records, reference, blueprintName }: 
         <Row label="Hidden" value={m.neurons.hidden} />
         <Row label="Outputs" value={m.neurons.output} />
       </Section>
+      {senses && (
+        <Section title="Senses">
+          {senses.map((g) => (
+            <Row key={g.label} label={g.label} value={g.count} hint={g.inputs.join(', ')} />
+          ))}
+        </Section>
+      )}
       <Section title="Connections">
         <Row label="Enabled" value={m.connections.enabled} />
         <Row label="Disabled" value={m.connections.disabled} hint="Disabled genes stay in the genome and can switch back on." />

@@ -26,7 +26,7 @@ const DOCS: Record<Output, Pick<SensorDocs, 'summary' | 'description' | 'explain
   },
   lock: {
     summary: "The brain's lock output: rising above 0 locks or unlocks a box.",
-    description: 'Each time it rises above 0, a hider locks the free box in front of it, or unlocks one its team locked. Seekers have the output too, but for them it does nothing.',
+    description: 'Each time it rises above 0, the agent locks the free box in front of it, or unlocks one its own team locked. Both teams lock, but not while carrying a box or on a ramp.',
     explain: "the brain's lock",
     label: 'brain lock',
   },

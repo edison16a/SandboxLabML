@@ -7,7 +7,7 @@ import { Button } from '@/ui/primitives/Button';
 import { Dialog } from '@/ui/primitives/Dialog';
 import { EditorBoard } from './EditorBoard';
 import { EditorSidebar } from './EditorSidebar';
-import { EDITOR_TOOLS, KEYBOARD_HINT, toolForKey, type EditorTool } from './editorTools';
+import { EDITOR_TOOLS, KEYBOARD_HINT, START_YAWS, toolForKey, TURN_KEY, turnNext, type EditorTool, type PlaceYaws } from './editorTools';
 import { useBoardInput } from './useBoardInput';
 import { useRoomDraft } from './useRoomDraft';
 
@@ -27,19 +27,19 @@ interface Props {
 
 /**
  * The room editor: a top down board on a snapping grid with tools to draw
- * walls, place cubes and planks, erase, and set where each team spawns,
+ * walls, place cubes, planks and ramps, erase, and set where each team spawns,
  * plus undo, clear and a hint line that says what the current tool does.
  * Saving stores the room and plays it straight away.
  */
 export function RoomEditorDialog({ room, saved, onSave, onDelete, onClose }: Props) {
   const draft = useRoomDraft(room);
   const [tool, setTool] = useState<EditorTool>('wall');
-  const [plankYaw, setPlankYaw] = useState(0);
+  const [yaws, setYaws] = useState<PlaceYaws>(START_YAWS);
   /** Delete asks once more before it removes a saved room for good. */
   const [confirming, setConfirming] = useState(false);
   /** The draft when Escape last tried to close over unsaved changes. Any edit after it disarms the second press. */
   const [leavingFrom, setLeavingFrom] = useState<SandboxRoom | null>(null);
-  const input = useBoardInput(draft, tool, plankYaw);
+  const input = useBoardInput(draft, tool, yaws);
   const board = useRef<SVGSVGElement>(null);
   const info = EDITOR_TOOLS.find((t) => t.id === tool)!;
   const leaving = leavingFrom === draft.room;
@@ -78,7 +78,7 @@ export function RoomEditorDialog({ room, saved, onSave, onDelete, onClose }: Pro
     if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
     const next = toolForKey(e.key);
     if (next) return setTool(next);
-    if (e.key.toLowerCase() === 'r') setPlankYaw((y) => (y === 0 ? Math.PI / 2 : 0));
+    if (e.key.toLowerCase() === TURN_KEY.toLowerCase()) setYaws((y) => turnNext(tool, y));
   };
 
   const footer = (
@@ -117,7 +117,7 @@ export function RoomEditorDialog({ room, saved, onSave, onDelete, onClose }: Pro
       <div className="flex flex-col gap-5 md:flex-row" onKeyDown={onKeyDown}>
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <div className="mx-auto w-full max-w-[min(62vh,640px)]">
-            <EditorBoard ref={board} draft={draft} input={input} tool={tool} plankYaw={plankYaw} />
+            <EditorBoard ref={board} draft={draft} input={input} tool={tool} yaws={yaws} />
           </div>
           <p role="status" className={`flex min-h-[2.6em] items-start gap-1.5 text-[12px] leading-[1.3] ${notice ? 'text-warn' : 'text-fg/80'}`}>
             {notice ? <TriangleAlert className="mt-px size-3.5 shrink-0" /> : <Info className="mt-px size-3.5 shrink-0 text-muted" />}
@@ -125,7 +125,7 @@ export function RoomEditorDialog({ room, saved, onSave, onDelete, onClose }: Pro
           </p>
           <p className="text-[11px] text-subtle">{KEYBOARD_HINT}</p>
         </div>
-        <EditorSidebar draft={draft} tool={tool} onTool={setTool} plankYaw={plankYaw} onPlankYaw={setPlankYaw} />
+        <EditorSidebar draft={draft} tool={tool} onTool={setTool} yaws={yaws} onYaws={setYaws} />
       </div>
     </Dialog>
   );

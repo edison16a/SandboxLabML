@@ -1,27 +1,48 @@
 'use client';
 
-import { Undo2 } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Undo2 } from 'lucide-react';
 import { SANDBOX_LIMITS } from '@/engine/hideseek/sandbox/room';
 import { cn } from '@/ui/cn';
 import { Button } from '@/ui/primitives/Button';
 import { Field, TextInput } from '@/ui/primitives/Field';
 import { Kbd } from '@/ui/primitives/Kbd';
 import { Segmented } from '@/ui/primitives/Segmented';
-import { EDITOR_TOOLS, type EditorTool } from './editorTools';
+import { EDITOR_TOOLS, TURN_KEY, type EditorTool, type PlaceYaws } from './editorTools';
 import type { RoomDraft } from './useRoomDraft';
 
 interface Props {
   draft: RoomDraft;
   tool: EditorTool;
   onTool: (tool: EditorTool) => void;
-  plankYaw: number;
-  onPlankYaw: (yaw: number) => void;
+  yaws: PlaceYaws;
+  onYaws: (yaws: PlaceYaws) => void;
 }
 
 const DOT: Partial<Record<EditorTool, string>> = { hiders: 'text-hider', seekers: 'text-seeker' };
 
-/** The editor's side column: the room's name, the tools with their keys, plank direction, counts, undo and clear. */
-export function EditorSidebar({ draft, tool, onTool, plankYaw, onPlankYaw }: Props) {
+/** A ramp's yaw points uphill: yaw 0 is to the right on the board, and each quarter turn goes counterclockwise. */
+const UPHILL = [
+  { value: '0', label: <ArrowRight />, title: 'Uphill to the right' },
+  { value: '1', label: <ArrowUp />, title: 'Uphill to the top' },
+  { value: '2', label: <ArrowLeft />, title: 'Uphill to the left' },
+  { value: '3', label: <ArrowDown />, title: 'Uphill to the bottom' },
+] as const;
+
+/** One "which way" row: a label, the turn key when it applies to this row, and the choice. */
+function DirectionRow({ label, turns, children }: { label: string; turns: boolean; children: React.ReactNode }) {
+  return (
+    <div className="flex h-7 items-center justify-between gap-2 text-[12px] text-fg/80">
+      <span className="flex items-center gap-1.5">
+        {label}
+        {turns && <Kbd>{TURN_KEY}</Kbd>}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+/** The editor's side column: the room's name, the tools with their keys, which way new planks and ramps go, counts, undo and clear. */
+export function EditorSidebar({ draft, tool, onTool, yaws, onYaws }: Props) {
   const room = draft.room;
   return (
     <div className="flex w-full flex-col gap-4 md:w-56">
@@ -52,20 +73,23 @@ export function EditorSidebar({ draft, tool, onTool, plankYaw, onPlankYaw }: Pro
           );
         })}
       </div>
-      <div className="flex items-center justify-between gap-2 text-[12px] text-muted">
-        <span className="flex items-center gap-1.5">
-          New planks <Kbd>R</Kbd>
-        </span>
-        <Segmented
-          label="New plank direction"
-          size="sm"
-          value={plankYaw === 0 ? 'across' : 'down'}
-          onChange={(v) => onPlankYaw(v === 'across' ? 0 : Math.PI / 2)}
-          options={[
-            { value: 'across', label: 'Across' },
-            { value: 'down', label: 'Down' },
-          ]}
-        />
+      <div className="flex flex-col gap-1.5">
+        <span className="text-[12px] font-medium text-muted">Direction of new boxes</span>
+        <DirectionRow label="Planks" turns={tool !== 'ramp'}>
+          <Segmented
+            label="New plank direction"
+            size="sm"
+            value={yaws.plank === 0 ? 'across' : 'down'}
+            onChange={(v) => onYaws({ ...yaws, plank: v === 'across' ? 0 : Math.PI / 2 })}
+            options={[
+              { value: 'across', label: 'Across' },
+              { value: 'down', label: 'Down' },
+            ]}
+          />
+        </DirectionRow>
+        <DirectionRow label="Ramps" turns={tool === 'ramp'}>
+          <Segmented label="New ramp uphill direction" size="sm" value={String(Math.round(yaws.ramp / (Math.PI / 2)) % 4)} onChange={(v) => onYaws({ ...yaws, ramp: (Number(v) * Math.PI) / 2 })} options={UPHILL} />
+        </DirectionRow>
       </div>
       <dl className="grid grid-cols-2 gap-2 rounded-md border border-border bg-surface-2 p-2.5 text-[12px]">
         <div>

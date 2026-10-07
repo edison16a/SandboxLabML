@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { InputSpec, OutputSpec } from '@/engine/env/types';
 import { cn } from '@/ui/cn';
+import { isSignedInput } from './signedInputs';
 
 interface Props {
   schema: InputSpec[];
@@ -42,7 +43,7 @@ export function InputBars({ schema, outputs, read, hovered, onHover, compact = f
     <div className="flex flex-col gap-0.5">
       {rows.map((spec) => {
         const v = data?.obs[spec.index] ?? 0;
-        const signed = spec.group === 'scalar' && (spec.key === 'headingError' || spec.key === 'steerAngle' || spec.key.startsWith('curvature'));
+        const signed = isSignedInput(spec);
         const off = lesioned?.has(spec.index);
         return (
           <div
