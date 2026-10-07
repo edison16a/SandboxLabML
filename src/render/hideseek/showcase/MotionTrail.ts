@@ -9,19 +9,17 @@ const Y = 0.016;
 
 /**
  * A short ribbon on the floor behind an agent, fading out with age. It
- * runs at the agent's feet, so it climbs a ramp with it; a jump leaves a
- * gap, since a ribbon hanging in the air reads as a sheet, not a path.
- * Every buffer is allocated once and rewritten in place, and the newest
- * point follows the interpolated agent each frame, so the ribbon never
- * lags.
+ * runs at the agent's feet, so it climbs a ramp with it. A jump ends it
+ * and the landing starts a new one: a ribbon hung through the air reads
+ * as a sheet, not a path. Every buffer is allocated once and rewritten in
+ * place, and the newest point follows the interpolated agent each frame,
+ * so the ribbon never lags.
  */
 export class MotionTrail {
   readonly mesh: THREE.Mesh;
   private readonly xs = new Float32Array(SAMPLES);
   private readonly zs = new Float32Array(SAMPLES);
   private readonly ys = new Float32Array(SAMPLES);
-  /** 1 for a point on the floor or a slope, 0 for one in the air. */
-  private readonly ws = new Float32Array(SAMPLES);
   private filled = 0;
   private readonly pos: THREE.BufferAttribute;
   private readonly col: THREE.BufferAttribute;
@@ -52,12 +50,17 @@ export class MotionTrail {
   }
 
   /**
-   * Moves the head to (x, z), `elevation` m above the floor, drawn only
-   * when `grounded`. Once the head is far enough from the newest kept
-   * sample, the previous head is kept as a sample, so samples end up about
-   * MIN_STEP apart however fast the agent moves.
+   * Moves the head to (x, z), `elevation` m above the floor. Once the head
+   * is far enough from the newest kept sample, the previous head is kept
+   * as a sample, so samples end up about MIN_STEP apart however fast the
+   * agent moves. Off the ground (`grounded` false) there is no ribbon.
    */
   update(x: number, z: number, elevation: number, grounded: boolean, brightness: number): void {
+    if (!grounded) {
+      this.filled = 0;
+      this.mesh.geometry.setDrawRange(0, 0);
+      return;
+    }
     if (this.filled === 0) {
       this.filled = 1;
     } else {
@@ -66,14 +69,12 @@ export class MotionTrail {
         this.xs.copyWithin(1, 0, SAMPLES - 1);
         this.zs.copyWithin(1, 0, SAMPLES - 1);
         this.ys.copyWithin(1, 0, SAMPLES - 1);
-        this.ws.copyWithin(1, 0, SAMPLES - 1);
         this.filled = Math.min(SAMPLES, this.filled + 1);
       }
     }
     this.xs[0] = x;
     this.zs[0] = z;
     this.ys[0] = elevation;
-    this.ws[0] = grounded ? 1 : 0;
     this.write(brightness);
   }
 
@@ -98,7 +99,7 @@ export class MotionTrail {
       p[o + 3] = this.xs[i] + dz * w;
       p[o + 4] = Y + this.ys[i];
       p[o + 5] = this.zs[i] - dx * w;
-      const alpha = (1 - age) ** 1.6 * 0.38 * brightness * this.ws[i];
+      const alpha = (1 - age) ** 1.6 * 0.38 * brightness;
       for (let side = 0; side < 2; side++) {
         const q = i * 8 + side * 4;
         c[q] = this.color.r;
