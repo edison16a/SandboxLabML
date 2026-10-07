@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
+import { DEFAULT_CAR } from '@/engine/racing/car/params';
 import { RACING_SNAPSHOT } from '@/engine/racing/env';
 import { useRacingLab } from '@/features/racing/state/labStore';
 import { attachOpacity, createFadeMaterial } from '@/render/shared/fadeMaterial';
@@ -10,6 +11,7 @@ import { blendPose, type Pose } from '@/render/shared/interpolate';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { crowdGeometry } from './car/geometry/crowd';
 import { withCarSurface } from './car/materials/carSurface';
+import { FleetMotion } from './motion/fleetMotion';
 import { ghostColor, ghostOpacity } from './palette';
 import { useRacingScene } from './sceneContext';
 import { GhostTrails } from './GhostTrails';
@@ -38,18 +40,16 @@ export function GhostCars() {
     const depth = new THREE.MeshBasicMaterial({ colorWrite: false, transparent: true, depthWrite: true });
     return { geometry, opacity, material, depth, dispose: () => (geometry.dispose(), material.dispose(), depth.dispose()) };
   }, []);
-  const tmp = useMemo(
-    () => ({ m: new THREE.Matrix4(), q: new THREE.Quaternion(), p: new THREE.Vector3(), s: new THREE.Vector3(), c: new THREE.Color(), up: new THREE.Vector3(0, 1, 0), pose: { x: 0, y: 0, heading: 0 } as Pose, stopAt: new Float64Array(MAX_GHOSTS), epoch: -1 }),
-    [],
-  );
+  const tmp = useMemo(() => ({ m: new THREE.Matrix4(), c: new THREE.Color(), pose: { x: 0, y: 0, heading: 0 } as Pose, stopAt: new Float64Array(MAX_GHOSTS), epoch: -1 }), []);
+  const fleet = useMemo(() => new FleetMotion(MAX_GHOSTS), []);
 
-  useFrame((state) => {
+  useFrame((state, dt) => {
     const m = mesh.current;
     const d = depthMesh.current;
     if (!m || !d) return;
     // Both meshes read the same instance matrices; only the count needs copying.
     if (d.instanceMatrix !== m.instanceMatrix) d.instanceMatrix = m.instanceMatrix;
-    const { view, hoveredGhost } = useRacingLab.getState();
+    const { view, hoveredGhost, run } = useRacingLab.getState();
     if (!ghosts?.curr || view === 'population') {
       m.count = d.count = 0;
       return;
@@ -63,6 +63,7 @@ export function GhostCars() {
     const prev = ghosts.prev?.buffer ?? null;
     const a = ghosts.alpha();
     const n = Math.min(ghosts.count, MAX_GHOSTS);
+    fleet.update(ghosts, n, run?.racing?.car ?? DEFAULT_CAR, Math.min(dt, 0.1));
     for (let i = 0; i < n; i++) {
       const t = n > 1 ? i / (n - 1) : 1;
       blendPose(prev, buf, i * STRIDE, a, tmp.pose);
@@ -72,10 +73,7 @@ export function GhostCars() {
       const since = stopped ? now - tmp.stopAt[i] : 0;
       const fade = since < 1 ? 1 : Math.max(0.12, 1 - (since - 1) / 0.6);
       const hover = hoveredGhost === ghosts.tags[i];
-      tmp.q.setFromAxisAngle(tmp.up, tmp.pose.heading);
-      tmp.p.set(tmp.pose.x, 0.01, -tmp.pose.y);
-      tmp.s.setScalar(i === frame.hiddenGhost ? 0 : 1);
-      tmp.m.compose(tmp.p, tmp.q, tmp.s);
+      fleet.compose(i, tmp.pose.x, 0.01, -tmp.pose.y, tmp.pose.heading, i === frame.hiddenGhost ? 0 : 1, tmp.m);
       m.setMatrixAt(i, tmp.m);
       ghostColor(t, tmp.c);
       if (hover) tmp.c.set('#ffffff');
