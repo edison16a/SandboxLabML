@@ -6,7 +6,8 @@ import { useLayoutEffect, useMemo, useRef } from 'react';
 import type { QualityTier } from '@/features/racing/state/labStore';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { withHaze } from '../atmosphere';
-import { rockGeometry, shrubGeometry } from './groundCover';
+import { detailNoise, releaseDetailNoise } from '../detailNoise';
+import { createRockMaterial, rockGeometry, shrubGeometry } from './groundCover';
 import { instanceSet, withColors, writeInstance, type InstanceSet } from './instances';
 import type { Flora } from './placement';
 import { createWindMaterial } from './windMaterial';
@@ -38,8 +39,8 @@ export function Undergrowth({ flora, tier }: { flora: Flora; tier: QualityTier }
   }, []);
   const mats = useDisposable(() => {
     const shrub = createWindMaterial(1.2, 0.05);
-    const rock = withHaze(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, flatShading: true, envMapIntensity: 0.8 }));
-    return { shrub, rock, dispose: () => (shrub.material.dispose(), rock.dispose()) };
+    const rock = withHaze(createRockMaterial(detailNoise()));
+    return { shrub, rock, dispose: () => (shrub.material.dispose(), rock.dispose(), releaseDetailNoise()) };
   }, []);
   const sets = useMemo(
     () => ({

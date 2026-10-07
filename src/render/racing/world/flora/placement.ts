@@ -71,7 +71,8 @@ export function placeFlora(shape: TerrainShape): Flora {
       push(shrubs, x, z, rng.range(0.55, 1.5), rng.next() < 0.5 ? 0 : 1);
     } else if (roll < 0.2 * near + 0.05 * (0.15 + rock) * near) {
       // Boulders, a few of them huge where the spines break the surface.
-      const big = rock > 0.5 && rng.next() < 0.18;
+      // Big boulders only well away from the road, where they read as part of the hillside.
+      const big = rock > 0.5 && d > 70 && rng.next() < 0.18;
       push(rocks, x, z, big ? rng.range(3.5, 9) : rng.range(0.5, 2.2), rng.next() < 0.5 ? 0 : 1, slopeAt(shape, x, z));
     }
   }

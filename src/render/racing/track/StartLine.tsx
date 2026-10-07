@@ -52,11 +52,11 @@ export function StartLine({ track, paint }: { track: Track; paint: THREE.Materia
     const steel = withHaze(new THREE.MeshStandardMaterial({ color: '#2b3038', metalness: 0.7, roughness: 0.38 }));
     const line = new THREE.MeshStandardMaterial({ map: checker, roughness: 0.65, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
     const face = new THREE.MeshStandardMaterial({ map: board, roughness: 0.4, emissive: '#ffffff', emissiveMap: board, emissiveIntensity: 0.35 });
-    const lamp = new THREE.MeshStandardMaterial({ color: '#2a0606', emissive: '#ff2414', emissiveIntensity: 0.25, roughness: 0.3, toneMapped: false });
+    const lamp = new THREE.MeshStandardMaterial({ color: '#1a0505', emissive: '#ff2414', emissiveIntensity: 0.06, roughness: 0.25, metalness: 0.2 });
     const all = [checker, board, steel, line, face, lamp];
     return { steel, line, face, lamp, dispose: () => all.forEach((x) => x.dispose()) };
   }, [w]);
-  const lamps = useMemo(() => [-2, -1, 0, 1, 2].map((k) => k * 0.62), []);
+  const lamps = useMemo(() => [-2, -1, 0, 1, 2].map((k) => k * 0.42), []);
 
   return (
     <group>
@@ -74,13 +74,13 @@ export function StartLine({ track, paint }: { track: Track; paint: THREE.Materia
           <boxGeometry args={[0.9, 0.7, span + 0.7]} />
         </mesh>
         {[-1, 1].map((s) => (
-          <mesh key={s} position={[s * 0.36, 5.85, 0]} rotation={[0, s > 0 ? Math.PI / 2 : -Math.PI / 2, 0]} material={look.face}>
-            <planeGeometry args={[w * 0.9, (w * 0.9) / 7]} />
+          <mesh key={s} position={[s * 0.36, 6.15, 0]} rotation={[0, s > 0 ? Math.PI / 2 : -Math.PI / 2, 0]} material={look.face}>
+            <planeGeometry args={[w * 0.6, (w * 0.6) / 7]} />
           </mesh>
         ))}
         {lamps.map((z) => (
           <mesh key={z} position={[-0.47, 7.1, z]} rotation={[0, 0, Math.PI / 2]} material={look.lamp}>
-            <cylinderGeometry args={[0.2, 0.2, 0.08, 20]} />
+            <cylinderGeometry args={[0.13, 0.13, 0.06, 18]} />
           </mesh>
         ))}
       </group>

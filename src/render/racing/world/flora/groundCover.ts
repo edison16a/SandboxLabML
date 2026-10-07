@@ -19,9 +19,9 @@ export function shrubGeometry(variant: number): THREE.BufferGeometry {
   return b.build();
 }
 
-const SAND = new THREE.Color('#c39a6f');
-const SAND_DARK = new THREE.Color('#8f6a4b');
-const SAND_PALE = new THREE.Color('#dcbf96');
+const SAND = new THREE.Color('#b69476');
+const SAND_DARK = new THREE.Color('#7e6450');
+const SAND_PALE = new THREE.Color('#d2bc9c');
 
 /**
  * A weathered sandstone boulder: a lumpy, squat, faceted stone with a flat
@@ -50,4 +50,33 @@ export function rockGeometry(variant: number): THREE.BufferGeometry {
   g.computeVertexNormals();
   g.computeBoundingSphere();
   return g;
+}
+
+/**
+ * Boulder material: flat shaded vertex colors, broken up with world space
+ * grain and darker cracks from the shared noise, so no two rocks share a
+ * pattern and big ones do not look like plain painted polygons.
+ */
+export function createRockMaterial(noise: THREE.Texture): THREE.MeshStandardMaterial {
+  const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, flatShading: true, envMapIntensity: 0.8 });
+  m.onBeforeCompile = (shader) => {
+    shader.uniforms.uDetail = { value: noise };
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vRock;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\n#ifdef USE_INSTANCING\nvRock = ( modelMatrix * instanceMatrix * vec4( transformed, 1.0 ) ).xyz;\n#else\nvRock = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;\n#endif');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform sampler2D uDetail;\nvarying vec3 vRock;')
+      .replace(
+        '#include <color_fragment>',
+        [
+          '#include <color_fragment>',
+          'vec4 g1 = texture2D( uDetail, vRock.xz * 0.9 + vRock.y * 0.3 );',
+          'vec4 g2 = texture2D( uDetail, vec2( vRock.x + vRock.z, vRock.y * 3.0 ) * 0.12 );',
+          'diffuseColor.rgb *= ( 0.8 + g1.r * 0.35 ) * ( 0.86 + g2.g * 0.28 );',
+          'diffuseColor.rgb *= 1.0 - 0.35 * smoothstep( 0.03, 0.0, abs( g2.b - 0.5 ) );',
+        ].join('\n'),
+      );
+  };
+  m.customProgramCacheKey = () => 'racing-rock';
+  return m;
 }

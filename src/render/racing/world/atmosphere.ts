@@ -13,10 +13,10 @@ export const ATMOSPHERE = {
   zenith: new THREE.Color('#2a63b8'),
   horizon: new THREE.Color('#a9c3df'),
   /** Haze looking away from the sun, and toward it, where it glows warm. */
-  haze: new THREE.Color('#b9c9d8'),
-  sunHaze: new THREE.Color('#f1dcc0'),
+  haze: new THREE.Color('#bccad6'),
+  sunHaze: new THREE.Color('#f3dcbd'),
   /** Fog density at ground level, per meter, and how fast it thins with height. */
-  density: 0.00052,
+  density: 0.0004,
   falloff: 1 / 240,
 };
 
