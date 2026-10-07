@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
-import { FLAG_FROZEN, FLAG_SEEING, FLAG_SEEN } from '@/engine/hideseek/snapshot';
+import { AGENT_X, AGENT_Z, FLAG_FROZEN, FLAG_SEEING, FLAG_SEEN } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { TEAM_BODY } from '../characters/characterMaterials';
 import { instancedCharacterGeometry } from '../characters/instancedCharacter';
@@ -51,7 +51,7 @@ export function GridAgents({ onPick }: { onPick: (slot: number) => void }) {
         blendFloorPose(prev, curr, o, frame.alpha, t.pose);
         const flags = agentFlags(curr, o);
         const frozen = hasFlag(flags, FLAG_FROZEN);
-        const step = prev && prev.length > o + 1 ? Math.hypot(curr[o] - prev[o], curr[o + 1] - prev[o + 1]) : 0;
+        const step = prev && prev.length > o + AGENT_Z ? Math.hypot(curr[o + AGENT_X] - prev[o + AGENT_X], curr[o + AGENT_Z] - prev[o + AGENT_Z]) : 0;
         const speed = step < 1 ? step / SNAPSHOT_SECONDS : 0;
         const run = Math.min(1, speed / 3);
         const phase = time * 2.1 + k * 1.3 + a * 2;

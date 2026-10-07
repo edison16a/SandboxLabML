@@ -3,7 +3,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
-import { FLAG_FROZEN, FLAG_SEEING, HIDESEEK_RAY_SNAPSHOT, SNAPSHOT_RAYS } from '@/engine/hideseek/snapshot';
+import { AGENT_X, AGENT_Z, FLAG_FROZEN, FLAG_SEEING, HIDESEEK_RAY_SNAPSHOT, SNAPSHOT_RAYS } from '@/engine/hideseek/snapshot';
 import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
 import { RayBuffer } from '@/render/shared/RayBuffer';
 import { useDisposable } from '@/render/shared/useDisposable';
@@ -64,8 +64,8 @@ export function RaysOverlay() {
             const o = agentAt(arena, a);
             // A frozen seeker is blind: its rays read full range straight through walls, which says nothing.
             if (hasFlag(agentFlags(curr, o), FLAG_FROZEN)) continue;
-            const ax = curr[o];
-            const az = curr[o + 1];
+            const ax = curr[o + AGENT_X];
+            const az = curr[o + AGENT_Z];
             const base = arena * RAY_STRIDE + a * SNAPSHOT_RAYS * 2;
             for (let r = 0; r < SNAPSHOT_RAYS; r++) {
               const hx = rays[base + 2 * r];

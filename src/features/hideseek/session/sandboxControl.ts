@@ -1,4 +1,5 @@
 import { roomById, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
+import { SANDBOX_OVER } from '@/engine/hideseek/sandbox/snapshot';
 import { hideSeekBlueprints, hideSeekSettingsOf } from '@/engine/training/hideseekRunConfig';
 import { hideSeekScriptSource } from '@/engine/training/hideseekSetup';
 import type { HideSeekPool } from '@/workers/client/hideSeekPool';
@@ -74,7 +75,7 @@ export class SandboxControl {
 
   /** The match on screen has played to its end (see the Sandbox frame header). */
   get over(): boolean {
-    return this.pool.sandbox.curr?.buffer[3] === 1;
+    return this.pool.sandbox.curr?.buffer[SANDBOX_OVER] === 1;
   }
 
   /** Plays the same setup again from the start. It keeps playing if it was. */

@@ -6,6 +6,7 @@ import { SANDBOX_LIMITS } from '@/engine/hideseek/sandbox/room';
 import {
   BOX_LOCKED,
   SANDBOX_BOX_BITS,
+  SANDBOX_PHASE,
   sandboxAgentAt,
   sandboxBoxAt,
   sandboxBoxCount,
@@ -70,7 +71,7 @@ export const isLocked = (bits: number) => (bits & BOX_LOCKED) !== 0;
  * already says prep, so seekers never show a cone before the seek starts.
  */
 export function seekerIdle(curr: Float32Array, flags: number): boolean {
-  return (flags & FLAG_FROZEN) !== 0 || curr[1] === 1;
+  return (flags & FLAG_FROZEN) !== 0 || curr[SANDBOX_PHASE] === 1;
 }
 
 /** Floats per box in SightBoxes: slice center x and z, half length, half width, cos and sin of the yaw, box center x and z, 1 for a ramp. */

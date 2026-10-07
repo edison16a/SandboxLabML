@@ -3,6 +3,9 @@ import { getLayout } from '@/engine/hideseek/layouts/presets';
 import { BOX_COUNT, BOX_KINDS, boxSize, DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import {
   AGENT_FLAGS,
+  AGENT_X,
+  AGENT_YAW,
+  AGENT_Z,
   BOX_LOCK,
   FLAG_FROZEN,
   FLAG_SEEING,
@@ -38,7 +41,7 @@ const C = {
 
 /** A pose between two frames, read from x, z and yaw stored in a row at offsets `a` and `b`. */
 function pose(f: Float32Array, a: number, b: number, t: number): { x: number; z: number; yaw: number } {
-  return { x: lerp(f[a], f[b], t), z: lerp(f[a + 1], f[b + 1], t), yaw: lerpAngle(f[a + 2], f[b + 2], t) };
+  return { x: lerp(f[a + AGENT_X], f[b + AGENT_X], t), z: lerp(f[a + AGENT_Z], f[b + AGENT_Z], t), yaw: lerpAngle(f[a + AGENT_YAW], f[b + AGENT_YAW], t) };
 }
 
 function drawRoom(g: CanvasRenderingContext2D, v: View, p: MatchPreview): void {

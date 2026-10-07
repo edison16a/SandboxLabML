@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
-import { arenaHiderSeen, arenaInPrep } from '@/render/hideseek/frame/snapshotRead';
+import { arenaHiderSeen, arenaInPrep, arenaTime } from '@/render/hideseek/frame/snapshotRead';
 import { hideSeekSession } from '../../session/HideSeekSession';
 import { useHideSeekLab } from '../../state/hideSeekStore';
 
@@ -38,7 +38,7 @@ export function HiddenHistogram() {
         epoch = feed.epoch;
         hidden.fill(-1);
       }
-      const time = buf[0];
+      const time = arenaTime(buf, 0);
       const bin = Math.min(BINS - 1, Math.floor((time / MATCH_SECONDS) * BINS));
       if (time < 0.05) hidden.fill(-1);
       let h = 0;

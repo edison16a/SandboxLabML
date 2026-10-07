@@ -2,6 +2,9 @@ import { lerp, lerpAngle } from '@/engine/core/math';
 import {
   AGENT_ELEVATION,
   AGENT_FLAGS,
+  AGENT_X,
+  AGENT_YAW,
+  AGENT_Z,
   BOX_LOCK,
   HIDESEEK_SNAPSHOT,
   LOCK_FREE,
@@ -63,15 +66,18 @@ const TELEPORT = 2;
  * Allocates nothing; the caller owns `out`.
  */
 export function blendFloorPose(prev: Float32Array | null, curr: Float32Array, o: number, alpha: number, out: FloorPose): FloorPose {
-  if (!prev || prev.length <= o + 2 || Math.abs(prev[o] - curr[o]) + Math.abs(prev[o + 1] - curr[o + 1]) > TELEPORT) {
-    out.x = curr[o];
-    out.z = curr[o + 1];
-    out.yaw = curr[o + 2];
+  const x = o + AGENT_X;
+  const z = o + AGENT_Z;
+  const yaw = o + AGENT_YAW;
+  if (!prev || prev.length <= yaw || Math.abs(prev[x] - curr[x]) + Math.abs(prev[z] - curr[z]) > TELEPORT) {
+    out.x = curr[x];
+    out.z = curr[z];
+    out.yaw = curr[yaw];
     return out;
   }
-  out.x = lerp(prev[o], curr[o], alpha);
-  out.z = lerp(prev[o + 1], curr[o + 1], alpha);
-  out.yaw = lerpAngle(prev[o + 2], curr[o + 2], alpha);
+  out.x = lerp(prev[x], curr[x], alpha);
+  out.z = lerp(prev[z], curr[z], alpha);
+  out.yaw = lerpAngle(prev[yaw], curr[yaw], alpha);
   return out;
 }
 

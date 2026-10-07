@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
-import { sandboxHiderCount } from '@/engine/hideseek/sandbox/snapshot';
+import { SANDBOX_HIDERS_SEEN, SANDBOX_OVER, SANDBOX_PHASE, SANDBOX_TIME, sandboxHiderCount } from '@/engine/hideseek/sandbox/snapshot';
 import { hideSeekSettingsOf } from '@/engine/training/hideseekRunConfig';
 import { arenaHiderSeen, arenaInPrep, arenaTime } from '@/render/hideseek/frame/snapshotRead';
 import { hideSeekSession } from '../session/HideSeekSession';
@@ -31,10 +31,10 @@ const SAMPLE_MS = 250;
  * its frame header holds how many there are and how many are in sight.
  */
 function sandboxPulse(buf: Float32Array): ArenaPulse {
-  const prep = buf[1] === 1;
+  const prep = buf[SANDBOX_PHASE] === 1;
   const hiders = sandboxHiderCount(buf);
-  const hidersSeen = buf[7] | 0;
-  return { arenas: 1, time: buf[0], prep, seeking: prep ? 0 : hiders, hidden: prep ? 0 : hiders - hidersSeen, over: buf[3] === 1, hiders, hidersSeen };
+  const hidersSeen = buf[SANDBOX_HIDERS_SEEN] | 0;
+  return { arenas: 1, time: buf[SANDBOX_TIME], prep, seeking: prep ? 0 : hiders, hidden: prep ? 0 : hiders - hidersSeen, over: buf[SANDBOX_OVER] === 1, hiders, hidersSeen };
 }
 
 /** Reads the latest frame of the feed the viewport shows. */
