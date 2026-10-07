@@ -17,15 +17,12 @@ import { ChampionCar } from './ChampionCar';
 import { BrakeMap } from './BrakeMap';
 import { CrashRings } from './CrashRings';
 import { FrameDriver } from './FrameDriver';
-import { Grandstand } from './Grandstand';
 import { GhostCars } from './GhostCars';
 import { PopulationCars } from './PopulationCars';
-import { RacingEnvironment } from './RacingEnvironment';
+import { RacingWorld } from './RacingWorld';
 import { RaysOverlay } from './RaysOverlay';
-import { Scenery } from './Scenery';
 import { createFrame, RacingSceneContext } from './sceneContext';
 import { TireEffects } from './TireEffects';
-import { TrackMesh } from './TrackMesh';
 
 interface Props {
   track: Track;
@@ -46,6 +43,7 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
   const idle = useRacingLab((s) => s.status === 'paused' && s.mode === 'train' && s.speed !== 'turbo' && s.speed !== 'max');
   // Max hands the whole machine to training, so the last frame simply stays up.
   const held = useRacingLab(viewportHeld);
+  const editing = useRacingLab((s) => s.editingTrack);
   const loop = useFrameLoop(held ? 'held' : idle ? 'idle' : 'live');
   const frame = useMemo(() => createFrame(), []);
   const target = useRef(new THREE.Vector3());
@@ -67,10 +65,7 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
       <FramePacer loop={loop} />
       <RacingSceneContext.Provider value={value}>
         <FrameDriver />
-        <RacingEnvironment tier={tier} focus={target} />
-        <TrackMesh track={track} />
-        <Scenery track={track} count={tier === 'low' ? 140 : 320} />
-        <Grandstand track={track} />
+        <RacingWorld track={track} tier={tier} focus={target} editing={editing} />
         <PopulationCars castShadow={tier === 'high'} />
         <GhostCars />
         <ChampionCar />

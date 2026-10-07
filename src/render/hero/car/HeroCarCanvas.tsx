@@ -7,12 +7,9 @@ import type { InputSpec } from '@/engine/env/types';
 import type { Track } from '@/engine/racing/track/types';
 import type { QualityTier } from '@/features/racing/state/labStore';
 import { ChampionCar } from '@/render/racing/ChampionCar';
-import { Grandstand } from '@/render/racing/Grandstand';
-import { RacingEnvironment } from '@/render/racing/RacingEnvironment';
-import { Scenery } from '@/render/racing/Scenery';
+import { RacingWorld } from '@/render/racing/RacingWorld';
 import { createFrame, RacingSceneContext } from '@/render/racing/sceneContext';
 import { TireEffects } from '@/render/racing/TireEffects';
-import { TrackMesh } from '@/render/racing/TrackMesh';
 import { Effects } from '@/render/shared/Effects';
 import { FramePacer } from '@/render/shared/FramePacer';
 import { Prewarm } from '@/render/shared/Prewarm';
@@ -68,10 +65,7 @@ export function HeroCarCanvas({ track, stream, schema, tier, running, onShown }:
       <RacingSceneContext.Provider value={value}>
         <Prewarm isReady={isReady} stepping={!running} onWarm={onWarm} />
         <HeroCarDriver />
-        <RacingEnvironment tier={tier} focus={target} />
-        <TrackMesh track={track} />
-        <Scenery track={track} count={tier === 'low' ? 140 : 320} />
-        <Grandstand track={track} />
+        <RacingWorld track={track} tier={tier} focus={target} />
         <ChampionCar tier={tier} ring={false} />
         {tier !== 'low' && <TireEffects />}
         <HeroCarRays schema={schema} />
