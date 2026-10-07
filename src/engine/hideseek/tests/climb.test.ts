@@ -41,6 +41,19 @@ describe('mounting a ramp', () => {
     m.release();
   });
 
+  it('works the same for hiders', () => {
+    const m = scriptedMatch(pool, 'open', scripted(() => ({ move: 1 })), idle(), P);
+    placeRamp(m, 0, 0, 0, true);
+    m.moveAgent('seeker', 8, 8, 0);
+    m.moveAgent('hider', -1.5, 0, 0);
+    const frames = record(m, 0, 70);
+    expect(frames.some((f) => f.climbing)).toBe(true);
+    expect(frames.some((f) => f.airborne)).toBe(true);
+    expect(m.hider.climbs).toBe(1);
+    expect(m.result().hiderClimbs).toBe(1);
+    m.release();
+  });
+
   it('does not mount facing more than 45 degrees off uphill, too slowly, or from beside the ramp', () => {
     // Facing 52 degrees off it stays put for the ticks it takes to decide. Driving on, it would slide along
     // the ramp's side and could turn uphill, and then it may well climb.
