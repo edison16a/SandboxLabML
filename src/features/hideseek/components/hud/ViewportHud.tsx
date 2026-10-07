@@ -57,10 +57,13 @@ export function ViewportHud({ viewport }: { viewport: React.RefObject<HTMLDivEle
             <MousePointerClick className="size-3" /> Click an arena to fly in
           </Hint>
         )}
+        {/* The Sandbox card fills the bottom left, so a narrow viewport has no room for this longer hint beside it. */}
         {mode === 'sandbox' && (
-          <Hint>
-            <MousePointerClick className="size-3" /> Drag a box or ramp to move it. Double click it to lock it for the hiders or free it.
-          </Hint>
+          <div className="@max-[50rem]:hidden">
+            <Hint>
+              <MousePointerClick className="size-3" /> Drag a box or ramp to move it. Double click it to lock it for the hiders or free it.
+            </Hint>
+          </div>
         )}
       </div>
     </>
