@@ -119,6 +119,27 @@ export function closeShot(cx: number, cz: number, span: number, fovDeg: number, 
   return orbitShot(cx + Math.sin(CLOSE_AZIMUTH) * fit.shift, cz + Math.cos(CLOSE_AZIMUTH) * fit.shift, fit.distance, CLOSE_ELEVATION, CLOSE_AZIMUTH);
 }
 
+/** A scene a view is fit to: its center on the floor and its size (the close shot's distance there). */
+export interface SceneFrame {
+  x: number;
+  z: number;
+  size: number;
+}
+
+/**
+ * Carries a hand placed view from one scene to another: the same angle,
+ * the aim moved with the scene's center and every distance scaled to the
+ * new scene's size, so a view of one room becomes the same view of the
+ * whole grid and back. `p` is the camera, `t` the point it orbits.
+ */
+export function carryShot(p: { x: number; y: number; z: number }, t: { x: number; y: number; z: number }, from: SceneFrame, to: SceneFrame): Shot {
+  const k = to.size / from.size;
+  const tx = to.x + (t.x - from.x) * k;
+  const ty = t.y * k;
+  const tz = to.z + (t.z - from.z) * k;
+  return { px: tx + (p.x - t.x) * k, py: ty + (p.y - t.y) * k, pz: tz + (p.z - t.z) * k, tx, ty, tz };
+}
+
 /** Smooth start and stop, so a 500 ms fly never jerks. */
 export function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;

@@ -14,6 +14,7 @@ import { firstPersonAgent, followedAgentOf, presetShot, shotKey } from './camera
 import { fitDepthRange } from './depthRange';
 import { Flight } from './flight';
 import { FollowCam } from './followCam';
+import { carryShot } from './framing';
 
 /** Eye height of the first person cameras, m: just under the top of a 1.5 m agent. */
 const EYE = 1.32;
@@ -30,7 +31,7 @@ type Controls = React.ComponentRef<typeof OrbitControls>;
  * Every camera view of the lab. Set shots fly into place whenever the
  * view, the focus or the grid changes; follow views keep an agent in frame
  * and swing round walls that hide it (see FollowCam); the free view never
- * moves by itself and carries over to a newly focused arena; first person views
+ * moves by itself and carries over to a new scene; first person views
  * ride on an agent. Orbit, pan and zoom work in every view but first
  * person, and never take the camera under the floor or far off the arenas.
  */
@@ -47,8 +48,9 @@ export function CameraRig() {
       flight: new Flight(),
       follow: new FollowCam(),
       o: { x: 0, z: 0 },
-      /** The scene the free view was last carried to: its center. */
-      scene: { x: 0, z: 0 },
+      /** The scene the free view was last fit to: its key, its center and the close shot's distance there. */
+      scene: { key: Number.NaN, x: 0, z: 0, size: 1 },
+      nextScene: { x: 0, z: 0, size: 1 },
       pose: { x: 0, z: 0, yaw: 0, elevation: 0 },
       target: { key: 0, x: 0, z: 0, elevation: 0, ox: 0, oz: 0, epoch: 0, walls: frame.walls },
     }),
@@ -124,16 +126,31 @@ export function CameraRig() {
     invalidate();
   }
 
-  /** The free view keeps wherever you put it; a new focus carries it over by the same offset. */
+  /**
+   * The free view keeps wherever you put it. Opened with nothing framed yet
+   * (a Free view restored on a new visit) it starts on the close shot. A
+   * new focus or grid carries it over: the same angle, the aim moved with
+   * the scene and the distance scaled to the new scene's size.
+   */
   function free(c: Controls): void {
-    const o = focusOrigin();
     const s = r.scene;
+    const key = shotKey('free', frame.focusSlot, frame.count, frame.lattice.cols);
+    if (f.key === FREE && key === s.key) return;
+    const o = focusOrigin();
+    const close = shotFor('close');
+    const next = r.nextScene;
+    next.x = o.x;
+    next.z = o.z;
+    next.size = Math.hypot(close.px - close.tx, close.py - close.ty, close.pz - close.tz);
     if (f.key !== FREE) {
+      if (Number.isNaN(f.key)) f.start(camera, c, close);
+      else f.t = 1;
       f.key = FREE;
-      f.t = 1;
-    } else if (o.x !== s.x || o.z !== s.z) f.carry(camera, c, o.x - s.x, 0, o.z - s.z);
-    s.x = o.x;
-    s.z = o.z;
+    } else f.start(camera, c, carryShot(camera.position, c.target, s, next));
+    s.key = key;
+    s.x = next.x;
+    s.z = next.z;
+    s.size = next.size;
   }
 
   function firstPerson(agent: number): void {

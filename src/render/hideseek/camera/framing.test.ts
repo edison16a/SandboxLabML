@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { ARENA_SPAN, latticeFor } from '../layout/gridLattice';
 import { presetShot, shotKey } from './cameraViews';
-import { arenaShot, closeShot, type Shot } from './framing';
+import { arenaShot, carryShot, closeShot, type Shot } from './framing';
 
 const FOV = 42;
 const ASPECT = 1.35;
@@ -68,6 +68,12 @@ describe('camera framing', () => {
       expect(Math.abs(corner.x)).toBeLessThan(1);
       expect(Math.abs(corner.y)).toBeLessThan(1);
     }
+  });
+
+  it('carries a hand placed view to a new scene at the same angle, scaled to its size', () => {
+    // Looking at a point 2 m right of a room's center from 10 m up and 10 m back, then the grid, three times the size.
+    const s = carryShot({ x: 32, y: 10, z: 10 }, { x: 32, y: 0, z: 0 }, { x: 30, z: 0, size: 20 }, { x: 0, z: 0, size: 60 });
+    expect(s).toEqual({ px: 6, py: 30, pz: 30, tx: 6, ty: 0, tz: 0 });
   });
 
   it('gives every view, focus and grid its own shot key', () => {
