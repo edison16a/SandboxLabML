@@ -9,10 +9,10 @@ export interface BracedBoxParts {
   braces: THREE.BufferGeometry;
 }
 
-/** Edge frame thickness and face brace width, m. */
-const EDGE = 0.07;
-const BRACE = 0.052;
-const BRACE_DEPTH = 0.026;
+/** Edge frame thickness and face brace width, m. The ramp is built from the same bars. */
+export const EDGE = 0.07;
+export const BRACE = 0.052;
+export const BRACE_DEPTH = 0.026;
 /** Faces narrower than this get no X brace, m. */
 const MIN_BRACED = 0.6;
 
@@ -77,7 +77,7 @@ export function panelCorner(f: CrateFace, p: FacePanel, su: number, sv: number):
 }
 
 /** A bar of square ends from a to b, `w` wide across the face and `d` deep along the face normal. */
-function bar(a: THREE.Vector3, b: THREE.Vector3, normal: THREE.Vector3, w: number, d: number): THREE.BufferGeometry {
+export function bar(a: THREE.Vector3, b: THREE.Vector3, normal: THREE.Vector3, w: number, d: number): THREE.BufferGeometry {
   const len = a.distanceTo(b);
   // One bevel segment: a crisp chamfer that catches the light, at a third of the triangles of a round bevel.
   const g = new RoundedBoxGeometry(len + w * 0.6, w, d, 1, Math.min(w, d) * 0.3);
