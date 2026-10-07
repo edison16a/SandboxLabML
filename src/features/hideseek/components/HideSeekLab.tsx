@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTrainScriptParam } from '@/features/scripts/useTrainScriptParam';
 import { HideSeekCanvas } from '@/render/hideseek/HideSeekCanvas';
 import { ResizeHandle } from '@/ui/split/ResizeHandle';
+import { useCameraPreference } from '../hooks/useCameraPreference';
 import { useHideSeekBootstrap } from '../hooks/useHideSeekBootstrap';
 import { useHideSeekInspect } from '../hooks/useHideSeekInspect';
 import { useHideSeekQuality } from '../hooks/useHideSeekQuality';
@@ -29,6 +30,7 @@ export function HideSeekLab() {
   const viewport = useRef<HTMLDivElement>(null);
   const schemas = useTeamSchemas();
   useHideSeekShortcuts(openNewRun);
+  useCameraPreference();
   useHideSeekInspect(ready);
   // ?quality=low|medium|high|ultra pins the render tier over Settings, handy on slow machines and in browser tests.
   useHideSeekQuality(params.get('quality'));

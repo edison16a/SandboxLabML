@@ -5,7 +5,6 @@ import { Button } from '@/ui/primitives/Button';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Select } from '@/ui/primitives/Select';
 import { Tooltip } from '@/ui/primitives/Tooltip';
-import { useCameraPreference } from '../../hooks/useCameraPreference';
 import { allowedGridSizes } from '../../hooks/useHideSeekShortcuts';
 import { useSettings } from '@/features/settings/settingsStore';
 import { gridCapped, useHideSeekLab } from '../../state/hideSeekStore';
@@ -28,7 +27,6 @@ const CAMERA_OPTIONS: Array<{ value: HsCamera; label: string; hint?: string }> =
 
 /** Grid size, camera, overlays and effects, top right of the viewport. Quality lives in Settings. */
 export function ViewControls() {
-  useCameraPreference();
   const mode = useHideSeekLab((s) => s.mode);
   const grid = useHideSeekLab((s) => s.gridSize);
   const camera = useHideSeekLab((s) => s.camera);
