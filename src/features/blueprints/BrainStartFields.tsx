@@ -30,7 +30,8 @@ export function BrainStartFields<B extends Blueprint>({ value, onChange }: { val
   const set = (patch: Partial<Blueprint>) => onChange({ ...value, ...patch } as B);
   return (
     <>
-      <section className="grid gap-4 sm:grid-cols-3">
+      {/* The wiring choice takes the room its three labels need, so "Hidden layer" never wraps. */}
+      <section className="grid gap-4 sm:grid-cols-[1fr_1fr_auto]">
         <Field label={`Sensor noise: ${Math.round(value.inputs.noise * 100)}%`} hint="Off by default. Noise makes brains more robust and slower to train.">
           <Slider label="Sensor noise" min={0} max={10} value={Math.round(value.inputs.noise * 100)} onChange={(v) => set({ inputs: { ...value.inputs, noise: v / 100 } } as Partial<Blueprint>)} />
         </Field>
@@ -41,6 +42,7 @@ export function BrainStartFields<B extends Blueprint>({ value, onChange }: { val
           <Segmented
             label="Starting wiring"
             size="sm"
+            className="self-start"
             value={value.wiring}
             onChange={(w) => set({ wiring: w, hiddenCount: w === 'hidden' ? value.hiddenCount ?? 4 : undefined })}
             options={[

@@ -56,6 +56,7 @@ export function HideSeekBlueprintForm({ value, onChange }: { value: HideSeekBlue
           <Segmented<Motion>
             label="Own motion"
             size="sm"
+            className="self-start"
             value={motionOf(inputs)}
             onChange={(m) => setInputs({ speed: m === 'speed', velocity: m === 'velocity' })}
             options={[
@@ -69,6 +70,7 @@ export function HideSeekBlueprintForm({ value, onChange }: { value: HideSeekBlue
           <Segmented
             label="Nearest crates"
             size="sm"
+            className="self-start"
             value={String(inputs.nearestBoxes)}
             onChange={(v) => setInputs({ nearestBoxes: Number(v) })}
             options={['0', '1', '2', '3', '4'].map((v) => ({ value: v, label: v }))}
