@@ -41,6 +41,12 @@ export interface HsFrame {
   /** The feed is a still preview, not a stream: nothing has been sent yet. */
   preview: boolean;
   /**
+   * Seconds of simulation per second of wall time: 2 or 4 while a live
+   * round plays at a faster watch speed, else 1. Character and box motion
+   * run on simulation time, so strides keep their real length.
+   */
+  timeScale: number;
+  /**
    * Set by a scene whose stream is not laid out as arenas (the Sandbox), so
    * the first person cameras and the inspected agent's rays know where to
    * look. Null reads the arena snapshot (see followedAgent).
@@ -65,6 +71,7 @@ export function createHsFrame(): HsFrame {
     matchTime: 0,
     prep: true,
     preview: true,
+    timeScale: 1,
     agentPose: null,
   };
 }

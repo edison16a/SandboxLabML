@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef, type ReactNode } from 'react';
 import { useDisposable } from '@/render/shared/useDisposable';
-import { POSE_PRIORITY } from '../frame/sceneContext';
+import { POSE_PRIORITY, useHsScene } from '../frame/sceneContext';
 import { characterKit } from './characterKit';
 import { CharacterMaterials } from './characterMaterials';
 import { CharacterMotion } from './motion/characterMotion';
@@ -43,6 +43,7 @@ const BLOB_SHRINK = 0.45;
  * Seekers stand in a glowing ring.
  */
 export function HsCharacter({ team, read, detail = 'full', shadows = false, blob = true, seed = 0, children }: HsCharacterProps) {
+  const { frame } = useHsScene();
   const kit = characterKit(detail);
   const mats = useDisposable(() => new CharacterMaterials(team, detail, kit.blobMap), [team, detail, kit]);
   const rig = useDisposable(() => {
@@ -71,7 +72,7 @@ export function HsCharacter({ team, read, detail = 'full', shadows = false, blob
     g.visible = feet.current.visible = visible;
     if (!visible) return;
     const d = state.drive;
-    const pose = state.motion.update(d, dt, clock.elapsedTime);
+    const pose = state.motion.update(d, dt, clock.elapsedTime, frame.timeScale);
     g.position.set(d.x, d.elevation, d.z);
     g.rotation.y = d.yaw;
     feet.current.position.set(d.x, d.elevation, d.z);

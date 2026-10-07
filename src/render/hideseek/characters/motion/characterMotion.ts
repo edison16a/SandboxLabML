@@ -3,16 +3,13 @@ import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { CONTACT_HOLD, CONTACT_NONE, CONTACT_PUSH, type CharacterDrive } from '../types';
 import { BodyDynamics, type BodyInput } from './body';
 import { FaceDynamics, type FaceInput } from './face';
-import { Gait, type GaitInput } from './gait';
-import { MotionEstimate } from './kinematics';
+import { Footwork } from './footwork';
 import { Limbs, type ArmBlend } from './limbs';
 import { createPose, type CharacterPose } from './pose';
 import { approach } from './spring';
 import { toLocal } from './vec';
 
 const RAMP = DEFAULT_HIDESEEK_PHYSICS.box.ramp;
-/** Rise per meter of a ramp's slope. */
-const GRADE = RAMP.height / RAMP.length;
 /** Eye height over the ground, m, to aim the head at something. */
 const EYES = 1.15;
 /** A stop sharper than this against something solid is a collision, m/s² as the motion estimate smooths it: a run into a wall peaks near 14. */
@@ -31,14 +28,12 @@ const BUMP = 8;
  */
 export class CharacterMotion {
   readonly pose: CharacterPose = createPose();
-  private readonly est = new MotionEstimate();
-  private readonly gait = new Gait();
+  private readonly footwork = new Footwork();
   private readonly body = new BodyDynamics();
   private readonly face = new FaceDynamics();
   private readonly limbs = new Limbs();
   private readonly blend: ArmBlend = { raise: 0, air: 0, push: 0, hold: 0, asleep: 0, crouch: 0 };
   // Inputs for the parts, filled in place every frame so a frame allocates nothing.
-  private readonly gaitIn: GaitInput = { x: 0, z: 0, yaw: 0, ground: 0, vx: 0, vz: 0, speed: 0, yawRate: 0, grade: 0, uphillX: 1, uphillZ: 0, airborne: false, frozen: false, dt: 0 };
   private readonly bodyIn: BodyInput;
   private readonly faceIn: FaceInput;
   private readonly flat = { x: 0, z: 0 };
@@ -57,20 +52,26 @@ export class CharacterMotion {
     this.faceIn = { frozen: false, seen: false, seeing: false, straining: false, lookYaw: 0, lookPitch: 0, looking: 0, time: 0, seed, dt: 0 };
   }
 
-  /** Advances by `dt` seconds of wall time at clock `time` and returns the pose, which it owns. */
-  update(d: CharacterDrive, dt: number, time: number): CharacterPose {
-    const step = clamp(dt, 1e-4, 0.1);
+  /**
+   * Advances by `dt` seconds of wall time at clock `time` and returns the
+   * pose, which it owns. `timeScale` is how many seconds of simulation pass
+   * in one of wall time (2 or 4 at the faster watch speeds). The body runs
+   * on simulation time, so a stride keeps its real length and the feet stay
+   * planted at any speed; the clip simply plays faster, like the agents.
+   * Blinks and breathing keep to the wall clock.
+   */
+  update(d: CharacterDrive, dt: number, time: number, timeScale = 1): CharacterPose {
+    const step = clamp(dt, 1e-4, 0.1) * clamp(timeScale, 0.25, 8);
     const p = this.pose;
+    const { est, gait } = this.footwork;
     if (d.teleported) {
-      this.est.reset(d.x, d.z, d.yaw, d.elevation);
-      this.gait.reset(d.x, d.z, d.yaw, d.elevation);
+      this.footwork.reset(d);
       this.body.reset();
       d.teleported = false;
     }
-    const est = this.est;
-    est.update(d.x, d.z, d.yaw, d.elevation, step);
     const b = this.blend;
     this.climb = approach(this.climb, d.climbing ? 1 : 0, 12, step);
+    this.footwork.update(d, this.climb, step);
     b.air = approach(b.air, d.airborne ? 1 : 0, 16, step);
     b.asleep = 1 - p.awake;
     b.push = approach(b.push, d.contact === CONTACT_PUSH && !d.frozen ? 1 : 0, 8, step);
@@ -92,28 +93,6 @@ export class CharacterMotion {
       lookPitch = Math.atan2(d.elevation + EYES - ty, Math.max(0.3, Math.hypot(this.flat.x, this.flat.z)));
     }
     this.looking = approach(this.looking, target && !d.frozen ? 1 : 0, 6, step);
-
-    // On a slope the ground rises along the way the agent moves up it.
-    const moving = est.speed > 0.2;
-    const up = est.rise >= 0 ? 1 : -1;
-    const ux = moving ? (up * est.vx) / est.speed : Math.cos(d.yaw);
-    const uz = moving ? (up * est.vz) / est.speed : -Math.sin(d.yaw);
-    const g = this.gaitIn;
-    g.x = d.x;
-    g.z = d.z;
-    g.yaw = d.yaw;
-    g.ground = d.elevation;
-    g.vx = est.vx;
-    g.vz = est.vz;
-    g.speed = est.speed;
-    g.yawRate = est.yawRate;
-    g.grade = GRADE * this.climb;
-    g.uphillX = ux;
-    g.uphillZ = uz;
-    g.airborne = d.airborne;
-    g.frozen = d.frozen;
-    g.dt = step;
-    this.gait.update(g);
 
     if (this.wasAirborne && !d.airborne) this.body.kick(Math.min(0, est.rise) * 0.45 - 0.5);
     // Brains steer by velocity, so they can stop dead anywhere; only a hard stop with something solid in front is a collision.
@@ -143,7 +122,7 @@ export class CharacterMotion {
     bi.looking = this.looking;
     bi.time = time;
     bi.dt = step;
-    this.body.update(bi, est, this.gait, p);
+    this.body.update(bi, est, gait, p);
     const fi = this.faceIn;
     fi.frozen = d.frozen;
     fi.seen = d.seen;
@@ -156,12 +135,12 @@ export class CharacterMotion {
     fi.time = time;
     fi.dt = step;
     this.face.update(fi, p);
-    this.limbs.update(d, d.elevation, this.gait, est, b, step, p);
+    this.limbs.update(d, d.elevation, gait, est, b, step, p);
     return p;
   }
 
   /** The feet, for tests and for anything drawn at them. */
   get feet() {
-    return this.gait.feet;
+    return this.footwork.gait.feet;
   }
 }

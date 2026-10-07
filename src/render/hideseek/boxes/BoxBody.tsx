@@ -6,7 +6,7 @@ import { useMemo, useRef } from 'react';
 import type { BoxKind, BoxSize } from '@/engine/hideseek/physics';
 import { LOCK_FREE, LOCK_SEEKERS } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
-import { POSE_PRIORITY } from '../frame/sceneContext';
+import { POSE_PRIORITY, useHsScene } from '../frame/sceneContext';
 import { boxExtras, boxParts } from './boxKit';
 import { BoxMotion, tipOffset } from './boxMotion';
 import { BoxMaterials } from './boxMaterials';
@@ -57,6 +57,7 @@ const HOLO_SCALE = 1.35;
  * their meshes and where the hologram floats.
  */
 export function BoxBody({ kind, size, read, full = true, shadows = false, blob = false, onPointerDown, onDoubleClick, holoX }: BodyProps) {
+  const { frame } = useHsScene();
   const parts = boxParts(kind, size);
   const extras = boxExtras();
   const mats = useDisposable(() => new BoxMaterials(kind, full, extras.blobMap), [kind, full, extras]);
@@ -75,7 +76,8 @@ export function BoxBody({ kind, size, read, full = true, shadows = false, blob =
     const d = state.drive;
     // The simulated pose, plus the small tip of a heavy box sliding and settling (see BoxMotion).
     const w = state.weight;
-    w.update(d.x, d.z, d.yaw, dt);
+    // Simulation time, like the characters, so a box at 4x tips as it would at 1x.
+    w.update(d.x, d.z, d.yaw, Math.min(dt, 0.1) * frame.timeScale);
     tipOffset(w.pitch.value, w.roll.value, size.length / 2, size.width / 2, state.tip);
     const c = Math.cos(d.yaw);
     const s = Math.sin(d.yaw);

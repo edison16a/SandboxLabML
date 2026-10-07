@@ -13,7 +13,7 @@ import { agentAt, agentFlags, blendAgentPose, hasFlag } from '../frame/snapshotR
 import { teamColor } from '../palette';
 import { MotionTrail } from './MotionTrail';
 
-/** A jump this long between two frames is a teleport (a new match, a Sandbox drag), m. */
+/** A jump this long between two frames at 1x is a teleport (a new match, a Sandbox drag), m. A faster watch speed covers more ground a frame. */
 const TELEPORT = 1.5;
 
 /**
@@ -33,7 +33,7 @@ export function ShowcaseAgent({ arena, agent, tier, field }: { arena: number; ag
       const o = agentAt(arena, agent);
       blendAgentPose(frame.prev, curr, o, frame.alpha, state.pose);
       const { x, z, yaw, elevation } = state.pose;
-      if (state.epoch !== frame.epoch || Math.hypot(x - d.x, z - d.z) > TELEPORT) {
+      if (state.epoch !== frame.epoch || Math.hypot(x - d.x, z - d.z) > TELEPORT * frame.timeScale) {
         state.epoch = frame.epoch;
         d.teleported = true;
         trail.reset();

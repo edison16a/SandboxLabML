@@ -8,6 +8,7 @@ import { isPresetRoomId } from '@/engine/hideseek/sandbox/room';
 import { hideSeekSettingsOf } from '@/engine/training/hideseekRunConfig';
 import { useHideSeekLab, type HideSeekLabState } from '@/features/hideseek/state/hideSeekStore';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
+import { isWatchSpeed, WATCH_SPEEDS } from '@/workers/shared/protocol';
 import { latticeFor } from '../layout/gridLattice';
 import { previewFeed } from './previewFeed';
 import { useHsScene } from './sceneContext';
@@ -73,6 +74,8 @@ export function FrameDriver() {
     const shown = curr.buffer.length >= (first + 1) * STRIDE;
     frame.matchTime = shown ? arenaTime(curr.buffer, first) : 0;
     frame.prep = shown ? arenaInPrep(curr.buffer, first) : true;
+    // Only a live round runs faster than real time; replays and the Sandbox play at 1x.
+    frame.timeScale = !sandbox && s.source === 'live' && isWatchSpeed(s.speed) ? WATCH_SPEEDS[s.speed] : 1;
   }, -2);
   return null;
 }

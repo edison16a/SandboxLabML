@@ -18,7 +18,7 @@ import { commit, GRID_LAYER, makeScratch, MAX_ARENAS } from './scratch';
 
 const BODY = [TEAM_BODY.hider, TEAM_BODY.seeker];
 const WHITE = new THREE.Color('#ffffff');
-/** Snapshots arrive at 30 Hz, so a step between two of them over this gives a speed. */
+/** Snapshots arrive at 30 Hz of wall time, so a step between two of them over this gives a speed. */
 const SNAPSHOT_SECONDS = 1 / 30;
 
 /**
@@ -62,11 +62,12 @@ export function GridAgents({ onPick }: { onPick: (slot: number) => void }) {
         const frozen = hasFlag(flags, FLAG_FROZEN);
         const climbing = hasFlag(flags, FLAG_CLIMBING);
         const step = prev && prev.length > o + AGENT_Z ? Math.hypot(curr[o + AGENT_X] - prev[o + AGENT_X], curr[o + AGENT_Z] - prev[o + AGENT_Z]) : 0;
-        const speed = step < 1 ? step / SNAPSHOT_SECONDS : 0;
+        // A faster watch speed packs more simulation into each snapshot: the stride keeps its real length and swings faster.
+        const speed = step < frame.timeScale ? step / SNAPSHOT_SECONDS / frame.timeScale : 0;
         const run = Math.min(1, speed / 3);
         const airborne = hasFlag(flags, FLAG_AIRBORNE);
         // Legs and arms swing in the shader at the cadence the real speed sets, and the body rises with each step.
-        const stride = (t.phase[n] = (t.phase[n] + Math.min(dt, 0.1) * cadence(speed) * Math.PI * 2) % (Math.PI * 2));
+        const stride = (t.phase[n] = (t.phase[n] + Math.min(dt, 0.1) * frame.timeScale * cadence(speed) * Math.PI * 2) % (Math.PI * 2));
         built.gait.setXY(n, stride, frozen || airborne ? 0 : Math.min(0.6, speed * 0.22) * (climbing ? 0.6 : 1));
         const idle = time * 2.1 + k * 1.3 + a * 2;
         const bob = frozen ? 0 : (1 - run) * (0.006 + Math.sin(idle) * 0.006) + run * Math.abs(Math.sin(stride)) * 0.035;

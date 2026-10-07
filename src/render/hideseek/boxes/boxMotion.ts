@@ -31,7 +31,7 @@ export class BoxMotion {
   private fresh = true;
 
   update(x: number, z: number, yaw: number, dt: number): void {
-    const step = Math.min(Math.max(dt, 1e-4), 0.1);
+    const step = Math.min(Math.max(dt, 1e-4), 0.5);
     if (this.fresh || Math.hypot(x - this.x, z - this.z) > TELEPORT) {
       this.fresh = false;
       this.x = x;

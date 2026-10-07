@@ -19,10 +19,12 @@ const SUBSTEP = 1 / 240;
  * having weight. `force` is an extra acceleration, e.g. inertia pushing a
  * head back when the body accelerates. Integrated in small fixed substeps
  * (semi implicit Euler), so the motion is the same at 30 and 144 fps.
+ * Steps run in simulation time, so a 4x watch speed on a slow frame can
+ * ask for a few tenths of a second; only a stalled tab is cut short.
  * Allocates nothing.
  */
 export function driveSpring(s: Spring, target: number, omega: number, zeta: number, dt: number, force = 0): number {
-  let left = Math.min(dt, 0.1);
+  let left = Math.min(dt, 0.5);
   const k = omega * omega;
   const c = 2 * zeta * omega;
   while (left > 1e-6) {
