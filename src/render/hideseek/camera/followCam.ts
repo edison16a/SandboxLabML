@@ -8,12 +8,13 @@ import { CLOSE_AZIMUTH, orbitShot } from './framing';
 import { clearView, sightBlocked, type ViewAngle } from './occlusion';
 
 /**
- * The follow shot: a drone a few meters off the agent's shoulder, high
- * enough to see over a wall, aimed at its chest. Stiffness (1/s) sets how
- * closely the aim trails a running agent: soft enough to feel like a
- * camera operator, firm enough that a sprint never leaves the frame.
+ * The follow shot: a drone a few meters off the agent's shoulder, close
+ * enough to read its face, high enough to see over most walls, aimed at
+ * its chest. Stiffness (1/s) sets how closely the aim trails a running
+ * agent: soft enough to feel like a camera operator, firm enough that a
+ * sprint never leaves the frame.
  */
-export const FOLLOW = { distance: 9.5, elevation: (57 * Math.PI) / 180, height: 0.7, stiffness: 5 };
+export const FOLLOW = { distance: 6.5, elevation: (52 * Math.PI) / 180, height: 0.7, stiffness: 5 };
 
 const WALL = DEFAULT_HIDESEEK_PHYSICS.arena.wallHeight;
 /** The point on the agent the camera must see, m over its feet: the middle of its head. */

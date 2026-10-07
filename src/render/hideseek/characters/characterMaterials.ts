@@ -11,7 +11,7 @@ import type { CharacterDetail, CharacterTeam } from './types';
  */
 export const TEAM_BODY: Record<CharacterTeam, THREE.Color> = { hider: new THREE.Color(HS_COLORS.hiderBody), seeker: new THREE.Color(HS_COLORS.seekerBody) };
 /** The light inside a body is its team color washed this far toward white. */
-const GLOW_WASH = 0.55;
+const GLOW_WASH = 0.45;
 const WHITE = new THREE.Color('#ffffff');
 /** Opacity of the blob shadow under a character standing on the floor. */
 const BLOB_OPACITY = 0.42;
@@ -34,8 +34,8 @@ function addInnerGlow(material: THREE.MeshStandardMaterial, uniforms: { uGlowCol
       `#include <emissivemap_fragment>
       {
         float facing = clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);
-        float rim = pow(1.0 - facing, 3.0);
-        totalEmissiveRadiance += uGlowColor * uGlow * (0.12 * facing + 1.1 * rim);
+        float rim = pow(1.0 - facing, 2.2);
+        totalEmissiveRadiance += uGlowColor * uGlow * (0.12 * facing + 1.8 * rim);
       }`,
     );
   };
