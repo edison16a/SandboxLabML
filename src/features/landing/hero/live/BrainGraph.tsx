@@ -16,8 +16,8 @@ interface Props {
   inspect: number;
 }
 
-/** Room for the output names and values on the right of the graph, px. */
-const MARGIN = { left: 10, right: 104, top: 10, bottom: 10 };
+/** Room for the output names and values on the right of the graph, px. Top and bottom stay tight, since a crowded column's dots shrink to fit. */
+const MARGIN = { left: 10, right: 104, top: 6, bottom: 6 };
 
 /**
  * A brain lighting up live. Each time the worker sends a frame, the

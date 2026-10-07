@@ -9,6 +9,7 @@ import { NetworkPainter, valueText } from './NetworkPainter';
 /** A 2D context that records where the painter draws. Only what paint calls is implemented. */
 function recorder() {
   const points: Array<[number, number]> = [];
+  const arcs: Array<[number, number, number]> = [];
   let strokes = 0;
   const texts: string[] = [];
   const g = {
@@ -23,12 +24,15 @@ function recorder() {
     beginPath() {},
     moveTo: (x: number, y: number) => void points.push([x, y]),
     bezierCurveTo: (_a: number, _b: number, _c: number, _d: number, x: number, y: number) => void points.push([x, y]),
-    arc: (x: number, y: number) => void points.push([x, y]),
+    arc: (x: number, y: number, r: number) => {
+      points.push([x, y]);
+      arcs.push([x, y, r]);
+    },
     stroke: () => void strokes++,
     fill() {},
     fillText: (t: string) => void texts.push(t),
   };
-  return { g: g as unknown as CanvasRenderingContext2D, raw: g, points, texts, strokes: () => strokes };
+  return { g: g as unknown as CanvasRenderingContext2D, raw: g, points, arcs, texts, strokes: () => strokes };
 }
 
 function genome() {
@@ -72,6 +76,26 @@ describe('NetworkPainter', () => {
     }
     expect(rec.texts.filter((t) => t === 'Steer' || t === 'Pedal')).toHaveLength(2);
     expect(rec.texts).toContain(valueText(net.values[net.nodeIds.indexOf(g.outputs[0])]));
+  });
+
+  it('shrinks the neurons of a crowded column so no two overlap, and keeps full size where there is room', () => {
+    const tracker = new InnovationTracker();
+    // As many inputs as the hero's Hide and Seek brain, in its short card.
+    const template = createTemplate({ inputCount: 17, outputCount: 4, activation: 'tanh', wiring: 'direct' }, tracker);
+    const g = createGenome(template, tracker, new Rng(3), 0);
+    const painter = new NetworkPainter(g, new Network(g), ['Move', 'Turn', 'Grab', 'Lock']);
+    painter.layout({ width: 276, height: 140, margin: { left: 10, right: 104, top: 6, bottom: 6 } });
+    const rec = recorder();
+    painter.paint(rec.g);
+    const columns = new Map<number, Array<[number, number]>>();
+    for (const [x, y, r] of rec.arcs) columns.set(x, [...(columns.get(x) ?? []), [y, r]]);
+    for (const dots of columns.values()) {
+      dots.sort((a, b) => a[0] - b[0]);
+      // Each dot spans its radius plus half its ring, which is at most 0.2 radii.
+      for (let k = 1; k < dots.length; k++) expect(dots[k][0] - dots[k - 1][0]).toBeGreaterThan(1.2 * (dots[k][1] + dots[k - 1][1]));
+    }
+    const outputs = [...columns.entries()].sort((a, b) => b[0] - a[0])[0][1];
+    expect(outputs.every(([, r]) => r === 5.5)).toBe(true);
   });
 
   it('labels outputs in a font a canvas accepts, with no CSS variable in it', () => {

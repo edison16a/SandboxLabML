@@ -5,6 +5,15 @@ import { layoutGenome, type LaidOutNode } from './layout';
 
 const KINDS: readonly LaidOutNode['kind'][] = ['input', 'bias', 'hidden', 'output'];
 
+/** Neuron radii when there is room, px, the same as the lab graph. Hidden neurons are a step smaller. */
+const NODE_RADIUS = 5.5;
+const HIDDEN_RADIUS = 4.5;
+/**
+ * Largest radius as a share of the row spacing in a column. With the ring
+ * around it a dot spans about 2.4 radii, so 0.36 leaves a clear gap.
+ */
+const RADIUS_SHARE = 0.36;
+
 /** Activations shown next to the outputs, from -1.00 to 1.00, made once so a frame builds no strings. */
 const VALUE_TEXT = Array.from({ length: 201 }, (_, i) => ((i - 100) / 100).toFixed(2));
 
@@ -34,6 +43,10 @@ export class NetworkPainter {
   private readonly slot: Int32Array;
   private readonly x: Float32Array;
   private readonly y: Float32Array;
+  /** How many neurons share each neuron's column, which sets how much room each one gets. */
+  private readonly columnSize: Float32Array;
+  /** Radius of each neuron at the current size, px. */
+  private readonly r: Float32Array;
   private readonly from: Int32Array;
   private readonly to: Int32Array;
   private readonly strength: Float32Array;
@@ -54,7 +67,12 @@ export class NetworkPainter {
     this.slot = Int32Array.from(this.nodes, (n) => slotOf.get(n.id) ?? -1);
     this.x = new Float32Array(this.nodes.length);
     this.y = new Float32Array(this.nodes.length);
-    const links = genome.connections.filter((c) => c.enabled && index.has(c.from) && index.has(c.to));
+    // The layout puts each column at one x, so neurons with the same x stack in one column.
+    const perColumn = new Map<number, number>();
+    for (const n of this.nodes) perColumn.set(n.x, (perColumn.get(n.x) ?? 0) + 1);
+    this.columnSize = Float32Array.from(this.nodes, (n) => perColumn.get(n.x) ?? 1);
+    this.r = new Float32Array(this.nodes.length);
+    const links =genome.connections.filter((c) => c.enabled && index.has(c.from) && index.has(c.to));
     this.from = Int32Array.from(links, (c) => index.get(c.from) ?? 0);
     this.to = Int32Array.from(links, (c) => index.get(c.to) ?? 0);
     this.strength = Float32Array.from(links, (c) => linkStrength(c.weight));
@@ -70,13 +88,20 @@ export class NetworkPainter {
     this.font = `500 12px ${family}`;
   }
 
-  /** Places every neuron inside the box. Call it whenever the canvas changes size. */
+  /**
+   * Places every neuron inside the box and sizes it. Call it whenever the
+   * canvas changes size. A neuron keeps the lab graph's size while its
+   * column has room, and shrinks in a crowded column (17 inputs in a short
+   * card) so neighbours never overlap and every input stays its own dot.
+   */
   layout(box: PainterBox): void {
     const w = box.width - box.margin.left - box.margin.right;
     const h = box.height - box.margin.top - box.margin.bottom;
     this.nodes.forEach((n, i) => {
       this.x[i] = box.margin.left + n.x * w;
       this.y[i] = box.margin.top + n.y * h;
+      const full = n.kind === 'hidden' ? HIDDEN_RADIUS : NODE_RADIUS;
+      this.r[i] = Math.max(1, Math.min(full, (RADIUS_SHARE * h) / this.columnSize[i]));
     });
   }
 
@@ -100,7 +125,7 @@ export class NetworkPainter {
       const v = act(i);
       const kind = KINDS[this.kind[i]];
       g.beginPath();
-      g.arc(this.x[i], this.y[i], kind === 'hidden' ? 4.5 : 5.5, 0, Math.PI * 2);
+      g.arc(this.x[i], this.y[i], this.r[i], 0, Math.PI * 2);
       // An opaque base keeps links from showing through the faint fill of a quiet neuron.
       g.globalAlpha = 1;
       g.fillStyle = '#10141c';
@@ -109,7 +134,8 @@ export class NetworkPainter {
       g.fillStyle = v >= 0 ? POSITIVE_COLOR : NEGATIVE_COLOR;
       g.fill();
       g.globalAlpha = 1;
-      g.lineWidth = 1.4;
+      // A small dot gets a thinner ring, so the ring never fills it in.
+      g.lineWidth = Math.min(1.4, this.r[i] * 0.4);
       g.strokeStyle = NODE_RING[kind];
       g.stroke();
     }
