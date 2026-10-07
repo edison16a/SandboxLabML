@@ -73,14 +73,14 @@ export default function BenchTab() {
   };
 
   if (!loading && sources.length === 0) {
-    return <p className="m-4 rounded-md border border-dashed border-border p-4 text-center text-[13px] text-muted">No runs with a champion yet. Train a run in the Racing or Hide and Seek lab, then benchmark its champion here.</p>;
+    return <p className="m-4 rounded-md border border-dashed border-border p-4 text-center text-[13px] text-muted">No trained runs yet.</p>;
   }
   return (
     <div className="flex flex-col gap-4 p-4">
       <Field label="Run">
         <Select label="Run" value={source?.run.id ?? ''} disabled={progress !== null} onChange={(id) => setRunId(id)} options={sources.map((s) => ({ value: s.run.id, label: s.run.name, hint: `${ENV_NAMES[s.run.env]}, ${s.latest + 1} generations` }))} />
       </Field>
-      <Field label="Champion of generation" hint={source?.run.env === 'hideseek' ? 'Defaults to the latest generation. Its hider and seeker champions play together.' : 'Defaults to the latest champion.'}>
+      <Field label="Champion of generation" hint={source?.run.env === 'hideseek' ? 'Its hider and seeker play as a pair.' : undefined}>
         <Select
           label="Generation"
           value={generation === null ? '' : String(generation)}

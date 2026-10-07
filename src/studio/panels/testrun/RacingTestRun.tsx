@@ -39,7 +39,7 @@ export function RacingTestRun({ text, analysis }: { text: string; analysis: Anal
   return (
     <>
       <TestRunControls value={settings} onChange={setSettings} sources={sources} disabled={job.running} />
-      <RunBar running={job.running} blocked={analysis.counts.error > 0} label="Run one episode" busy="Driving..." idle="One car, up to a minute of driving." onRun={() => void run()} onCancel={job.cancel} />
+      <RunBar running={job.running} blocked={analysis.counts.error > 0} label="Run one episode" busy="Driving..." idle="One car, up to 60 s." onRun={() => void run()} onCancel={job.cancel} />
       {job.result && !job.result.ok && <RunFailure message={job.result.message} />}
       {job.result && job.result.ok && <TestRunResultView result={job.result} estimate={analysis.micros} />}
     </>

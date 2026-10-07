@@ -27,7 +27,7 @@ export function HideSeekTestRun({ text, analysis }: { text: string; analysis: An
   return (
     <>
       <MatchControls value={settings} onChange={setSettings} named={named} room={room} disabled={job.running} />
-      <RunBar running={job.running} blocked={analysis.counts.error > 0} label="Play one match" busy="Playing the match..." idle="Both players, one 30 second match." onRun={() => void run()} onCancel={job.cancel} />
+      <RunBar running={job.running} blocked={analysis.counts.error > 0} label="Play one match" busy="Playing the match..." idle="One 30 s match." onRun={() => void run()} onCancel={job.cancel} />
       {job.result && !job.result.ok && <RunFailure message={job.result.message} />}
       {job.result && job.result.ok && <MatchResultView result={job.result} estimate={analysis.micros} />}
     </>

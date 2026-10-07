@@ -47,7 +47,7 @@ export function MatchResultView({ result, estimate }: { result: MatchTestOk; est
           <Stat label="Script, measured" value={`${result.scriptMicros.toFixed(3)} µs`} hint="The script alone for one player, timed in a tight loop over player states from this match" />
           <Stat label="Whole tick" value={`${result.tickMicros.toFixed(1)} µs`} hint="Physics, sight, rays, both brains and the script for both players" />
         </div>
-        {estimate !== null && <p className="text-[11px] text-subtle">The editor estimated {estimate.toFixed(3)} µs for the script. Measurements vary with the machine and what else is running.</p>}
+        {estimate !== null && <p className="text-[11px] text-subtle">Editor estimate {estimate.toFixed(3)} µs</p>}
       </Section>
       <Section title="Ticks">
         <MatchTicks log={result.log} />

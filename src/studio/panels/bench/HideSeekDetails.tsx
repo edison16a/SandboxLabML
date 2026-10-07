@@ -42,7 +42,7 @@ export function HideSeekDetails({ result, references }: { result: BenchResult; r
           ))}
         </tbody>
       </table>
-      <p className="text-[11px] text-subtle">Won counts games, each a match as hider and one as seeker from the same start. A draw counts half.</p>
+      <p className="text-[11px] text-subtle">A game is one match on each side from the same start. A draw counts half.</p>
     </section>
   );
 }

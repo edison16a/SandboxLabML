@@ -27,8 +27,8 @@ interface Props {
 }
 
 const SEED_HINT: Record<MatchBrains, string> = {
-  test: `Where the players start and how the boxes lie. Seed ${TEST_MATCH_SEED} in the script's first room is the match lesson checks play.`,
-  random: 'Also builds the two random brains. Same seed, same brains.',
+  test: `Sets where players and boxes start. Lesson checks use ${TEST_MATCH_SEED}.`,
+  random: 'Sets the start and both brains.',
 };
 
 /** Room, players and seed for a Hide and Seek test match. */
