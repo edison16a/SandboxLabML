@@ -52,11 +52,12 @@ export const RACING_TOUR: Tour = {
       id: 'parents',
       chapter: LEARN,
       target: '[data-tour="generation"]',
-      fallback: '[data-tour="viewport"]',
+      // A narrow toolbar hides its counter, but the viewport always shows one.
+      fallback: '[data-tour="hud-generation"]',
       prefer: ['top'],
       prepare: () => void keepRacingTraining(),
       title: 'The best become parents',
-      body: 'When every car is done, the best ones breed the next generation. Their children are copies or mixes of them, with small changes.',
+      body: 'When every car is done, the best ones breed the next generation, and this counter goes up. Their children are copies or mixes of them, with small changes.',
       terms: [
         { term: 'Mutation', meaning: 'Small random changes. Link weights shift, and now and then a new link or neuron is added.' },
         { term: 'Crossover', meaning: 'A child that mixes the links of two parents.' },
