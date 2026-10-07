@@ -24,7 +24,7 @@ export const HS_COLORS = {
   hider: '#4c9aff',
   seeker: '#ff5f6d',
   /** The characters' bodies: the team colors deepened and saturated, since lit glossy color washes out on the bright floor. */
-  hiderBody: '#1f7dff',
+  hiderBody: '#2a87ff',
   seekerBody: '#ff2f48',
   /** Crates: cubes a rich gold, planks a warmer amber, so the two read apart at a glance. Shared with the 2D room maps. */
   cube: '#f0a91e',
