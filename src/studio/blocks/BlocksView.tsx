@@ -85,7 +85,7 @@ export default function BlocksView() {
           {broken && analysis.syntaxError && (
             <Banner tone="warn">
               <CircleAlert className="size-4 text-warn" />
-              <span>Fix line {lineOf(text, analysis.syntaxError.span.from)} to edit blocks. Your text is safe in the code view.</span>
+              <span>Fix line {lineOf(text, analysis.syntaxError.span.from)} to edit blocks.</span>
               <Button size="sm" variant="outline" className="ml-auto" onClick={() => useStudio.getState().revealSpan(analysis.syntaxError!.span.from, analysis.syntaxError!.span.to)}>
                 Show in code
               </Button>
@@ -94,9 +94,9 @@ export default function BlocksView() {
           {presetOnly && scriptId && (
             <Banner tone="info">
               <Lock className="size-4 text-muted" />
-              <span>Presets are read only. Duplicate it to edit the blocks.</span>
+              <span>This preset is read only.</span>
               <Button size="sm" variant="primary" className="ml-auto" onClick={() => void duplicate(scriptId)}>
-                Duplicate
+                Duplicate to edit
               </Button>
             </Banner>
           )}
