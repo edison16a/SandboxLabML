@@ -30,7 +30,6 @@ export function ViewControls() {
         <Tooltip content={weak ? 'Arenas on screen. This GPU shows up to 25 until you pick a quality in Settings.' : 'Arenas on screen'} shortcut="G">
           <span>
             <Segmented<`${GridSize}`>
-              data-tour="arenas"
               label="Arenas on screen"
               size="sm"
               overlay

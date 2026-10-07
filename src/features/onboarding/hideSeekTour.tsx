@@ -55,13 +55,12 @@ export const HIDE_SEEK_TOUR: Tour = {
     {
       id: 'arenas',
       chapter: PLAY,
-      target: '[data-tour="arenas"]',
-      fallback: '[data-tour="viewport"]',
-      prefer: ['bottom', 'left'],
+      // The whole viewport, so the arenas the step invites a click on sit in the hole and take it.
+      target: '[data-tour="viewport"]',
       title: 'Fly in close',
-      body: 'The grid shows every match at once. Pick 1, or click any arena, to watch a single match up close.',
+      body: 'The grid shows every match at once. Click any arena, or pick 1 at the top, to watch a single match up close.',
       action: {
-        prompt: 'Pick 1 or click an arena',
+        prompt: 'Click an arena or pick 1',
         done: () => lab().gridSize === 1 || lab().focus !== null,
         doneLabel: 'Up close',
         then: {
