@@ -110,6 +110,7 @@ export function useStage(refs: StageRefs, scene: StageScene): void {
           el.style.transform = '';
           card = null;
         } else {
+          delete el.dataset.edge;
           // Whole pixels at rest keep the text crisp.
           const spot = [Math.round(place.x), Math.round(place.y)];
           if (!card || reduced) card = createSpring(spot);

@@ -44,7 +44,7 @@ export function StepCard({ tour, index, acted, cardRef, panelRef }: Props) {
         aria-labelledby={titleId}
         aria-describedby={bodyId}
         data-testid="walkthrough"
-        className="animate-walk-in overflow-hidden rounded-xl outline-none border border-border-strong bg-surface-2 shadow-[0_24px_60px_-16px_rgba(0,0,0,0.7)] group-data-[edge=bottom]:rounded-b-none group-data-[edge=bottom]:border-b-0 group-data-[edge=top]:rounded-t-none group-data-[edge=top]:border-t-0"
+        className="animate-walk-in overflow-hidden rounded-xl outline-none motion-reduce:animate-fade-in border border-border-strong bg-surface-2 shadow-[0_24px_60px_-16px_rgba(0,0,0,0.7)] group-data-[edge=bottom]:rounded-b-none group-data-[edge=bottom]:border-b-0 group-data-[edge=top]:rounded-t-none group-data-[edge=top]:border-t-0"
       >
         <div className="h-0.5 bg-border/70">
           <div className="h-full bg-accent transition-[width] duration-500 ease-out motion-reduce:transition-none" style={{ width: `${progress * 100}%` }} />
