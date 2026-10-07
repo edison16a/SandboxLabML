@@ -52,9 +52,9 @@ export const RACING_TOUR: Tour = {
       prefer: ['top'],
       prepare: () => void keepRacingTraining(),
       title: 'The best become parents',
-      body: 'When every car is done, the best ones breed the next generation. Their children start as copies, with small changes.',
+      body: 'When every car is done, the best ones breed the next generation. Their children are copies or mixes of them, with small changes.',
       terms: [
-        { term: 'Mutation', meaning: 'Small random changes to the links of a network.' },
+        { term: 'Mutation', meaning: 'Small random changes. Link weights shift, and now and then a new link or neuron is added.' },
         { term: 'Crossover', meaning: 'A child that mixes the links of two parents.' },
       ],
     },
@@ -133,7 +133,10 @@ export const RACING_TOUR: Tour = {
           target: '[data-tour="panel"]',
           title: 'This is the model running',
           body: 'Every tick the inputs on the left flow through the links to steering and pedal on the right. Links light up as they carry the decision.',
-          terms: [{ term: 'Weight', meaning: 'How strongly a link passes its signal on. Blue links pass it as it is, orange links flip it.' }],
+          terms: [
+            { term: 'Weight', meaning: 'How strongly a link passes its signal on. Blue links pass it as it is, orange links flip it.' },
+            { term: 'Hidden neuron', meaning: 'A neuron between the inputs and outputs. Mutation adds them now and then, so networks grow as they learn.' },
+          ],
         },
       },
     },
