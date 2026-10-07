@@ -5,6 +5,11 @@ const TELEPORT = 1.2;
 /** Furthest a sliding box tips, rad: about two degrees, enough to feel its weight, never enough to look loose. */
 const MAX_TIP = 0.035;
 
+/** The tilt a box leans toward for its velocity `v` (m/s) and acceleration `a` (m/s²) along one axis, rad. Module level, so a frame makes no closure. */
+function tipFor(v: number, a: number): number {
+  return Math.max(-MAX_TIP, Math.min(MAX_TIP, 0.03 * Math.tanh(v / 0.6) + 0.004 * a));
+}
+
 /**
  * The weight of a box, as a renderer shows it. Positions stay exactly the
  * simulation's; on top, a box that slides tips a little onto its leading
@@ -50,9 +55,8 @@ export class BoxMotion {
     const across = vx * s + vz * c;
     const accAlong = this.ax * c - this.az * s;
     const accAcross = this.ax * s + this.az * c;
-    const tip = (v: number, a: number) => Math.max(-MAX_TIP, Math.min(MAX_TIP, 0.03 * Math.tanh(v / 0.6) + 0.004 * a));
-    driveSpring(this.pitch, tip(along, accAlong), 16, 0.3, step);
-    driveSpring(this.roll, tip(across, accAcross), 16, 0.3, step);
+    driveSpring(this.pitch, tipFor(along, accAlong), 16, 0.3, step);
+    driveSpring(this.roll, tipFor(across, accAcross), 16, 0.3, step);
   }
 
   /** Whether the box is still rocking, so a paused canvas keeps drawing until it settles. */
