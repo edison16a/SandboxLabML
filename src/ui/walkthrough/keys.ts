@@ -30,7 +30,8 @@ export function walkMove(key: string, spot: KeySpot): WalkMove | null {
 const CONTROL = 'button, a[href], [role="tab"], [role="radio"], [role="menuitem"], [role="switch"]';
 
 /** Widgets with roving focus or a value the arrows change. Radix toggle groups are role="group". */
-const ARROW_WIDGET = '[role="tablist"], [role="radiogroup"], [role="group"], [role="toolbar"], [role="slider"], [role="separator"], [role="menu"], [role="menubar"], [role="listbox"]';
+const ARROW_WIDGET =
+  '[role="tablist"], [role="radiogroup"], [role="group"], [role="toolbar"], [role="slider"], [role="separator"], [role="menu"], [role="menubar"], [role="listbox"]';
 
 /** Reads where a key event landed. */
 export function keySpot(target: EventTarget | null, pageOwnsEscape: boolean): KeySpot {
