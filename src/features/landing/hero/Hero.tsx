@@ -17,6 +17,8 @@ const HeroLive = lazy(() => import('./live/HeroLive'));
  * scenes load after first paint and fade in over the poster. A flat scrim
  * between the scene and the text keeps the words readable on any frame;
  * the pale Hide and Seek room needs a little more of it than the circuit.
+ * The hero is one screen tall, down to a floor that still holds the
+ * tightened text of a short window, so nothing is ever clipped.
  */
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
@@ -24,7 +26,7 @@ export function Hero() {
   const active = useHeroActive(ref);
   const [scene, setScene] = useState<HeroScene>('car');
   return (
-    <section ref={ref} aria-labelledby="hero-title" className="relative isolate flex h-[calc(100dvh-3rem)] min-h-[560px] items-center justify-center overflow-hidden bg-bg">
+    <section ref={ref} aria-labelledby="hero-title" className="relative isolate flex h-[calc(100dvh-3rem)] min-h-[280px] items-center justify-center overflow-hidden bg-bg">
       <div aria-hidden="true" className="absolute inset-0">
         <HeroPoster />
       </div>
