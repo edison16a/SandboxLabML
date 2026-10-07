@@ -16,6 +16,7 @@ export const BOARD_COLORS = {
   wall: '#dfe3ea',
   cube: HS_COLORS.cube,
   plank: HS_COLORS.plank,
+  ramp: HS_COLORS.ramp,
   boxEdge: '#7d5f3c',
   accent: HS_COLORS.hider,
   bad: '#ff5f5f',
@@ -71,7 +72,7 @@ export function SpawnArea({ region, team, preview = false }: { region: Region; t
 /** One box seen from above, in its crate color. A ghost is drawn as an outline, red when it does not fit. */
 export function BoardBox({ box, ghost, bad, highlight }: { box: SandboxBox; ghost?: boolean; bad?: boolean; highlight?: boolean }) {
   const r = boxRect(box);
-  const fill = box.kind === 'cube' ? BOARD_COLORS.cube : BOARD_COLORS.plank;
+  const fill = BOARD_COLORS[box.kind];
   return (
     <rect
       x={r.x - r.hx}
