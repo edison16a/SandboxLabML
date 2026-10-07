@@ -60,13 +60,19 @@ export function useArenaMatch(pool: ShowcasePool | null, arena: ArenaShowcase | 
     let next: ReturnType<typeof setTimeout> | null = null;
     const physics = DEFAULT_HIDESEEK_PHYSICS;
     const prepEnds = physics.matchSeconds * physics.prepShare;
+    // The clock is read on every frame but React only hears of it once a second.
+    const shown = { prep: true, left: -1 };
     const off = pool.arena.on((msg) => {
       const buf = pool.arena.curr?.buffer;
       if (msg.kind !== 'frame' || !buf) return;
       const prep = buf[SANDBOX_PHASE] === 1;
       const t = buf[SANDBOX_TIME];
       const left = Math.max(0, Math.ceil((prep ? prepEnds : physics.matchSeconds) - t));
-      setClock((c) => (c.prep === prep && c.left === left ? c : { prep, left }));
+      if (shown.prep !== prep || shown.left !== left) {
+        shown.prep = prep;
+        shown.left = left;
+        setClock({ prep, left });
+      }
       if (buf[SANDBOX_OVER] === 1 && !next) next = setTimeout(() => setN((k) => k + 1), OVER_PAUSE_MS);
     });
     return () => {
