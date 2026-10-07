@@ -5,6 +5,7 @@ import { Button } from '@/ui/primitives/Button';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Select } from '@/ui/primitives/Select';
 import { Tooltip } from '@/ui/primitives/Tooltip';
+import { useCameraPreference } from '../../hooks/useCameraPreference';
 import { allowedGridSizes } from '../../hooks/useHideSeekShortcuts';
 import { useSettings } from '@/features/settings/settingsStore';
 import { gridCapped, useHideSeekLab } from '../../state/hideSeekStore';
@@ -13,8 +14,21 @@ import type { GridSize, HsCamera } from '../../state/types';
 export const glass = 'border-white/10 bg-black/50 text-white backdrop-blur-sm hover:bg-black/65';
 const on = 'border-accent/60 bg-accent/25 text-white hover:bg-accent/35';
 
+/** The camera views, in the order C steps through them. */
+const CAMERA_OPTIONS: Array<{ value: HsCamera; label: string; hint?: string }> = [
+  { value: 'close', label: 'Close' },
+  { value: 'overview', label: 'Overview' },
+  { value: 'top', label: 'Top down' },
+  { value: 'follow-hider', label: 'Follow hider' },
+  { value: 'follow-seeker', label: 'Follow seeker' },
+  { value: 'free', label: 'Free', hint: 'Stays where you leave it' },
+  { value: 'seeker', label: 'Seeker eyes', hint: 'First person' },
+  { value: 'hider', label: 'Hider eyes', hint: 'First person' },
+];
+
 /** Grid size, camera, overlays and effects, top right of the viewport. Quality lives in Settings. */
 export function ViewControls() {
+  useCameraPreference();
   const mode = useHideSeekLab((s) => s.mode);
   const grid = useHideSeekLab((s) => s.gridSize);
   const camera = useHideSeekLab((s) => s.camera);
@@ -41,18 +55,11 @@ export function ViewControls() {
           </span>
         </Tooltip>
       )}
-      <Select<HsCamera>
-        label="Camera"
-        value={camera}
-        onChange={(v) => set({ camera: v })}
-        className={`h-7 w-32 ${glass}`}
-        options={[
-          { value: 'orbit', label: 'Orbit', hint: 'Drag to turn, scroll to zoom' },
-          { value: 'top', label: 'Top down' },
-          { value: 'seeker', label: 'Seeker view', hint: 'First person, focused arena' },
-          { value: 'hider', label: 'Hider view', hint: 'First person, focused arena' },
-        ]}
-      />
+      <Tooltip content="Camera view. Drag to turn, right drag to pan, scroll to zoom." shortcut="C">
+        <span>
+          <Select<HsCamera> label="Camera" value={camera} onChange={(v) => set({ camera: v })} className={`h-7 w-34 ${glass}`} options={CAMERA_OPTIONS} />
+        </span>
+      </Tooltip>
       <Tooltip content="Show what the agents sense" shortcut="I">
         <Button size="sm" variant="secondary" className={inputs ? on : glass} onClick={() => set({ inputsOverlay: !inputs })} aria-pressed={inputs}>
           <ScanEye />

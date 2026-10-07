@@ -78,7 +78,7 @@ export const useHideSeekLab = create<HideSeekLabState>((set, get) => ({
   mode: 'train',
   gridSize: 50,
   focus: null,
-  camera: 'orbit',
+  camera: 'close',
   pov: true,
   activeTier: 'high',
   effects: true,

@@ -13,9 +13,15 @@ export const GRID_SIZES: GridSize[] = [1, 4, 9, 25, 50];
 /** Render tiers. Ultra adds 4096 px shadows and full resolution effects to the showcase; see useHideSeekQuality for when it applies. */
 export type HsQualityTier = 'low' | 'medium' | 'high' | 'ultra';
 
-/** Orbit and top down look at the arenas; the POV cameras ride on an agent of the focused arena. */
-export type HsCamera = 'orbit' | 'top' | 'seeker' | 'hider';
-export const HS_CAMERAS: HsCamera[] = ['orbit', 'top', 'seeker', 'hider'];
+/**
+ * How the viewport camera frames the arenas. Close, Overview and Top down
+ * are set shots; the follow views keep one agent of the focused arena in
+ * frame; Free only ever moves when you move it; the first person views
+ * look through an agent's eyes. Every view but first person can be turned,
+ * panned and zoomed by hand.
+ */
+export type HsCamera = 'close' | 'overview' | 'top' | 'follow-hider' | 'follow-seeker' | 'free' | 'seeker' | 'hider';
+export const HS_CAMERAS: HsCamera[] = ['close', 'overview', 'top', 'follow-hider', 'follow-seeker', 'free', 'seeker', 'hider'];
 
 export type HsPanelTab = 'progress' | 'network' | 'inputs' | 'model';
 
