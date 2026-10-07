@@ -42,6 +42,14 @@ export function BrainGraph({ genome, outputLabels, stream, inspect }: Props) {
     const g = el?.getContext('2d');
     if (!el || !g) return;
     const out = new Float64Array(genome.outputs.length);
+    // Runs the newest inputs through the network. The stream keeps the last ones it got, so a graph that
+    // mounts while its scene is paused lights up from where the agent left off instead of showing a blank brain.
+    const think = () => {
+      const obs = stream.inspect;
+      if (!obs || obs.index !== inspect || obs.obs.length < genome.inputs.length) return false;
+      net.activate(obs.obs, out);
+      return true;
+    };
     const paint = () => {
       const { w, h, dpr } = size.current;
       g.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -58,14 +66,12 @@ export function BrainGraph({ genome, outputLabels, stream, inspect }: Props) {
       painter.layout({ width: w, height: h, margin: MARGIN });
       paint();
     };
+    think();
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     const off = stream.on((msg) => {
-      const obs = stream.inspect;
-      if (msg.kind !== 'frame' || !obs || obs.index !== inspect || obs.obs.length < genome.inputs.length) return;
-      net.activate(obs.obs, out);
-      paint();
+      if (msg.kind === 'frame' && think()) paint();
     });
     return () => {
       ro.disconnect();
