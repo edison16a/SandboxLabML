@@ -9,22 +9,28 @@ interface WalkState {
   acted: boolean;
   /** True during the short fade after the tour closes. */
   leaving: boolean;
+  /** Where focus goes when the tour closes, like the help button that replayed it. */
+  returnTo: HTMLElement | null;
 }
 
 /**
  * Which tour is open and where it stands. A store rather than component
  * state, so the help menu in each lab can replay a tour it does not own.
  */
-export const useWalkthrough = create<WalkState>(() => ({ open: null, index: 0, acted: false, leaving: false }));
+export const useWalkthrough = create<WalkState>(() => ({ open: null, index: 0, acted: false, leaving: false, returnTo: null }));
 
 /** Matches the fade on the overlay in Stage. */
 const FADE_MS = 200;
 let fadeTimer: ReturnType<typeof setTimeout> | undefined;
 
-/** Opens a tour on its welcome card. Help menus call this to replay one. */
-export function openWalkthrough(id: string): void {
+/**
+ * Opens a tour on its welcome card. Help menus call this to replay one and
+ * pass their own button, so focus goes back to it however long their
+ * popover takes to close.
+ */
+export function openWalkthrough(id: string, returnTo: HTMLElement | null = null): void {
   clearTimeout(fadeTimer);
-  useWalkthrough.setState({ open: id, index: 0, acted: false, leaving: false });
+  useWalkthrough.setState({ open: id, index: 0, acted: false, leaving: false, returnTo });
 }
 
 export function showStep(index: number, acted: boolean): void {
@@ -38,7 +44,7 @@ export function markActed(): void {
 /** Fades the tour out, or removes it at once when its lab is going away. */
 export function closeWalkthrough(immediate = false): void {
   clearTimeout(fadeTimer);
-  const reset = { open: null, index: 0, acted: false, leaving: false };
+  const reset = { open: null, index: 0, acted: false, leaving: false, returnTo: null };
   if (immediate) {
     useWalkthrough.setState(reset);
     return;

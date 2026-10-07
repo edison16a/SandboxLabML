@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, type RefObject } from 'react';
+import { useLayoutEffect, type RefObject } from 'react';
+import { useWalkthrough } from './walkStore';
 
 /**
  * Moves focus into the card when the tour opens and whenever a step
@@ -10,20 +11,19 @@ import { useEffect, type RefObject } from 'react';
  * tour closes, focus goes back to where it was before.
  */
 export function useWalkFocus(card: RefObject<HTMLElement | null>, key: string): void {
-  useEffect(() => {
-    const before = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  // Notes where focus was before the effect below moves it, since layout effects run in order.
+  useLayoutEffect(() => {
+    const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const before = useWalkthrough.getState().returnTo ?? active;
     return () => {
       if (before?.isConnected && before !== document.body) before.focus({ preventScroll: true });
     };
   }, []);
 
-  useEffect(() => {
-    // A frame later, so a menu that just closed has handed focus back first and does not take it again.
-    const raf = requestAnimationFrame(() => {
-      const el = card.current;
-      if (!el || el.contains(document.activeElement)) return;
-      el.querySelector<HTMLElement>('[role="dialog"]')?.focus({ preventScroll: true });
-    });
-    return () => cancelAnimationFrame(raf);
+  // Before the card paints: on a busy page a key pressed the moment it shows would otherwise land elsewhere.
+  useLayoutEffect(() => {
+    const el = card.current;
+    if (!el || el.contains(document.activeElement)) return;
+    el.querySelector<HTMLElement>('[role="dialog"]')?.focus({ preventScroll: true });
   }, [card, key]);
 }

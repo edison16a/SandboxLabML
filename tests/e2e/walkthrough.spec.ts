@@ -52,6 +52,7 @@ test.describe('Walkthrough', () => {
     await page.getByRole('button', { name: 'Help and shortcuts' }).click();
     await page.getByRole('button', { name: 'Replay the tour' }).click();
     await expect(title('Welcome to the Racing lab')).toBeVisible();
+    await expect(card).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(title('Every car has a brain')).toBeVisible();
     await card.getByRole('button', { name: 'Skip tour' }).click();
@@ -77,7 +78,10 @@ test.describe('Walkthrough', () => {
     await page.getByRole('button', { name: 'Help and shortcuts' }).click();
     await page.getByRole('button', { name: 'Replay the tour' }).click();
     await expect(card.getByRole('heading', { name: 'Welcome to Hide and Seek' })).toBeVisible();
+    await expect(card).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(card).toBeHidden();
+    // Focus goes back to where it was before the tour took it.
+    await expect(page.getByRole('button', { name: 'Help and shortcuts' })).toBeFocused();
   });
 });

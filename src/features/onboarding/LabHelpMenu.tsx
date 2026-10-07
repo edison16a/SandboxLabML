@@ -1,21 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { CircleHelp, Play } from 'lucide-react';
 import { Button } from '@/ui/primitives/Button';
 import { Kbd } from '@/ui/primitives/Kbd';
 import { Popover } from '@/ui/primitives/Popover';
 import { openWalkthrough } from '@/ui/walkthrough/walkStore';
 
-/** Lets the popover finish closing and hand focus back before the tour takes it. */
-const REPLAY_DELAY_MS = 120;
-
 /** A lab's help menu: its keyboard shortcuts and a button that replays the lab's tour. */
 export function LabHelpMenu({ tour, shortcuts }: { tour: string; shortcuts: ReadonlyArray<readonly [string, string]> }) {
   const [open, setOpen] = useState(false);
+  const button = useRef<HTMLButtonElement>(null);
+  const replaying = useRef(false);
+  // The tour opens once the menu has closed, in place of the menu handing focus back to its button.
+  // Opening it any sooner, the menu could take focus back from the tour's card a moment later.
+  const onCloseAutoFocus = (event: Event) => {
+    if (!replaying.current) return;
+    replaying.current = false;
+    event.preventDefault();
+    openWalkthrough(tour, button.current);
+  };
   const replay = () => {
+    replaying.current = true;
     setOpen(false);
-    setTimeout(() => openWalkthrough(tour), REPLAY_DELAY_MS);
   };
   return (
     <Popover
@@ -23,9 +30,10 @@ export function LabHelpMenu({ tour, shortcuts }: { tour: string; shortcuts: Read
       align="end"
       open={open}
       onOpenChange={setOpen}
+      onCloseAutoFocus={onCloseAutoFocus}
       label="Help and shortcuts"
       trigger={
-        <Button size="icon" variant="ghost" aria-label="Help and shortcuts" data-tour="help">
+        <Button ref={button} size="icon" variant="ghost" aria-label="Help and shortcuts" data-tour="help">
           <CircleHelp />
         </Button>
       }
