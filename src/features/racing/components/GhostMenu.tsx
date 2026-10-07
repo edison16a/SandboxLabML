@@ -77,7 +77,7 @@ export function GhostMenu() {
           </div>
         )}
         {sel.mode === 'pick' && (
-          <Field label="Generations" hint="Comma separated, e.g. 1, 5, 20">
+          <Field label="Generations" hint="Like 1, 5, 20">
             <TextInput
               defaultValue={sel.generations.map((g) => g + 1).join(', ')}
               onBlur={(e) => apply({ mode: 'pick', generations: e.target.value.split(',').map((x) => Number(x.trim()) - 1).filter((x) => x >= 0) })}
@@ -85,7 +85,7 @@ export function GhostMenu() {
           </Field>
         )}
         <p className="text-[12px] text-muted">
-          Showing {shown.length ? shown.map((g) => g + 1).join(', ') : 'none yet'}. Ghosts are re-simulated from stored champions, so they cost almost no storage.
+          Showing {shown.length ? shown.map((g) => g + 1).join(', ') : 'none yet'}
         </p>
         <label className="flex items-center justify-between text-[13px]">
           Fading trails
@@ -94,7 +94,7 @@ export function GhostMenu() {
         <label className="flex items-center justify-between text-[13px]">
           <span className="flex flex-col">
             Brake map
-            <span className="text-[11px] text-muted">Where each champion braked, colored by generation</span>
+            <span className="text-[11px] text-muted">Where each champion braked</span>
           </span>
           <Switch label="Brake map" checked={brakes} onChange={(v) => set({ brakeMap: v })} />
         </label>
