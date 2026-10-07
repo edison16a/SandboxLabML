@@ -50,7 +50,7 @@ export const HIDE_SEEK_TOUR: Tour = {
       target: '[data-tour="viewport"]',
       prepare: () => void keepHideSeekTraining(),
       title: 'An arms race',
-      body: 'Each arena border turns blue while its hider is winning and red while its seeker is. The best of each team breed the next generation, so when one side pulls ahead the other usually answers a few generations later.',
+      body: 'Each arena border turns blue while its hider is winning and red while its seeker is. Both teams breed from their best, so when one pulls ahead the other answers a few generations later.',
     },
     {
       id: 'arenas',
