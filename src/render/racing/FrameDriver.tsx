@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { RACING_SNAPSHOT } from '@/engine/racing/env';
 import { useRacingLab } from '@/features/racing/state/labStore';
 import { blendField, blendPose, type Pose } from '@/render/shared/interpolate';
+import { updateFocusMotion } from './motion/focusMotion';
 import { useRacingScene } from './sceneContext';
 
 const STRIDE = RACING_SNAPSHOT.stride;
@@ -36,7 +37,7 @@ function findLeader(buf: Float32Array, count: number): number {
 export function FrameDriver() {
   const { population, ghosts, frame, track } = useRacingScene();
   useFrame(() => {
-    const { focus, view, mode } = useRacingLab.getState();
+    const { focus, view, mode, run } = useRacingLab.getState();
     // In the Sandbox the population stream holds the last training frame, so the camera only ever follows ghosts.
     const showPop = mode !== 'sandbox' && view !== 'overlay' && population?.curr && population.count > 0;
     const showGhosts = view !== 'population' && ghosts?.curr && ghosts.count > 0;
@@ -80,6 +81,7 @@ export function FrameDriver() {
       frame.focusYaw = pose.heading;
       frame.focusSpeed = blendField(prev, stream.curr.buffer, index * STRIDE + 3, a);
     }
+    updateFocusMotion(frame, stream, index, track, run?.racing?.car);
   }, -1);
   return null;
 }
