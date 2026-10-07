@@ -35,8 +35,9 @@ function Layer({ visible, children }: { visible: boolean; children: ReactNode })
  * devices: one replay worker plays a trained car and a Hide and Seek
  * match, two canvases draw them with the labs' own renderers, and they
  * crossfade every few seconds. A scene draws and simulates only while it
- * is visible (or fading, or drawing its first frames out of sight so its
- * shaders are ready), and everything stops while the hero is off screen.
+ * is visible or fading (the car also while it warms up behind the
+ * poster), and everything stops while the hero is off screen. The arena
+ * warms up without drawing, so getting it ready never stalls the car.
  */
 export default function HeroLive({ active, onScene }: HeroLiveProps) {
   // The labs' ?quality= works here too, which the poster capture script relies on.
@@ -80,7 +81,7 @@ export default function HeroLive({ active, onScene }: HeroLiveProps) {
         {pool && arena && match.room && (
           <Layer visible={scene === 'arena'}>
             <SceneBoundary>
-              <HeroArenaCanvas room={match.room} stream={pool.arena} tier={tier} running={active && (on('arena') || !shown.arena)} onShown={arenaShown} />
+              <HeroArenaCanvas room={match.room} stream={pool.arena} tier={tier} running={active && on('arena')} onShown={arenaShown} />
             </SceneBoundary>
           </Layer>
         )}

@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { InputSpec } from '@/engine/env/types';
 import type { SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
@@ -13,6 +13,7 @@ import { tierDpr, ToneMappingSync } from '@/render/hideseek/scene/RenderHelpers'
 import { StudioLighting } from '@/render/hideseek/scene/StudioLighting';
 import { ShowcaseEffects } from '@/render/hideseek/showcase/ShowcaseEffects';
 import { FramePacer } from '@/render/shared/FramePacer';
+import { Prewarm } from '@/render/shared/Prewarm';
 import { useFrameLoop } from '@/render/shared/frameLoop';
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
 import { HeroArenaDriver } from './HeroArenaDriver';
@@ -25,6 +26,7 @@ interface Props {
   tier: HsQualityTier;
   /** False while the scene is faded out or off screen: the canvas then draws nothing. */
   running: boolean;
+  /** Called once the scene can draw without stalling the page (see Prewarm). */
   onShown: () => void;
 }
 
@@ -42,7 +44,14 @@ export function HeroArenaCanvas({ room, stream, tier, running, onShown }: Props)
   const frame = useMemo(() => createHsFrame(), []);
   const getFeed = useCallback(() => stream, [stream]);
   const value = useMemo(() => ({ frame, getFeed, schemas: NO_SCHEMAS }), [frame, getFeed]);
-  const composer = tier === 'high' || tier === 'ultra';
+  const [warm, setWarm] = useState(false);
+  // The composer draws on its own, so it joins once everything else has compiled.
+  const composer = warm && (tier === 'high' || tier === 'ultra');
+  const isReady = useCallback(() => frame.curr !== null && !frame.preview, [frame]);
+  const onWarm = useCallback(() => {
+    setWarm(true);
+    onShown();
+  }, [onShown]);
 
   return (
     <Canvas
@@ -57,7 +66,8 @@ export function HeroArenaCanvas({ room, stream, tier, running, onShown }: Props)
     >
       <FramePacer loop={loop} />
       <HsSceneContext.Provider value={value}>
-        <HeroArenaDriver onShown={onShown} />
+        <Prewarm isReady={isReady} stepping={!running} onWarm={onWarm} />
+        <HeroArenaDriver />
         <ToneMappingSync composer={composer} />
         <StudioLighting tier={tier} shadows={tier !== 'low'} />
         <Backdrop />

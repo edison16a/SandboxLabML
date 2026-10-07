@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { InputSpec } from '@/engine/env/types';
 import type { Track } from '@/engine/racing/track/types';
 import type { QualityTier } from '@/features/racing/state/labStore';
@@ -15,6 +15,7 @@ import { TireEffects } from '@/render/racing/TireEffects';
 import { TrackMesh } from '@/render/racing/TrackMesh';
 import { Effects } from '@/render/shared/Effects';
 import { FramePacer } from '@/render/shared/FramePacer';
+import { Prewarm } from '@/render/shared/Prewarm';
 import { useFrameLoop } from '@/render/shared/frameLoop';
 import { tierDpr } from '@/render/shared/quality';
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
@@ -30,6 +31,7 @@ interface Props {
   tier: QualityTier;
   /** False while the scene is faded out or off screen: the canvas then draws nothing. */
   running: boolean;
+  /** Called once the scene can draw without stalling the page (see Prewarm). */
   onShown: () => void;
 }
 
@@ -43,6 +45,12 @@ export function HeroCarCanvas({ track, stream, schema, tier, running, onShown }:
   const frame = useMemo(() => createFrame(), []);
   const target = useRef(new THREE.Vector3());
   const value = useMemo(() => ({ track, population: null, ghosts: stream, frame }), [track, stream, frame]);
+  const [warm, setWarm] = useState(false);
+  const isReady = useCallback(() => stream.curr !== null, [stream]);
+  const onWarm = useCallback(() => {
+    setWarm(true);
+    onShown();
+  }, [onShown]);
 
   return (
     <Canvas
@@ -58,7 +66,8 @@ export function HeroCarCanvas({ track, stream, schema, tier, running, onShown }:
     >
       <FramePacer loop={loop} />
       <RacingSceneContext.Provider value={value}>
-        <HeroCarDriver onShown={onShown} />
+        <Prewarm isReady={isReady} stepping={!running} onWarm={onWarm} />
+        <HeroCarDriver />
         <RacingEnvironment tier={tier} focus={target} />
         <TrackMesh track={track} />
         <Scenery track={track} count={tier === 'low' ? 140 : 320} />
@@ -67,7 +76,8 @@ export function HeroCarCanvas({ track, stream, schema, tier, running, onShown }:
         {tier !== 'low' && <TireEffects />}
         <HeroCarRays schema={schema} />
         <HeroChaseCamera target={target} />
-        <Effects tier={tier} />
+        {/* The composer draws on its own, so it joins once everything else has compiled. */}
+        {warm && <Effects tier={tier} />}
       </RacingSceneContext.Provider>
     </Canvas>
   );
