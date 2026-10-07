@@ -15,7 +15,7 @@ const SEND_EVERY = 33;
 export const boxDrag = { active: false };
 
 /**
- * Dragging a crate in the Sandbox. The pointer ray is intersected with a
+ * Dragging a box (a crate or the ramp) in the Sandbox. The pointer ray is intersected with a
  * horizontal plane at half box height, the hit is turned into the arena's
  * own coordinates and sent to the replay worker, which teleports the box.
  * The orbit camera is held still while a drag is on.

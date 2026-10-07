@@ -10,7 +10,7 @@ import { blendFloorPose, boxAt, boxLock } from '../frame/snapshotRead';
 
 const SIZES = Array.from({ length: BOX_COUNT }, (_, i) => boxSize(DEFAULT_HIDESEEK_PHYSICS, i));
 
-/** Called when a crate is pressed, for Sandbox dragging. */
+/** Called when a box is pressed, for Sandbox dragging. */
 export type BoxPointerHandler = (index: number, e: ThreeEvent<PointerEvent>) => void;
 
 /**

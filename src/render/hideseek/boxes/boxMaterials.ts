@@ -3,13 +3,13 @@ import type { BoxKind } from '@/engine/hideseek/physics';
 import { HS_COLORS } from '../palette';
 import { hologramMaterial } from './padlock';
 
-/** Crate colors. The panel colors live in the palette, so the room maps draw crates in the same gold. */
+/** Box colors. The panel colors come from the shared scene colors, so the room maps draw the same gold crates and jade ramp. */
 export const BOX_LOOK = {
   cube: HS_COLORS.cube,
   plank: HS_COLORS.plank,
   ramp: HS_COLORS.ramp,
   brace: '#f5f1e8',
-  /** Braces of a locked crate take the color of the team that owns the lock, like the padlock over it. */
+  /** Braces of a locked box take the color of the team that owns the lock, like the padlock over it. */
   lockedBrace: '#cfeaff',
   lockGlow: HS_COLORS.hider,
   seekerLockedBrace: '#ffd9dd',
@@ -22,9 +22,9 @@ const LOCKED_BRACE = [new THREE.Color(BOX_LOOK.lockedBrace), new THREE.Color(BOX
 const LOCK_GLOW = [new THREE.Color(BOX_LOOK.lockGlow), new THREE.Color(BOX_LOOK.seekerLockGlow)];
 
 /**
- * The materials of one crate: lacquered gold panels, a light frame and the
- * padlock hologram. Each crate has its own, because locking animates them
- * one crate at a time.
+ * The materials of one box: lacquered panels in its kind's color (gold
+ * for crates, jade for the ramp), a light frame and the padlock hologram.
+ * Each box has its own, because locking animates them one box at a time.
  */
 export class BoxMaterials {
   readonly panel: THREE.MeshStandardMaterial;
@@ -49,11 +49,11 @@ export class BoxMaterials {
     const glow = LOCK_GLOW[owner];
     this.brace.color.copy(BRACE).lerp(LOCKED_BRACE[owner], lock);
     this.brace.emissive.copy(BRACE).lerp(glow, lock);
-    // Copied in place: this runs every frame for every crate.
+    // Copied in place: this runs every frame for every box.
     (this.lockBody.uniforms.uColor.value as THREE.Color).copy(glow);
     (this.lockShackle.uniforms.uColor.value as THREE.Color).copy(glow);
     this.brace.emissiveIntensity = 0.06 + lock * 0.7;
-    // Set one by one: this runs every frame for every crate and must not allocate.
+    // Set one by one: this runs every frame for every box and must not allocate.
     this.lockBody.uniforms.uOpacity.value = lock;
     this.lockBody.uniforms.uTime.value = time;
     this.lockShackle.uniforms.uOpacity.value = lock;

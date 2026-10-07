@@ -16,7 +16,7 @@ import { commit, GRID_LAYER, makeScratch, MAX_ARENAS, placeInstance } from './sc
 import { tintMaskMaterial } from '../shared/tintMask';
 
 const BRACE = new THREE.Color(BOX_LOOK.brace);
-/** Pushed past 1 so a locked crate's braces read as lit even from far away. */
+/** Pushed past 1 so a locked box's braces read as lit even from far away. */
 const LOCKED = new THREE.Color(BOX_LOOK.lockGlow).multiplyScalar(1.5);
 const SEEKER_LOCKED = new THREE.Color(BOX_LOOK.seekerLockGlow).multiplyScalar(1.5);
 /** Box indexes of each kind: two cubes, two planks and a ramp. */
@@ -32,14 +32,15 @@ BOX_KINDS.forEach((k, i) => OF_KIND[k].push(i));
 export function GridBoxes({ onPick }: { onPick: (slot: number) => void }) {
   return (
     <group>
-      <CrateKind kind="cube" onPick={onPick} />
-      <CrateKind kind="plank" onPick={onPick} />
-      <CrateKind kind="ramp" onPick={onPick} />
+      <BoxKindMesh kind="cube" onPick={onPick} />
+      <BoxKindMesh kind="plank" onPick={onPick} />
+      <BoxKindMesh kind="ramp" onPick={onPick} />
     </group>
   );
 }
 
-function CrateKind({ kind, onPick }: { kind: BoxKind; onPick: (slot: number) => void }) {
+/** The one instanced mesh that draws every box of `kind` in every grid arena. */
+function BoxKindMesh({ kind, onPick }: { kind: BoxKind; onPick: (slot: number) => void }) {
   const { frame } = useHsScene();
   const mesh = useRef<THREE.InstancedMesh>(null);
   const boxes = OF_KIND[kind];

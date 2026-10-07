@@ -6,7 +6,7 @@ import { useMemo, useRef } from 'react';
 import type { BoxKind, BoxSize } from '@/engine/hideseek/physics';
 import { LOCK_FREE, LOCK_SEEKERS } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
-import { boxParts, crateExtras } from './boxKit';
+import { boxExtras, boxParts } from './boxKit';
 import { BoxMaterials } from './boxMaterials';
 
 /** Where a box is and its lock, filled in by the caller every frame. */
@@ -56,7 +56,7 @@ const HOLO_SCALE = 1.35;
  */
 export function BoxBody({ kind, size, read, full = true, shadows = false, blob = false, onPointerDown, onDoubleClick, holoX }: BodyProps) {
   const parts = boxParts(kind, size);
-  const extras = crateExtras();
+  const extras = boxExtras();
   const mats = useDisposable(() => new BoxMaterials(kind, full, extras.blobMap), [kind, full, extras]);
   const state = useMemo(() => ({ drive: { x: 0, z: 0, yaw: 0, lock: LOCK_FREE } as BoxDrive, lock: 0, owner: 0, seed: Math.random() * 10 }), []);
   const root = useRef<THREE.Group>(null);

@@ -26,7 +26,7 @@ export function boxParts(kind: BoxKind, size: BoxSize): BracedBoxParts {
 }
 
 /** The padlock and the soft floor shadow, shared by every box. */
-export function crateExtras() {
+export function boxExtras() {
   shared ??= { lockBody: padlockBodyGeometry(), lockShackle: padlockShackleGeometry(), blob: floorQuad(1), blobMap: sharedBlobTexture() };
   return shared;
 }
