@@ -18,6 +18,8 @@ export type SlotObservation = (match: SandboxMatch, slot: number) => ArrayLike<n
  */
 export class SandboxFrameWriter {
   private epoch = 0;
+  /** Tick of the last frame that went out, so the frame that ends a match is not sent twice. */
+  private sentTick = -1;
 
   constructor(
     private readonly stream: StreamSender,
@@ -28,16 +30,37 @@ export class SandboxFrameWriter {
   begin(match: SandboxMatch, epoch: number): void {
     const s = match.state;
     this.epoch = epoch;
+    this.cancel();
     this.stream.ring.resize(sandboxSnapshotLength(s.agents.length, s.boxes.length));
     this.stream.send({ kind: 'start', stream: this.stream.stream, generation: epoch, count: 1, tags: new Int32Array(1) });
   }
 
-  /** Sends the current frame. Dropped quietly when the main thread still holds every buffer. */
-  send(match: SandboxMatch): void {
+  /** Sends the current frame. Dropped quietly, returning false, when the main thread still holds every buffer. */
+  send(match: SandboxMatch): boolean {
     const buffer = this.stream.ring.take();
-    if (!buffer) return;
+    if (!buffer) return false;
     match.snapshot(buffer);
     this.stream.send({ kind: 'frame', stream: this.stream.stream, generation: this.epoch, tick: match.tick, count: 1, buffer, inspect: this.inspected(match) });
+    this.sentTick = match.tick;
+    return true;
+  }
+
+  /**
+   * Sends the frame that ends a match. A frame mid match may be dropped,
+   * but this one must arrive: it is the only one that says the match is
+   * over, and the landing hero waits for it to start the next match. So
+   * when the main thread still holds every buffer, it goes out as soon as
+   * one comes back.
+   */
+  sendLast(match: SandboxMatch): void {
+    if (this.sentTick === match.tick || this.send(match)) return;
+    this.stream.whenFree(() => this.sendLast(match));
+  }
+
+  /** Forgets a last frame still waiting for a buffer, once its match is gone. */
+  cancel(): void {
+    this.sentTick = -1;
+    this.stream.whenFree(null);
   }
 
   private inspected(match: SandboxMatch): InspectPayload | undefined {

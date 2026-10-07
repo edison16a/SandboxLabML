@@ -104,7 +104,7 @@ export class SandboxPlayer {
       },
       () => this.frames.send(m),
       () => {
-        this.frames.send(m);
+        this.frames.sendLast(m);
         if (this.pacer === pacer) this.pacer = null;
       },
     );
@@ -156,6 +156,7 @@ export class SandboxPlayer {
   stop(): void {
     this.pacer?.stop();
     this.pacer = null;
+    this.frames.cancel();
     this.match?.dispose();
     this.match = null;
   }
