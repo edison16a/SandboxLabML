@@ -49,6 +49,8 @@ export class GhostPlayer {
   private loop = true;
   private paused = false;
   private speed = 1;
+  /** Ticks every run skips before it is shown. See play. */
+  private warmup = 0;
   private run = 0;
   private scratch = new Float32Array(RACING_SNAPSHOT.stride * 64);
 
@@ -59,14 +61,21 @@ export class GhostPlayer {
     this.ghosts = ghosts;
   }
 
-  /** Restarts every ghost from its grid slot at `speed` times real time. */
-  play(speed: number, loop: boolean): void {
+  /**
+   * Restarts every ghost from its grid slot at `speed` times real time.
+   * `warmup` ticks are simulated before the first frame, so a showcase can
+   * open on a car already at speed. The ticks are the same ones a cold
+   * start would run, so the lap itself does not change.
+   */
+  play(speed: number, loop: boolean, warmup = 0): void {
     this.stop();
     this.paused = false;
     this.speed = speed;
+    this.warmup = warmup;
     if (!this.setup || this.ghosts.length === 0) return;
     this.loop = loop;
     this.build();
+    for (let k = 0; k < warmup; k++) for (const e of this.envs) if (!e.env.done) e.env.step();
     const runId = ++this.run;
     const count = this.ghosts.length;
     this.stream.ring.resize(count * RACING_SNAPSHOT.stride);
@@ -111,7 +120,7 @@ export class GhostPlayer {
    */
   private replay(): void {
     const paused = this.paused;
-    this.play(this.speed, true);
+    this.play(this.speed, true, this.warmup);
     if (paused) this.setPaused(true);
   }
 

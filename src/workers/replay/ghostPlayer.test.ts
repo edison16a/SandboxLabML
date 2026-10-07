@@ -73,6 +73,23 @@ describe('ghost player grid', () => {
   });
 });
 
+describe('ghost player warm up', () => {
+  it('opens part way into the lap on the very tick a cold start reaches', async () => {
+    const { setup, ghost } = scene();
+    const { sender, frames, ticks } = capture();
+    const player = new GhostPlayer(sender);
+    player.setScene(setup, [ghost(2, 0)]);
+    const lap = player.telemetry()[0];
+    const warmup = Math.min(40, lap.distance.length - 1);
+    player.play(1, false, warmup);
+    for (let waited = 0; frames.length === 0 && waited < 5000; waited += 20) await new Promise((r) => setTimeout(r, 20));
+    player.stop();
+    expect(ticks[0]).toBeGreaterThanOrEqual(warmup);
+    // Telemetry index k is the car after tick k + 1, and progress is the last field of a snapshot.
+    expect(frames[0][STRIDE - 1]).toBeCloseTo(lap.distance[ticks[0] - 1], 4);
+  });
+});
+
 describe('ghost player loop', () => {
   afterEach(() => vi.useRealTimers());
 
