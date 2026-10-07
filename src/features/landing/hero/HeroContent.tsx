@@ -28,7 +28,7 @@ export function HeroContent() {
       <Link
         href="/lab/racing"
         prefetch={false}
-        className="mt-9 inline-flex h-12 items-center gap-2 rounded-lg bg-accent px-7 text-[16px] font-semibold text-[#06101f] transition-colors hover:bg-[#62a8ff]"
+        className="mt-9 inline-flex h-12 items-center gap-2 rounded-lg bg-accent px-7 text-[16px] font-semibold text-[#06101f] transition-colors hover:bg-[#62a8ff] focus-visible:outline-fg"
       >
         Go Train
         <ArrowRight className="size-[18px]" aria-hidden="true" />
