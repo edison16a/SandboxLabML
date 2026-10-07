@@ -1,6 +1,7 @@
 import { Dna, Eye, Users } from 'lucide-react';
 import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
 import type { Tour } from '@/ui/walkthrough/types';
+import { keepHideSeekTraining } from './tourActions';
 
 const LEARN = 'How they learn';
 const PLAY = 'How they play';
@@ -42,11 +43,10 @@ export const HIDE_SEEK_TOUR: Tour = {
     {
       id: 'race',
       chapter: LEARN,
-      target: '[data-tour="panel"]',
-      prefer: ['left'],
-      prepare: () => lab().set({ panelTab: 'progress' }),
+      target: '[data-tour="viewport"]',
+      prepare: () => void keepHideSeekTraining(),
       title: 'An arms race',
-      body: 'The best of each team breed the next generation. When one team pulls ahead, the other usually answers a few generations later.',
+      body: 'Each arena border turns blue while its hider is winning and red while its seeker is. The best of each team breed the next generation, so when one side pulls ahead the other usually answers a few generations later.',
     },
     {
       id: 'arenas',
