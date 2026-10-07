@@ -9,8 +9,7 @@ export const metadata: Metadata = {
     default: 'SandboxLabML',
     template: '%s | SandboxLabML',
   },
-  description:
-    'Watch neural networks evolve to race cars and play hide and seek, then write your own training scripts. Everything runs in your browser.',
+  description: 'Watch neural networks evolve to race cars and play hide and seek, then write your own training scripts.',
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },
