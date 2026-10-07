@@ -59,7 +59,7 @@ export function ViewportHud({ viewport }: { viewport: React.RefObject<HTMLDivEle
         )}
         {mode === 'sandbox' && (
           <Hint>
-            <MousePointerClick className="size-3" /> Drag a crate to move it. Double click it to lock or free it.
+            <MousePointerClick className="size-3" /> Drag a box or ramp to move it. Double click it to lock it for the hiders or free it.
           </Hint>
         )}
       </div>
