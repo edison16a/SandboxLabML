@@ -61,4 +61,9 @@ export interface Tour {
   storageKey: string;
   intro: { title: string; body: string; icon: ReactNode; chapters: Chapter[] };
   steps: WalkStep[];
+  /**
+   * True while the lab has its own use for Escape, like backing out of a
+   * followed car. Escape then goes to the lab instead of skipping the tour.
+   */
+  pageOwnsEscape?: () => boolean;
 }

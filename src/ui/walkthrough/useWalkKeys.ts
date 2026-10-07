@@ -19,15 +19,15 @@ function otherLayerOpen(): boolean {
 /**
  * Right or Enter goes to the next step, Left goes back and Escape skips,
  * except where walkMove leaves a key to the page. Listens before the lab
- * does, so Escape skips the tour instead of resetting the camera. Lab
- * shortcuts like Space still work, since steps ask for them.
+ * does, so a key the tour uses never also reaches the lab. Lab shortcuts
+ * like Space still work, since steps ask for them.
  */
 export function useWalkKeys(tour: Tour): void {
   // Attached as the card mounts, before it paints, so a key pressed the moment it shows is never lost.
   useLayoutEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target) || otherLayerOpen()) return;
-      const move = walkMove(e.key, keySpot(e.target));
+      const move = walkMove(e.key, keySpot(e.target, tour.pageOwnsEscape?.() ?? false));
       if (!move) return;
       if (move === 'next') goNext(tour);
       else if (move === 'back') goBack(tour);

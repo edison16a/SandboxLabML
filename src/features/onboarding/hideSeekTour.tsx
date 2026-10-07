@@ -11,6 +11,8 @@ const lab = () => useHideSeekLab.getState();
 export const HIDE_SEEK_TOUR: Tour = {
   id: 'hideseek',
   storageKey: 'sandboxlab.tour.hideseek',
+  // Escape leaves photo mode, then a clicked arena, as the step on flying in close invites.
+  pageOwnsEscape: () => lab().photoMode || (lab().mode === 'train' && lab().focus !== null && lab().gridSize > 1),
   intro: {
     title: 'Welcome to Hide and Seek',
     body: 'Two teams learn against each other. Every trick one side finds pushes the other to find an answer.',

@@ -15,6 +15,8 @@ const lab = () => useRacingLab.getState();
 export const RACING_TOUR: Tour = {
   id: 'racing',
   storageKey: 'sandboxlab.tour.racing',
+  // Escape takes the camera back from a clicked car or ghost to the champion.
+  pageOwnsEscape: () => lab().focus.kind !== 'champion',
   intro: {
     title: 'Welcome to the Racing lab',
     body: 'These cars teach themselves to drive. See how they learn, then how a trained one drives.',
