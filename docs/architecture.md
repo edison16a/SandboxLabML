@@ -43,7 +43,7 @@ Overlay generations and round replays work by re-simulating genomes, so results 
 * Every random choice goes through a seeded `Rng` (sfc32). Episode seeds are mixed from the run seed, generation and genome id or match index.
 * Cars and matches never share state, so a champion replayed alone matches its training run tick for tick. A unit test checks this.
 * Weights are rounded to float32 when mutated, so the compact binary genome format (16 bytes per connection, 8 per neuron) round-trips exactly.
-* The physics config is frozen per run and hashed, and every run stores `ENGINE_VERSION`. A mismatch shows "cannot replay" instead of a wrong path.
+* The physics config is frozen per run and hashed, and every run stores its engine version: `ENGINE_VERSION` for Racing, `HIDESEEK_ENGINE_VERSION` for Hide and Seek. They are separate, so a change to one game never blocks replays of the other. A mismatch shows "cannot replay" instead of a wrong path.
 
 ## Racing
 
@@ -52,6 +52,26 @@ The car is a kinematic bicycle model with a friction circle: rate-limited steeri
 The cars on screen are built in code from one design in `src/render/racing/car`. The body is a loft of creased cross sections, so each panel is smooth and the lines between panels stay sharp. The followed car is the full build, under 50,000 triangles, with clear coat paint over metallic flakes and woven carbon. The rest of the field shares a light build of about 5,000 triangles in one instanced draw call. Each of its vertices carries its own surface values, and only the paint takes the species color. Every texture is computed on load, so nothing is downloaded.
 
 The Sandbox races stored champions on any track through the replay worker, and training never sees it. Extra cars line up on a staggered grid that follows the road behind the start line, 6 m apart, or closer on a road too short for a full grid. Slot 0 is the start line itself, where training puts every car, so a lone champion still replays its lap tick for tick.
+
+## Hide and Seek ramps and locks
+
+Every room has five boxes in `BOX_KINDS` order: two cubes, two planks and a ramp. A ramp is a wedge 2.4 m long and 1.2 m wide whose top rises from the floor at its foot to 1.2 m at its lip. Its collider is the convex hull of that wedge, so a sight ray hits exactly the drawn slope. Its mass sits at the center of its footprint with a crate's inertia, so it is grabbed, carried, pushed and locked like any box. Every ramp and climbing number lives in `HideSeekPhysics` (`box.ramp` and the `climb` group), so it hashes into the rules.
+
+* Both teams lock. An agent that is free to act, empty handed and on the floor locks the nearest free box in front of it, and only its own team can unlock it. The other team can neither unlock, grab nor push it. Seekers are frozen during prep, so they lock in the seek phase.
+* An agent at the foot of a ramp that drives forward facing within 45 degrees of uphill mounts it (`agents/climb`). On the slope its collider touches nothing and the engine moves it: the move output sets its progress, it faces uphill, and its position comes from the ramp pose every tick, so a pushed or carried ramp takes it along. Backing past the foot steps off if there is room.
+* At the lip it looks straight ahead for the first free landing spot within 3 m and jumps there in half a second, on an arc that clears the tallest thing it crosses. A jump that crosses a wall is a vault. With no free spot it waits at the lip, and nobody ever jumps the outer walls. An agent its controller stops finishes its jump, or steps off the foot as soon as there is room.
+* Walls always block sight. Boxes block a sight line only when both ends are below 1 m, and the ramp an end stands on never blocks it. Boxes block at their slice at sight height, the high end of a ramp, so Rapier's sight lines, the 2D sensor rays and the cone drawings agree. Tests hold them to it.
+
+## Snapshot layout
+
+The engine writes snapshots and the renderer only reads them, through named offsets and the helpers in `src/render/hideseek/frame/snapshotRead.ts` and `sandboxRead.ts`. Nothing reads a raw index.
+
+| Stream | Header | Per agent | Per box |
+| --- | --- | --- | --- |
+| Arena, 34 floats | time, phase, hider seen, spare | x, z, yaw, flags, elevation | x, z, yaw, lock |
+| Sandbox | time, phase, any hider seen, over, hiders, seekers, boxes, hiders seen | x, z, yaw, flags, elevation | x, z, yaw, bits |
+
+Agent flags are `FLAG_HOLDING`, `FLAG_SEEING`, `FLAG_SEEN`, `FLAG_FROZEN`, `FLAG_CLIMBING` and `FLAG_AIRBORNE`. An arena box lock is 0 when free, 1 when the hiders own it and 2 when the seekers do, and the box kind follows from its index through `BOX_KINDS`. Sandbox boxes carry their kind and lock in bits: `BOX_LOCKED`, `BOX_PLANK`, `BOX_RAMP` and `BOX_SEEKER_LOCK`.
 
 ## Hide and Seek Sandbox
 

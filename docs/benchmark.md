@@ -113,13 +113,15 @@ Each reference champion has a rating, fitted once when the reference file is bui
 
 ## Versions
 
-Scores only compare within one `HIDESEEK_BENCHMARK_VERSION` (in `src/engine/core/version.ts`). It is separate from the Racing version, so changing one exam never forces the other file to be rebuilt. Changing a room, the starts, the match count or anything in `src/engine/bench/hideseek/scoring.ts` changes scores, so it must bump the version. The reference champions are part of the exam too. Training is deterministic, so they only change when the engine, a Hide and Seek preset or the generator settings change. When a regenerated file ships different champions, bump the version in the same change.
+Scores only compare within one `HIDESEEK_BENCHMARK_VERSION` (in `src/engine/core/version.ts`). It is separate from the Racing version, so changing one exam never forces the other file to be rebuilt. Changing a room, the starts, the match count or anything in `src/engine/bench/hideseek/scoring.ts` changes scores, so it must bump the version. The reference champions are part of the exam too. Training is deterministic, so they only change when the engine, a Hide and Seek preset or the generator settings change. When a regenerated file ships different champions, bump the version in the same change. A change to the Hide and Seek simulation bumps `HIDESEEK_ENGINE_VERSION`, which is separate from the Racing `ENGINE_VERSION`.
+
+Version 4 came with ramps. Every exam room gained a ramp, both teams can lock, agents climb and vault, and the preset brains sense the nearest ramp, so the engine moved to `HIDESEEK_ENGINE_VERSION` 2. Champions trained before never met a ramp and lack the ramp inputs the presets now have, so they no longer stand for the presets. The reference file must be regenerated with `npm run refs -- --env hideseek`, and until it is, the tests that read it fail on purpose. The lock number in a result counts only the model hider's locks, as it did before seekers could lock.
 
 ## Reference results
 
 `public/references/hideseek.json` holds a curve and a champion pair for each of the three Hide and Seek script presets. For each preset, `scripts/references/hideseek/generate.ts` trains several seeds with 50 per team, exactly as the lab would with that preset. Each tier's reference champion is the final pair of its middle seed, ranked by hidden plus seen share against the hand-written agents, so it is typical of the preset rather than its luckiest run. The three pairs are rated against each other, then every pair kept every 10 generations of every run plays the exam against them, and the median and the 25% to 75% band of those scores make the curves.
 
-The shipped file uses the generator's defaults, the same numbers the nightly workflow runs: 5 seeds of 60 generations per preset. It took 53 minutes on four worker threads:
+The shipped file uses the generator's defaults, the same numbers the nightly workflow runs: 5 seeds of 60 generations per preset. It took 53 minutes on four worker threads. The table below is from the file made for version 3, before rooms had ramps, and regenerating for version 4 replaces it:
 
     npm run refs -- --env hideseek --workers 4
 
