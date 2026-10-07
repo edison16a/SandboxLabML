@@ -9,32 +9,34 @@ import { ensureGpuProbed } from './useLabQuality';
 
 const NAMES = { low: 'Low', medium: 'Medium', high: 'High', ultra: 'Ultra' } as const;
 
-/** Says where the quality on screen came from when nobody picked it here. */
-function qualityHint(s: SettingsState): string {
-  if (s.pinned) return `The page address sets ${NAMES[s.pinned]} until you pick one here.`;
-  if (s.quality === null && s.weakGpu) return 'Medium suits this GPU. Training stays the same.';
-  return 'Shadows and effects. Training stays the same.';
+/** Says where the quality on screen came from when nobody picked it here. Nothing once it is a pick. */
+function qualityHint(s: SettingsState): string | null {
+  if (s.pinned) return `${NAMES[s.pinned]} is set by the page address.`;
+  if (s.quality === null && s.weakGpu) return 'Medium suits this GPU.';
+  return null;
 }
 
 /**
- * One setting: the name and its control on a line, a short hint under them.
- * It is a labelled group like Field, so a screen reader hears the hint with
- * the choices. The type is a step larger than Field's because the name is
- * a row title beside its control, not a caption above it.
+ * One setting: the name and its control on a line, with an optional short
+ * hint under them. It is a labelled group like Field, so a screen reader
+ * hears the hint with the choices. The type is a step larger than Field's
+ * because the name is a row title beside its control, not a caption above it.
  */
-function Row({ label, hint, children }: { label: string; hint: string; children: ReactNode }) {
+function Row({ label, hint, children }: { label: string; hint?: string | null; children: ReactNode }) {
   const id = useId();
   return (
-    <div role="group" aria-labelledby={`${id}label`} aria-describedby={`${id}hint`} className="flex flex-col gap-1.5 px-3 py-3">
+    <div role="group" aria-labelledby={`${id}label`} aria-describedby={hint ? `${id}hint` : undefined} className="flex flex-col gap-1.5 px-3 py-3">
       <div className="flex items-center justify-between gap-3">
         <span id={`${id}label`} className="text-[13px] font-medium text-fg">
           {label}
         </span>
         {children}
       </div>
-      <p id={`${id}hint`} className="text-[12px] leading-snug text-muted">
-        {hint}
-      </p>
+      {hint && (
+        <p id={`${id}hint`} className="text-[12px] leading-snug text-muted">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
@@ -63,7 +65,7 @@ export function SettingsMenu() {
       }
     >
       <h2 className="border-b border-border px-3 py-2.5 text-[13px] font-semibold">Settings</h2>
-      <Row label="Frame rate" hint="30 saves battery. Max matches your display.">
+      <Row label="Frame rate">
         <Segmented<FrameRate>
           label="Frame rate"
           value={frameRate}
