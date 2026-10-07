@@ -1,13 +1,10 @@
 'use client';
 
 import type { RacingBlueprint } from '@/engine/blueprints/types';
-import { ACTIVATIONS, type Activation } from '@/engine/neat/types';
 import { RACING_SCALARS, type RacingScalar } from '@/engine/racing/sensors/inputConfig';
 import { Field, TextInput } from '@/ui/primitives/Field';
-import { Segmented } from '@/ui/primitives/Segmented';
-import { Select } from '@/ui/primitives/Select';
 import { Slider } from '@/ui/primitives/Slider';
-import { Switch } from '@/ui/primitives/Switch';
+import { BrainStartFields, InputToggle } from './BrainStartFields';
 
 const SCALAR_LABELS: Record<RacingScalar, [string, string]> = {
   speed: ['Speed', 'How fast the car is going.'],
@@ -44,42 +41,11 @@ export function RacingBlueprintForm({ value, onChange }: { value: RacingBlueprin
         <span className="text-[12px] font-medium text-muted">Other inputs</span>
         <div className="grid gap-x-6 sm:grid-cols-2">
           {RACING_SCALARS.map((k) => (
-            <label key={k} className="flex items-center justify-between gap-3 border-b border-border py-2">
-              <span className="flex flex-col">
-                <span className="text-[13px]">{SCALAR_LABELS[k][0]}</span>
-                <span className="text-[11px] text-subtle">{SCALAR_LABELS[k][1]}</span>
-              </span>
-              <Switch label={SCALAR_LABELS[k][0]} checked={inputs[k]} onChange={(v) => setInputs({ [k]: v } as Partial<RacingBlueprint['inputs']>)} />
-            </label>
+            <InputToggle key={k} label={SCALAR_LABELS[k][0]} hint={SCALAR_LABELS[k][1]} checked={inputs[k]} onChange={(v) => setInputs({ [k]: v } as Partial<RacingBlueprint['inputs']>)} />
           ))}
         </div>
       </section>
-      <section className="grid gap-4 sm:grid-cols-3">
-        <Field label={`Sensor noise: ${Math.round(inputs.noise * 100)}%`} hint="Off by default. Noise makes brains more robust and slower to train.">
-          <Slider label="Sensor noise" min={0} max={10} value={Math.round(inputs.noise * 100)} onChange={(v) => setInputs({ noise: v / 100 })} />
-        </Field>
-        <Field label="Activation" hint="Used by hidden neurons. Outputs always use tanh.">
-          <Select<Activation> label="Activation" value={value.activation} onChange={(v) => set({ activation: v })} options={ACTIVATIONS.map((a) => ({ value: a, label: a === 'relu' ? 'ReLU' : a[0].toUpperCase() + a.slice(1) }))} />
-        </Field>
-        <Field label="Starting wiring">
-          <Segmented
-            label="Starting wiring"
-            size="sm"
-            value={value.wiring}
-            onChange={(w) => set({ wiring: w, hiddenCount: w === 'hidden' ? value.hiddenCount ?? 4 : undefined })}
-            options={[
-              { value: 'direct', label: 'Direct' },
-              { value: 'sparse', label: 'Sparse' },
-              { value: 'hidden', label: 'Hidden layer' },
-            ]}
-          />
-        </Field>
-      </section>
-      {value.wiring === 'hidden' && (
-        <Field label={`Hidden neurons: ${value.hiddenCount ?? 4}`}>
-          <Slider label="Hidden neurons" min={1} max={16} value={value.hiddenCount ?? 4} onChange={(v) => set({ hiddenCount: v })} />
-        </Field>
-      )}
+      <BrainStartFields value={value} onChange={onChange} />
     </div>
   );
 }

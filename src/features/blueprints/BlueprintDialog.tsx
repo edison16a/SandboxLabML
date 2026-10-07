@@ -2,26 +2,27 @@
 
 import { useEffect, useState } from 'react';
 import { blueprintInputCount, blueprintShape, validateBlueprint } from '@/engine/blueprints/shape';
-import type { RacingBlueprint } from '@/engine/blueprints/types';
+import type { Blueprint } from '@/engine/blueprints/types';
 import { copyId, saveBlueprint } from '@/storage/blueprints';
 import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
 import { Dialog } from '@/ui/primitives/Dialog';
+import { HideSeekBlueprintForm } from './HideSeekBlueprintForm';
 import { RacingBlueprintForm } from './RacingBlueprintForm';
 
-interface Props {
+interface Props<B extends Blueprint> {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Blueprint to start from. Presets are copied, never edited in place. */
-  base: RacingBlueprint;
+  base: B;
   title: string;
   description: string;
   action: string;
-  onSave: (b: RacingBlueprint) => void | Promise<void>;
+  onSave: (b: B) => void | Promise<void>;
 }
 
 /** Starting parameter count for a shape, so the dialog can show how big the brain begins. */
-function startingParameters(b: RacingBlueprint): number {
+function startingParameters(b: Blueprint): number {
   const s = blueprintShape(b);
   if (s.wiring === 'hidden') {
     const h = s.hiddenCount ?? 4;
@@ -31,9 +32,15 @@ function startingParameters(b: RacingBlueprint): number {
   return s.wiring === 'sparse' ? Math.round(links * 0.5 + s.outputCount * 0.5) : links;
 }
 
-/** Edits a copy of a racing blueprint, shows its size live, and saves it as the user's own. */
-export function BlueprintDialog({ open, onOpenChange, base, title, description, action, onSave }: Props) {
-  const [draft, setDraft] = useState<RacingBlueprint>(base);
+/** The form for a blueprint's game. The draft keeps the base's game, so the casts only undo the narrowing. */
+function BlueprintForm<B extends Blueprint>({ value, onChange }: { value: B; onChange: (b: B) => void }) {
+  const set = onChange as (b: Blueprint) => void;
+  return value.env === 'racing' ? <RacingBlueprintForm value={value} onChange={set} /> : <HideSeekBlueprintForm value={value} onChange={set} />;
+}
+
+/** Edits a copy of a blueprint for either game, shows its size live, and saves it as the user's own. */
+export function BlueprintDialog<B extends Blueprint>({ open, onOpenChange, base, title, description, action, onSave }: Props<B>) {
+  const [draft, setDraft] = useState<B>(base);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     if (open) setDraft({ ...structuredClone(base), id: copyId(base.id), name: base.readonly ? `${base.name} (custom)` : base.name, readonly: false, tier: 'custom' });
@@ -71,7 +78,7 @@ export function BlueprintDialog({ open, onOpenChange, base, title, description, 
         </>
       }
     >
-      <RacingBlueprintForm value={draft} onChange={setDraft} />
+      <BlueprintForm value={draft} onChange={setDraft} />
       {issues.length > 0 && (
         <ul className="mt-4 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-[12px] text-danger">
           {issues.map((i) => (
