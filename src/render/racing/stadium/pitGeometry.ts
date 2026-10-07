@@ -44,10 +44,9 @@ export function pitShell(length: number, depth: number): THREE.BufferGeometry {
     b.box(0.12, 0.18, depth - 1.6, x, PIT_GROUND - 0.6, depth / 2 + 0.6, BLUE);
     for (let z = 2.2; z < depth - 1; z += 2.4) b.box(0.16, PIT_TOP - PIT_GROUND - 0.6, 0.14, x, (PIT_GROUND + PIT_TOP) / 2 + 0.1, z, GREY);
   }
-  // Roof deck and canopy over the pit lane, with a dark fascia.
+  // Roof deck and a cantilevered canopy over the pit lane, with a dark fascia; no posts, so a pit lane camera has a clear view.
   b.box(length + 1.2, 0.45, depth + 4.2, 0, PIT_TOP + 0.22, depth / 2 - 2.1, WHITE);
   b.box(length + 1.2, 0.9, 0.12, 0, PIT_TOP + 0.1, -4.2, DARK);
-  for (let x = start; x <= -start + 0.01; x += BAY * 2) b.box(0.18, PIT_TOP, 0.18, x, PIT_TOP / 2, -3.8, GREY);
   return b.build();
 }
 
