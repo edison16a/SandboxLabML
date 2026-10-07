@@ -52,4 +52,13 @@ describe('generation stats', () => {
     expect(game.seekerVaultsPerMatch).toBe(1);
     expect(game.hiderVaultsPerMatch).toBe(0.5);
   });
+
+  it('split locks by the team that placed them', () => {
+    const plan = [[spec(0, 0), spec(1, 1)]];
+    const results = [[result({ locksPlaced: 3, hiderLocks: 2, seekerLocks: 1 }), result({ locksPlaced: 1, seekerLocks: 1 })]];
+    const { game } = scoreGeneration(plan, results, 2, 2);
+    expect(game.locksPerMatch).toBe(2);
+    expect(game.hiderLocksPerMatch).toBe(1);
+    expect(game.seekerLocksPerMatch).toBe(1);
+  });
 });

@@ -132,6 +132,9 @@ export interface HideSeekMatchStats {
    */
   currentHiddenShare: number;
   locksPerMatch: number;
+  /** Locks each team placed per match, now that both teams lock. Missing in histories from before ramps. */
+  hiderLocksPerMatch?: number;
+  seekerLocksPerMatch?: number;
   boxesMovedPerMatch: number;
   grabsPerMatch: number;
   /** Ramps mounted per match, by both teams. Missing in histories from before ramps. */

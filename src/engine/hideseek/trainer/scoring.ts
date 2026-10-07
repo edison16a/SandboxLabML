@@ -28,6 +28,8 @@ export function scoreGeneration(plan: MatchSpec[][], results: MatchResult[][], h
   let current = 0;
   let currentHidden = 0;
   let locks = 0;
+  let hiderLocks = 0;
+  let seekerLocks = 0;
   let moved = 0;
   let grabs = 0;
   let climbs = 0;
@@ -60,6 +62,8 @@ export function scoreGeneration(plan: MatchSpec[][], results: MatchResult[][], h
       hidden += res.hiddenShare;
       seen += res.seenShare;
       locks += res.locksPlaced;
+      hiderLocks += res.hiderLocks;
+      seekerLocks += res.seekerLocks;
       moved += res.boxesMoved;
       grabs += res.hiderGrabs + res.seekerGrabs;
       climbs += res.hiderClimbs + res.seekerClimbs;
@@ -78,6 +82,8 @@ export function scoreGeneration(plan: MatchSpec[][], results: MatchResult[][], h
       seenShare: per(seen),
       currentHiddenShare: current > 0 ? currentHidden / current : 0,
       locksPerMatch: per(locks),
+      hiderLocksPerMatch: per(hiderLocks),
+      seekerLocksPerMatch: per(seekerLocks),
       boxesMovedPerMatch: per(moved),
       grabsPerMatch: per(grabs),
       climbsPerMatch: per(climbs),
