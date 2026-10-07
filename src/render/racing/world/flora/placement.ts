@@ -63,7 +63,7 @@ export function placeFlora(shape: TerrainShape): Flora {
       const slope = slopeAt(shape, x, z);
       if (slope > 0.42) continue;
       const y = terrainHeight(shape, x, z);
-      const pine = rng.next() < (insideAt(f, x, z) ? 0.45 : 0.62 + smoothstep(2, 30, y) * 0.3);
+      const pine = rng.next() < (insideAt(f, x, z) ? 0.58 : 0.72 + smoothstep(2, 30, y) * 0.22);
       // Big trees close to the road, a mix of heights everywhere.
       const scale = rng.range(0.75, 1.35) * (pine ? 1 : 0.95);
       push(pine ? pines : broad, x, z, scale, rng.next() < 0.5 ? 0 : 1, slope);

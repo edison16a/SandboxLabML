@@ -29,7 +29,7 @@ export function clump(b: MeshBuilder, base: THREE.IcosahedronGeometry, center: T
       idx.push(known);
       continue;
     }
-    const lump = 0.82 + valueNoise(x * 2.2 + seed, z * 2.2 + y * 1.7, seed) * 0.36;
+    const lump = 0.72 + valueNoise(x * 2.6 + seed, z * 2.6 + y * 1.9, seed) * 0.56;
     const px = center.x + x * radius * lump;
     const py = center.y + y * radius * lump * 0.86;
     const pz = center.z + z * radius * lump;
@@ -57,12 +57,13 @@ export function broadleafGeometry(variant: number): THREE.BufferGeometry {
     const a = rng.range(0, Math.PI * 2);
     b.limb(new THREE.Vector3(0, crown.y - 2.4, 0), new THREE.Vector3(Math.cos(a) * 0.8, 1, Math.sin(a) * 0.8), 2.6, 0.16, 0.06, 5, BARK);
   }
-  const clumps = variant ? 7 : 6;
+  // Many smaller, lumpier clumps at uneven heights: the crown's outline breaks up like a real canopy.
+  const clumps = variant ? 9 : 8;
   for (let k = 0; k < clumps; k++) {
-    const a = (k / clumps) * Math.PI * 2 + rng.range(-0.3, 0.3);
-    const out = k === 0 ? 0 : rng.range(1.6, 2.5);
-    const center = new THREE.Vector3(Math.cos(a) * out, crown.y + rng.range(-0.6, 1.4) + (k === 0 ? 1.4 : 0), Math.sin(a) * out);
-    clump(b, base, center, rng.range(1.9, 2.6), crown, k + variant * 10);
+    const a = (k / clumps) * Math.PI * 2 * 1.6 + rng.range(-0.4, 0.4);
+    const out = k === 0 ? 0 : rng.range(1.4, 2.7);
+    const center = new THREE.Vector3(Math.cos(a) * out, crown.y + rng.range(-1.1, 1.8) + (k === 0 ? 1.6 : 0), Math.sin(a) * out);
+    clump(b, base, center, rng.range(1.4, 2.2), crown, k + variant * 10);
   }
   base.dispose();
   return b.build();
