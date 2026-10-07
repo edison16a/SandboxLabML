@@ -30,7 +30,7 @@ const FRAGMENT = [
   '  vec2 lo = mod( cell, 2.0 );',
   '  vec2 hi = floor( cell * 0.5 );',
   '  float bayer = ( 4.0 * mod( 2.0 * lo.x + 3.0 * lo.y, 4.0 ) + mod( 2.0 * hi.x + 3.0 * hi.y, 4.0 ) + 0.5 ) / 16.0;',
-  '  float keep = min( smoothstep( 5.0, 7.5, vCarNear ), smoothstep( 2.2, 4.8, vCarFocus ) );',
+  '  float keep = min( smoothstep( 6.0, 9.0, vCarNear ), smoothstep( 2.2, 4.8, vCarFocus ) );',
   '  if ( bayer > mix( 1.0, keep, uNearFade ) ) discard;',
   '}',
 ].join('\n');

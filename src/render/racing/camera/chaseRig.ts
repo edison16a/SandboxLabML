@@ -69,8 +69,9 @@ export function stepChase(rig: ChaseRig, frame: RacingFrame, camera: THREE.Persp
     stepSpring(rig.y, ty, 5, dt) + shake(rig.t, 7) * amp * 1.4,
     stepSpring(rig.z, tz, 6, dt) + shake(rig.t, 3) * amp,
   );
+  // Aim down the car's real heading, not the camera's lagging one: the car stays framed while the camera swings wide.
   const ahead = 6 + speed * 0.14;
-  rig.look.set(focus.x + Math.cos(rig.yaw) * ahead, 1.3, focus.z - Math.sin(rig.yaw) * ahead);
+  rig.look.set(focus.x + Math.cos(frame.focusYaw) * ahead, 1.3, focus.z - Math.sin(frame.focusYaw) * ahead);
   camera.lookAt(rig.look);
   const fov = stepSpring(rig.fov, FOV + FOV_SPEED * pace * pace, 2.5, dt);
   if (Math.abs(camera.fov - fov) > 0.01) {

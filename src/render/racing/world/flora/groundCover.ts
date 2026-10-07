@@ -19,9 +19,9 @@ export function shrubGeometry(variant: number): THREE.BufferGeometry {
   return b.build();
 }
 
-const SAND = new THREE.Color('#b69476');
-const SAND_DARK = new THREE.Color('#7e6450');
-const SAND_PALE = new THREE.Color('#d2bc9c');
+const SAND = new THREE.Color('#b3a086');
+const SAND_DARK = new THREE.Color('#786956');
+const SAND_PALE = new THREE.Color('#d5c8ab');
 
 /**
  * A weathered sandstone boulder: a lumpy, squat, faceted stone with a flat

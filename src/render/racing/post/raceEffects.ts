@@ -64,8 +64,8 @@ export class GradeEffect extends Effect {
   constructor() {
     super('GradeEffect', grade, {
       uniforms: new Map<string, THREE.Uniform>([
-        ['saturation', new THREE.Uniform(1.1)],
-        ['contrast', new THREE.Uniform(0.22)],
+        ['saturation', new THREE.Uniform(1.16)],
+        ['contrast', new THREE.Uniform(0.28)],
         ['warmth', new THREE.Uniform(new THREE.Vector3(1.03, 1.0, 0.96))],
       ]),
     });

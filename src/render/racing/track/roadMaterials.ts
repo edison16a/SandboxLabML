@@ -31,7 +31,7 @@ vec4 asphalt(vec2 uv, vec3 wp, vec2 line, float dist) {
   float streak = texture2D(uDetail, vec2(uv.x * uRoadWidth * 0.6, uv.y * 0.05)).b;
   float rubber = line.y * clamp(band * 0.55 + tracks * 0.6 * (0.6 + streak * 0.8), 0.0, 1.0);
   c = mix(c, vec3(0.05, 0.05, 0.055), rubber * 0.8);
-  float rough = mix(0.9, 0.62, rubber) - smoothstep(0.82, 0.95, grit.r) * 0.25 * near;
+  float rough = mix(0.8, 0.58, rubber) - smoothstep(0.82, 0.95, grit.r) * 0.25 * near;
   return vec4(c, rough);
 }
 `;

@@ -60,8 +60,9 @@ void main() {
     sky = mix(sky, cloud, cover * smoothstep(0.0, 0.12, d.y) * 0.95);
   }
   // The same aerial haze as the ground, taken out to the far plane, so the horizon and far hills match.
+  // Above the horizon the air thins fast, so the haze is eased off with height to keep the sky a deep blue overhead.
   vec3 hd = normalize(vec3(d.x, max(d.y, 0.002), d.z));
-  sky = mix(sky, hazeColor(hd), hazeAmount(hd, 4800.0));
+  sky = mix(sky, hazeColor(hd), hazeAmount(hd, 4800.0) * (1.0 - smoothstep(0.02, 0.35, d.y) * 0.55));
   // The sun's disk, after the haze so it stays crisp.
   sky += uSun * smoothstep(0.99975, 0.9999, mu) * 24.0 * smoothstep(-0.02, 0.03, d.y);
   gl_FragColor = vec4(sky, 1.0);

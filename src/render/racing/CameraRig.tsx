@@ -48,8 +48,8 @@ export function CameraRig({ mode, target }: { mode: CameraMode; target: React.Re
   }, [mode, camera, center, chase, editing, track.spec.id, controls]);
 
   useFrame((_, rawDt) => {
-    // A generous clamp keeps the springs stable after a stall without leaving the camera behind on slow GPUs.
-    const dt = Math.min(rawDt, 0.25);
+    // The springs are stable for any step, so only a real stall (a hidden tab) is clamped; a slow GPU still keeps up.
+    const dt = Math.min(rawDt, 1);
     if (mode === 'chase') {
       stepChase(chase, frame, camera, dt);
       target.current?.copy(frame.focusPos);
