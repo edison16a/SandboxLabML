@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { RACING_SNAPSHOT } from '@/engine/racing/env';
-import { useRacingLab } from '@/features/racing/state/labStore';
+import { useRacingLab, type QualityTier } from '@/features/racing/state/labStore';
 import { springStep } from '@/render/shared/interpolate';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { ContactShadow } from './car/ContactShadow';
@@ -23,9 +23,17 @@ const STRIDE = RACING_SNAPSHOT.stride;
  * under braking and body roll and pitch from a spring on the car's
  * accelerations.
  */
-export function ChampionCar() {
+interface ChampionCarProps {
+  /** Draws at this tier instead of the Racing lab's, for a view outside the lab. */
+  tier?: QualityTier;
+  /** The blue ring that marks the followed car in the lab. A view with one car leaves it out. */
+  ring?: boolean;
+}
+
+export function ChampionCar({ tier: pinnedTier, ring = true }: ChampionCarProps) {
   const { population, ghosts, frame } = useRacingScene();
-  const tier = useRacingLab((s) => s.activeTier);
+  const labTier = useRacingLab((s) => s.activeTier);
+  const tier = pinnedTier ?? labTier;
   const root = useRef<THREE.Group>(null);
   const rig: HeroRig = { body: useRef<THREE.Group>(null), steer: useRef<Array<THREE.Group | null>>([]), spin: useRef<Array<THREE.Group | null>>([]) };
   const state = useMemo(() => ({ roll: 0, rollV: 0, pitch: 0, pitchV: 0, spin: 0, lastSpeed: 0, lastYaw: 0, color: new THREE.Color(PARKED_PAINT) }), []);
@@ -87,10 +95,12 @@ export function ChampionCar() {
     <group ref={root} visible={false}>
       <HeroCar tier={tier} materials={materials} rig={rig} />
       <ContactShadow />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
-        <ringGeometry args={[3.0, 3.1, 64]} />
-        <meshBasicMaterial color="#4c9aff" transparent opacity={0.4} toneMapped={false} />
-      </mesh>
+      {ring && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
+          <ringGeometry args={[3.0, 3.1, 64]} />
+          <meshBasicMaterial color="#4c9aff" transparent opacity={0.4} toneMapped={false} />
+        </mesh>
+      )}
     </group>
   );
 }
