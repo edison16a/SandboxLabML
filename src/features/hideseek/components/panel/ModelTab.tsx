@@ -64,7 +64,7 @@ export function ModelTab() {
         <TeamToggle value={team === 'hider' ? 0 : 1} onChange={(v) => set({ modelTeam: v === 0 ? 'hider' : 'seeker' })} />
       </div>
       {!run || !latest || !blueprint ? (
-        <div className="p-4 text-[13px] text-muted">The model card fills in after the first generation.</div>
+        <div className="p-4 text-[13px] text-muted">Appears after the first generation.</div>
       ) : (
         <ModelCard runId={run.id} genome={latest.genome} records={cards} reference={reference} blueprintName={blueprint.name} senses={senses} />
       )}

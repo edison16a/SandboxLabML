@@ -26,7 +26,7 @@ function Empty() {
   const running = useHideSeekLab((s) => s.status === 'running');
   return (
     <div className="flex h-24 items-center justify-center rounded-md border border-dashed border-border px-6 text-center text-[12px] text-subtle">
-      {running ? 'The first generation is playing. Charts appear once all its rounds are done.' : 'Press Train to play the first generation.'}
+      {running ? 'First generation running' : 'Press Train to start'}
     </div>
   );
 }

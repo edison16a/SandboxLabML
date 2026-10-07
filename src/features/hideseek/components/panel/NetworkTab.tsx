@@ -34,7 +34,7 @@ export function NetworkTab() {
   const labels = useMemo(() => schemas[agent].map((s) => s.label), [schemas, agent]);
   const lesioned = useMemo(() => (mode === 'sandbox' ? new Set(sandbox.lesions.filter((l) => l.agent === agent).map((l) => l.index)) : undefined), [mode, sandbox.lesions, agent]);
 
-  if (!record) return <div className="p-4 text-[13px] text-muted">The network appears after the first generation.</div>;
+  if (!record) return <div className="p-4 text-[13px] text-muted">Appears after the first generation.</div>;
   const genome = agent === 0 ? record.hiderChampion : record.seekerChampion;
   const counts = countGenome(genome);
   return (
