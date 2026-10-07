@@ -65,11 +65,75 @@ test.describe('Walkthrough', () => {
     await expect(card).toHaveCount(0);
   });
 
-  test('Hide and Seek opens its own tour once and replays it from its help menu', async ({ page }) => {
+  test('keeps the drive chapter live after Turbo and leaves the arrows to the tab list', async ({ page }) => {
+    await page.goto('/lab/racing?quality=low');
+    const card = page.getByTestId('walkthrough');
+    const title = (name: string) => card.getByRole('heading', { name });
+    await expect(title('Welcome to the Racing lab')).toBeVisible({ timeout: 90_000 });
+    await page.keyboard.press('Enter');
+    await expect(title('Every car has a brain')).toBeVisible();
+    await page.keyboard.press(' ');
+    await expect(title('Fitness is the score')).toBeVisible();
+    for (const name of ['The best become parents', 'Watch it improve', 'Species protect new ideas', 'Train faster']) {
+      await page.keyboard.press('ArrowRight');
+      await expect(title(name)).toBeVisible();
+    }
+
+    // Turbo trains out of sight, so the steps that show a car drive go back to 1x.
+    await page.locator('[data-tour="speed"]').getByText('Turbo').click();
+    await expect(title('Learning in the background')).toBeVisible();
+    await page.keyboard.press('ArrowRight');
+    await expect(title('A network only sees numbers')).toBeVisible();
+    await expect(page.locator('[data-tour="speed"] [data-state="on"]')).toHaveText('1x');
+    await page.keyboard.press('i');
+    await expect(title('What the car senses')).toBeVisible();
+    // The readout is live: the followed car's speed is a number, not a dash.
+    await expect(page.getByText('Followed car').locator('..')).toContainText(/\d m\/s/, { timeout: 60_000 });
+
+    // The arrows still move through the tab list, so the keyboard reaches the Network tab the step asks for.
+    await page.keyboard.press('ArrowRight');
+    await expect(title('Look inside the champion')).toBeVisible();
+    await page.getByRole('tab', { name: 'Progress' }).focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByRole('tab', { name: 'Network' })).toHaveAttribute('aria-selected', 'true');
+    await expect(title('This is the model running')).toBeVisible();
+    await page.keyboard.press(' ');
+    await expect(page.getByRole('button', { name: 'Train' })).toBeVisible();
+  });
+
+  test('Hide and Seek takes its shortcuts from the card, opens once and replays from its help menu', async ({ page }) => {
     await page.goto('/lab/hide-seek?quality=low');
     const card = page.getByTestId('walkthrough');
-    await expect(card.getByRole('heading', { name: 'Welcome to Hide and Seek' })).toBeVisible({ timeout: 90_000 });
-    await card.getByRole('button', { name: 'Skip tour' }).click();
+    const title = (name: string) => card.getByRole('heading', { name });
+    await expect(title('Welcome to Hide and Seek')).toBeVisible({ timeout: 90_000 });
+    // Started with the mouse, focus sits on Next. Space still trains instead of pressing it.
+    await card.getByRole('button', { name: 'Start the tour' }).click();
+    await expect(title('Hiders against seekers')).toBeVisible();
+    await page.keyboard.press(' ');
+    await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible();
+    await expect(title('50 matches at once')).toBeVisible();
+    for (const name of ['An arms race', 'Fly in close']) {
+      await page.keyboard.press('ArrowRight');
+      await expect(title(name)).toBeVisible();
+    }
+
+    // The step frames the arenas, so a click on one flies in. Escape then backs out of it and the tour stays.
+    const viewport = (await page.getByTestId('hs-viewport').boundingBox())!;
+    await page.mouse.click(viewport.x + viewport.width * 0.54, viewport.y + viewport.height * 0.5);
+    await expect(title('Crates, ramps and locks')).toBeVisible();
+    const backToGrid = page.getByRole('button', { name: /All arenas/ });
+    await expect(backToGrid).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(backToGrid).toBeHidden();
+    await expect(title('Crates, ramps and locks')).toBeVisible();
+    await page.keyboard.press('ArrowRight');
+    await expect(title('What they sense')).toBeVisible();
+    await page.keyboard.press('i');
+    await expect(page.locator('[data-tour="inputs"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(title('Senses in, moves out')).toBeVisible();
+    await page.keyboard.press(' ');
+    await expect(page.getByRole('button', { name: 'Train' })).toBeVisible();
+    await page.keyboard.press('Escape');
     await expect(card).toBeHidden();
     await expect.poll(() => marker(page, 'sandboxlab.tour.hideseek')).toBe('1');
     // Skipping one lab's tour leaves the other lab's for its own first visit.
@@ -77,7 +141,7 @@ test.describe('Walkthrough', () => {
 
     await page.getByRole('button', { name: 'Help and shortcuts' }).click();
     await page.getByRole('button', { name: 'Replay the tour' }).click();
-    await expect(card.getByRole('heading', { name: 'Welcome to Hide and Seek' })).toBeVisible();
+    await expect(title('Welcome to Hide and Seek')).toBeVisible();
     await expect(card).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(card).toBeHidden();
