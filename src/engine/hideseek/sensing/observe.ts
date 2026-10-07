@@ -1,5 +1,5 @@
 import type { Rng } from '../../core/rng';
-import { HIT_AGENT, HIT_BOX, NEVER_SEEN_AGE } from '../agents/agent';
+import { HIT_AGENT, HIT_BOX, HIT_RAMP, NEVER_SEEN_AGE } from '../agents/agent';
 import { bearing, localAhead, localLeft } from '../frame';
 import type { HideSeekInputConfig } from '../inputConfig';
 import type { PlayState } from '../match/state';
@@ -36,7 +36,8 @@ export class HideSeekObserver {
     const range = cfg.rays.range;
     for (let k = 0; k < count; k++) out[n++] = a.rays[k] / range;
     if (cfg.rays.hitTypes) {
-      for (let k = 0; k < count; k++) out[n++] = a.rayHits[k] === HIT_BOX ? 1 : 0;
+      // Crates and ramps alike read as a box, so the per ray inputs keep their shape.
+      for (let k = 0; k < count; k++) out[n++] = a.rayHits[k] === HIT_BOX || a.rayHits[k] === HIT_RAMP ? 1 : 0;
       for (let k = 0; k < count; k++) out[n++] = a.rayHits[k] === HIT_AGENT ? 1 : 0;
     }
     const top = p.agent.maxSpeed;

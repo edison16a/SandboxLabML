@@ -1,6 +1,6 @@
-import { HIT_AGENT, HIT_BOX, HIT_NONE, HIT_WALL } from '../agents/agent';
+import { HIT_AGENT, HIT_BOX, HIT_NONE, HIT_RAMP, HIT_WALL } from '../agents/agent';
 import type { PlayState } from '../match/state';
-import { boxKindSize, type HideSeekPhysics } from '../physics';
+import { boxSlice, type BoxKind, type BoxSlice, type HideSeekPhysics } from '../physics';
 import { rayAabb, rayBox, rayCircle } from './raycast2d';
 
 /**
@@ -21,7 +21,7 @@ export function hideSeekRayAngles(count: number): number[] {
  * and sin so a tick costs one cos and one sin per agent, not per ray, and
  * box rotations and sizes are worked out once per cast instead of once per
  * ray. Scratch arrays grow to the number of boxes, so the Sandbox can hold
- * any mix of cubes and planks.
+ * any mix of boxes.
  */
 export class SensorRays {
   readonly count: number;
@@ -30,10 +30,14 @@ export class SensorRays {
   private readonly physics: HideSeekPhysics;
   private readonly cosA: Float64Array;
   private readonly sinA: Float64Array;
-  private boxCos = new Float64Array(4);
-  private boxSin = new Float64Array(4);
-  private boxHx = new Float64Array(4);
-  private boxHz = new Float64Array(4);
+  /** What of each kind stands taller than ray height, so what a ray can hit (see BoxSlice). */
+  private readonly slices: Record<BoxKind, BoxSlice>;
+  private boxCos = new Float64Array(5);
+  private boxSin = new Float64Array(5);
+  private boxX = new Float64Array(5);
+  private boxZ = new Float64Array(5);
+  private boxHx = new Float64Array(5);
+  private boxHz = new Float64Array(5);
 
   constructor(count: number, range: number, physics: HideSeekPhysics) {
     this.count = count;
@@ -42,6 +46,7 @@ export class SensorRays {
     this.angles = Float64Array.from(hideSeekRayAngles(count));
     this.cosA = this.angles.map(Math.cos);
     this.sinA = this.angles.map(Math.sin);
+    this.slices = { cube: boxSlice(physics, 'cube'), plank: boxSlice(physics, 'plank'), ramp: boxSlice(physics, 'ramp') };
   }
 
   /**
@@ -52,6 +57,12 @@ export class SensorRays {
    * Rays stop at agents of the other team only. In a 1 v 1 match that is
    * just the opponent; in the Sandbox teammates are passed through, so the
    * "agent on ray" input keeps the meaning it had in training: an opponent.
+   * An agent on a ramp or in the air has its collider switched off, so rays
+   * pass it too, as Rapier's would.
+   *
+   * Boxes block at their sight slice: all of a crate, the high end of a
+   * ramp. An agent on a ramp casts through the ramp it stands on, and one
+   * high enough to see over boxes casts past every box. Walls always block.
    */
   cast(s: PlayState, i: number, blind: boolean): void {
     const a = s.agents[i];
@@ -62,14 +73,18 @@ export class SensorRays {
     }
     const walls = s.arena.walls;
     const boxes = s.boxes;
-    const boxCount = boxes.length;
+    const boxCount = a.elevation >= this.physics.climb.seeOverBoxes ? 0 : boxes.length;
     if (this.boxCos.length < boxCount) this.grow(boxCount);
     for (let b = 0; b < boxCount; b++) {
-      const size = boxKindSize(this.physics, boxes[b].kind);
-      this.boxCos[b] = Math.cos(boxes[b].yaw);
-      this.boxSin[b] = Math.sin(boxes[b].yaw);
-      this.boxHx[b] = size.length / 2;
-      this.boxHz[b] = size.width / 2;
+      const slice = this.slices[boxes[b].kind];
+      const cos = Math.cos(boxes[b].yaw);
+      const sin = Math.sin(boxes[b].yaw);
+      this.boxCos[b] = cos;
+      this.boxSin[b] = sin;
+      this.boxX[b] = boxes[b].x + slice.offset * cos;
+      this.boxZ[b] = boxes[b].z - slice.offset * sin;
+      this.boxHx[b] = slice.hx;
+      this.boxHz[b] = slice.hz;
     }
     const cy = Math.cos(a.yaw);
     const sy = Math.sin(a.yaw);
@@ -89,16 +104,16 @@ export class SensorRays {
         }
       }
       for (let b = 0; b < boxCount; b++) {
-        const box = boxes[b];
-        const t = rayBox(a.x, a.z, dx, dz, box.x, box.z, this.boxHx[b], this.boxHz[b], this.boxCos[b], this.boxSin[b]);
+        if (b === a.climbRamp || this.boxHx[b] === 0) continue;
+        const t = rayBox(a.x, a.z, dx, dz, this.boxX[b], this.boxZ[b], this.boxHx[b], this.boxHz[b], this.boxCos[b], this.boxSin[b]);
         if (t < best) {
           best = t;
-          hit = HIT_BOX;
+          hit = boxes[b].kind === 'ramp' ? HIT_RAMP : HIT_BOX;
         }
       }
       for (let j = 0; j < s.agents.length; j++) {
         const other = s.agents[j];
-        if (other.index === a.index) continue;
+        if (other.index === a.index || other.climbing || other.airborne) continue;
         const t = rayCircle(a.x, a.z, dx, dz, other.x, other.z, radius);
         if (t < best) {
           best = t;
@@ -113,6 +128,8 @@ export class SensorRays {
   private grow(n: number): void {
     this.boxCos = new Float64Array(n);
     this.boxSin = new Float64Array(n);
+    this.boxX = new Float64Array(n);
+    this.boxZ = new Float64Array(n);
     this.boxHx = new Float64Array(n);
     this.boxHz = new Float64Array(n);
   }

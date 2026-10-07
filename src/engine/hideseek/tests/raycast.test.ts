@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { HIT_AGENT, HIT_BOX, HIT_NONE, HIT_WALL } from '../agents/agent';
+import { HIT_AGENT, HIT_BOX, HIT_NONE, HIT_RAMP, HIT_WALL } from '../agents/agent';
+import { GROUP_AGENT, GROUP_WALL, interactionGroups } from '../world/groups';
 import { STANDARD_HIDESEEK_INPUTS } from '../inputConfig';
 import { startMatch } from '../match/runMatch';
 import type { HideSeekMatch } from '../match/match';
@@ -8,18 +9,25 @@ import { hideSeekRayAngles } from '../sensing/rays';
 import { createArenaPool } from '../world/pool';
 import { randomGenomes } from './helpers';
 
-/** Casts every sensor ray of agent `i` with Rapier and returns distances and hit kinds. */
+/**
+ * Casts every sensor ray of agent `i` with Rapier and returns distances and
+ * hit kinds. Rapier sees the real wedge of a ramp; the engine's rules on
+ * top are passing the ramp an agent climbs, and passing every box when it
+ * stands high enough to see over them.
+ */
 function rapierRays(m: HideSeekMatch, i: number, count: number, range: number) {
   const arena = m.state.arena;
   const a = m.state.agents[i];
   const kinds = new Map<number, number>();
   arena.agents.forEach((b) => kinds.set(b.collider(0).handle, HIT_AGENT));
-  arena.boxes.forEach((b) => kinds.set(b.collider(0).handle, HIT_BOX));
+  arena.boxes.forEach((b, k) => kinds.set(b.collider(0).handle, m.state.boxes[k].kind === 'ramp' ? HIT_RAMP : HIT_BOX));
+  const own = a.climbRamp >= 0 ? arena.boxes[a.climbRamp].collider(0).handle : -1;
+  const groups = a.elevation >= m.state.physics.climb.seeOverBoxes ? interactionGroups(0xffff, GROUP_WALL | GROUP_AGENT) : undefined;
   const ray = new arena.rapier.Ray({ x: a.x, y: m.state.physics.rayHeight, z: a.z }, { x: 1, y: 0, z: 0 });
   return hideSeekRayAngles(count).map((angle) => {
     ray.dir.x = Math.cos(a.yaw + angle);
     ray.dir.z = -Math.sin(a.yaw + angle);
-    const hit = arena.world.castRay(ray, range, true, undefined, undefined, undefined, arena.agents[i]);
+    const hit = arena.world.castRay(ray, range, true, undefined, groups, undefined, arena.agents[i], (c) => c.handle !== own);
     return hit ? { d: hit.timeOfImpact, kind: kinds.get(hit.collider.handle) ?? HIT_WALL } : { d: range, kind: HIT_NONE };
   });
 }
