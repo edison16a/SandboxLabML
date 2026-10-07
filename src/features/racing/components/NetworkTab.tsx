@@ -55,7 +55,7 @@ export function NetworkTab() {
     return stream.inspect?.obs ?? null;
   }, [ghost]);
 
-  if (!record) return <div className="p-4 text-[13px] text-muted">The network appears after the first generation.</div>;
+  if (!record) return <div className="p-4 text-[13px] text-muted">Appears after the first generation.</div>;
   const counts = countGenome(record.genome);
 
   return (

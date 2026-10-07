@@ -29,7 +29,7 @@ export function ModelTab() {
       ? (shape.inputCount + 1) * (shape.hiddenCount ?? 4) + ((shape.hiddenCount ?? 4) + 1) * shape.outputCount
       : (shape.inputCount + 1) * shape.outputCount;
   }, [run]);
-  if (!run || !latest) return <div className="p-4 text-[13px] text-muted">The model card fills in after the first generation.</div>;
+  if (!run || !latest) return <div className="p-4 text-[13px] text-muted">Appears after the first generation.</div>;
 
   const grow = async (blueprint: Parameters<typeof forkRacingRun>[1]) => {
     const session = racingSession();
@@ -39,7 +39,7 @@ export function ModelTab() {
       const config = await forkRacingRun(run.id, blueprint, custom);
       await session.openRun(config.id);
       await setSetting(LAST_RUN_KEY, config.id);
-      toast.success('Brain grown', 'New inputs start unconnected. Evolution wires them in over the next generations.');
+      toast.success('Brain grown');
     } catch (err) {
       toast.error('Could not grow the brain', err instanceof Error ? err.message : String(err));
     }
@@ -48,7 +48,7 @@ export function ModelTab() {
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <p className="text-[12px] text-muted">Add or remove sensors without losing what this population learned.</p>
+        <p className="text-[12px] text-muted">Change the sensors, keep what it learned.</p>
         <Button size="sm" variant="outline" onClick={() => setGrowing(true)} disabled={run.blueprint.env !== 'racing'}>
           <Sprout />
           Grow this brain
@@ -61,7 +61,7 @@ export function ModelTab() {
           onOpenChange={setGrowing}
           base={run.blueprint}
           title="Grow this brain"
-          description="Creates a new run from the latest checkpoint. Kept inputs keep their links, new ones start unconnected, removed ones disappear. This run stays as it is."
+          description="Starts a new run from the latest checkpoint. New inputs start unconnected."
           action="Create grown run"
           onSave={(b) => grow(b)}
         />

@@ -57,11 +57,11 @@ export function InputsTab() {
       </div>
       {mode === 'sandbox' && (
         <p className="rounded-md border border-orange/30 bg-orange-soft px-3 py-2 text-[12px] text-orange">
-          Lesion test: click an input name to switch it off. The brain keeps acting without it, so you can see what it relies on. Training is never affected.
+          Lesion test: click an input to switch it off and see what the brain relies on.
         </p>
       )}
       <p className="text-[12px] text-muted">
-        {schema.length} inputs from the <span className="text-fg">{run?.blueprint.name}</span> blueprint. Hover a row to highlight that sensor in 3D and in the network.
+        {schema.length} inputs, <span className="text-fg">{run?.blueprint.name}</span> blueprint
       </p>
       <InputBars
         schema={schema}
