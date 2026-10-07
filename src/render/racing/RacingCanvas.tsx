@@ -6,7 +6,6 @@ import { useMemo, useRef } from 'react';
 import type { InputSpec } from '@/engine/env/types';
 import type { Track } from '@/engine/racing/track/types';
 import { useRacingLab, viewportHeld } from '@/features/racing/state/labStore';
-import { Effects } from '@/render/shared/Effects';
 import { FramePacer } from '@/render/shared/FramePacer';
 import { useFrameLoop } from '@/render/shared/frameLoop';
 import { tierDpr } from '@/render/shared/quality';
@@ -19,6 +18,7 @@ import { CrashRings } from './CrashRings';
 import { FrameDriver } from './FrameDriver';
 import { GhostCars } from './GhostCars';
 import { PopulationCars } from './PopulationCars';
+import { RacingEffects } from './post/RacingEffects';
 import { RacingWorld } from './RacingWorld';
 import { RaysOverlay } from './RaysOverlay';
 import { createFrame, RacingSceneContext } from './sceneContext';
@@ -75,7 +75,7 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
         <RaysOverlay schema={schema} />
         <CameraRig mode={camera} target={target} />
         {children}
-        <Effects tier={tier} />
+        <RacingEffects tier={tier} chase={camera === 'chase'} />
         <StatsProbe
           instances={() => ({
             population: population?.count ?? 0,

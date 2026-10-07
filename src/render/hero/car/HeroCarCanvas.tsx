@@ -7,10 +7,10 @@ import type { InputSpec } from '@/engine/env/types';
 import type { Track } from '@/engine/racing/track/types';
 import type { QualityTier } from '@/features/racing/state/labStore';
 import { ChampionCar } from '@/render/racing/ChampionCar';
+import { RacingEffects } from '@/render/racing/post/RacingEffects';
 import { RacingWorld } from '@/render/racing/RacingWorld';
 import { createFrame, RacingSceneContext } from '@/render/racing/sceneContext';
 import { TireEffects } from '@/render/racing/TireEffects';
-import { Effects } from '@/render/shared/Effects';
 import { FramePacer } from '@/render/shared/FramePacer';
 import { Prewarm } from '@/render/shared/Prewarm';
 import { useFrameLoop } from '@/render/shared/frameLoop';
@@ -71,7 +71,7 @@ export function HeroCarCanvas({ track, stream, schema, tier, running, onShown }:
         <HeroCarRays schema={schema} />
         <HeroChaseCamera target={target} />
         {/* The composer draws on its own, so it joins once everything else has compiled. */}
-        {warm && <Effects tier={tier} />}
+        {warm && <RacingEffects tier={tier} chase={false} />}
       </RacingSceneContext.Provider>
     </Canvas>
   );
