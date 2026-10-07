@@ -4,7 +4,10 @@ import { buildTrack } from '@/engine/racing/track/buildTrack';
 import { BUILT_IN_TRACKS } from '@/engine/racing/track/presets';
 import { terrainHeight } from '../world/terrain/terrainHeight';
 import { distanceAt } from '../world/trackField';
+import { padWeight } from '../stadium/layout';
+import { PIT_TOP } from '../stadium/pitGeometry';
 import { worldFor } from '../world/worldData';
+import { canSee, keepOut, occluders } from './sightLines';
 import { ahead, pickStation, trackStations } from './stations';
 
 describe('trackside cameras', () => {
@@ -16,6 +19,24 @@ describe('trackside cameras', () => {
       for (const s of stations) {
         expect(distanceAt(world.field, s.x, s.z)).toBeGreaterThan(world.track.halfWidth + RUNOFF + 3);
         expect(s.y).toBeGreaterThan(terrainHeight(world.shape, s.x, s.z) + 4);
+      }
+    }
+  });
+
+  it('never stand under the pit canopy or on the lane, and see the road they cover past every building', () => {
+    for (const spec of BUILT_IN_TRACKS) {
+      const world = worldFor(buildTrack(spec));
+      const { track, layout, shape } = world;
+      const keep = keepOut(layout, 0);
+      const blockers = occluders(layout);
+      for (const st of trackStations(world)) {
+        // Only the camera up on the pit canopy may stand over the pits.
+        if (st.y < PIT_TOP) expect(keep.every((p) => padWeight(p, st.x, st.z, 0.01) === 0)).toBe(true);
+        const i = Math.round(st.s / track.spacing);
+        for (let d = -90; d <= 40; d += 5) {
+          const j = (i + Math.round(d / track.spacing) + track.count) % track.count;
+          expect(canSee(shape, blockers, st.x, st.y, st.z, track.cx[j], -track.cy[j])).toBe(true);
+        }
       }
     }
   });
