@@ -79,9 +79,9 @@ export function ProgressTab() {
   return (
     <div className="flex flex-col gap-6 p-4">
       <div className="grid grid-cols-3 gap-3">
-        <Stat label="Hidden" value={`${Math.round(last.stats.game.currentHiddenShare * 100)}%`} hint="Share of seek time hiders stayed out of sight, current teams" />
+        <Stat label="Hidden" value={`${Math.round(last.stats.game.currentHiddenShare * 100)}%`} hint="Share of seek time the hiders stayed out of sight" />
         <Stat label="Locks a match" value={last.stats.game.locksPerMatch.toFixed(2)} hint={lockSplit(last.stats.game)} />
-        <Stat label="Species" value={`${last.stats.hiders.species.length} / ${last.stats.seekers.species.length}`} hint="Hider species / seeker species" />
+        <Stat label="Species" value={`${last.stats.hiders.species.length} / ${last.stats.seekers.species.length}`} hint="Groups of similar brains, hiders / seekers" />
       </div>
       <Section title="Fitness" hint="per team">
         <HsLineChart generations={charts.gens} series={charts.fitness} yLabel="Fitness" />

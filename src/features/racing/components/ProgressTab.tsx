@@ -33,9 +33,9 @@ export function ProgressTab() {
   return (
     <div className="flex flex-col gap-6 p-4">
       <div className="grid grid-cols-3 gap-3">
-        <Stat label="Best fitness" value={last.stats.best.toFixed(1)} />
-        <Stat label="Species" value={last.stats.species.length} />
-        <Stat label="Avg links" value={last.stats.meanConnections.toFixed(1)} hint="Mean enabled connections per brain" />
+        <Stat label="Best fitness" value={last.stats.best.toFixed(1)} hint="The top score from the training rewards" />
+        <Stat label="Species" value={last.stats.species.length} hint="Groups of similar brains that breed among themselves" />
+        <Stat label="Avg links" value={last.stats.meanConnections.toFixed(1)} hint="Average number of working connections in a brain" />
       </div>
       <Section title="Fitness" hint="best, median, mean">
         <FitnessChart records={records} />
