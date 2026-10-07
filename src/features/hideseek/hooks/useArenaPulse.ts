@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
-import { SANDBOX_HIDERS_SEEN, SANDBOX_OVER, SANDBOX_PHASE, SANDBOX_TIME, sandboxHiderCount } from '@/engine/hideseek/sandbox/snapshot';
+import { SANDBOX_HEADER, SANDBOX_HIDERS_SEEN, SANDBOX_OVER, SANDBOX_PHASE, SANDBOX_TIME, sandboxHiderCount } from '@/engine/hideseek/sandbox/snapshot';
 import { hideSeekSettingsOf } from '@/engine/training/hideseekRunConfig';
 import { arenaHiderSeen, arenaInPrep, arenaTime } from '@/render/hideseek/frame/snapshotRead';
 import { hideSeekSession } from '../session/HideSeekSession';
@@ -43,7 +43,7 @@ function readPulse(): ArenaPulse {
   const buf = feed?.curr?.buffer;
   if (!feed || !buf || feed.count === 0) return EMPTY;
   const s = useHideSeekLab.getState();
-  if (s.mode === 'sandbox') return buf.length >= 8 ? sandboxPulse(buf) : EMPTY;
+  if (s.mode === 'sandbox') return buf.length >= SANDBOX_HEADER ? sandboxPulse(buf) : EMPTY;
   const n = Math.min(feed.count, s.gridSize === 1 ? feed.count : s.gridSize);
   let seeking = 0;
   let hidden = 0;

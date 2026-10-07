@@ -6,6 +6,7 @@ import { SANDBOX_LIMITS } from '@/engine/hideseek/sandbox/room';
 import {
   BOX_LOCKED,
   SANDBOX_BOX_BITS,
+  SANDBOX_HEADER,
   SANDBOX_PHASE,
   sandboxAgentAt,
   sandboxBoxAt,
@@ -32,7 +33,7 @@ const SLICES: Record<BoxKind, BoxSlice> = { cube: boxSlice(P, 'cube'), plank: bo
  */
 export function sandboxFrame(frame: HsFrame): Float32Array | null {
   const buf = frame.curr;
-  if (!buf || frame.preview || buf.length < 8) return null;
+  if (!buf || frame.preview || buf.length < SANDBOX_HEADER) return null;
   return buf.length === sandboxSnapshotLength(sandboxPlayerCount(buf), sandboxBoxCount(buf)) ? buf : null;
 }
 
