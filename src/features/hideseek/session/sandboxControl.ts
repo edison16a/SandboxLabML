@@ -26,7 +26,7 @@ export class SandboxControl {
   async enter(): Promise<void> {
     const s = this.store;
     if (!s.run || !s.records.length) {
-      toast.info('Nothing to play yet', 'The Sandbox uses trained champions. Train at least one generation first.');
+      toast.info('Nothing to play yet', 'Train at least one generation first.');
       return;
     }
     await loadSandboxRooms();
