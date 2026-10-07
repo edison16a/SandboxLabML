@@ -88,7 +88,7 @@ export function NewRunDialog({ open, onOpenChange, initialTrack, initialScript }
       open={open}
       onOpenChange={onOpenChange}
       title="New racing run"
-      description="These settings are frozen once the run starts, so every generation can be replayed exactly."
+      description="Fixed once the run starts."
       className="max-w-2xl"
       footer={
         <>
@@ -167,7 +167,7 @@ export function NewRunDialog({ open, onOpenChange, initialTrack, initialScript }
         onOpenChange={setEditing}
         base={blueprint}
         title="Customize the brain"
-        description="Pick what the car senses and how the brain starts. Saved as your own blueprint."
+        description="Saved as your own blueprint."
         action="Use this blueprint"
         onSave={(b) => {
           setCustom((list) => [b, ...list]);
