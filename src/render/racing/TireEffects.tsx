@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { Particles } from './effects/particles';
 import { SkidMarks } from './effects/skidMarks';
@@ -18,7 +18,7 @@ import { smoothstep as smooth } from './world/noise';
  * and a wheel off the road throws up dust and grit or grass. Cosmetic only.
  */
 export function TireEffects() {
-  const { frame } = useRacingScene();
+  const { frame, track, population, ghosts } = useRacingScene();
   const fx = useDisposable(() => {
     const noise = detailNoise();
     const marks = new SkidMarks();
@@ -32,7 +32,9 @@ export function TireEffects() {
     };
     return { marks, puffs, kinds, dispose: () => (marks.dispose(), puffs.dispose(), releaseDetailNoise()) };
   }, []);
-  const s = useMemo(() => ({ now: 0, last: new Float32Array(8), active: new Uint8Array(4), emit: new Float32Array(8) }), []);
+  const s = useMemo(() => ({ now: 0, last: new Float32Array(8), active: new Uint8Array(4), emit: new Float32Array(8), owner: -1, epoch: -1 }), []);
+  // Rubber laid on another track has no business on this one.
+  useEffect(() => fx.marks.clear(), [fx, track]);
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.1);
@@ -44,6 +46,18 @@ export function TireEffects() {
     const fwdX = Math.cos(frame.focusYaw);
     const fwdZ = -Math.sin(frame.focusYaw);
     const moving = frame.focusIndex >= 0 && speed > 1.5;
+    // A different car, or a new episode: no strip may join the old wheel to the new one, and a restart starts clean.
+    if (frame.contactOwner !== s.owner) {
+      s.owner = frame.contactOwner;
+      s.active.fill(0);
+      s.emit.fill(0);
+    }
+    const stream = frame.focusStream === 'ghosts' ? ghosts : population;
+    if (stream && stream.epoch !== s.epoch) {
+      s.epoch = stream.epoch;
+      s.active.fill(0);
+      fx.marks.clear();
+    }
     const slide = smooth(0.86, 1.04, m.usage) * smooth(5, 12, speed);
     const push = smooth(0.12, 0.45, m.push) * smooth(6, 14, speed);
     for (let w = 0; w < 4; w++) {
@@ -56,7 +70,8 @@ export function TireEffects() {
       if (grip > 0.08) {
         const lx = s.last[w * 2];
         const lz = s.last[w * 2 + 1];
-        if (!s.active[w]) {
+        // More than 2 m since the last point is a jump, not a slide: start a fresh strip here.
+        if (!s.active[w] || (x - lx) ** 2 + (z - lz) ** 2 > 4) {
           s.active[w] = 1;
           s.last[w * 2] = x;
           s.last[w * 2 + 1] = z;
