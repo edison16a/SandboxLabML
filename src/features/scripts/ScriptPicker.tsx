@@ -5,6 +5,7 @@ import { FileCode2, Sparkles } from 'lucide-react';
 import type { EnvId } from '@/engine/env/types';
 import { listScripts } from '@/storage/scripts';
 import { cn } from '@/ui/cn';
+import { firstSentence } from '@/ui/firstSentence';
 import { Field } from '@/ui/primitives/Field';
 import { choiceFromPreset, choiceFromSource, presetsFor, type BlueprintOf, type ScriptChoice } from './scriptChoice';
 
@@ -16,9 +17,6 @@ const BUILTIN: Record<EnvId, string> = {
 
 /** What a training script is, in one line. */
 const HINT = 'Sets the rewards and how each generation breeds.';
-
-/** The first sentence of a preset's description; the rest is for the Studio. */
-const firstSentence = (text: string) => text.split('. ')[0].replace(/\.$/, '') + '.';
 
 interface Props<E extends EnvId> {
   env: E;

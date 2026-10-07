@@ -28,7 +28,7 @@ export function BlueprintPicker({ open, value, onChange }: { open: boolean; valu
     if (open) void listBlueprints('hideseek').then((list) => setCustom(list.filter((b): b is HideSeekBlueprint => b.env === 'hideseek')));
   }, [open]);
   // A copy keeps the preset's teaching line, which no longer holds once its inputs change.
-  const hint = value.readonly ? value.teaches : 'Your own blueprint. Both teams sense what it says.';
+  const hint = value.readonly ? value.teaches : 'Your own blueprint.';
   return (
     <Field label="Brain blueprint" hint={hint}>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -52,7 +52,7 @@ export function BlueprintPicker({ open, value, onChange }: { open: boolean; valu
         onOpenChange={setEditing}
         base={value}
         title="Customize the brain"
-        description="Pick what each agent senses and how the brain starts. Both teams get it. Saved as your own blueprint."
+        description="Both teams get it. Saved as your own blueprint."
         action="Use this blueprint"
         onSave={(b) => {
           setCustom((list) => [b, ...list]);
