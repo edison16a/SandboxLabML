@@ -57,9 +57,9 @@ export function BrainStartFields<B extends Blueprint>({ value, onChange }: { val
             value={value.wiring}
             onChange={(w) => set({ wiring: w, hiddenCount: w === 'hidden' ? (value.hiddenCount ?? 4) : undefined })}
             options={[
-              { value: 'direct', label: 'Direct' },
-              { value: 'sparse', label: 'Sparse' },
-              { value: 'hidden', label: 'Hidden layer' },
+              { value: 'direct', label: 'Direct', title: 'Every input linked to every output' },
+              { value: 'sparse', label: 'Sparse', title: 'About half of those links' },
+              { value: 'hidden', label: 'Hidden layer', title: 'A layer of hidden neurons in between' },
             ]}
           />
         </Field>
