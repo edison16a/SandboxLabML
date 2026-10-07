@@ -67,7 +67,11 @@ export function Prewarm({ isReady, stepping, onWarm }: Props) {
         timer = setTimeout(step, STEP_MS);
         return;
       }
-      void s.gl.compileAsync(s.scene, s.camera).then(() => {
+      // Without parallel compiling (Safari, software renderers) nothing can be polled, so the programs are only sent off.
+      // Most drivers still finish them well before the scene first draws.
+      const parallel = s.gl.extensions.has('KHR_parallel_shader_compile');
+      const compiled = parallel ? s.gl.compileAsync(s.scene, s.camera) : Promise.resolve(s.gl.compile(s.scene, s.camera));
+      void compiled.then(() => {
         if (gone) return;
         uploadTextures(s.gl, s.scene);
         setWarm(true);
