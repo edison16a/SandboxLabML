@@ -81,7 +81,7 @@ export function TrackGallery() {
             ))}
           </div>
         ) : (
-          <p className="text-[12px] text-white/50">Draw a track and save it, and it shows up here.</p>
+          <p className="text-[12px] text-white/50">None yet</p>
         )}
       </div>
     </div>

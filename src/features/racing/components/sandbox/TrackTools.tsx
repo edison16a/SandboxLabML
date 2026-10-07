@@ -47,7 +47,7 @@ export function TrackTools() {
         <span className="truncate font-medium text-white">{edited ? `${picked?.name ?? 'Track'}, edited` : spec.name}</span>
         <span className="tabular shrink-0 font-mono text-white/55">{Math.round(info.length)} m</span>
       </div>
-      {editing && <p className="text-[11px] leading-snug text-white/60">Drag a point to move it. Double click the ground to add one. Select a point and press Delete to remove it.</p>}
+      {editing && <p className="text-[11px] leading-snug text-white/60">Drag a point to move it. Double click to add one, Delete removes it.</p>}
       <div className="flex items-center gap-3 text-[12px] text-white/70">
         <span className="shrink-0">Width</span>
         <Slider label="Track width" min={7} max={14} value={spec.width} onChange={setWidth} />
@@ -56,8 +56,8 @@ export function TrackTools() {
       {!ok && (
         <p className="text-[12px] leading-snug text-warn">
           {problems.selfIntersects ? 'The road crosses itself. ' : ''}
-          {problems.tooTight ? `The tightest corner is ${problems.minRadius.toFixed(1)} m, under the 12 m the car can take. ` : ''}
-          Cars still race here, but a new run cannot train on it.
+          {problems.tooTight ? `The tightest corner is ${problems.minRadius.toFixed(1)} m, under the 12 m minimum. ` : ''}
+          Cars can race here but not train.
         </p>
       )}
       <div className="flex items-center gap-1.5">

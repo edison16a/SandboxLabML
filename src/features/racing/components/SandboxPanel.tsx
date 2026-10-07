@@ -47,7 +47,6 @@ export function SandboxPanel() {
       <header className="flex h-10 shrink-0 items-center gap-2 border-b border-white/10 pr-1.5 pl-3">
         <FlaskConical className="size-3.5 text-orange" />
         <span className="text-[13px] font-semibold">Sandbox</span>
-        <span className="truncate text-[11px] text-white/50">Training is paused</span>
         <div className="ml-auto flex items-center gap-0.5">
           <Button size="icon-sm" variant="ghost" className={iconButton} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? 'Fold the Sandbox panel' : 'Unfold the Sandbox panel'}>
             {open ? <ChevronDown /> : <ChevronUp />}
