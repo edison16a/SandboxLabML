@@ -1,8 +1,12 @@
 /**
- * Advanced Hide and Seek preset: cover rewards for hiders, scripted
- * sparring and mixed rooms from the v2 setup, plus a shelter bonus, seeker
- * approach shaping, a hall of fame schedule that starts with two sparring
- * rounds, and a shrinking prep phase.
+ * Advanced Hide and Seek preset: cover rewards for hiders and mixed rooms
+ * from the v2 setup, plus a shelter bonus, seeker approach shaping, hall of
+ * fame opponents and a shrinking prep phase.
+ *
+ * It used to spar with the scripted agents for its first 30 generations.
+ * Once rooms had ramps, the seekers it trained found the reference hiders
+ * far less often than ones trained against past champions all along, so it
+ * plays the hall of fame instead (see docs/benchmark.md).
  *
  * Seekers keep the v1 rewards. Mirroring the cover rewards for them made a
  * line of sight free, so turning to actually see the hider was worth half
@@ -47,15 +51,9 @@ each generation {
   breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 }, adaptive: true)
   keepChampions()
 
-  // Hall of fame schedule. Early on the hall only holds clumsy champions, so two
-  // rounds go to the scripted sparring partners: a fixed opponent that tells
-  // good brains from lucky ones. Later one of those rounds goes to past champions,
-  // so neither team forgets how to beat an old trick.
-  if generation < 30 {
-    opponents(current: 2, scripted: 2)
-  } else {
-    opponents(current: 2, hallOfFame: 1, scripted: 1)
-  }
+  // Each brain plays two rounds against the other team's current brains and two
+  // against past champions, so neither team forgets how to beat an old trick.
+  opponents(current: 2, hallOfFame: 2)
   hallOfFame(size: 20)
 
   // Curriculum: a long prep phase gives new hiders time to reach cover,
@@ -68,8 +66,8 @@ each generation {
     prepTime(length: 9 s)
   }
 
-  // Every room, mixed inside each round, so the share of time hidden from the
-  // scripted seeker can be compared from one generation to the next.
+  // Every room, mixed inside each round, so each generation is scored on the
+  // same mix of rooms and no room is learned at the cost of the others.
   useLayout(id: "open")
   useLayout(id: "shelter")
   useLayout(id: "corridor")

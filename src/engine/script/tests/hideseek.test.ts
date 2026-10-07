@@ -62,7 +62,7 @@ describe('hide and seek presets', () => {
     });
     const advanced = [0, 15, 40].map((g) => run('hideseek-advanced', g));
     expect(advanced.map((d) => d?.prepSeconds)).toEqual([12, 10.5, 9]);
-    expect(advanced.map((d) => d?.opponents)).toEqual([0, 15, 40].map((g) => (g < 30 ? { current: 2, hallOfFame: 0, scripted: 2 } : { current: 2, hallOfFame: 1, scripted: 1 })));
+    expect(advanced.map((d) => d?.opponents)).toEqual([0, 15, 40].map(() => ({ current: 2, hallOfFame: 2, scripted: 0 })));
     expect([advanced[0]?.mixLayouts, advanced[0]?.sharedSeeds]).toEqual([true, undefined]);
     expect(advanced[0]?.layouts).toEqual(['open', 'shelter', 'corridor']);
   });

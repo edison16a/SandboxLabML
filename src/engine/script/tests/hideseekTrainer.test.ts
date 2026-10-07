@@ -29,13 +29,14 @@ describe('scripts in the trainer', () => {
     const trainer = scriptedRun(host, 'hideseek-advanced');
     // The generation block also ran before generation 0, so its rules hold from the start.
     expect(trainer.options.prepSeconds).toBe(12);
-    expect(trainer.options.opponents).toEqual({ current: 2, hallOfFame: 0, scripted: 2 });
+    expect(trainer.options.opponents).toEqual({ current: 2, hallOfFame: 2, scripted: 0 });
     expect([trainer.options.mixLayouts, trainer.options.sharedSeeds]).toEqual([true, false]);
     expect(trainer.options.layouts).toEqual(['open', 'shelter', 'corridor']);
     for (let g = 0; g < 3; g++) {
       const stats = trainer.runGeneration(pool, (spec) => host.createHideSeekControllers(spec.seed), host);
       for (const v of [stats.hiders.best, stats.hiders.mean, stats.seekers.best, stats.seekers.mean]) expect(Number.isFinite(v)).toBe(true);
-      expect(stats.game.scriptedHiddenShare).toBeGreaterThanOrEqual(0);
+      // Advanced plays no scripted rounds, so there is no share against the scripted seeker.
+      expect(stats.game.scriptedHiddenShare).toBeUndefined();
     }
     expect(trainer.history).toHaveLength(3);
     expect(trainer.planGeneration().flat().every((s) => s.prepSeconds === 12)).toBe(true);
