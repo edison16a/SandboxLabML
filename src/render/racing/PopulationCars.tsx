@@ -1,17 +1,19 @@
 'use client';
 
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { DEFAULT_CAR } from '@/engine/racing/car/params';
 import { RACING_SNAPSHOT } from '@/engine/racing/env';
-import { useRacingLab } from '@/features/racing/state/labStore';
+import { useRacingLab, type QualityTier } from '@/features/racing/state/labStore';
+import { attachOpacity, withInstanceOpacity } from '@/render/shared/fadeMaterial';
 import { blendPose, type Pose } from '@/render/shared/interpolate';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { crowdGeometry } from './car/geometry/crowd';
 import { withCarSurface } from './car/materials/carSurface';
 import { useCarReflections } from './car/materials/useCarReflections';
-import { nearFade, withNearFade } from './fleet/nearFade';
+import { clearance } from './fleet/clearance';
+import { FadeSplit } from './fleet/fadeSplit';
 import { FleetMotion } from './motion/fleetMotion';
 import { CRASHED_COLOR, speciesColor } from './palette';
 import { useRacingScene } from './sceneContext';
@@ -19,70 +21,103 @@ import { useRacingScene } from './sceneContext';
 const MAX_CARS = 256;
 const STRIDE = RACING_SNAPSHOT.stride;
 
+/** The crowd car's paint: a clear coat on High, cheaper standard shading below. */
+function carMaterial(tier: QualityTier): THREE.MeshStandardMaterial {
+  return tier === 'high'
+    ? new THREE.MeshPhysicalMaterial({ vertexColors: true, clearcoat: 1, clearcoatRoughness: 0.06, envMapIntensity: 0.85 })
+    : new THREE.MeshStandardMaterial({ vertexColors: true, envMapIntensity: 0.85 });
+}
+
 /**
- * The live generation, up to 256 cars in a single instanced draw call,
- * each a lighter build of the hero car. The paint takes the species color;
+ * The live generation, up to 256 cars in one instanced draw call, each a
+ * lighter build of the hero car. The paint takes the species color;
  * stopped cars turn graphite and sink slightly so the ones still driving
  * stand out. Every body pitches, rolls and slides on its own springs from
- * its own accelerations, and cars right in front of the chase camera
- * dissolve so they never block the one it follows.
+ * its own accelerations. In the chase and trackside views, cars at the
+ * lens or between it and the followed car melt away: they move to a small
+ * transparent pass whose opacity eases over time, with a depth pass first
+ * so each pixel shows only a fading car's nearest surface.
  */
 export function PopulationCars({ castShadow }: { castShadow: boolean }) {
   const { population, frame } = useRacingScene();
   const tier = useRacingLab((s) => s.activeTier);
-  const mesh = useRef<THREE.InstancedMesh>(null);
-  const geometry = useDisposable(() => crowdGeometry(), []);
-  const fade = useMemo(() => nearFade(), []);
-  // High adds a clear coat over the paint and glass; the lower tiers keep the cheaper standard shading.
-  const material = useDisposable(
-    () => withNearFade(withCarSurface(tier === 'high' ? new THREE.MeshPhysicalMaterial({ vertexColors: true, clearcoat: 1, clearcoatRoughness: 0.06, envMapIntensity: 0.85 }) : new THREE.MeshStandardMaterial({ vertexColors: true, envMapIntensity: 0.85 })), fade),
-    [tier],
-  );
-  useCarReflections([material]);
+  const solid = useRef<THREE.InstancedMesh>(null);
+  const fading = useRef<THREE.InstancedMesh>(null);
+  const depth = useRef<THREE.InstancedMesh>(null);
+  const shape = useDisposable(() => {
+    const geometry = crowdGeometry();
+    return { geometry, opacity: attachOpacity(geometry, MAX_CARS), dispose: () => geometry.dispose() };
+  }, []);
+  const look = useDisposable(() => {
+    const body = withCarSurface(carMaterial(tier));
+    const fade = withCarSurface(withInstanceOpacity(carMaterial(tier)));
+    fade.depthFunc = THREE.LessEqualDepth;
+    // Transparent so it draws after the opaque scene; drawn earlier it would punch holes in the track behind it.
+    const prepass = new THREE.MeshBasicMaterial({ colorWrite: false, transparent: true, depthWrite: true });
+    return { body, fade, prepass, dispose: () => [body, fade, prepass].forEach((m) => m.dispose()) };
+  }, [tier]);
+  useCarReflections([look.body, look.fade]);
   const fleet = useMemo(() => new FleetMotion(MAX_CARS), []);
+  const split = useMemo(() => new FadeSplit(MAX_CARS), []);
   const tmp = useMemo(() => ({ m: new THREE.Matrix4(), c: new THREE.Color(), pose: { x: 0, y: 0, heading: 0 } as Pose }), []);
 
-  useFrame((_, dt) => {
-    const m = mesh.current;
-    if (!m) return;
+  useFrame((state, dt) => {
+    const a = solid.current;
+    const f = fading.current;
+    const d = depth.current;
+    if (!a || !f || !d) return;
+    // The depth pass reads the fading cars' matrices; only the count needs copying.
+    if (d.instanceMatrix !== f.instanceMatrix) d.instanceMatrix = f.instanceMatrix;
     const { view, camera, run } = useRacingLab.getState();
-    // The chase and trackside views are about one car: clear the pack off it there.
-    fade.strength.value = camera === 'chase' || camera === 'trackside' ? 1 : 0;
-    fade.focus.value.copy(frame.focusPos);
     if (!population?.curr || view === 'overlay') {
-      m.count = 0;
+      a.count = f.count = d.count = 0;
       return;
     }
+    // The chase and trackside views are about one car: clear the pack off it there.
+    const clearFocus = camera === 'chase' || camera === 'trackside';
+    const step = Math.min(dt, 0.1);
     const buf = population.curr.buffer;
     const prev = population.prev?.buffer ?? null;
-    const a = population.alpha();
+    const alpha = population.alpha();
     const n = Math.min(population.count, MAX_CARS);
-    fleet.update(population, n, run?.racing?.car ?? DEFAULT_CAR, Math.min(dt, 0.1));
+    fleet.update(population, n, run?.racing?.car ?? DEFAULT_CAR, step);
+    split.begin(step);
     for (let i = 0; i < n; i++) {
-      blendPose(prev, buf, i * STRIDE, a, tmp.pose);
+      blendPose(prev, buf, i * STRIDE, alpha, tmp.pose);
+      const hidden = i === frame.hiddenPopulation;
+      const target = hidden ? 0 : clearFocus ? clearance(tmp.pose.x, -tmp.pose.y, frame.focusPos, state.camera.position) : 1;
+      const solidBefore = split.solidCount;
+      const fadeBefore = split.fadeCount;
+      const opacity = split.place(i, target, hidden);
+      const mesh: THREE.InstancedMesh | null = split.solidCount > solidBefore ? a : split.fadeCount > fadeBefore ? f : null;
+      if (!mesh) continue;
+      const slot = mesh === a ? solidBefore : fadeBefore;
       const status = buf[i * STRIDE + 6];
-      fleet.compose(i, tmp.pose.x, status === 0 ? 0 : -0.06, -tmp.pose.y, tmp.pose.heading, i === frame.hiddenPopulation ? 0 : 1, tmp.m);
-      m.setMatrixAt(i, tmp.m);
+      fleet.compose(i, tmp.pose.x, status === 0 ? 0 : -0.06, -tmp.pose.y, tmp.pose.heading, 1, tmp.m);
+      mesh.setMatrixAt(slot, tmp.m);
       if (status === 0) speciesColor(population.tags[i] ?? 0, tmp.c);
       else tmp.c.copy(CRASHED_COLOR);
-      m.setColorAt(i, tmp.c);
+      mesh.setColorAt(slot, tmp.c);
+      if (mesh === f) shape.opacity.setX(slot, opacity);
     }
-    m.count = n;
-    m.instanceMatrix.needsUpdate = true;
-    if (m.instanceColor) m.instanceColor.needsUpdate = true;
+    a.count = split.solidCount;
+    f.count = d.count = split.fadeCount;
+    a.instanceMatrix.needsUpdate = f.instanceMatrix.needsUpdate = true;
+    if (a.instanceColor) a.instanceColor.needsUpdate = true;
+    if (f.instanceColor) f.instanceColor.needsUpdate = true;
+    shape.opacity.needsUpdate = true;
   });
 
+  // Clicking a car follows it; the draw slot maps back to the car through the split's lists.
+  const follow = (list: Int32Array) => (e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation();
+    if (e.instanceId !== undefined) useRacingLab.getState().set({ focus: { kind: 'car', index: list[e.instanceId] } });
+  };
   return (
-    <instancedMesh
-      ref={mesh}
-      args={[geometry, material, MAX_CARS]}
-      castShadow={castShadow}
-      receiveShadow
-      frustumCulled={false}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (e.instanceId !== undefined) useRacingLab.getState().set({ focus: { kind: 'car', index: e.instanceId } });
-      }}
-    />
+    <group>
+      <instancedMesh ref={solid} args={[shape.geometry, look.body, MAX_CARS]} castShadow={castShadow} receiveShadow frustumCulled={false} onClick={follow(split.solid)} />
+      <instancedMesh ref={depth} args={[shape.geometry, look.prepass, MAX_CARS]} frustumCulled={false} renderOrder={1} raycast={() => null} />
+      <instancedMesh ref={fading} args={[shape.geometry, look.fade, MAX_CARS]} receiveShadow frustumCulled={false} renderOrder={2} onClick={follow(split.fading)} />
+    </group>
   );
 }
