@@ -8,13 +8,13 @@ import { Select } from '@/ui/primitives/Select';
 import { Slider } from '@/ui/primitives/Slider';
 import { Switch } from '@/ui/primitives/Switch';
 
-/** One input group that can be switched on or off, with a line on what it tells the brain. */
-export function InputToggle({ label, hint, checked, onChange }: { label: string; hint: string; checked: boolean; onChange: (on: boolean) => void }) {
+/** One input group that can be switched on or off, with a line on what it tells the brain when the name does not say it. */
+export function InputToggle({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (on: boolean) => void }) {
   return (
-    <label className="flex items-center justify-between gap-3 border-b border-border py-2">
+    <label className="flex min-h-13 items-center justify-between gap-3 border-b border-border py-2">
       <span className="flex flex-col">
         <span className="text-[13px]">{label}</span>
-        <span className="text-[11px] text-subtle">{hint}</span>
+        {hint && <span className="text-[11px] text-subtle">{hint}</span>}
       </span>
       <Switch label={label} checked={checked} onChange={onChange} />
     </label>
@@ -32,7 +32,7 @@ export function BrainStartFields<B extends Blueprint>({ value, onChange }: { val
     <>
       {/* The wiring choice takes the room its three labels need, so "Hidden layer" never wraps. */}
       <section className="grid gap-4 sm:grid-cols-[1fr_1fr_auto]">
-        <Field label={`Sensor noise: ${Math.round(value.inputs.noise * 100)}%`} hint="Off by default. Noise makes brains more robust and slower to train.">
+        <Field label={`Sensor noise: ${Math.round(value.inputs.noise * 100)}%`} hint="Random error on every reading. Brains get sturdier but learn slower.">
           <Slider
             label="Sensor noise"
             min={0}
@@ -41,7 +41,7 @@ export function BrainStartFields<B extends Blueprint>({ value, onChange }: { val
             onChange={(v) => set({ inputs: { ...value.inputs, noise: v / 100 } } as Partial<Blueprint>)}
           />
         </Field>
-        <Field label="Activation" hint="Used by hidden neurons. Outputs always use tanh.">
+        <Field label="Activation" hint="How a hidden neuron turns its input into an output.">
           <Select<Activation>
             label="Activation"
             value={value.activation}
