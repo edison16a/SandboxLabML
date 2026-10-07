@@ -69,7 +69,7 @@ export function TelemetryStrip() {
   }, [hovered, gens]);
 
   if (!telemetry.length) {
-    return <div className="flex h-full items-center justify-center text-[12px] text-subtle">Telemetry appears once the first generation finishes.</div>;
+    return <div className="flex h-full items-center justify-center text-[12px] text-subtle">Speed traces appear after the first generation.</div>;
   }
   return <UPlotChart options={options} data={data} className="h-full w-full" onReady={(p) => (plot.current = p)} />;
 }
