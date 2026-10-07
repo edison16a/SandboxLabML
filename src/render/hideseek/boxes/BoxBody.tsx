@@ -7,6 +7,7 @@ import type { BoxKind, BoxSize } from '@/engine/hideseek/physics';
 import { LOCK_FREE, LOCK_SEEKERS } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { boxExtras, boxParts } from './boxKit';
+import { BoxMotion, tipOffset } from './boxMotion';
 import { BoxMaterials } from './boxMaterials';
 
 /** Where a box is and its lock, filled in by the caller every frame. */
@@ -48,17 +49,17 @@ const HOLO_SCALE = 1.35;
 
 /**
  * The shared body of every box drawn one by one: its panels and frame, a
- * blob shadow, and the lock. Locking turns the frame to the owner team's
- * color and raises a padlock hologram that bobs and turns slowly over the
- * top, its shackle snapping shut, so a sealed fort reads from across the
- * room. Crates and ramps differ only in their meshes and where the
- * hologram floats.
+ * blob shadow, the lock, and the weight it shows as it slides. Locking
+ * turns the frame to the owner team's color and raises a padlock hologram
+ * that bobs and turns slowly over the top, its shackle snapping shut, so a
+ * sealed fort reads from across the room. Crates and ramps differ only in
+ * their meshes and where the hologram floats.
  */
 export function BoxBody({ kind, size, read, full = true, shadows = false, blob = false, onPointerDown, onDoubleClick, holoX }: BodyProps) {
   const parts = boxParts(kind, size);
   const extras = boxExtras();
   const mats = useDisposable(() => new BoxMaterials(kind, full, extras.blobMap), [kind, full, extras]);
-  const state = useMemo(() => ({ drive: { x: 0, z: 0, yaw: 0, lock: LOCK_FREE } as BoxDrive, lock: 0, owner: 0, seed: Math.random() * 10 }), []);
+  const state = useMemo(() => ({ drive: { x: 0, z: 0, yaw: 0, lock: LOCK_FREE } as BoxDrive, lock: 0, owner: 0, seed: Math.random() * 10, weight: new BoxMotion(), tip: { x: 0, y: 0, z: 0 } }), []);
   const root = useRef<THREE.Group>(null);
   const holo = useRef<THREE.Group>(null);
   const shackle = useRef<THREE.Mesh>(null);
@@ -71,8 +72,14 @@ export function BoxBody({ kind, size, read, full = true, shadows = false, blob =
     g.visible = visible;
     if (!visible) return;
     const d = state.drive;
-    g.position.set(d.x, 0, d.z);
-    g.rotation.y = d.yaw;
+    // The simulated pose, plus the small tip of a heavy box sliding and settling (see BoxMotion).
+    const w = state.weight;
+    w.update(d.x, d.z, d.yaw, dt);
+    tipOffset(w.pitch.value, w.roll.value, size.length / 2, size.width / 2, state.tip);
+    const c = Math.cos(d.yaw);
+    const s = Math.sin(d.yaw);
+    g.position.set(d.x + state.tip.x * c + state.tip.z * s, state.tip.y, d.z - state.tip.x * s + state.tip.z * c);
+    g.rotation.set(w.roll.value, d.yaw, -w.pitch.value, 'YXZ');
     const target = d.lock === LOCK_FREE ? 0 : 1;
     // The owner sticks while a lock fades out, so an unlock never flashes the other team's color.
     if (target) state.owner = d.lock === LOCK_SEEKERS ? 1 : 0;
@@ -99,7 +106,7 @@ export function BoxBody({ kind, size, read, full = true, shadows = false, blob =
     if (shadow.current) shadow.current.visible = blob;
     // While paused the canvas only draws on demand, so ask for the next
     // frame until a lock or unlock has fully played out.
-    if (k !== target) three.invalidate();
+    if (k !== target || w.moving) three.invalidate();
   });
 
   return (
