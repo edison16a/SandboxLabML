@@ -6,7 +6,7 @@ import { useMemo, useRef } from 'react';
 import { AGENT_X, AGENT_Z, FLAG_AIRBORNE, FLAG_CLIMBING, FLAG_FROZEN, FLAG_SEEING, FLAG_SEEN } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { TEAM_BODY } from '../characters/characterMaterials';
-import { SLOPE_LEAN, TREAD_LIFT } from '../characters/characterMotion';
+import { SLOPE_LEAN } from '../characters/motion/body';
 import { instancedCharacterGeometry } from '../characters/instancedCharacter';
 import { useHsScene } from '../frame/sceneContext';
 import { agentAt, agentFlags, blendAgentPose, hasFlag } from '../frame/snapshotRead';
@@ -62,7 +62,7 @@ export function GridAgents({ onPick }: { onPick: (slot: number) => void }) {
         const lean = climbing ? SLOPE_LEAN : hasFlag(flags, FLAG_AIRBORNE) ? 0.12 : run * 0.2;
         t.e.set(0, t.pose.yaw, -lean);
         t.q.setFromEuler(t.e);
-        t.p.set(t.o.x + t.pose.x, bob + t.pose.elevation + (climbing ? TREAD_LIFT : 0), t.o.z + t.pose.z);
+        t.p.set(t.o.x + t.pose.x, bob + t.pose.elevation, t.o.z + t.pose.z);
         t.s.setScalar(hide);
         m.setMatrixAt(n, t.m.compose(t.p, t.q, t.s));
         t.c.copy(BODY[a]);
