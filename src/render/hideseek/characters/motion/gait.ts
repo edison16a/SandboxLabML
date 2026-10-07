@@ -201,12 +201,3 @@ export class Gait {
     this.home.yaw = futureYaw;
   }
 }
-
-/** Puts a foot that was off the ground (a landing, waking up) down where it now is. */
-export function plantFoot(foot: Foot, x: number, y: number, z: number, yaw: number): void {
-  setVec(foot.pos, x, y, z);
-  foot.yaw = yaw;
-  foot.pitch = 0;
-  foot.planted = true;
-  foot.swing = 0;
-}
