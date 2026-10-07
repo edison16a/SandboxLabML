@@ -22,7 +22,7 @@ export async function loadStarter(lesson: Lesson, step: LessonStep): Promise<voi
     if (isDirty(s)) {
       const answer = await ask({
         title: 'Replace your text?',
-        body: 'Loading the starter replaces what is in the editor. Undo brings it back, or save it first.',
+        body: 'The starter replaces what is in the editor. Undo brings it back.',
         confirmLabel: 'Load starter',
         alternateLabel: 'Save first',
       });
@@ -50,5 +50,5 @@ export function applySolution(solution: string): void {
     return;
   }
   s.edit(solution);
-  toast.success('Solution applied', 'Undo brings your own version back.');
+  toast.success('Solution applied', 'Undo brings yours back.');
 }

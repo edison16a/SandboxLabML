@@ -21,7 +21,7 @@ export function wordAt(text: string, pos: number): { from: number; to: number; w
 
 function insertAt(view: EditorView, pos: number, example: string): void {
   if (view.state.readOnly) {
-    toast.info('Presets are read only', 'Duplicate it to make a copy you can edit.');
+    toast.info('Presets are read only', 'Duplicate it to edit.');
     return;
   }
   const doc = view.state.doc.toString();
