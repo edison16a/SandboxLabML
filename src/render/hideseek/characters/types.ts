@@ -28,10 +28,16 @@ export interface CharacterDrive {
   seeing: boolean;
   /** Carrying a box. Its arms reach forward. */
   holding: boolean;
+  /** Height of its feet above the floor, m: up a ramp or in a jump. The whole character rises with it. */
+  elevation: number;
+  /** On a ramp slope. It leans into the slope and takes quick short steps. */
+  climbing: boolean;
+  /** In the air after running off a ramp lip. Arms up, curled up on the way up, a squash on landing. */
+  airborne: boolean;
   /** Set when the character jumped somewhere (a new match, a drag), so it does not animate the jump as a run. */
   teleported: boolean;
 }
 
 export function createCharacterDrive(): CharacterDrive {
-  return { x: 0, z: 0, yaw: 0, frozen: false, seen: false, seeing: false, holding: false, teleported: true };
+  return { x: 0, z: 0, yaw: 0, frozen: false, seen: false, seeing: false, holding: false, elevation: 0, climbing: false, airborne: false, teleported: true };
 }

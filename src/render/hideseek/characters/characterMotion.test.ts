@@ -80,4 +80,48 @@ describe('CharacterMotion', () => {
     const pose = run(new CharacterMotion(), 60, (d) => void (d.holding = true));
     expect(pose.reach).toBeGreaterThan(0.95);
   });
+
+  it('leans into a ramp and takes quicker steps up it than on the floor', () => {
+    const steps = (climbing: boolean) => {
+      const motion = new CharacterMotion();
+      let flips = 0;
+      let last = 0;
+      const pose = run(motion, 90, (d) => {
+        d.x += 2 * DT;
+        d.climbing = climbing;
+        d.elevation = climbing ? d.x * 0.5 : 0;
+        if (Math.sign(motion.pose.swing) !== Math.sign(last)) flips++;
+        last = motion.pose.swing;
+      });
+      return { flips, lean: pose.lean };
+    };
+    const floor = steps(false);
+    const slope = steps(true);
+    expect(slope.lean).toBeGreaterThan(0.35);
+    expect(slope.lean).toBeGreaterThan(floor.lean + 0.15);
+    expect(slope.flips).toBeGreaterThan(floor.flips * 1.5);
+  });
+
+  it('jumps with its arms up, curled while rising, and squashes on landing', () => {
+    const motion = new CharacterMotion();
+    run(motion, 30, () => {});
+    let curled = 1;
+    const air = run(motion, 15, (d, i) => {
+      d.airborne = true;
+      d.x += 6 * DT;
+      d.elevation = 1.2 + Math.sin((i / 15) * Math.PI) * 0.4;
+      if (i < 6) curled = Math.min(curled, motion.pose.squash);
+    });
+    expect(air.leap).toBeGreaterThan(0.9);
+    expect(curled).toBeLessThan(0.95);
+    let flattest = 1;
+    run(motion, 12, (d) => {
+      d.airborne = false;
+      d.elevation = 0;
+      flattest = Math.min(flattest, motion.pose.squash);
+    });
+    expect(flattest).toBeLessThan(0.88);
+    const settled = run(motion, 60, () => {});
+    expect(settled.squash).toBeGreaterThan(0.95);
+  });
 });

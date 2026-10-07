@@ -34,6 +34,11 @@ const REST_SPLAY = RIG.restSplay;
 const REACH_SPLAY = 0.12;
 const RAISE_SPLAY = 1.75;
 const REACH_SWING = 1.42;
+/** Arms thrown up overhead in a jump, rad from hanging down, and tipped a little forward. */
+const LEAP_SPLAY = 2.55;
+const LEAP_SWING = 0.3;
+/** How fast the blob shadow shrinks with height: to half its size 2.2 m up, about a vault's peak. */
+const BLOB_SHRINK = 0.45;
 
 interface Parts {
   root: THREE.Group | null;
@@ -51,7 +56,9 @@ interface Parts {
  * glowing face, a soft bean body with little arms, glossy and lit from
  * within in its team color. It animates itself from what `read` reports:
  * it bobs when idle, leans and waddles when it moves, swings its arms,
- * reaches forward to carry, hops when spotted and sleeps when frozen.
+ * reaches forward to carry, hops when spotted and sleeps when frozen. Up
+ * a ramp it leans into the slope with quick steps, and off a ramp lip it
+ * jumps with its arms up, its shadow left on the floor below.
  */
 export function HsCharacter({ team, read, detail = 'full', shadows = false, blob = true, seed = 0, children }: HsCharacterProps) {
   const kit = characterKit(detail);
@@ -67,21 +74,22 @@ export function HsCharacter({ team, read, detail = 'full', shadows = false, blob
     if (!visible) return;
     const d = state.drive;
     const pose = state.motion.update(d, dt, clock.elapsedTime);
-    p.root.position.set(d.x, 0, d.z);
+    p.root.position.set(d.x, d.elevation, d.z);
     p.root.rotation.y = d.yaw;
-    p.feet.position.set(d.x, 0, d.z);
+    p.feet.position.set(d.x, d.elevation, d.z);
     p.body.position.y = pose.bob;
     p.body.rotation.set(pose.roll, 0, -pose.lean);
     const s = pose.squash;
     p.body.scale.set(1 / Math.sqrt(s), s, 1 / Math.sqrt(s));
     p.head.rotation.set(0, pose.headYaw, -pose.headPitch);
-    const splay = REST_SPLAY + (REACH_SPLAY - REST_SPLAY) * pose.reach + (RAISE_SPLAY - REST_SPLAY) * pose.raise;
+    const ground = REST_SPLAY + (REACH_SPLAY - REST_SPLAY) * pose.reach + (RAISE_SPLAY - REST_SPLAY) * pose.raise;
+    const splay = ground + (LEAP_SPLAY - ground) * pose.leap;
     for (let side = 0; side < 2; side++) {
       const sign = side === 0 ? 1 : -1;
       const shoulder = p.shoulders[side];
       const arm = p.arms[side];
       if (shoulder) shoulder.rotation.x = sign * splay;
-      if (arm) arm.rotation.z = sign * pose.swing + pose.reach * REACH_SWING + pose.raise * 0.35;
+      if (arm) arm.rotation.z = sign * pose.swing + pose.reach * REACH_SWING + pose.raise * 0.35 + pose.leap * LEAP_SWING;
     }
     const face: FaceKey = pose.expression === 'keen' && pose.blink < 0.5 ? 'blink' : pose.expression;
     if (face !== state.face) {
@@ -92,10 +100,12 @@ export function HsCharacter({ team, read, detail = 'full', shadows = false, blob
       state.face = face;
     }
     if (p.blob) {
+      // The shadow stays on the floor, shrinking as the body rises off it.
       p.blob.visible = blob;
-      p.blob.scale.setScalar(1 - Math.min(0.4, pose.bob * 2));
+      p.blob.position.y = -d.elevation;
+      p.blob.scale.setScalar((1 - Math.min(0.4, pose.bob * 2)) / (1 + d.elevation * BLOB_SHRINK));
     }
-    mats.apply(pose);
+    mats.apply(pose, d.elevation);
   });
 
   const arm = (side: 0 | 1) => (

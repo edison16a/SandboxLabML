@@ -11,6 +11,8 @@ export const TEAM_BODY: Record<CharacterTeam, THREE.Color> = { hider: HS.hider, 
 /** The light inside a body is its team color washed this far toward white. */
 const GLOW_WASH = 0.6;
 const WHITE = new THREE.Color('#ffffff');
+/** Opacity of the blob shadow under a character standing on the floor. */
+const BLOB_OPACITY = 0.42;
 
 /**
  * Adds a soft light inside the body: a core glow strongest where the
@@ -58,11 +60,12 @@ export class CharacterMaterials {
     addInnerGlow(this.body, this.uniforms);
     // Pushed past 1 so bloom, where it runs, gives the face a soft halo.
     this.face = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.7, 1.75, 1.8), toneMapped: false });
-    this.blob = new THREE.MeshBasicMaterial({ color: HS_COLORS.blobShadow, alphaMap: blobMap, transparent: true, opacity: 0.42, depthWrite: false });
+    this.blob = new THREE.MeshBasicMaterial({ color: HS_COLORS.blobShadow, alphaMap: blobMap, transparent: true, opacity: BLOB_OPACITY, depthWrite: false });
   }
 
-  /** Follows the pose: the sleepy fade and the glow that rises when seen or seeing. */
-  apply(pose: CharacterPose): void {
+  /** Follows the pose: the sleepy fade and the glow that rises when seen or seeing. `height` (m) fades the floor shadow of a climber or a jumper. */
+  apply(pose: CharacterPose, height = 0): void {
+    this.blob.opacity = BLOB_OPACITY * Math.max(0.2, 1 - height * 0.32);
     const sleepy = 1 - pose.awake;
     this.body.color.copy(this.tint).lerp(HS.dormant, sleepy * 0.55);
     this.uniforms.uGlow.value = pose.glow * (1 - sleepy * 0.85);
