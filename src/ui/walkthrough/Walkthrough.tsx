@@ -10,7 +10,7 @@ import { StepCard } from './StepCard';
 import { revealTarget } from './reveal';
 import type { StepText, Tour, WalkStep } from './types';
 import { useReducedMotion } from './useReducedMotion';
-import { useStage } from './useStage';
+import { measureTarget, useStage } from './useStage';
 import { useWalkFocus } from './useWalkFocus';
 import { useWalkKeys } from './useWalkKeys';
 import { closeWalkthrough, markActed, openWalkthrough, useWalkthrough } from './walkStore';
@@ -36,7 +36,8 @@ function useReveal(text: StepText | null, key: string, reduced: boolean): void {
   const fallback = text?.fallback;
   useEffect(() => {
     if (!target) return;
-    const selector = document.querySelector(target) || !fallback ? target : fallback;
+    // The same choice the frame makes: a target a narrow layout hides gives way to its fallback.
+    const selector = measureTarget(target) || !fallback ? target : fallback;
     revealTarget(selector, !reduced);
   }, [target, fallback, key, reduced]);
 }
