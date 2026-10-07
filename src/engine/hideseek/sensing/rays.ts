@@ -38,6 +38,8 @@ export class SensorRays {
   private boxZ = new Float64Array(5);
   private boxHx = new Float64Array(5);
   private boxHz = new Float64Array(5);
+  /** Radius of a circle around each slice, so most rays skip a box after a dot product. */
+  private boxR = new Float64Array(5);
 
   constructor(count: number, range: number, physics: HideSeekPhysics) {
     this.count = count;
@@ -85,6 +87,7 @@ export class SensorRays {
       this.boxZ[b] = boxes[b].z - slice.offset * sin;
       this.boxHx[b] = slice.hx;
       this.boxHz[b] = slice.hz;
+      this.boxR[b] = Math.sqrt(slice.hx * slice.hx + slice.hz * slice.hz);
     }
     const cy = Math.cos(a.yaw);
     const sy = Math.sin(a.yaw);
@@ -105,6 +108,12 @@ export class SensorRays {
       }
       for (let b = 0; b < boxCount; b++) {
         if (b === a.climbRamp || this.boxHx[b] === 0) continue;
+        // Skip boxes whose bounding circle lies beyond the best hit or off the ray's line.
+        const vx = this.boxX[b] - a.x;
+        const vz = this.boxZ[b] - a.z;
+        const along = vx * dx + vz * dz;
+        const r = this.boxR[b];
+        if (along - r >= best || vx * vx + vz * vz - along * along > r * r) continue;
         const t = rayBox(a.x, a.z, dx, dz, this.boxX[b], this.boxZ[b], this.boxHx[b], this.boxHz[b], this.boxCos[b], this.boxSin[b]);
         if (t < best) {
           best = t;
@@ -132,5 +141,6 @@ export class SensorRays {
     this.boxZ = new Float64Array(n);
     this.boxHx = new Float64Array(n);
     this.boxHz = new Float64Array(n);
+    this.boxR = new Float64Array(n);
   }
 }
