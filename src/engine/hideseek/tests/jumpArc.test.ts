@@ -64,4 +64,25 @@ describe('the arc of a jump', () => {
   it('stays above a crate turned 45 degrees, whose far corner sits close to the landing', () => {
     expectClears(CUBE, LIP + 0.2 + Math.SQRT1_2, Math.PI / 4);
   });
+
+  it('a jump past the end of a wall it runs along is no vault and keeps a low arc', () => {
+    const m = scriptedMatch(pool, 'corridor', idle(), forward(), P);
+    m.moveAgent('hider', -8, -8, 0);
+    // The ramp lies along the z = 0 wall, which ends at x = -7.1, with its lip 0.6 m short of that end.
+    placeRamp(m, -5.3, 0.75, Math.PI, true);
+    // The seeker stands 0.41 m off the wall face, so every landing spot beside the wall is too close to it.
+    m.moveAgent('seeker', -3, 0.51, Math.PI);
+    const frames = record(m, 1, 120);
+    expect(frames.some((f) => f.airborne)).toBe(true);
+    expect(m.seeker.climbs).toBe(1);
+    const c = m.state.controls[1].climb;
+    expect(c.toX).toBeLessThan(-7.1);
+    expect(c.toZ).toBeCloseTo(0.51, 2);
+    expect(c.vault).toBe(false);
+    expect(c.peak).toBeCloseTo(P.box.ramp.height + P.climb.clearance, 6);
+    expect(frames.some((f) => f.justVaulted)).toBe(false);
+    expect(m.seeker.vaults).toBe(0);
+    expect(m.result().seekerVaults).toBe(0);
+    m.release();
+  });
 });

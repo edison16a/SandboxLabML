@@ -2,13 +2,12 @@ import { clamp } from '../../../core/math';
 import { localAhead, localLeft } from '../../frame';
 import type { PlayState } from '../../match/state';
 import { rayAabb } from '../../sensing/raycast2d';
-import { SPOT_CLEAR, spotBlocker, type SpotHit } from './clearance';
+import { SPOT_CLEAR, spotBlocker } from './clearance';
 import { planJump, stepJump } from './jump';
 import { placeOnRamp, rampPoint, standOnFloor, type FloorPoint } from './ramp';
 
 /** Scratch for spots worked out during a tick, so climbing allocates nothing. */
 const spot: FloorPoint = { x: 0, z: 0 };
-const hit: SpotHit = { kind: SPOT_CLEAR, index: -1 };
 
 /**
  * Climbing for agent `i`, run every tick before it drives, grabs or locks.
@@ -119,7 +118,7 @@ function stepOff(s: PlayState, i: number): boolean {
   const p = s.physics;
   const ramp = s.boxes[a.climbRamp];
   rampPoint(ramp, -p.box.ramp.length / 2 - p.agent.radius - 2 * p.climb.landingGap, s.controls[i].climb.lateral, spot);
-  if (spotBlocker(s, i, spot.x, spot.z, hit) !== SPOT_CLEAR) return false;
+  if (spotBlocker(s, i, spot.x, spot.z) !== SPOT_CLEAR) return false;
   standOnFloor(s, i, spot.x, spot.z, ramp.yaw);
   return true;
 }

@@ -21,14 +21,17 @@ const over = { enter: 0, exit: 0, height: 0, wall: false };
  * shape where it lands, not how high it goes. The arc tops out a
  * clearance above the tallest thing it crosses, over its middle when that
  * keeps the agent above everything it crosses along the way, else moved
- * just far enough that it does.
+ * just far enough that it does. Crossing a wall makes the jump a vault;
+ * landing past the end of a wall it ran beside does not.
  */
 export function fitArc(s: PlayState, i: number, x: number, z: number, dx: number, dz: number, land: number, c: ClimbState): void {
   const count = s.arena.walls.length + s.boxes.length + s.agents.length;
   let tallest = 0;
   let middle = 0;
+  c.vault = false;
   for (let k = 0; k < count; k++) {
     if (!passOver(s, i, k, x, z, dx, dz, land)) continue;
+    if (over.wall) c.vault = true;
     if (over.height > tallest) {
       tallest = over.height;
       middle = (over.enter + over.exit) / 2;

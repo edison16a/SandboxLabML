@@ -1,7 +1,7 @@
 import type { PlayState } from '../../match/state';
 import type { HideSeekPhysics } from '../../physics';
 import { fitArc } from './arc';
-import { SPOT_CLEAR, SPOT_OUTSIDE, SPOT_WALL, spotBlocker, type SpotHit } from './clearance';
+import { SPOT_CLEAR, SPOT_OUTSIDE, spotBlocker } from './clearance';
 import { standOnFloor } from './ramp';
 import { jumpElevation } from './state';
 
@@ -10,16 +10,12 @@ export function jumpTicks(p: HideSeekPhysics): number {
   return Math.max(1, Math.round(p.climb.jumpSeconds / p.dt));
 }
 
-/** Scratch for the blocker of each landing candidate, so planning allocates nothing. */
-const hit: SpotHit = { kind: SPOT_CLEAR, index: -1 };
-
 /**
  * Plans the jump of agent `i` off the lip at (lipX, lipZ), straight ahead
  * along `yaw` (the uphill direction). Landing spots are tried every
  * jumpStep m from just past the lip out to jumpRange m, and the first one
- * where the agent fits (see spotBlocker) wins. When a candidate before it
- * was blocked by a wall, the jump is a vault over that wall. The arc
- * clears what the line crosses (see fitArc).
+ * where the agent fits (see spotBlocker) wins. The arc clears what the
+ * line crosses, and crossing a wall makes it a vault (see fitArc).
  * Returns false, planning nothing, when no spot in range is free, or when
  * the line runs out of the room: nobody ever jumps the outer walls.
  */
@@ -28,14 +24,12 @@ export function planJump(s: PlayState, i: number, lipX: number, lipZ: number, ya
   const dx = Math.cos(yaw);
   const dz = -Math.sin(yaw);
   const steps = Math.round(p.climb.jumpRange / p.climb.jumpStep);
-  let vault = false;
   let land = -1;
   for (let k = 1; k <= steps && land < 0; k++) {
     const d = k * p.climb.jumpStep;
-    const kind = spotBlocker(s, i, lipX + dx * d, lipZ + dz * d, hit);
+    const kind = spotBlocker(s, i, lipX + dx * d, lipZ + dz * d);
     if (kind === SPOT_CLEAR) land = d;
     else if (kind === SPOT_OUTSIDE) return false;
-    else if (kind === SPOT_WALL) vault = true;
   }
   if (land < 0) return false;
   const c = s.controls[i].climb;
@@ -44,7 +38,6 @@ export function planJump(s: PlayState, i: number, lipX: number, lipZ: number, ya
   c.toX = lipX + dx * land;
   c.toZ = lipZ + dz * land;
   fitArc(s, i, lipX, lipZ, dx, dz, land, c);
-  c.vault = vault;
   c.jumpTick = 0;
   c.jumpTicks = jumpTicks(p);
   return true;
