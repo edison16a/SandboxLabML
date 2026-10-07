@@ -15,6 +15,8 @@ import { createShowcasePool, type ShowcasePool } from '@/workers/client/showcase
 
 /** Ticks the car drives before the hero shows it, so it opens at speed rather than on the grid. 9 s at 30 ticks a second. */
 const WARMUP_TICKS = 270;
+/** How long the arena waits for a loaded car to reach the screen before it starts anyway, ms. */
+const ARENA_FALLBACK_MS = 10_000;
 
 export interface CarShowcase {
   racer: HeroRacer;
@@ -39,15 +41,38 @@ async function fetchJson(path: string): Promise<unknown> {
   return res.ok ? res.json() : null;
 }
 
+/** Plays the hero car in the worker and returns what the page needs to draw it, or null when the file is missing or stale. */
+async function startCar(pool: ShowcasePool, data: unknown): Promise<CarShowcase | null> {
+  const racer = parseHeroRacer(data);
+  if (!racer) return null;
+  const ghost = { generation: racer.file.generation, genome: racer.genome, seed: racer.file.replaySeed, scriptSource: null, slot: 0 };
+  await pool.replay.setGhostScene(racer.setup, [ghost]);
+  pool.car.subscribe(0, false);
+  await pool.replay.playGhosts(1, true, WARMUP_TICKS);
+  return { racer, track: buildTrack(racer.setup.track), schema: racingInputSchema(racer.setup.inputs, racer.setup.car) };
+}
+
+/** Fetches the Hide and Seek references and decodes the pair the hero shows, or null when there is none. */
+async function loadArena(): Promise<ArenaShowcase | null> {
+  const refs = await loadReferences('hideseek');
+  const pair = refs?.champions ? pickShowcasePair(refs.champions) : null;
+  if (!pair) return null;
+  return { pair, hider: decodeGenome(base64ToBytes(pair.hider.genome)), seeker: decodeGenome(base64ToBytes(pair.seeker.genome)) };
+}
+
 /**
- * Starts the hero's replay worker and loads both scenes into it: the
- * trained car first, then the Hide and Seek champions, whose physics
- * engine is the heaviest thing the page loads. Either half may fail on
- * its own (an old file, a blocked fetch), and the hero then shows what
- * did load, or keeps its poster. The worker goes when the hero unmounts.
+ * Starts the hero's replay worker and loads both scenes into it. The car
+ * comes first. The Hide and Seek half (its references, its physics engine
+ * and its 3D scene) only starts once the car is on screen, so its warm up
+ * never competes with the car's, or once the car has failed or taken too
+ * long. Either half may fail on its own (an old file, a blocked fetch), and
+ * the hero then shows what did load, or keeps its poster. The worker goes
+ * when the hero unmounts.
  */
-export function useShowcase(): Showcase {
+export function useShowcase(carShown: boolean): Showcase {
   const [state, setState] = useState<Showcase>({ pool: null, car: null, arena: null });
+  const [carFailed, setCarFailed] = useState(false);
+  const [waited, setWaited] = useState(false);
 
   useEffect(() => {
     let gone = false;
@@ -57,29 +82,41 @@ export function useShowcase(): Showcase {
       if (gone) return made.terminate();
       pool = made;
       setState((s) => ({ ...s, pool: made }));
-      const racer = parseHeroRacer(racerData);
-      if (racer) {
-        const ghost = { generation: racer.file.generation, genome: racer.genome, seed: racer.file.replaySeed, scriptSource: null, slot: 0 };
-        await made.replay.setGhostScene(racer.setup, [ghost]);
-        made.car.subscribe(0, false);
-        await made.replay.playGhosts(1, true, WARMUP_TICKS);
-        if (gone) return;
-        const car = { racer, track: buildTrack(racer.setup.track), schema: racingInputSchema(racer.setup.inputs, racer.setup.car) };
-        setState((s) => ({ ...s, car }));
-      }
-      const refs = await loadReferences('hideseek');
-      const pair = refs?.champions ? pickShowcasePair(refs.champions) : null;
-      if (!pair || gone) return;
-      const arena = { pair, hider: decodeGenome(base64ToBytes(pair.hider.genome)), seeker: decodeGenome(base64ToBytes(pair.seeker.genome)) };
-      setState((s) => ({ ...s, arena }));
+      const car = await startCar(made, racerData).catch(() => null);
+      if (gone) return;
+      if (car) setState((s) => ({ ...s, car }));
+      else setCarFailed(true);
     })().catch(() => {
-      // A hero that cannot load keeps its poster. Nothing else on the page depends on it.
+      // A hero whose worker cannot start keeps its poster. Nothing else on the page depends on it.
     });
     return () => {
       gone = true;
       pool?.terminate();
     };
   }, []);
+
+  // A car that loaded but never reaches the screen (say its WebGL context was refused) hands over to the arena.
+  const carLoaded = state.car !== null;
+  useEffect(() => {
+    if (!carLoaded || carShown) return;
+    const timer = setTimeout(() => setWaited(true), ARENA_FALLBACK_MS);
+    return () => clearTimeout(timer);
+  }, [carLoaded, carShown]);
+
+  const arenaGo = state.pool !== null && (carShown || carFailed || waited);
+  useEffect(() => {
+    if (!arenaGo) return;
+    let gone = false;
+    loadArena().then(
+      (arena) => !gone && arena && setState((s) => ({ ...s, arena })),
+      () => {
+        // No references, no arena: the car keeps the hero on its own.
+      },
+    );
+    return () => {
+      gone = true;
+    };
+  }, [arenaGo]);
 
   return state;
 }

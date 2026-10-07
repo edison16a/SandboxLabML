@@ -37,7 +37,8 @@ function Layer({ visible, children }: { visible: boolean; children: ReactNode })
  * crossfade every few seconds. A scene draws and simulates only while it
  * is visible or fading (the car also while it warms up behind the
  * poster), and everything stops while the hero is off screen. The arena
- * warms up without drawing, so getting it ready never stalls the car.
+ * only starts loading once the car is on screen, and then warms up
+ * without drawing, so getting it ready never stalls the car.
  */
 export default function HeroLive({ active, onScene }: HeroLiveProps) {
   // The labs' ?quality= works here too, which the poster capture script relies on.
@@ -46,8 +47,8 @@ export default function HeroLive({ active, onScene }: HeroLiveProps) {
   const chosen = useSettings(qualityChosen);
   const weakGpu = useSettings((s) => s.weakGpu === true);
   const tier = heroTier(quality, chosen, weakGpu);
-  const { pool, car, arena } = useShowcase();
   const [shown, setShown] = useState<SceneReady>({ car: false, arena: false });
+  const { pool, car, arena } = useShowcase(shown.car);
   const { scene, fading } = useSceneCycle(shown, active);
   const on = (s: HeroScene) => scene === s || fading;
   const match = useArenaMatch(pool, arena, active && on('arena'));
