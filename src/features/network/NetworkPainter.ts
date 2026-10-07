@@ -39,6 +39,8 @@ export class NetworkPainter {
   private readonly strength: Float32Array;
   private readonly positive: Uint8Array;
   private readonly outputs: number[];
+  /** The font for output names and values, built once so paint assigns a ready string. */
+  private font = '500 12px sans-serif';
 
   constructor(
     genome: Genome,
@@ -62,6 +64,11 @@ export class NetworkPainter {
 
   /** The latest activation of laid out node i. An arrow property, so paint can alias it without binding each frame. */
   private readonly activation = (i: number): number => (this.slot[i] >= 0 ? this.net.values[this.slot[i]] : 0);
+
+  /** Sets the family the output labels draw in, as canvasFontFamily gives it. A canvas cannot read the CSS variable itself. */
+  setFontFamily(family: string): void {
+    this.font = `500 12px ${family}`;
+  }
 
   /** Places every neuron inside the box. Call it whenever the canvas changes size. */
   layout(box: PainterBox): void {
@@ -106,7 +113,7 @@ export class NetworkPainter {
       g.strokeStyle = NODE_RING[kind];
       g.stroke();
     }
-    g.font = '500 12px var(--font-geist-sans), sans-serif';
+    g.font = this.font;
     g.textBaseline = 'middle';
     g.fillStyle = '#e7ebf3';
     for (let k = 0; k < this.outputs.length; k++) {

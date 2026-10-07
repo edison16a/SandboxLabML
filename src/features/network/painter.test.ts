@@ -28,7 +28,7 @@ function recorder() {
     fill() {},
     fillText: (t: string) => void texts.push(t),
   };
-  return { g: g as unknown as CanvasRenderingContext2D, points, texts, strokes: () => strokes };
+  return { g: g as unknown as CanvasRenderingContext2D, raw: g, points, texts, strokes: () => strokes };
 }
 
 function genome() {
@@ -72,5 +72,18 @@ describe('NetworkPainter', () => {
     }
     expect(rec.texts.filter((t) => t === 'Steer' || t === 'Pedal')).toHaveLength(2);
     expect(rec.texts).toContain(valueText(net.values[net.nodeIds.indexOf(g.outputs[0])]));
+  });
+
+  it('labels outputs in a font a canvas accepts, with no CSS variable in it', () => {
+    const g = genome();
+    const painter = new NetworkPainter(g, new Network(g), ['Steer', 'Pedal']);
+    painter.layout({ width: 300, height: 200, margin: { left: 10, right: 100, top: 10, bottom: 10 } });
+    const rec = recorder();
+    painter.paint(rec.g);
+    expect(rec.raw.font).toBe('500 12px sans-serif');
+    painter.setFontFamily('"GeistSans", "GeistSans Fallback", sans-serif');
+    painter.paint(rec.g);
+    expect(rec.raw.font).toBe('500 12px "GeistSans", "GeistSans Fallback", sans-serif');
+    expect(rec.raw.font).not.toContain('var(');
   });
 });

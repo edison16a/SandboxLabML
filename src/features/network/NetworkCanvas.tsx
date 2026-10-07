@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Network } from '@/engine/neat/network';
 import type { Genome } from '@/engine/neat/types';
+import { canvasFontFamily } from './canvasFont';
 import { drawNetwork, nodePoint, type DrawOptions } from './drawNetwork';
 import { layoutGenome } from './layout';
 
@@ -51,6 +52,7 @@ export function NetworkCanvas({ genome, inputLabels, outputLabels, liveObservati
     el.width = size.w * dpr;
     el.height = size.h * dpr;
     const out = new Float64Array(genome.outputs.length);
+    const fontFamily = canvasFontFamily();
     let raf = 0;
     let drewStatic = false;
     const render = () => {
@@ -65,7 +67,7 @@ export function NetworkCanvas({ genome, inputLabels, outputLabels, liveObservati
           activity = new Map();
           for (let i = 0; i < net.nodeIds.length; i++) activity.set(net.nodeIds[i], net.values[i]);
         }
-        const o: DrawOptions = { width: size.w, height: size.h, inputLabels, outputLabels, activity, hoveredInput, lesioned, showDisabled, margin: MARGIN };
+        const o: DrawOptions = { width: size.w, height: size.h, inputLabels, outputLabels, activity, hoveredInput, lesioned, showDisabled, margin: MARGIN, fontFamily };
         g.setTransform(dpr, 0, 0, dpr, 0, 0);
         drawNetwork(g, genome, nodes, o);
         drewStatic = !live;

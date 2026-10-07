@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Network } from '@/engine/neat/network';
 import type { Genome } from '@/engine/neat/types';
+import { canvasFontFamily } from '@/features/network/canvasFont';
 import { NetworkPainter } from '@/features/network/NetworkPainter';
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
 
@@ -66,6 +67,7 @@ export function BrainGraph({ genome, outputLabels, stream, inspect }: Props) {
       painter.layout({ width: w, height: h, margin: MARGIN });
       paint();
     };
+    painter.setFontFamily(canvasFontFamily());
     think();
     measure();
     const ro = new ResizeObserver(measure);

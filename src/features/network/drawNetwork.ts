@@ -13,6 +13,8 @@ export interface DrawOptions {
   lesioned?: ReadonlySet<number>;
   showDisabled: boolean;
   margin: { left: number; right: number; top: number; bottom: number };
+  /** The label font family, from canvasFontFamily. A canvas cannot read the CSS variable itself. */
+  fontFamily: string;
 }
 
 const BLUE = [76, 154, 255];
@@ -93,7 +95,7 @@ export function drawNetwork(g: CanvasRenderingContext2D, genome: Genome, nodes: 
   }
   g.setLineDash([]);
 
-  g.font = '11px var(--font-geist-sans), sans-serif';
+  g.font = `11px ${o.fontFamily}`;
   g.textBaseline = 'middle';
   for (const n of nodes) {
     const [x, y] = pos.get(n.id) as [number, number];
