@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import type { SpeedMode } from '@/workers/shared/protocol';
 import { hideSeekSession } from '../session/HideSeekSession';
 import { useSettings } from '@/features/settings/settingsStore';
-import { gridCapped, useHideSeekLab } from '../state/hideSeekStore';
+import { cameraPatch, gridCapped, useHideSeekLab } from '../state/hideSeekStore';
 import { GRID_SIZES, HS_CAMERAS, type GridSize } from '../state/types';
 
 const SPEEDS: SpeedMode[] = ['1x', '2x', '4x', 'turbo', 'max'];
@@ -45,7 +45,7 @@ export function useHideSeekShortcuts(onNewRun: () => void) {
       } else if (key === 's' && s.status !== 'running') void session.start(1);
       else if (key >= '1' && key <= '5') void session.setSpeed(SPEEDS[Number(key) - 1]);
       else if (key === 'i') s.set({ inputsOverlay: !s.inputsOverlay });
-      else if (key === 'c') s.set({ camera: next(HS_CAMERAS, s.camera) });
+      else if (key === 'c') s.set(cameraPatch(s, next(HS_CAMERAS, s.camera)));
       else if (key === 'g' && s.mode === 'train') s.set({ gridSize: next(allowedGridSizes(gridCapped(useSettings.getState())), s.gridSize), focus: null });
       else if (key === 'n') onNewRun();
       else if (key === 'escape') {

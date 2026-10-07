@@ -23,6 +23,14 @@ export type HsQualityTier = 'low' | 'medium' | 'high' | 'ultra';
 export type HsCamera = 'close' | 'overview' | 'top' | 'follow-hider' | 'follow-seeker' | 'free' | 'seeker' | 'hider';
 export const HS_CAMERAS: HsCamera[] = ['close', 'overview', 'top', 'follow-hider', 'follow-seeker', 'free', 'seeker', 'hider'];
 
+/** The views that frame the room rather than ride on an agent. Only these are remembered between visits. */
+export const FRAMING_CAMERAS: HsCamera[] = ['close', 'overview', 'top', 'free'];
+
+/** Whether a view follows or looks through one agent, so it needs an arena in close up. */
+export function ridesAgent(camera: HsCamera): boolean {
+  return !FRAMING_CAMERAS.includes(camera);
+}
+
 export type HsPanelTab = 'progress' | 'network' | 'inputs' | 'model';
 
 /** Training shows the live round or a replay; the Sandbox plays one match the user sets up and can edit. */

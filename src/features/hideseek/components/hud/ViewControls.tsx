@@ -7,7 +7,7 @@ import { Select } from '@/ui/primitives/Select';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import { allowedGridSizes } from '../../hooks/useHideSeekShortcuts';
 import { useSettings } from '@/features/settings/settingsStore';
-import { gridCapped, useHideSeekLab } from '../../state/hideSeekStore';
+import { cameraPatch, gridCapped, useHideSeekLab } from '../../state/hideSeekStore';
 import type { GridSize, HsCamera } from '../../state/types';
 
 export const glass = 'border-white/10 bg-black/50 text-white backdrop-blur-sm hover:bg-black/65';
@@ -55,7 +55,7 @@ export function ViewControls() {
       )}
       <Tooltip content="Camera view. Drag to turn, right drag to pan, scroll to zoom." shortcut="C">
         <span>
-          <Select<HsCamera> label="Camera" value={camera} onChange={(v) => set({ camera: v })} className={`h-7 w-34 ${glass}`} options={CAMERA_OPTIONS} />
+          <Select<HsCamera> label="Camera" value={camera} onChange={(v) => set(cameraPatch(useHideSeekLab.getState(), v))} className={`h-7 w-34 ${glass}`} options={CAMERA_OPTIONS} />
         </span>
       </Tooltip>
       <Tooltip content="Show what the agents sense" shortcut="I">

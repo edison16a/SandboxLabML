@@ -5,7 +5,7 @@ import type { RunConfig } from '@/engine/training/runConfig';
 import type { TrainingStatus } from '@/workers/coordinator/events';
 import type { SpeedMode } from '@/workers/shared/protocol';
 import { qualityChosen, type SettingsState } from '@/features/settings/settingsStore';
-import type { AgentSlot, FeedSource, GridSize, HsCamera, HsPanelTab, HsQualityTier, LabMode, RoundInfo, SandboxSettings, Team } from './types';
+import { ridesAgent, type AgentSlot, type FeedSource, type GridSize, type HsCamera, type HsPanelTab, type HsQualityTier, type LabMode, type RoundInfo, type SandboxSettings, type Team } from './types';
 
 /**
  * UI state for the Hide and Seek lab. Like the Racing store it never holds
@@ -61,6 +61,16 @@ export interface HideSeekLabState {
  */
 export function gridCapped(s: Pick<SettingsState, 'weakGpu' | 'pinned' | 'quality'>): boolean {
   return s.weakGpu === true && !qualityChosen(s);
+}
+
+/**
+ * The change that switches the viewport to `camera`. A view that rides on
+ * an agent needs one arena drawn in full, so picking it on the grid with
+ * no arena focused flies into the first one rather than showing the
+ * grid's coarse crowd up close.
+ */
+export function cameraPatch(s: Pick<HideSeekLabState, 'mode' | 'gridSize' | 'focus'>, camera: HsCamera): Partial<HideSeekLabState> {
+  return ridesAgent(camera) && s.mode === 'train' && s.gridSize > 1 && s.focus === null ? { camera, focus: 0 } : { camera };
 }
 
 export const useHideSeekLab = create<HideSeekLabState>((set, get) => ({

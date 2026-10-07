@@ -63,13 +63,15 @@ export function CameraRig() {
     const dt = Math.min(rawDt, 0.1);
     const c = controls.current;
     const m = useHideSeekLab.getState().camera;
-    const eyes = firstPersonAgent(m);
+    // With no arena focused the grid draws only its coarse crowds, so a view that rides on an agent keeps the grid shot until one is.
+    const crowd = frame.focusSlot < 0;
+    const eyes = crowd ? -1 : firstPersonAgent(m);
     if (c) c.enabled = eyes < 0 && f.t >= 1 && !boxDrag.active;
     const target = c?.target ?? f.toTarget;
     fitDepthRange(camera, scene, frame, eyes >= 0 ? 0 : camera.position.distanceTo(target), target);
     if (eyes >= 0) return firstPerson(eyes);
     if (!c) return;
-    const team = followedAgentOf(m);
+    const team = crowd ? -1 : followedAgentOf(m);
     if (team >= 0 && agentInWorld(team)) follow(c, m, dt);
     else if (m === 'free') free(c);
     else preset(c, m);
@@ -88,9 +90,9 @@ export function CameraRig() {
     return r.o;
   }
 
-  /** Reads agent `agent` of the focused arena (or the first) into r.pose, in world space. False when there is nobody. */
+  /** Reads agent `agent` of the focused arena into r.pose, in world space. False when there is nobody. */
   function agentInWorld(agent: number): boolean {
-    const slot = Math.max(0, frame.focusSlot);
+    const slot = frame.focusSlot;
     if (followedAgent(frame, slot, agent, r.pose) < 0) return false;
     arenaOrigin(slot, frame.lattice, r.o);
     r.pose.x += r.o.x;
