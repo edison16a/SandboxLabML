@@ -21,7 +21,7 @@ const PROFILE: ReadonlyArray<readonly [number, number]> = [
 /** Faces of the profile that carry the red and white band in bends: the lip and the top. */
 const BAND_FACES = new Set([3, 4]);
 
-const CONCRETE = new THREE.Color('#c3c4c2');
+const CONCRETE = new THREE.Color('#c8c2b6');
 const SCUFF = new THREE.Color('#57585a');
 
 /**

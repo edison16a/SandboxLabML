@@ -6,6 +6,7 @@ import { OrbitControls } from '@react-three/drei';
 import { useMemo, useRef } from 'react';
 import { padOf, padWeight, type Pad } from '../stadium/layout';
 import { terrainHeight } from '../world/terrain/terrainHeight';
+import { insideAt } from '../world/trackField';
 import type { WorldData } from '../world/worldData';
 import { useRacingScene } from '../sceneContext';
 
@@ -60,8 +61,10 @@ export function OrbitCam({ world, target }: { world: WorldData | null; target: R
     if (!c) return;
     const focus = frame.focusPos;
     if (!last.ready) {
-      // Opening shot: a three quarter view from behind and above, high enough to see the road ahead.
-      const a = frame.focusYaw + Math.PI + 0.6;
+      // Opening shot: a three quarter view from behind and above. It takes the infield side, where no
+      // grandstand fence stands between the lens and the car.
+      let a = frame.focusYaw + Math.PI + 0.6;
+      if (world && !insideAt(world.field, focus.x + Math.cos(a) * 14, focus.z - Math.sin(a) * 14)) a -= 1.2;
       c.target.copy(focus).setY(0.8);
       camera.position.set(focus.x + Math.cos(a) * 14, 5.5, focus.z - Math.sin(a) * 14);
       last.ready = true;

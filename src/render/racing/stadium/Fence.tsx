@@ -16,7 +16,7 @@ function meshTexture(): THREE.CanvasTexture {
   c.width = c.height = 64;
   const g = c.getContext('2d') as CanvasRenderingContext2D;
   g.strokeStyle = 'rgba(200,205,210,1)';
-  g.lineWidth = 3;
+  g.lineWidth = 2;
   g.beginPath();
   g.moveTo(0, 0);
   g.lineTo(64, 64);
@@ -53,9 +53,10 @@ function fenceGeometry(track: Track, layout: StadiumLayout, offset: number): { m
     const [bx, bz] = sideOffset(track, j, lat);
     const len = Math.hypot(bx - ax, bz - az);
     pos.push(ax, BASE, az, bx, BASE, bz, ax, TOP, az, ax, TOP, az, bx, BASE, bz, bx, TOP, bz);
-    const u0 = run / 0.45;
-    const u1 = (run + len) / 0.45;
-    const v = (TOP - BASE) / 0.45;
+    // A diamond about 12 cm across, like real chain link; mipmaps turn it into a light veil further away.
+    const u0 = run / 0.12;
+    const u1 = (run + len) / 0.12;
+    const v = (TOP - BASE) / 0.12;
     uv.push(u0, 0, u1, 0, u0, v, u0, v, u1, 0, u1, v);
     if (Math.floor(run / 3) !== Math.floor((run + len) / 3)) posts.push(new THREE.BoxGeometry(0.1, TOP + 0.3, 0.1).translate(ax, (TOP + 0.3) / 2, az));
     run += len;
