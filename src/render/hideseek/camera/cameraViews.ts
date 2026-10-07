@@ -19,7 +19,7 @@ export function followedAgentOf(c: HsCamera): number {
  * closely the aim trails a running agent: soft enough to feel like a
  * camera operator, firm enough that a sprint never leaves the frame.
  */
-export const FOLLOW = { distance: 8.5, elevation: (38 * Math.PI) / 180, height: 0.7, stiffness: 5 };
+export const FOLLOW = { distance: 9, elevation: (48 * Math.PI) / 180, height: 0.7, stiffness: 5 };
 
 /**
  * A number that changes whenever a set shot must be framed again: the view,

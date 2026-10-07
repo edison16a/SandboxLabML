@@ -20,6 +20,8 @@ const FLY_SECONDS = 0.6;
 const EYE = 1.32;
 /** The camera never dips below this, m, so no view ever looks up through the floor. */
 const MIN_HEIGHT = 0.3;
+/** An aim this far from its agent means the agent jumped (a new round), m: the follow camera flies there instead of trailing. */
+const RESPAWN = 4;
 /** Key of the free view: it has no shot of its own, it only follows the focused arena when that changes. */
 const FREE = -1;
 
@@ -52,6 +54,8 @@ export function CameraRig() {
       toTarget: new THREE.Vector3(),
       look: new THREE.Vector3(),
       delta: new THREE.Vector3(),
+      /** The follow camera's place relative to its aim, kept through a fly. */
+      offset: new THREE.Vector3(),
       o: { x: 0, z: 0 },
       origin: { x: 0, z: 0 },
       pose: { x: 0, z: 0, yaw: 0, elevation: 0 },
@@ -143,16 +147,24 @@ export function CameraRig() {
     const key = shotKey(m, frame.focusSlot, frame.count, frame.lattice.cols);
     if (key !== r.key) {
       r.key = key;
-      startFly(c, orbitShot(ax, az, FOLLOW.distance, FOLLOW.elevation, CLOSE_AZIMUTH, ay));
+      const shot = orbitShot(ax, az, FOLLOW.distance, FOLLOW.elevation, CLOSE_AZIMUTH, ay);
+      r.offset.set(shot.px - ax, shot.py - ay, shot.pz - az);
+      startFly(c, shot);
     }
     if (r.t < 1) {
       // Mid flight the destination moves with the agent.
       r.toTarget.set(ax, ay, az);
-      r.toPos.set(ax + Math.sin(CLOSE_AZIMUTH) * Math.cos(FOLLOW.elevation) * FOLLOW.distance, ay + Math.sin(FOLLOW.elevation) * FOLLOW.distance, az + Math.cos(CLOSE_AZIMUTH) * Math.cos(FOLLOW.elevation) * FOLLOW.distance);
+      r.toPos.set(ax, ay, az).add(r.offset);
       r.aim.x.value = ax;
       r.aim.y.value = ay;
       r.aim.z.value = az;
       r.aim.x.velocity = r.aim.y.velocity = r.aim.z.velocity = 0;
+      return;
+    }
+    if (Math.hypot(ax - r.aim.x.value, az - r.aim.z.value) > RESPAWN) {
+      // The agent jumped (a new round, a respawn): fly over to it, keeping the angle and distance you had.
+      r.offset.copy(camera.position).sub(c.target);
+      startFly(c, { px: ax + r.offset.x, py: ay + r.offset.y, pz: az + r.offset.z, tx: ax, ty: ay, tz: az });
       return;
     }
     r.delta.set(stepSpring(r.aim.x, ax, FOLLOW.stiffness, dt), stepSpring(r.aim.y, ay, FOLLOW.stiffness, dt), stepSpring(r.aim.z, az, FOLLOW.stiffness, dt)).sub(c.target);
