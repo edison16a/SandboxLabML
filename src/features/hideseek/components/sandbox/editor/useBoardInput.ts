@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import type { Region } from '@/engine/hideseek/layouts/types';
 import { addWall, boxAtPoint, eraseAt, moveBox, placeBox, setSpawn, snap, spawnAround, turnBox } from '@/engine/hideseek/sandbox/roomEdit';
-import type { EditorTool } from './editorTools';
+import { isBoxTool, placeYaw, type EditorTool, type PlaceYaws } from './editorTools';
 import type { RoomDraft } from './useRoomDraft';
 
 export type Point = [number, number];
@@ -34,7 +34,7 @@ export const snapped = (p: Point): Point => [snap(p[0]), snap(p[1])];
  * The keyboard drives a cursor, and Enter does what a click would there
  * (for a wall, the first Enter starts it and the second ends it).
  */
-export function useBoardInput(draft: RoomDraft, tool: EditorTool, plankYaw: number) {
+export function useBoardInput(draft: RoomDraft, tool: EditorTool, yaws: PlaceYaws) {
   const [gesture, setGesture] = useState<Gesture | null>(null);
   /** Where the pointer is over the board, unsnapped, so erase can pick exactly what is under it. */
   const [hover, setHover] = useState<Point | null>(null);
@@ -50,10 +50,10 @@ export function useBoardInput(draft: RoomDraft, tool: EditorTool, plankYaw: numb
         const next = eraseAt(room, p[0], p[1]);
         return next ? draft.apply(next) : draft.flash('Nothing to erase there.');
       }
-      if (tool === 'cube' || tool === 'plank') return draft.edit(placeBox(room, tool, s[0], s[1], tool === 'plank' ? plankYaw : 0));
+      if (isBoxTool(tool)) return draft.edit(placeBox(room, tool, s[0], s[1], placeYaw(tool, yaws)));
       if (tool === 'hiders' || tool === 'seekers') return draft.apply(setSpawn(room, tool === 'hiders' ? 'hider' : 'seeker', spawnAround(s[0], s[1])));
     },
-    [draft, room, tool, plankYaw],
+    [draft, room, tool, yaws],
   );
 
   const down = useCallback(
@@ -62,7 +62,7 @@ export function useBoardInput(draft: RoomDraft, tool: EditorTool, plankYaw: numb
       const base = { start: s, current: s, box: -1, grab: [0, 0] as Point, moved: false };
       if (tool === 'wall') return setGesture({ kind: 'wall', ...base });
       if (tool === 'hiders' || tool === 'seekers') return setGesture({ kind: 'spawn', ...base });
-      if (tool === 'cube' || tool === 'plank') {
+      if (isBoxTool(tool)) {
         const box = boxAtPoint(room, p[0], p[1]);
         if (box >= 0) return setGesture({ kind: 'move', ...base, start: p, current: p, box, grab: [room.boxes[box].x - p[0], room.boxes[box].z - p[1]] });
       }
@@ -90,7 +90,8 @@ export function useBoardInput(draft: RoomDraft, tool: EditorTool, plankYaw: numb
       return draft.apply(setSpawn(room, team, g.moved ? regionOf(g.start, g.current) : spawnAround(g.start[0], g.start[1])));
     }
     if (g.moved) return draft.edit(moveBox(room, g.box, snap(g.current[0] + g.grab[0]), snap(g.current[1] + g.grab[1])));
-    if (tool === 'plank' && room.boxes[g.box]?.kind === 'plank') draft.edit(turnBox(room, g.box));
+    // A click on a plank or ramp with its own tool turns it in place, like pressing the turn key before placing it.
+    if ((tool === 'plank' || tool === 'ramp') && room.boxes[g.box]?.kind === tool) draft.edit(turnBox(room, g.box));
   }, [gesture, draft, room, tool]);
 
   /** Arrow keys, Enter and Delete on the focused board. Returns true when the key was used. Escape goes through cancel. */

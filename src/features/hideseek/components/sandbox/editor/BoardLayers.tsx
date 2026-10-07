@@ -4,6 +4,7 @@ import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import type { SandboxBox, SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import { boxRect } from '@/engine/hideseek/sandbox/roomEdit';
 import { HS_COLORS } from '@/render/hideseek/palette';
+import { RampMark } from '../../maps/RampMark';
 
 export const HALF = DEFAULT_HIDESEEK_PHYSICS.arena.size / 2;
 const OUTER = DEFAULT_HIDESEEK_PHYSICS.arena.outerWallThickness;
@@ -18,6 +19,9 @@ export const BOARD_COLORS = {
   plank: HS_COLORS.plank,
   ramp: HS_COLORS.ramp,
   boxEdge: '#7d5f3c',
+  rampEdge: '#3f6f58',
+  /** The uphill chevrons: dark ink on the jade, like the crate edges. */
+  rampMark: 'rgba(8, 20, 14, 0.62)',
   accent: HS_COLORS.hider,
   bad: '#ff5f5f',
 };
@@ -69,10 +73,19 @@ export function SpawnArea({ region, team, preview = false }: { region: Region; t
   );
 }
 
-/** One box seen from above, in its crate color. A ghost is drawn as an outline, red when it does not fit. */
+/**
+ * One box seen from above, in its crate color, or a ramp with chevrons
+ * pointing uphill. A ghost is drawn see through, red when it does not fit.
+ */
 export function BoardBox({ box, ghost, bad, highlight }: { box: SandboxBox; ghost?: boolean; bad?: boolean; highlight?: boolean }) {
+  const fill = ghost && bad ? BOARD_COLORS.bad : BOARD_COLORS[box.kind];
+  const ramp = box.kind === 'ramp';
+  const edge = highlight ? BOARD_COLORS.bad : ghost ? (bad ? BOARD_COLORS.bad : '#ffffff') : ramp ? BOARD_COLORS.rampEdge : BOARD_COLORS.boxEdge;
+  const edgeWidth = highlight ? 0.12 : 0.06;
+  if (ramp) {
+    return <RampMark ramp={box} fill={fill} fillOpacity={ghost ? 0.25 : 1} edge={edge} edgeWidth={edgeWidth} mark={ghost ? edge : BOARD_COLORS.rampMark} markWidth={0.08} chevrons={3} />;
+  }
   const r = boxRect(box);
-  const fill = BOARD_COLORS[box.kind];
   return (
     <rect
       x={r.x - r.hx}
@@ -80,11 +93,11 @@ export function BoardBox({ box, ghost, bad, highlight }: { box: SandboxBox; ghos
       width={2 * r.hx}
       height={2 * r.hz}
       rx={0.06}
-      fill={ghost ? (bad ? BOARD_COLORS.bad : fill) : fill}
+      fill={fill}
       fillOpacity={ghost ? 0.25 : 1}
-      stroke={highlight ? BOARD_COLORS.bad : ghost ? (bad ? BOARD_COLORS.bad : '#ffffff') : BOARD_COLORS.boxEdge}
+      stroke={edge}
       strokeOpacity={ghost ? 0.8 : 1}
-      strokeWidth={highlight ? 0.12 : 0.06}
+      strokeWidth={edgeWidth}
       pointerEvents="none"
     />
   );
