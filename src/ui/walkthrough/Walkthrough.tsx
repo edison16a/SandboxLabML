@@ -45,12 +45,13 @@ function Stage({ tour }: { tour: Tour }) {
   const reduced = useReducedMotion();
   const step = stepAt(tour, index);
   const key = `${index}:${acted}`;
+  const root = useRef<HTMLDivElement>(null);
   const dim = useRef<SVGPathElement>(null);
   const ring = useRef<SVGRectElement>(null);
   const card = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
 
-  useStage({ dim, ring, card }, { text: step ? textOf(step, acted) : null, reduced, key });
+  useStage({ root, dim, ring, card }, { text: step ? textOf(step, acted) : null, reduced, key });
   useWalkKeys(tour);
   useWalkFocus(card, key);
   useActionWatch(step, acted);
@@ -62,7 +63,7 @@ function Stage({ tour }: { tour: Tour }) {
   };
 
   return (
-    <div className={cn('fixed inset-0 z-[80] transition-opacity duration-200 pointer-events-none', leaving && 'opacity-0')}>
+    <div ref={root} className={cn('pointer-events-none fixed inset-0 z-[80] transition-opacity duration-200', leaving && 'opacity-0')}>
       <Spotlight dimRef={dim} ringRef={ring} onDimPress={nudge} />
       <StepCard tour={tour} index={index} acted={acted} cardRef={card} panelRef={panel} />
       <p aria-live="polite" className="sr-only">

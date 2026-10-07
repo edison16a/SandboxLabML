@@ -7,6 +7,7 @@ import { createSpring, glide, snapSpring, type Spring } from './spring';
 import type { StepText } from './types';
 
 export interface StageRefs {
+  root: RefObject<HTMLDivElement | null>;
   dim: RefObject<SVGPathElement | null>;
   ring: RefObject<SVGRectElement | null>;
   card: RefObject<HTMLDivElement | null>;
@@ -44,6 +45,11 @@ function frameOf(text: StepText | null, view: { w: number; h: number }): Box | n
 
 const asArray = (b: Box) => [b.x, b.y, b.w, b.h];
 
+/** A modal dialog of the page, like New run opened with N. The tour steps aside until it closes. */
+function pageDialogOpen(): boolean {
+  return !!document.querySelector('[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]');
+}
+
 /**
  * Runs the spotlight. Every frame it measures the target, so the frame
  * follows it when it moves or resizes, then springs the hole, the outline
@@ -56,7 +62,7 @@ export function useStage(refs: StageRefs, scene: StageScene): void {
   useLayoutEffect(() => {
     latest.current = scene;
   });
-  const { dim: dimRef, ring: ringRef, card: cardRef } = refs;
+  const { root: rootRef, dim: dimRef, ring: ringRef, card: cardRef } = refs;
 
   useLayoutEffect(() => {
     let raf = 0;
@@ -70,6 +76,8 @@ export function useStage(refs: StageRefs, scene: StageScene): void {
       const dt = (now - last) / 1000;
       last = now;
       const { text, reduced, key } = latest.current;
+      const root = rootRef.current;
+      if (root) root.style.visibility = pageDialogOpen() ? 'hidden' : '';
       const view = { w: window.innerWidth, h: window.innerHeight };
       const frame = frameOf(text, view);
       const goal = asArray(frame ?? restingHole(view));
@@ -116,5 +124,5 @@ export function useStage(refs: StageRefs, scene: StageScene): void {
     // One frame now, before the first paint, so the card never shows in the wrong place.
     tick(performance.now());
     return () => cancelAnimationFrame(raf);
-  }, [dimRef, ringRef, cardRef]);
+  }, [rootRef, dimRef, ringRef, cardRef]);
 }

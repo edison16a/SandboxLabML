@@ -18,7 +18,7 @@ export function Spotlight({ dimRef, ringRef, onDimPress }: Props) {
   return (
     <svg className="pointer-events-none fixed inset-0 h-full w-full animate-fade-in" aria-hidden="true">
       <path ref={dimRef} fillRule="evenodd" className="pointer-events-auto fill-[#03060c]/65" onPointerDown={onDimPress} />
-      <rect ref={ringRef} rx={11.5} className="fill-none stroke-accent opacity-0 transition-opacity duration-200" strokeWidth={2} />
+      <rect ref={ringRef} data-walk-ring rx={11.5} className="fill-none stroke-accent opacity-0 transition-opacity duration-200" strokeWidth={2} />
     </svg>
   );
 }
