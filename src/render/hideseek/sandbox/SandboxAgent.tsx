@@ -58,10 +58,10 @@ export function SandboxAgent({ slot, team, tier, field }: Props) {
       d.elevation = elevation;
       d.climbing = hasFlag(flags, FLAG_CLIMBING);
       d.airborne = hasFlag(flags, FLAG_AIRBORNE);
-      // Eyes on the nearest player of the other team when it sees or is seen, or comes close; hands on a box.
+      // Eyes on the nearest awake player of the other team when it sees or is seen, or comes close; hands on a box.
       const foe = field.nearest(team === 0 ? 1 : 0, x, z);
       const other = foe >= 0 ? field.agents[foe] : null;
-      d.look = !!other && !other.frozen && worthALook(d, other.x, other.z, team === 0 ? d.seen : d.seeing);
+      d.look = !!other && worthALook(d, other.x, other.z, team === 0 ? d.seen : d.seeing);
       if (other && d.look) lookAt(d, other.x, other.z, other.elevation);
       findContact(d, field.boxes, field.boxCount);
       d.blocked = blockedAhead(d, field.walls);

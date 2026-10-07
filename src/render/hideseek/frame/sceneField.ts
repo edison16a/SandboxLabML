@@ -71,13 +71,13 @@ export class SceneField {
     }
   }
 
-  /** The nearest awake agent of team `team` to (x, z), or -1. */
+  /** The nearest awake agent of team `team` to (x, z), or -1. A sleeping one is not worth a look, so a nearer sleeper never hides an awake one further off. */
   nearest(team: 0 | 1, x: number, z: number): number {
     let best = -1;
     let bestD = Infinity;
     for (let i = 0; i < this.agentCount; i++) {
       const a = this.agents[i];
-      if (a.team !== team) continue;
+      if (a.team !== team || a.frozen) continue;
       const d = Math.hypot(a.x - x, a.z - z);
       if (d < bestD) {
         bestD = d;
