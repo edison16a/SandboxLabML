@@ -14,6 +14,9 @@ import {
   FLAG_HOLDING,
   FLAG_SEEING,
   FLAG_SEEN,
+  SNAPSHOT_PHASE,
+  SNAPSHOT_SEEN,
+  SNAPSHOT_TIME,
   type AgentSnapshot,
 } from '../snapshot';
 import { BOX_LOCKED, sandboxBoxBits, sandboxBoxKind, sandboxBoxLock } from './boxBits';
@@ -36,6 +39,15 @@ export * from './boxBits';
  * reads time, phase and "seen" works on either stream.
  */
 export const SANDBOX_HEADER = 8;
+/** Header fields. Time, phase and "seen" sit where the arena snapshot keeps them. */
+export const SANDBOX_TIME = SNAPSHOT_TIME;
+export const SANDBOX_PHASE = SNAPSHOT_PHASE;
+export const SANDBOX_SEEN = SNAPSHOT_SEEN;
+export const SANDBOX_OVER = 3;
+export const SANDBOX_HIDERS = 4;
+export const SANDBOX_SEEKERS = 5;
+export const SANDBOX_BOXES = 6;
+export const SANDBOX_HIDERS_SEEN = 7;
 export const SANDBOX_AGENT_ENTRY = 5;
 export const SANDBOX_BOX_ENTRY = 4;
 /** Offset of a box's bits within its entry. */
@@ -57,9 +69,9 @@ export function sandboxBoxAt(agents: number, index: number): number {
 }
 
 /** Header counts one at a time, for render loops that run every frame and must not allocate. */
-export const sandboxHiderCount = (buf: Float32Array): number => buf[4] | 0;
-export const sandboxSeekerCount = (buf: Float32Array): number => buf[5] | 0;
-export const sandboxBoxCount = (buf: Float32Array): number => buf[6] | 0;
+export const sandboxHiderCount = (buf: Float32Array): number => buf[SANDBOX_HIDERS] | 0;
+export const sandboxSeekerCount = (buf: Float32Array): number => buf[SANDBOX_SEEKERS] | 0;
+export const sandboxBoxCount = (buf: Float32Array): number => buf[SANDBOX_BOXES] | 0;
 
 /** All counts from a frame's header as one object. Allocates, so it is for tests and slow paths. */
 export function sandboxCounts(buf: Float32Array): { hiders: number; seekers: number; boxes: number } {
@@ -71,14 +83,14 @@ export function writeSandboxSnapshot(s: SandboxState, out: Float32Array): void {
   const n = s.agents.length;
   let seen = 0;
   for (let h = 0; h < s.hiders; h++) if (s.agents[h].seen) seen++;
-  out[0] = s.tick * s.physics.dt;
-  out[1] = s.tick <= s.prepTicks ? 1 : 0;
-  out[2] = seen > 0 ? 1 : 0;
-  out[3] = s.tick >= s.totalTicks ? 1 : 0;
-  out[4] = s.hiders;
-  out[5] = s.seekers;
-  out[6] = s.boxes.length;
-  out[7] = seen;
+  out[SANDBOX_TIME] = s.tick * s.physics.dt;
+  out[SANDBOX_PHASE] = s.tick <= s.prepTicks ? 1 : 0;
+  out[SANDBOX_SEEN] = seen > 0 ? 1 : 0;
+  out[SANDBOX_OVER] = s.tick >= s.totalTicks ? 1 : 0;
+  out[SANDBOX_HIDERS] = s.hiders;
+  out[SANDBOX_SEEKERS] = s.seekers;
+  out[SANDBOX_BOXES] = s.boxes.length;
+  out[SANDBOX_HIDERS_SEEN] = seen;
   for (let i = 0; i < n; i++) {
     const a = s.agents[i];
     const o = sandboxAgentAt(i);
@@ -134,10 +146,10 @@ export function readSandboxSnapshot(buf: Float32Array): SandboxSnapshot {
   };
   const n = hiders + seekers;
   return {
-    time: buf[0],
-    prep: buf[1] === 1,
-    over: buf[3] === 1,
-    hidersSeen: buf[7],
+    time: buf[SANDBOX_TIME],
+    prep: buf[SANDBOX_PHASE] === 1,
+    over: buf[SANDBOX_OVER] === 1,
+    hidersSeen: buf[SANDBOX_HIDERS_SEEN],
     hiders: Array.from({ length: hiders }, (_, i) => agent(i)),
     seekers: Array.from({ length: seekers }, (_, i) => agent(hiders + i)),
     boxes: Array.from({ length: boxes }, (_, b) => {

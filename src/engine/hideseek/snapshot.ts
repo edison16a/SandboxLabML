@@ -21,6 +21,7 @@ export const FLAG_AIRBORNE = 32;
 export const SNAPSHOT_TIME = 0;
 export const SNAPSHOT_PHASE = 1;
 export const SNAPSHOT_SEEN = 2;
+export const SNAPSHOT_SPARE = 3;
 export const SNAPSHOT_HEADER = 4;
 
 /** Each agent: x, z, yaw, flags, then elevation in meters. Hider first. */
@@ -32,10 +33,14 @@ export const AGENT_ELEVATION = 4;
 export const SNAPSHOT_AGENT_ENTRY = 5;
 export const SNAPSHOT_AGENTS_AT = SNAPSHOT_HEADER;
 
-/** Each box: x, z, yaw, then its lock (LOCK_FREE and friends). Box kinds follow BOX_KINDS by index. */
-export const BOX_X = 0;
-export const BOX_Z = 1;
-export const BOX_YAW = 2;
+/**
+ * Each box: x, z, yaw, then its lock (LOCK_FREE and friends). Box kinds
+ * follow BOX_KINDS by index. A box starts with the same pose fields as an
+ * agent, so one pose reader serves both.
+ */
+export const BOX_X = AGENT_X;
+export const BOX_Z = AGENT_Z;
+export const BOX_YAW = AGENT_YAW;
 export const BOX_LOCK = 3;
 export const SNAPSHOT_BOX_ENTRY = 4;
 export const SNAPSHOT_BOXES_AT = SNAPSHOT_AGENTS_AT + 2 * SNAPSHOT_AGENT_ENTRY;
@@ -87,7 +92,7 @@ export function writeArenaSnapshot(s: MatchState, out: Float32Array, offset = 0)
   out[offset + SNAPSHOT_TIME] = s.tick * s.physics.dt;
   out[offset + SNAPSHOT_PHASE] = s.tick <= s.prepTicks ? 1 : 0;
   out[offset + SNAPSHOT_SEEN] = s.agents[0].seen ? 1 : 0;
-  out[offset + 3] = 0;
+  out[offset + SNAPSHOT_SPARE] = 0;
   for (let i = 0; i < 2; i++) {
     const a = s.agents[i];
     const o = snapshotAgentAt(i, offset);
