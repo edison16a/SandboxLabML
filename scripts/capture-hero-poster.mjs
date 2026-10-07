@@ -4,8 +4,9 @@
  * runs. Re-run it whenever the racing scene, the hero car or the camera
  * changes, so the poster still matches what fades in over it.
  *
- *   npm run build && npm run start -- -p 3100
- *   node scripts/capture-hero-poster.mjs --url http://127.0.0.1:3100 --chromium /path/to/chromium
+ *   npm run build
+ *   npx next start -p 3100
+ *   npm run hero:poster
  *
  * Options, all optional: --url (default http://127.0.0.1:3100), --chromium
  * (a Chromium binary; Playwright's own is used when left out), --settle 9

@@ -18,7 +18,9 @@
     "e2e": "playwright test",
     "format": "prettier --write .",
     "refs": "tsx scripts/generate-references.ts",
-    "icons": "tsx scripts/generate-icons.ts"
+    "icons": "tsx scripts/generate-icons.ts",
+    "hero:car": "tsx scripts/train-hero-racer.ts",
+    "hero:poster": "node scripts/capture-hero-poster.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "6.20.3",
