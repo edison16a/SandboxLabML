@@ -17,5 +17,11 @@ export const WALL_GROUPS = interactionGroups(GROUP_WALL, ALL);
 export const BOX_GROUPS = interactionGroups(GROUP_BOX, ALL);
 export const AGENT_GROUPS = interactionGroups(GROUP_AGENT, ALL);
 
+/** A collider in no group that filters everything out: it touches nothing and no query sees it. */
+export const NO_GROUPS = 0;
+
 /** Query groups for sight lines: they ignore both agents and stop at walls and boxes. */
 export const SIGHT_GROUPS = interactionGroups(ALL, GROUP_WALL | GROUP_BOX);
+
+/** Sight lines with an end high enough to see over boxes: only walls stop them. */
+export const HIGH_SIGHT_GROUPS = interactionGroups(ALL, GROUP_WALL);

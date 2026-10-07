@@ -132,7 +132,8 @@ export const DEFAULT_HIDESEEK_PHYSICS: HideSeekPhysics = {
   grab: { range: 1.6, cone: Math.PI / 2, gain: 0.8, maxSpeed: 8, maxSpin: 8, breakDistance: 1 },
   lock: { range: 1.6, cone: Math.PI / 2 },
   climb: {
-    footOut: 0.6,
+    // Less than an inner wall's thickness plus an agent's radius, so nobody mounts a ramp from the far side of a wall.
+    footOut: 0.5,
     footIn: 0.3,
     mountMove: 0.2,
     mountAngle: Math.PI / 4,

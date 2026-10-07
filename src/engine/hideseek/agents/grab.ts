@@ -17,7 +17,8 @@ export function updateGrab(s: PlayState, i: number): void {
     if (!c.grab || a.frozen || !carry(s, i)) releaseBox(s, i);
     return;
   }
-  if (!c.grab || a.frozen) return;
+  // Nothing is grabbed from a slope or in the air. An agent never climbs with a box, so none is held there.
+  if (!c.grab || a.frozen || a.climbing || a.airborne) return;
   const g = s.physics.grab;
   const index = findBoxInFront(s, i, g.range, g.cone, canGrab);
   if (index < 0) return;

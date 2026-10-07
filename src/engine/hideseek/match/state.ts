@@ -1,4 +1,5 @@
 import { createAgent, HIDER, SEEKER, type HideSeekAgent } from '../agents/agent';
+import { createClimbState, type ClimbState } from '../agents/climb/state';
 import type { MatchSetup } from '../layouts/spawn';
 import { BOX_COUNT, BOX_KINDS, matchTicks, prepTicks, type BoxKind, type HideSeekPhysics } from '../physics';
 import type { ArenaWorld } from '../world/arena';
@@ -23,6 +24,8 @@ export interface AgentControl {
   command: PlanarVelocity;
   /** Velocity measured after the latest step. */
   measured: PlanarVelocity;
+  /** Where the agent is on a ramp or in its jump. Only meaningful while it climbs or is airborne. */
+  climb: ClimbState;
 }
 
 export interface BoxState {
@@ -94,6 +97,7 @@ export function createControl(): AgentControl {
     holdYaw: 0,
     command: { vx: 0, vz: 0, spin: 0 },
     measured: { vx: 0, vz: 0, spin: 0 },
+    climb: createClimbState(),
   };
 }
 

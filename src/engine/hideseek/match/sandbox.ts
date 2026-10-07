@@ -1,4 +1,5 @@
 import { HIDER, SEEKER, type HideSeekTeam } from '../agents/agent';
+import { placeClimbers, standOnFloor } from '../agents/climb/ramp';
 import { releaseBox } from '../agents/grab';
 import { setBoxLock } from '../agents/lock';
 import type { MatchState } from './state';
@@ -20,6 +21,7 @@ export function sandboxMoveBox(s: MatchState, index: number, x: number, z: numbe
   b.x = x;
   b.z = z;
   s.arena.teleport(s.arena.boxes[index], b);
+  placeClimbers(s);
   updateDerived(s);
 }
 
@@ -29,14 +31,10 @@ export function sandboxSetBoxLocked(s: MatchState, index: number, locked: boolea
   updateDerived(s);
 }
 
-/** Moves an agent to a pose. It drops anything it carries. */
+/** Moves an agent to a pose on the floor. It drops anything it carries, and leaves any ramp or jump. */
 export function sandboxMoveAgent(s: MatchState, team: HideSeekTeam, x: number, z: number, yaw: number): void {
   const i = team === 'hider' ? HIDER : SEEKER;
-  const a = s.agents[i];
   releaseBox(s, i);
-  a.x = x;
-  a.z = z;
-  a.yaw = yaw;
-  s.arena.teleport(s.arena.agents[i], a);
+  standOnFloor(s, i, x, z, yaw);
   updateDerived(s);
 }

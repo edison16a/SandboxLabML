@@ -1,6 +1,7 @@
 import { mixSeed, Rng } from '../../core/rng';
 import { makeTickIO, type TickIO } from '../../env/types';
 import { clearEvents, HIDER, SEEKER, type HideSeekAgent, type HideSeekTeam } from '../agents/agent';
+import { updateClimb } from '../agents/climb/climb';
 import { updateGrab } from '../agents/grab';
 import { updateLock } from '../agents/lock';
 import { driveAgent, updateFreeze } from '../agents/movement';
@@ -24,9 +25,10 @@ import type { HideSeekMatchOptions, HideSeekTeamSetup, MatchResult } from './typ
  * between. Both go through the same `step`, so a live round and a Turbo
  * replay of it give identical results.
  *
- * A tick, in order: apply the actions chosen last tick (move, grab, lock),
- * step the physics, read the world back, update vision, rays and derived
- * fields, then let each brain and controller choose the next actions.
+ * A tick, in order: apply the actions chosen last tick (climb, move, grab,
+ * lock), step the physics, read the world back, update vision, rays and
+ * derived fields, then let each brain and controller choose the next
+ * actions.
  */
 export class HideSeekMatch {
   readonly state: MatchState;
@@ -87,6 +89,7 @@ export class HideSeekMatch {
     for (const a of s.agents) clearEvents(a);
     for (let i = 0; i < s.agents.length; i++) {
       updateFreeze(s, i, next);
+      updateClimb(s, i);
       driveAgent(s, i);
       updateGrab(s, i);
       updateLock(s, i);

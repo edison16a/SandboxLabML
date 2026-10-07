@@ -13,8 +13,9 @@ export function driveAgent(s: PlayState, i: number): void {
   const a = s.agents[i];
   const c = s.controls[i];
   const cmd = c.command;
-  if (a.frozen) {
-    // A frozen body has every axis locked, so there is nothing to command.
+  if (a.frozen || a.climbing || a.airborne) {
+    // A frozen body has every axis locked, and on a ramp or in the air the
+    // engine moves the agent itself, so there is nothing to command.
     cmd.vx = 0;
     cmd.vz = 0;
     cmd.spin = 0;

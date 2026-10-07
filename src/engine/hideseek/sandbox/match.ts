@@ -1,6 +1,7 @@
 import { mixSeed, Rng } from '../../core/rng';
 import type { AgentController } from '../../env/types';
 import { clearEvents, HIDER, SEEKER, type HideSeekAgent } from '../agents/agent';
+import { updateClimb } from '../agents/climb/climb';
 import { updateGrab } from '../agents/grab';
 import { updateLock } from '../agents/lock';
 import { driveAgent, updateFreeze } from '../agents/movement';
@@ -104,6 +105,7 @@ export class SandboxMatch {
     for (const a of s.agents) clearEvents(a);
     for (let i = 0; i < s.agents.length; i++) {
       updateFreeze(s, i, next);
+      updateClimb(s, i);
       driveAgent(s, i);
       updateGrab(s, i);
       updateLock(s, i);

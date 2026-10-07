@@ -1,4 +1,5 @@
 import { HIDER } from '../agents/agent';
+import { placeClimbers } from '../agents/climb/ramp';
 import { releaseBox } from '../agents/grab';
 import { setBoxLock } from '../agents/lock';
 import { updateSandboxDerived } from './derived';
@@ -19,6 +20,7 @@ export function moveSandboxBox(s: SandboxState, index: number, x: number, z: num
   b.x = x;
   b.z = z;
   s.arena.teleport(s.arena.boxes[index], b);
+  placeClimbers(s);
   updateSandboxDerived(s);
 }
 

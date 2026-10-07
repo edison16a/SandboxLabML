@@ -89,6 +89,12 @@ export interface MatchResult {
   lockedAtEnd: number;
   hiderGrabs: number;
   seekerGrabs: number;
+  /** Ramps each team mounted. */
+  hiderClimbs: number;
+  seekerClimbs: number;
+  /** Jumps off a ramp that crossed a wall, per team. */
+  hiderVaults: number;
+  seekerVaults: number;
   /** Boxes that ended more than half a meter from where they started. */
   boxesMoved: number;
   /** Meters traveled by all boxes together. */

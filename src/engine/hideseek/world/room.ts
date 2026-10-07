@@ -3,6 +3,7 @@ import { quatToYaw, yawToQuat, type Pose, type Quat } from '../frame';
 import type { Rect } from '../layouts/types';
 import type { HideSeekPhysics } from '../physics';
 import type { ArenaBodies } from './build';
+import { AGENT_GROUPS, NO_GROUPS } from './groups';
 import type { Rapier } from './rapier';
 
 /** Velocity of a body on the floor plane: m/s in x and z, and yaw rate in rad/s. */
@@ -117,6 +118,17 @@ export class RoomWorld {
     const body = this.agents[agent];
     body.setEnabledTranslations(!frozen, false, !frozen, true);
     body.setEnabledRotations(false, !frozen, false, true);
+    this.setVelocity(body, 0, 0, 0);
+  }
+
+  /**
+   * An agent on a ramp or in the air touches nothing: its collider stops
+   * colliding with anything and the engine moves it instead of contacts.
+   * Landing gives it its normal collisions back.
+   */
+  setClimbing(agent: number, climbing: boolean): void {
+    const body = this.agents[agent];
+    body.collider(0).setCollisionGroups(climbing ? NO_GROUPS : AGENT_GROUPS);
     this.setVelocity(body, 0, 0, 0);
   }
 
