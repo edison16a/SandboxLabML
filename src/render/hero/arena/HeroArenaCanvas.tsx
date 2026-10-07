@@ -36,9 +36,9 @@ interface Props {
  * room itself is drawn a little brighter than in the lab, so under the
  * scrim the gold crates stay gold and the players keep their blue and red.
  */
-const EXPOSURE = 1.05;
+const EXPOSURE = 1.25;
 /** Brightness of the city blocks and the ground between them against the lab's. */
-const CITY_SHADE = 0.55;
+const CITY_SHADE = 0.42;
 
 /** The hero draws no input overlay, so neither team needs its input schema. */
 const NO_SCHEMAS: [InputSpec[], InputSpec[]] = [[], []];
