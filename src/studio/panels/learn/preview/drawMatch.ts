@@ -19,6 +19,7 @@ import {
 } from '@/engine/hideseek/snapshot';
 import type { MatchPreview } from '@/engine/lessons/preview/types';
 import { rampChevrons } from '@/features/hideseek/components/maps/rampChevrons';
+import { HS_COLORS } from '@/render/hideseek/colors';
 import { frameAt, lerp, lerpAngle, secondsAt } from './playback';
 import { fitView, px, py, type View } from './view';
 
@@ -31,11 +32,11 @@ const C = {
   floor: '#151a24',
   grid: '#1b212d',
   wall: '#8a94a7',
-  cube: '#bf9a3e',
-  plank: '#c28d45',
-  ramp: '#4c8c70',
-  hider: '#4c9aff',
-  seeker: '#ff5f6d',
+  cube: HS_COLORS.cube,
+  plank: HS_COLORS.plank,
+  ramp: HS_COLORS.ramp,
+  hider: HS_COLORS.hider,
+  seeker: HS_COLORS.seeker,
   cone: 'rgba(255, 95, 109, 0.09)',
   face: '#f2f4f8',
   rampMark: 'rgba(8, 20, 14, 0.62)',

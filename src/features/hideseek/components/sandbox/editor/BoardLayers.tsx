@@ -3,7 +3,7 @@ import type { Region } from '@/engine/hideseek/layouts/types';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import type { SandboxBox, SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import { boxRect } from '@/engine/hideseek/sandbox/roomEdit';
-import { HS_COLORS } from '@/render/hideseek/palette';
+import { HS_COLORS } from '@/render/hideseek/colors';
 import { RampMark } from '../../maps/RampMark';
 
 export const HALF = DEFAULT_HIDESEEK_PHYSICS.arena.size / 2;

@@ -1,8 +1,9 @@
 import type { HideSeekGenerationStats } from '@/engine/hideseek/trainer/types';
+import { HS_COLORS } from '@/render/hideseek/colors';
 import type { Series } from './HsLineChart';
 
 /** Chart colors: the team colors, amber for the boxes, jade (the ramp color) for climbing, grey for context. */
-export const PROGRESS_COLORS = { hider: '#4c9aff', seeker: '#ff5f6d', amber: '#ffb547', jade: '#4c8c70', muted: '#8a94a7' } as const;
+export const PROGRESS_COLORS = { hider: HS_COLORS.hider, seeker: HS_COLORS.seeker, amber: '#ffb547', jade: HS_COLORS.ramp, muted: '#8a94a7' } as const;
 
 const C = PROGRESS_COLORS;
 

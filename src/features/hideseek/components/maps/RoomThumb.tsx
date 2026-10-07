@@ -1,7 +1,7 @@
 import { boxKindSize, DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import type { SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import type { Region } from '@/engine/hideseek/layouts/types';
-import { HS_COLORS } from '@/render/hideseek/palette';
+import { HS_COLORS } from '@/render/hideseek/colors';
 import { RampMark } from './RampMark';
 import { boxTransform } from './rampChevrons';
 
