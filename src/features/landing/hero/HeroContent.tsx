@@ -24,7 +24,7 @@ export function HeroContent() {
       <h1 id="hero-title" className="mt-6 text-[44px] leading-none font-semibold tracking-tight text-fg sm:text-7xl 2xl:text-[88px] short:mt-3 short:text-[44px]">
         SandboxLab<span className="text-accent">ML</span>
       </h1>
-      <p className="mt-5 max-w-3xl text-[18px] leading-snug text-balance text-fg/90 sm:text-[21px] 2xl:text-[22px] short:mt-3 short:text-[17px]">
+      <p className="mt-5 max-w-3xl text-[18px] leading-snug text-balance text-fg sm:text-[21px] 2xl:text-[22px] short:mt-3 short:text-[17px]">
         Train your own model with machine learning, right in your browser.
       </p>
       <Link
@@ -35,10 +35,10 @@ export function HeroContent() {
         Go Train
         <ArrowRight className="size-[18px]" aria-hidden="true" />
       </Link>
-      <p className="mt-6 text-[14px] text-balance text-fg/85 short:mt-3">
+      <p className="mt-6 text-[14px] text-balance text-fg short:mt-3">
         Or play <SubLink href="/lab/hide-seek">Hide and Seek</SubLink>, or write your own rules in the <SubLink href="/studio">Studio</SubLink>.
       </p>
-      <p className="mt-2 text-[12px] text-fg/70">No account, no server. Your runs stay in this browser.</p>
+      <p className="mt-2 text-[12px] text-fg">No account, no server. Your runs stay in this browser.</p>
     </div>
   );
 }

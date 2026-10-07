@@ -17,8 +17,6 @@ import { useShowcase } from './useShowcase';
 export interface HeroLiveProps {
   /** The hero is on screen and the tab is visible. Nothing draws or simulates otherwise. */
   active: boolean;
-  /** Told whenever another scene starts to fade in, so the page can match its scrim to it. */
-  onScene: (scene: HeroScene) => void;
 }
 
 /** One full bleed scene, faded in or out with the cycle. */
@@ -40,7 +38,7 @@ function Layer({ visible, children }: { visible: boolean; children: ReactNode })
  * only starts loading once the car is on screen, and then warms up
  * without drawing, so getting it ready never stalls the car.
  */
-export default function HeroLive({ active, onScene }: HeroLiveProps) {
+export default function HeroLive({ active }: HeroLiveProps) {
   // The labs' ?quality= works here too, which the poster capture script relies on.
   const [pin] = useState(() => new URLSearchParams(window.location.search).get('quality'));
   const quality = useLabQuality(pin);
@@ -59,8 +57,6 @@ export default function HeroLive({ active, onScene }: HeroLiveProps) {
   useEffect(() => {
     if (pool && car) void pool.replay.setGhostsPaused(!(active && carOn));
   }, [pool, car, active, carOn]);
-
-  useEffect(() => onScene(scene), [scene, onScene]);
 
   const live = shown.car || shown.arena;
   return (
