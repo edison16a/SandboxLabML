@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { FloorPose } from '../frame/snapshotRead';
+import type { AgentPose } from '../frame/snapshotRead';
 
 /** Most arenas the grid ever draws. */
 export const MAX_ARENAS = 50;
@@ -22,7 +22,8 @@ export interface Scratch {
   c: THREE.Color;
   up: THREE.Vector3;
   o: { x: number; z: number };
-  pose: FloorPose;
+  /** A blended pose; boxes leave the elevation alone. */
+  pose: AgentPose;
   version: number;
 }
 
@@ -35,7 +36,7 @@ export function makeScratch(): Scratch {
     c: new THREE.Color(),
     up: new THREE.Vector3(0, 1, 0),
     o: { x: 0, z: 0 },
-    pose: { x: 0, z: 0, yaw: 0 },
+    pose: { x: 0, z: 0, yaw: 0, elevation: 0 },
     version: -1,
   };
 }

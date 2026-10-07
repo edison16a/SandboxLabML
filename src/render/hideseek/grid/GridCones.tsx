@@ -7,7 +7,7 @@ import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import { FLAG_FROZEN, FLAG_SEEING } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
-import { agentAt, agentFlags, blendFloorPose, hasFlag } from '../frame/snapshotRead';
+import { agentAt, agentFlags, blendAgentPose, hasFlag } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
 import { clipToArenas, createArenaClip, updateArenaClip } from './arenaClip';
 import { HS } from '../palette';
@@ -51,9 +51,10 @@ export function GridCones() {
       const o = agentAt(arena, 1);
       const flags = agentFlags(curr, o);
       arenaOrigin(k, frame.lattice, t.o);
-      blendFloorPose(frame.prev, curr, o, frame.alpha, t.pose);
+      blendAgentPose(frame.prev, curr, o, frame.alpha, t.pose);
       const off = k === frame.focusSlot || hasFlag(flags, FLAG_FROZEN) ? 0 : 1;
-      placeInstance(m, k, t, t.o.x + t.pose.x, 0.04, t.o.z + t.pose.z, t.pose.yaw, off, 1, off);
+      // The fan rises with a seeker up a ramp, so it never sinks into the slope.
+      placeInstance(m, k, t, t.o.x + t.pose.x, 0.04 + t.pose.elevation, t.o.z + t.pose.z, t.pose.yaw, off, 1, off);
       t.c.copy(HS.seeker);
       if (!hasFlag(flags, FLAG_SEEING)) t.c.lerp(WHITE, 0.45);
       m.setColorAt(k, t.c);

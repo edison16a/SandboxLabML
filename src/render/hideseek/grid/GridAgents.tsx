@@ -3,12 +3,13 @@
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
-import { AGENT_X, AGENT_Z, FLAG_FROZEN, FLAG_SEEING, FLAG_SEEN } from '@/engine/hideseek/snapshot';
+import { AGENT_X, AGENT_Z, FLAG_AIRBORNE, FLAG_CLIMBING, FLAG_FROZEN, FLAG_SEEING, FLAG_SEEN } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { TEAM_BODY } from '../characters/characterMaterials';
+import { SLOPE_LEAN, TREAD_LIFT } from '../characters/characterMotion';
 import { instancedCharacterGeometry } from '../characters/instancedCharacter';
 import { useHsScene } from '../frame/sceneContext';
-import { agentAt, agentFlags, blendFloorPose, hasFlag } from '../frame/snapshotRead';
+import { agentAt, agentFlags, blendAgentPose, hasFlag } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
 import { HS } from '../palette';
 import { commit, GRID_LAYER, makeScratch, MAX_ARENAS } from './scratch';
@@ -24,7 +25,8 @@ const SNAPSHOT_SECONDS = 1 / 30;
  * hider of slot k at instance 2k and its seeker at 2k + 1. They are the
  * same characters as up close, in a coarse mesh: they bob, lean into a
  * run, a seen hider flashes paler, a frozen seeker (prep) fades to grey and
- * a seeker with the hider in sight glows brighter.
+ * a seeker with the hider in sight glows brighter. They rise up ramps and
+ * through jumps, leaning into a slope like the close up character.
  */
 export function GridAgents({ onPick }: { onPick: (slot: number) => void }) {
   const { frame } = useHsScene();
@@ -48,17 +50,19 @@ export function GridAgents({ onPick }: { onPick: (slot: number) => void }) {
       const hide = k === frame.focusSlot ? 0 : 1;
       for (let a = 0; a < 2; a++) {
         const o = agentAt(arena, a);
-        blendFloorPose(prev, curr, o, frame.alpha, t.pose);
+        blendAgentPose(prev, curr, o, frame.alpha, t.pose);
         const flags = agentFlags(curr, o);
         const frozen = hasFlag(flags, FLAG_FROZEN);
+        const climbing = hasFlag(flags, FLAG_CLIMBING);
         const step = prev && prev.length > o + AGENT_Z ? Math.hypot(curr[o + AGENT_X] - prev[o + AGENT_X], curr[o + AGENT_Z] - prev[o + AGENT_Z]) : 0;
         const speed = step < 1 ? step / SNAPSHOT_SECONDS : 0;
         const run = Math.min(1, speed / 3);
         const phase = time * 2.1 + k * 1.3 + a * 2;
         const bob = frozen ? 0 : (1 - run) * (0.006 + Math.sin(phase) * 0.006) + run * Math.abs(Math.sin(time * 9 + k)) * 0.05;
-        t.e.set(0, t.pose.yaw, -run * 0.2);
+        const lean = climbing ? SLOPE_LEAN : hasFlag(flags, FLAG_AIRBORNE) ? 0.12 : run * 0.2;
+        t.e.set(0, t.pose.yaw, -lean);
         t.q.setFromEuler(t.e);
-        t.p.set(t.o.x + t.pose.x, bob, t.o.z + t.pose.z);
+        t.p.set(t.o.x + t.pose.x, bob + t.pose.elevation + (climbing ? TREAD_LIFT : 0), t.o.z + t.pose.z);
         t.s.setScalar(hide);
         m.setMatrixAt(n, t.m.compose(t.p, t.q, t.s));
         t.c.copy(BODY[a]);
