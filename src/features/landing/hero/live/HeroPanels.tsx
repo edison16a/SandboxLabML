@@ -41,7 +41,7 @@ export function HeroPanels({ scene, pool, car, arena, match }: Props) {
         </div>
         {showArena ? (
           <>
-            <p className="mt-1.5 text-[13px] leading-snug text-fg/90">Reference champions play a real match, two hiders against two seekers.</p>
+            <p className="mt-1.5 text-[13px] leading-snug text-fg/90">2 hiders vs 2 seekers</p>
             <p className="mt-1 font-mono text-[11px] text-muted tabular">
               {match.prep ? 'Hiders hide' : 'Seekers seek'}, {match.left} s left
             </p>
@@ -49,7 +49,7 @@ export function HeroPanels({ scene, pool, car, arena, match }: Props) {
         ) : (
           car && (
             <>
-              <p className="mt-1.5 text-[13px] leading-snug text-fg/90">A trained brain drives the Grand Prix on its own, lap after lap.</p>
+              <p className="mt-1.5 text-[13px] leading-snug text-fg/90">Grand Prix</p>
               <p className="mt-1 font-mono text-[11px] text-muted tabular">
                 Generation {car.racer.file.generation + 1}, best lap {car.racer.file.lapTime.toFixed(1)} s
               </p>
