@@ -4,7 +4,7 @@ import * as THREE from 'three';
 const SAMPLES = 46;
 /** Minimum travel before a new sample is taken, m, so a still agent leaves no smear. */
 const MIN_STEP = 0.07;
-const WIDTH = 0.34;
+const WIDTH = 0.26;
 const Y = 0.016;
 
 /**
@@ -99,7 +99,7 @@ export class MotionTrail {
       p[o + 3] = this.xs[i] + dz * w;
       p[o + 4] = Y + this.ys[i];
       p[o + 5] = this.zs[i] - dx * w;
-      const alpha = (1 - age) ** 1.6 * 0.38 * brightness;
+      const alpha = (1 - age) ** 1.6 * 0.26 * brightness;
       for (let side = 0; side < 2; side++) {
         const q = i * 8 + side * 4;
         c[q] = this.color.r;
