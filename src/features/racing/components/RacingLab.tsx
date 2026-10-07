@@ -68,7 +68,7 @@ export function RacingLab() {
               )}
             </RacingCanvas>
           ) : (
-            <div className="flex h-full items-center justify-center bg-bg text-[13px] text-muted">Starting the simulation workers...</div>
+            <div className="flex h-full items-center justify-center bg-bg text-[13px] text-muted">Starting...</div>
           )}
           {streams && <ViewportHud population={streams.population} />}
           <InputsCard />
