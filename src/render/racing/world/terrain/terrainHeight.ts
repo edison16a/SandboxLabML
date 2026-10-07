@@ -20,10 +20,11 @@ export function flatRadius(field: TrackField): number {
 
 /**
  * Height of the ground at a world point. The circuit sits on a level
- * shelf; past it the ground rolls into dry hills with rocky spines, the
- * infield stays gentle so top down views read cleanly, and far away a
- * ring of ridged mountains closes the horizon. Pads under buildings are
- * leveled with a soft edge.
+ * shelf; past it the ground rolls into dry hills with rocky spines, and in
+ * places a steep bank rises close beside the road, like a cutting through
+ * a hillside. The infield stays gentle so top down views read cleanly, and
+ * far away a ring of ridged mountains closes the horizon. Pads under
+ * buildings are leveled with a soft edge.
  */
 export function terrainHeight(shape: TerrainShape, x: number, z: number): number {
   const f = shape.field;
@@ -38,7 +39,10 @@ export function terrainHeight(shape: TerrainShape, x: number, z: number): number
     const hills = (fbm(x / 240, z / 240, seed, 4) - 0.36) * amp * 2;
     // Rock spines only grow outside the loop, where they frame the circuit.
     const spine = inside ? 0 : Math.max(0, ridged(x / 90, z / 90, seed + 7, 3) - 0.52) * 34 * smoothstep(50, 190, d);
-    h += rise * (hills + spine);
+    // Banks: a quick, steep rise just past the verge on some stretches, fading out further away.
+    const bankAt = inside ? 0 : Math.max(0, fbm(x / 160, z / 160, seed + 23, 2) - 0.5) * 2;
+    const bank = bankAt * 26 * smoothstep(flat + 4, flat + 30, d) * (1 - smoothstep(110, 260, d));
+    h += rise * (hills + spine) + bank;
   }
   const far = smoothstep(480, 1700, d);
   if (far > 0) h += far * (30 + ridged(x / 1150, z / 1150, seed + 3, 5) * 330);

@@ -36,6 +36,14 @@ export function pitShell(length: number, depth: number): THREE.BufferGeometry {
   b.box(length + 0.4, 0.5, 0.6, 0, PIT_GROUND + 0.25, 0.3, WHITE);
   b.box(length, PIT_TOP - PIT_GROUND, depth - 2, 0, (PIT_GROUND + PIT_TOP) / 2, 2 + (depth - 2) / 2, GREY);
   for (const s of [-1, 1]) b.box(1.2, PIT_TOP - PIT_GROUND, depth, (s * (length - 1.2)) / 2, (PIT_GROUND + PIT_TOP) / 2, depth / 2, WHITE);
+  // The end walls face down the straight: a glazed stair tower, a grey slab band and the blue stripe, so they never read as a blank box.
+  for (const s of [-1, 1]) {
+    const x = s * (length / 2 + 0.04);
+    b.box(0.1, PIT_TOP - 1.2, 2.2, x, PIT_TOP / 2, depth * 0.62, DARK);
+    b.box(0.12, 0.5, depth - 1.6, x, PIT_GROUND + 0.25, depth / 2 + 0.6, GREY);
+    b.box(0.12, 0.18, depth - 1.6, x, PIT_GROUND - 0.6, depth / 2 + 0.6, BLUE);
+    for (let z = 2.2; z < depth - 1; z += 2.4) b.box(0.16, PIT_TOP - PIT_GROUND - 0.6, 0.14, x, (PIT_GROUND + PIT_TOP) / 2 + 0.1, z, GREY);
+  }
   // Roof deck and canopy over the pit lane, with a dark fascia.
   b.box(length + 1.2, 0.45, depth + 4.2, 0, PIT_TOP + 0.22, depth / 2 - 2.1, WHITE);
   b.box(length + 1.2, 0.9, 0.12, 0, PIT_TOP + 0.1, -4.2, DARK);
