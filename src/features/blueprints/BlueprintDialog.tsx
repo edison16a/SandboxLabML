@@ -65,9 +65,10 @@ export function BlueprintDialog<B extends Blueprint>({ open, onOpenChange, base,
       className="max-w-2xl"
       footer={
         <>
-          <div className="mr-auto flex items-center gap-2">
+          {/* On a phone only the input count fits beside the buttons. */}
+          <div className="mr-auto flex min-w-0 items-center gap-2">
             <Badge tone="accent">{blueprintInputCount(draft)} inputs</Badge>
-            <Badge>{startingParameters(draft)} starting parameters</Badge>
+            <Badge className="hidden sm:inline-flex">{startingParameters(draft)} starting parameters</Badge>
           </div>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
