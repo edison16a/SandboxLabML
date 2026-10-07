@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
-import { clearance } from './clearance';
+import { apart, clearance } from './clearance';
 import { FadeSplit } from './fadeSplit';
 
 describe('fading the pack off the followed car', () => {
@@ -29,12 +29,16 @@ describe('fading the pack off the followed car', () => {
     expect(split.shown[2]).toBe(0);
   });
 
-  it('clears cars at the lens and on the line of sight, and keeps the rest', () => {
+  it('clears cars at the lens, on the line of sight and inside the followed car, and keeps the rest', () => {
     const cam = new THREE.Vector3(0, 3, 0);
     const focus = new THREE.Vector3(10, 0, 0);
-    expect(clearance(1, 0.5, focus, cam)).toBe(0);
-    expect(clearance(7, 0.4, focus, cam)).toBe(0);
-    expect(clearance(7, 6, focus, cam)).toBe(1);
-    expect(clearance(30, 0, focus, cam)).toBe(1);
+    expect(clearance(1, 0.5, focus, 0, cam)).toBe(0);
+    expect(clearance(7, 0.4, focus, 0, cam)).toBe(0);
+    expect(clearance(7, 6, focus, 0, cam)).toBe(1);
+    expect(clearance(30, 0, focus, 0, cam)).toBe(1);
+    // Half a car ahead on the same line overlaps it; a car in the next lane does not.
+    expect(clearance(12, 0.3, focus, 0, cam)).toBe(0);
+    expect(apart(10.5, 2.6, focus, 0)).toBe(1);
+    expect(apart(12.5, -0.2, focus, Math.PI / 2)).toBe(1);
   });
 });

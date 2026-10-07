@@ -11,7 +11,7 @@ import { blendPose, type Pose } from '@/render/shared/interpolate';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { crowdGeometry } from './car/geometry/crowd';
 import { withCarSurface } from './car/materials/carSurface';
-import { clearance } from './fleet/clearance';
+import { apart, clearance } from './fleet/clearance';
 import { FleetMotion } from './motion/fleetMotion';
 import { ghostColor, ghostOpacity } from './palette';
 import { useRacingScene } from './sceneContext';
@@ -77,7 +77,8 @@ export function GhostCars() {
       const since = stopped ? now - tmp.stopAt[i] : 0;
       const fade = since < 1 ? 1 : Math.max(0.12, 1 - (since - 1) / 0.6);
       const hover = hoveredGhost === ghosts.tags[i];
-      const clear = clearFocus ? clearance(tmp.pose.x, -tmp.pose.y, frame.focusPos, state.camera.position) : 1;
+      // A ghost driving through the followed car would veil it in every view; chase and trackside clear the lens too.
+      const clear = clearFocus ? clearance(tmp.pose.x, -tmp.pose.y, frame.focusPos, frame.focusYaw, state.camera.position) : frame.focusIndex >= 0 ? apart(tmp.pose.x, -tmp.pose.y, frame.focusPos, frame.focusYaw) : 1;
       const opacity = (hover ? 0.9 : ghostOpacity(t)) * fade * clear;
       // A fully faded ghost is dropped outright, so its depth pass cannot hide smoke or other ghosts behind it.
       fleet.compose(i, tmp.pose.x, 0.01, -tmp.pose.y, tmp.pose.heading, i === frame.hiddenGhost || opacity < 0.02 ? 0 : 1, tmp.m);
