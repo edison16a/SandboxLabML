@@ -33,7 +33,7 @@ export function LabHelpMenu({ tour, shortcuts }: { tour: string; shortcuts: Read
       onCloseAutoFocus={onCloseAutoFocus}
       label="Help and shortcuts"
       trigger={
-        <Button ref={button} size="icon" variant="ghost" aria-label="Help and shortcuts" data-tour="help">
+        <Button ref={button} size="icon" variant="ghost" aria-label="Help and shortcuts">
           <CircleHelp />
         </Button>
       }
