@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { boxKindSize, DEFAULT_HIDESEEK_PHYSICS, type BoxKind } from '@/engine/hideseek/physics';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
-import { HsBox, type BoxDrive } from '../boxes/HsBox';
+import { BoxOfKind, type BoxDrive } from '../boxes/HsBox';
 import { useHsScene } from '../frame/sceneContext';
 import type { BoxPointerHandler } from '../showcase/ShowcaseBoxes';
 import { readBox, sandboxBoxLock, sandboxFrame } from './sandboxRead';
@@ -24,9 +24,9 @@ interface Props {
 }
 
 /**
- * Every crate of the Sandbox match, in frame order, drawn with the same
- * braced crate and padlock hologram as the training arenas. A crate can be
- * dragged, and a double click locks or frees it.
+ * Every box of the Sandbox match, in frame order, drawn with the same
+ * crates, ramps and padlock hologram as the training arenas. Any box can
+ * be dragged, and a double click locks or frees it.
  */
 export function SandboxBoxes({ kinds, players, tier, onPointerDown, onDoubleClick }: Props) {
   const { frame } = useHsScene();
@@ -48,7 +48,7 @@ export function SandboxBoxes({ kinds, players, tier, onPointerDown, onDoubleClic
   return (
     <group>
       {kinds.map((kind, b) => (
-        <HsBox
+        <BoxOfKind
           key={`${b}:${kind}`}
           kind={kind}
           size={SIZES[kind]}

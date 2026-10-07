@@ -4,7 +4,7 @@ import type { ThreeEvent } from '@react-three/fiber';
 import { useMemo } from 'react';
 import { BOX_COUNT, BOX_KINDS, boxSize, DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
-import { HsBox, type BoxDrive } from '../boxes/HsBox';
+import { BoxOfKind, type BoxDrive } from '../boxes/HsBox';
 import { useHsScene } from '../frame/sceneContext';
 import { blendFloorPose, boxAt, boxLock } from '../frame/snapshotRead';
 
@@ -14,10 +14,10 @@ const SIZES = Array.from({ length: BOX_COUNT }, (_, i) => boxSize(DEFAULT_HIDESE
 export type BoxPointerHandler = (index: number, e: ThreeEvent<PointerEvent>) => void;
 
 /**
- * The boxes of the showcase arena, fed from the arena stream (the ramp is
- * drawn as a crate of its footprint for now). A locked box lights its
- * braces and raises a padlock hologram in its owner's color. In the
- * Sandbox a crate can be dragged, and a double click locks or frees it.
+ * The boxes of the showcase arena, fed from the arena stream: the crates
+ * and the ramp. A locked box lights its frame and raises a padlock
+ * hologram in its owner's color. Given handlers, any box can be dragged
+ * and double clicked.
  */
 export function ShowcaseBoxes({ arena, tier, onBoxPointerDown, onBoxDoubleClick }: { arena: number; tier: HsQualityTier; onBoxPointerDown?: BoxPointerHandler; onBoxDoubleClick?: (index: number) => void }) {
   const { frame } = useHsScene();
@@ -40,7 +40,7 @@ export function ShowcaseBoxes({ arena, tier, onBoxPointerDown, onBoxDoubleClick 
   return (
     <group>
       {SIZES.map((size, b) => (
-        <HsBox
+        <BoxOfKind
           key={b}
           kind={BOX_KINDS[b]}
           size={size}
