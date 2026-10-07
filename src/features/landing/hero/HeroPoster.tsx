@@ -1,7 +1,8 @@
 /**
  * Still frames of the hero's live racing scene, captured from the real
  * renderer by scripts/capture-hero-poster.mjs. Wide screens pick one by
- * width; phones get a portrait crop of their own.
+ * the width it is drawn at; portrait screens, phones and tablets alike,
+ * get a portrait frame of their own.
  */
 export const POSTER = {
   wide: [
@@ -13,6 +14,13 @@ export const POSTER = {
 } as const;
 
 /**
+ * The width the wide poster is drawn at. It covers the hero, which is a
+ * screen tall, so a window taller than 16:9 draws it wider than the
+ * window, and the browser must pick the file for that width, not 100vw.
+ */
+const WIDE_SIZES = 'max(100vw, calc((100vh - 3rem) * 16 / 9))';
+
+/**
  * The hero's first paint: a still of the live scene, sent with high
  * priority as plain HTML so it shows before any script runs. The live
  * scene, when it comes, fades in over it.
@@ -20,12 +28,12 @@ export const POSTER = {
 export function HeroPoster() {
   return (
     <picture>
-      <source media="(max-width: 640px)" srcSet={POSTER.portrait} type="image/webp" />
+      <source media="(orientation: portrait)" srcSet={POSTER.portrait} type="image/webp" />
       {/* A plain img: these files are already sized and compressed, and the page must not depend on an image server. */}
       <img
         src={POSTER.wide[1].src}
         srcSet={POSTER.wide.map((p) => `${p.src} ${p.width}w`).join(', ')}
-        sizes="100vw"
+        sizes={WIDE_SIZES}
         alt=""
         fetchPriority="high"
         decoding="async"
