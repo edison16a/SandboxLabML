@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { heroMode, heroTier, LIVE_MIN_WIDTH, type HeroFacts } from './heroMode';
+import { heroMode, heroTier, LIVE_MIN_WIDTH, PHONE_SCREEN_SHORT, type HeroFacts } from './heroMode';
 import { firstScene, nextScene } from './sceneCycle';
 
-const desktop: HeroFacts = { reducedMotion: false, saveData: false, width: 1600, cores: 8, memoryGb: 8, webgl2: true };
+const desktop: HeroFacts = { reducedMotion: false, saveData: false, width: 1600, coarsePointer: false, screenShort: 1080, cores: 8, memoryGb: 8, webgl2: true };
 
 describe('heroMode', () => {
   it('goes live on a capable desktop, including one that hides its memory and cores', () => {
@@ -22,6 +22,19 @@ describe('heroMode', () => {
     expect(heroMode({ ...desktop, width: LIVE_MIN_WIDTH })).toBe('live');
     expect(heroMode({ ...desktop, cores: 2 })).toBe('poster');
     expect(heroMode({ ...desktop, memoryGb: 2 })).toBe('poster');
+  });
+
+  it('keeps the poster on a phone held sideways, however wide its window', () => {
+    const sideways = { ...desktop, width: 932, coarsePointer: true, screenShort: 430 };
+    expect(heroMode(sideways)).toBe('poster');
+    expect(heroMode({ ...sideways, width: 1280 })).toBe('poster');
+  });
+
+  it('tells phones by touch and screen size together', () => {
+    // A tablet's screen is wide both ways, and a zoomed in desktop reports a small screen but a fine pointer.
+    expect(heroMode({ ...desktop, width: 1180, coarsePointer: true, screenShort: 820 })).toBe('live');
+    expect(heroMode({ ...desktop, coarsePointer: false, screenShort: 540 })).toBe('live');
+    expect(heroMode({ ...desktop, coarsePointer: true, screenShort: PHONE_SCREEN_SHORT - 1 })).toBe('poster');
   });
 
   it('draws at the quality from Settings, stopping at High', () => {

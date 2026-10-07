@@ -12,6 +12,8 @@ function readFacts(): HeroFacts {
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     saveData: nav.connection?.saveData === true,
     width: window.innerWidth,
+    coarsePointer: window.matchMedia('(pointer: coarse)').matches,
+    screenShort: Math.min(window.screen.width, window.screen.height) || 0,
     cores: nav.hardwareConcurrency || 0,
     memoryGb: typeof nav.deviceMemory === 'number' ? nav.deviceMemory : null,
     webgl2: typeof WebGL2RenderingContext !== 'undefined',
