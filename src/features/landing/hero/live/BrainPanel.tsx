@@ -27,7 +27,7 @@ interface Props {
 export function BrainPanel({ title, dot, genome, outputLabels, stream, inspect, className }: Props) {
   const counts = useMemo(() => countGenome(genome), [genome]);
   return (
-    <div className={cn(CARD, 'flex w-[340px] flex-col gap-2 p-3', className)}>
+    <div className={cn(CARD, 'flex w-[300px] flex-col gap-2 p-3 2xl:w-[340px]', className)}>
       <div className="flex items-center gap-2 text-[12px]">
         <span className={cn('size-2 rounded-full', dot)} />
         <span className="font-medium text-fg">{title}</span>
@@ -35,7 +35,7 @@ export function BrainPanel({ title, dot, genome, outputLabels, stream, inspect, 
           {counts.inputs} in, {counts.hidden} hidden, {counts.enabled} links
         </span>
       </div>
-      <div className="h-[168px]">
+      <div className="h-[140px] 2xl:h-[168px]">
         <BrainGraph genome={genome} outputLabels={outputLabels} stream={stream} inspect={inspect} />
       </div>
     </div>

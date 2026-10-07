@@ -32,7 +32,7 @@ export function HeroPanels({ scene, pool, car, arena, match }: Props) {
   const team = match.prep ? 0 : 1;
   return (
     <div className="absolute inset-x-6 bottom-6 flex items-end justify-between gap-6">
-      <div key={`caption-${scene}`} className={`${CARD} max-w-[300px] animate-fade-in px-4 py-3`}>
+      <div key={`caption-${scene}`} className={`${CARD} max-w-[280px] animate-fade-in px-4 py-3 2xl:max-w-[300px]`}>
         <div className="flex items-center gap-2 text-[12px] font-medium">
           <span className="size-1.5 rounded-full bg-success" />
           <span className="text-fg">Live</span>
