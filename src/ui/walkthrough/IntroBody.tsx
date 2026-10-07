@@ -21,7 +21,9 @@ export function IntroBody({ tour, titleId, bodyId }: { tour: Tour; titleId: stri
           <li key={c.label} className="flex items-center gap-3 px-3 py-2.5">
             <span className="flex text-accent [&_svg]:size-4">{c.icon}</span>
             <span className="text-[13px] font-medium text-fg">{c.label}</span>
-            <span className="ml-auto text-[11px] text-subtle">{sizes[i]} steps</span>
+            <span className="ml-auto text-[11px] text-subtle">
+              {sizes[i]} {sizes[i] === 1 ? 'step' : 'steps'}
+            </span>
           </li>
         ))}
       </ol>

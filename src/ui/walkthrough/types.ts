@@ -49,7 +49,11 @@ export interface WalkStep extends StepText {
   links?: Array<{ label: string; href: string }>;
 }
 
-/** A chapter as the welcome card lists it. Its label matches the `chapter` of its steps. */
+/**
+ * A chapter as the welcome card lists it. Its label matches the `chapter`
+ * of its steps. Give every step a chapter, so the counts on the welcome
+ * card add up to the counter on the steps.
+ */
 export interface Chapter {
   label: string;
   icon: ReactNode;

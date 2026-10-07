@@ -1,10 +1,11 @@
-import { Car, Cpu, Dna } from 'lucide-react';
+import { Car, Code2, Cpu, Dna } from 'lucide-react';
 import { useRacingLab } from '@/features/racing/state/labStore';
 import type { Tour } from '@/ui/walkthrough/types';
 import { keepRacingTraining, racingFlatOut, watchRacingLive } from './tourActions';
 
 const LEARN = 'How it learns';
 const DRIVE = 'How it drives';
+const YOURS = 'Your turn';
 const lab = () => useRacingLab.getState();
 
 /**
@@ -24,6 +25,7 @@ export const RACING_TOUR: Tour = {
     chapters: [
       { label: LEARN, icon: <Dna /> },
       { label: DRIVE, icon: <Cpu /> },
+      { label: YOURS, icon: <Code2 /> },
     ],
   },
   steps: [
@@ -160,6 +162,7 @@ export const RACING_TOUR: Tour = {
     },
     {
       id: 'studio',
+      chapter: YOURS,
       target: '[data-tour="nav-studio"]',
       prefer: ['bottom'],
       title: 'Write the rules yourself',

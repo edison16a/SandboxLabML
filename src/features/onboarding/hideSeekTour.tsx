@@ -1,10 +1,11 @@
-import { Dna, Eye, Users } from 'lucide-react';
+import { Code2, Dna, Eye, Users } from 'lucide-react';
 import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
 import type { Tour } from '@/ui/walkthrough/types';
 import { keepHideSeekTraining } from './tourActions';
 
 const LEARN = 'How they learn';
 const PLAY = 'How they play';
+const YOURS = 'Your turn';
 const lab = () => useHideSeekLab.getState();
 
 /** The Hide and Seek lab tour: two teams that learn against each other, then what a trained agent senses and does. */
@@ -20,6 +21,7 @@ export const HIDE_SEEK_TOUR: Tour = {
     chapters: [
       { label: LEARN, icon: <Dna /> },
       { label: PLAY, icon: <Eye /> },
+      { label: YOURS, icon: <Code2 /> },
     ],
   },
   steps: [
@@ -99,6 +101,7 @@ export const HIDE_SEEK_TOUR: Tour = {
     },
     {
       id: 'studio',
+      chapter: YOURS,
       target: '[data-tour="nav-studio"]',
       prefer: ['bottom'],
       title: 'Write the rules yourself',
