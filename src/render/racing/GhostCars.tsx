@@ -18,6 +18,11 @@ import { GhostTrails } from './GhostTrails';
 
 const MAX_GHOSTS = 64;
 
+/** 0 below a, 1 above b, linear between. Module level, so the per ghost call below builds no closure. */
+function ramp(v: number, a: number, b: number): number {
+  return Math.min(1, Math.max(0, (v - a) / (b - a)));
+}
+
 /**
  * How much of a ghost to keep in views about one car: none right at the
  * lens or across the line of sight to the followed car, and little when it
@@ -30,7 +35,6 @@ function clearance(x: number, z: number, focus: THREE.Vector3, cam: THREE.Vector
   const fz = focus.z - cam.z;
   const fLen = Math.hypot(fx, fz) || 1e-3;
   const along = (cx * fx + cz * fz) / fLen;
-  const ramp = (v: number, a: number, b: number) => Math.min(1, Math.max(0, (v - a) / (b - a)));
   let keep = ramp(Math.hypot(cx, cz), 5.6, 6.4);
   // Across the line of sight in front of the followed car: it would veil it.
   if (along > 0 && along < fLen - 1.2) keep = Math.min(keep, ramp(Math.abs(cx * fz - cz * fx) / fLen, 2.3, 2.7));
