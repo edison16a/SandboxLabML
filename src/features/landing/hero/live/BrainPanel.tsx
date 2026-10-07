@@ -29,10 +29,11 @@ export function BrainPanel({ title, dot, genome, outputLabels, stream, inspect, 
   return (
     <div className={cn(CARD, 'flex w-[264px] flex-col gap-2 p-3 xl:w-[300px] 2xl:w-[340px]', className)}>
       <div className="flex items-center gap-2 text-[12px]">
-        <span className={cn('size-2 rounded-full', dot)} />
-        <span className="font-medium text-fg">{title}</span>
-        <span className="ml-auto font-mono text-[11px] text-muted tabular">
-          {counts.inputs} in, {counts.hidden} hidden, {counts.enabled} links
+        <span className={cn('size-2 shrink-0 rounded-full', dot)} />
+        <span className="font-medium whitespace-nowrap text-fg">{title}</span>
+        {/* The narrow card of a small laptop leaves out the hidden count, so the header stays on one line. */}
+        <span className="ml-auto font-mono text-[11px] whitespace-nowrap text-muted tabular">
+          {counts.inputs} in<span className="max-xl:hidden">, {counts.hidden} hidden</span>, {counts.enabled} links
         </span>
       </div>
       <div className="h-[140px] 2xl:h-[168px]">
