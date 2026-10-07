@@ -1,4 +1,5 @@
 import { hashObject } from '../core/hash';
+import { DEFAULT_CLIMB_RULES, type ClimbRules } from './climbRules';
 
 /** Size of one box along its local x (length), local z (width) and y (height), m. */
 export interface BoxSize {
@@ -67,33 +68,8 @@ export interface HideSeekPhysics {
     breakDistance: number;
   };
   lock: { range: number; cone: number };
-  climb: {
-    /**
-     * The mount zone at the foot of a ramp reaches this far out from the
-     * foot, m. An agent walking into the slope comes to rest about 0.1 m
-     * out, because its round bottom meets the thin end of the wedge.
-     */
-    footOut: number;
-    /** ...and this far up the slope from the foot, m. */
-    footIn: number;
-    /** Smallest move output that mounts a ramp, so a brain idling near one does not climb by accident. */
-    mountMove: number;
-    /** Widest angle between the facing and the uphill direction that still mounts, rad. */
-    mountAngle: number;
-    /** Speed along the slope at full move output, as a share of agent maxSpeed. Backing down uses backwardShare of it. */
-    speedShare: number;
-    /** From this elevation an agent sees over boxes and is seen over them, m: the cube and plank height. */
-    seeOverBoxes: number;
-    /** How long a jump off the lip lasts, s. Rounded to whole ticks. */
-    jumpSeconds: number;
-    /** Landing spots are tried every jumpStep m from just past the lip out to this distance, m. */
-    jumpRange: number;
-    jumpStep: number;
-    /** The top of the jump arc clears the tallest thing it crosses by this much, m. */
-    clearance: number;
-    /** Air kept between a landing or step off spot and anything solid, m. */
-    landingGap: number;
-  };
+  /** When agents mount ramps, how they climb and how they jump off the lip (see climbRules.ts). */
+  climb: ClimbRules;
   vision: {
     range: number;
     /** Full field of view, rad. */
@@ -131,21 +107,7 @@ export const DEFAULT_HIDESEEK_PHYSICS: HideSeekPhysics = {
   },
   grab: { range: 1.6, cone: Math.PI / 2, gain: 0.8, maxSpeed: 8, maxSpin: 8, breakDistance: 1 },
   lock: { range: 1.6, cone: Math.PI / 2 },
-  climb: {
-    // Less than an inner wall's thickness plus an agent's radius, so nobody mounts a ramp from the far side of a wall.
-    footOut: 0.5,
-    footIn: 0.3,
-    mountMove: 0.2,
-    mountAngle: Math.PI / 4,
-    speedShare: 0.6,
-    seeOverBoxes: 1,
-    // Half a second is long enough to read as a jump on screen and short enough that a vault still pays.
-    jumpSeconds: 0.5,
-    jumpRange: 3,
-    jumpStep: 0.1,
-    clearance: 0.3,
-    landingGap: 0.02,
-  },
+  climb: DEFAULT_CLIMB_RULES,
   vision: { range: 14, fov: (135 * Math.PI) / 180 },
   rayHeight: 0.5,
   spawn: { boxJitter: 0.4, boxYawJitter: 0.3 },
@@ -198,3 +160,4 @@ export function prepTicks(p: HideSeekPhysics): number {
 }
 
 export * from './boxKinds';
+export * from './climbRules';
