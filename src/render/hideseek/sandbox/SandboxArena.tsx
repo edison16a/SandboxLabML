@@ -7,6 +7,7 @@ import { DEFAULT_HIDESEEK_PHYSICS, type BoxKind } from '@/engine/hideseek/physic
 import { roomWallRects, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useHsScene } from '../frame/sceneContext';
+import { SceneField } from '../frame/sceneField';
 import { useBoxDrag } from '../interaction/useBoxDrag';
 import { ArenaContactShadows } from '../showcase/ArenaContactShadows';
 import { RoomMesh } from '../showcase/ArenaRoom';
@@ -52,6 +53,7 @@ export function SandboxArena({ tier, aoPass, room: shownRoom }: { tier: HsQualit
   const wallsKey = useMemo(() => JSON.stringify(room.walls), [room]);
   const [shape, setShape] = useState<Shape | null>(null);
   const origin = useMemo(() => ({ x: 0, z: 0 }), []);
+  const field = useMemo(() => new SceneField(), []);
   const getOrigin = useCallback(() => origin, [origin]);
   const drag = useBoxDrag(getOrigin, onMoveBox);
   const players = shape ? shape.hiders + shape.seekers : 0;
@@ -82,6 +84,7 @@ export function SandboxArena({ tier, aoPass, room: shownRoom }: { tier: HsQualit
       if (isLocked(bits)) locked++;
       if (sandboxBoxKind(bits) === 'ramp') ramps++;
     }
+    field.readSandbox(frame, curr, players, boxes);
     sandboxStats.agents = players;
     sandboxStats.boxes = boxes;
     sandboxStats.locked = locked;
@@ -113,7 +116,7 @@ export function SandboxArena({ tier, aoPass, room: shownRoom }: { tier: HsQualit
         <>
           <SandboxBoxes kinds={shape.kinds} players={players} tier={tier} onPointerDown={onMoveBox ? drag : undefined} onDoubleClick={onToggleLock ? toggleLock : undefined} />
           {Array.from({ length: players }, (_, slot) => (
-            <SandboxAgent key={slot} slot={slot} team={slot < shape.hiders ? 0 : 1} tier={tier} />
+            <SandboxAgent key={slot} slot={slot} team={slot < shape.hiders ? 0 : 1} tier={tier} field={field} />
           ))}
           <SandboxCones first={shape.hiders} count={shape.seekers} walls={walls} />
           <SeenMarkers hiders={shape.hiders} />

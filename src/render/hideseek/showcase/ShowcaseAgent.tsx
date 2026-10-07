@@ -5,8 +5,10 @@ import { FLAG_AIRBORNE, FLAG_CLIMBING, FLAG_FROZEN, FLAG_HOLDING, FLAG_SEEING, F
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { HsCharacter } from '../characters/HsCharacter';
+import { findContact, lookAt, worthALook } from '../characters/perception';
 import type { CharacterDrive } from '../characters/types';
 import { useHsScene } from '../frame/sceneContext';
+import type { SceneField } from '../frame/sceneField';
 import { agentAt, agentFlags, blendAgentPose, hasFlag } from '../frame/snapshotRead';
 import { teamColor } from '../palette';
 import { MotionTrail } from './MotionTrail';
@@ -19,7 +21,7 @@ const TELEPORT = 1.5;
  * stream, and a fading trail on the floor behind it. The cheapest tier
  * gets the plain material and a blob shadow; the others cast real shadows.
  */
-export function ShowcaseAgent({ arena, agent, tier }: { arena: number; agent: 0 | 1; tier: HsQualityTier }) {
+export function ShowcaseAgent({ arena, agent, tier, field }: { arena: number; agent: 0 | 1; tier: HsQualityTier; /** The arena's boxes and agents, read once this frame. */ field: SceneField }) {
   const { frame } = useHsScene();
   const trail = useDisposable(() => new MotionTrail(teamColor(agent)), [agent]);
   const state = useMemo(() => ({ pose: { x: 0, z: 0, yaw: 0, elevation: 0 }, epoch: Number.NaN }), []);
@@ -47,9 +49,14 @@ export function ShowcaseAgent({ arena, agent, tier }: { arena: number; agent: 0 
       d.elevation = elevation;
       d.climbing = hasFlag(flags, FLAG_CLIMBING);
       d.airborne = hasFlag(flags, FLAG_AIRBORNE);
+      // Eyes on the other agent when either sees the other or it comes close; hands on the box it carries or leans on.
+      const other = field.agents[1 - agent];
+      d.look = !other.frozen && worthALook(d, other.x, other.z, agent === 0 ? d.seen : d.seeing);
+      if (d.look) lookAt(d, other.x, other.z, other.elevation);
+      findContact(d, field.boxes, field.boxCount);
       trail.update(x, z, elevation, !d.airborne, d.frozen ? 0 : 1);
     },
-    [frame, arena, agent, state, trail],
+    [frame, arena, agent, state, trail, field],
   );
 
   return (

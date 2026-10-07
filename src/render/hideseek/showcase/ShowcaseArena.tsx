@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import { Suspense, useMemo, useRef, useState } from 'react';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import { useHsScene } from '../frame/sceneContext';
+import { SceneField } from '../frame/sceneField';
 import { arenaOrigin } from '../layout/gridLattice';
 import { ArenaContactShadows } from './ArenaContactShadows';
 import { ArenaRoom } from './ArenaRoom';
@@ -26,6 +27,7 @@ export function ShowcaseArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO 
   const group = useRef<THREE.Group>(null);
   const [shown, setShown] = useState<{ arena: number; layout: number } | null>(null);
   const origin = useMemo(() => ({ x: 0, z: 0 }), []);
+  const field = useMemo(() => new SceneField(), []);
 
   useFrame(() => {
     const g = group.current;
@@ -37,6 +39,7 @@ export function ShowcaseArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO 
     const arena = frame.first + frame.focusSlot;
     const layout = frame.layouts[frame.focusSlot] ?? 0;
     if (!shown || shown.arena !== arena || shown.layout !== layout) setShown({ arena, layout });
+    field.readArena(frame, arena);
     arenaOrigin(frame.focusSlot, frame.lattice, origin);
     g.position.set(origin.x, 0, origin.z);
     g.visible = true;
@@ -48,8 +51,8 @@ export function ShowcaseArena({ tier, aoPass }: { tier: HsQualityTier; /** N8AO 
         <>
           <ArenaRoom layout={shown.layout} ao={aoPass ? 0.3 : 0.5} />
           <ShowcaseBoxes arena={shown.arena} tier={tier} />
-          <ShowcaseAgent arena={shown.arena} agent={0} tier={tier} />
-          <ShowcaseAgent arena={shown.arena} agent={1} tier={tier} />
+          <ShowcaseAgent arena={shown.arena} agent={0} tier={tier} field={field} />
+          <ShowcaseAgent arena={shown.arena} agent={1} tier={tier} field={field} />
           <VisionCone arena={shown.arena} layout={shown.layout} />
           <SightLines arena={shown.arena} layout={shown.layout} />
           <Suspense fallback={null}>
