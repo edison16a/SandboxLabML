@@ -1,19 +1,29 @@
-import type { Ray } from '@dimforge/rapier3d-compat';
-import { NEVER_SEEN_AGE } from '../agents/agent';
-import { bearing, type Pose } from '../frame';
+import type { Collider, Ray } from '@dimforge/rapier3d-compat';
+import { NEVER_SEEN_AGE, type HideSeekAgent } from '../agents/agent';
+import { bearing } from '../frame';
 import type { MatchState } from '../match/state';
 import type { RoomWorld } from '../world/room';
-import { SIGHT_GROUPS } from '../world/groups';
+import { HIGH_SIGHT_GROUPS, SIGHT_GROUPS } from '../world/groups';
 
 /**
  * Line of sight through Rapier ray casts, reusing one Ray for every cast.
  * Sight lines use collision groups that skip both agents, so only walls
  * and boxes block them. They run at the physics `rayHeight`, below the box
  * tops, which is what lets a box hide an agent.
+ *
+ * Ramps change two things. When either end stands at least seeOverBoxes
+ * high (on a ramp or in the air) boxes no longer block: only walls do,
+ * always. And below that height the ramp an end stands on never blocks
+ * its own sight lines, since the agent stands on top of it.
  */
 export class SightLines {
   private readonly arena: RoomWorld;
   private readonly ray: Ray;
+  /** Collider handles of ramps a line ignores, -1 for none. Read by `notSkipped`, set per line. */
+  private skipA = -1;
+  private skipB = -1;
+  /** One closure for the life of the sight lines, so a line that skips ramps allocates nothing. */
+  private readonly notSkipped = (c: Collider) => c.handle !== this.skipA && c.handle !== this.skipB;
 
   constructor(arena: RoomWorld) {
     this.arena = arena;
@@ -21,8 +31,12 @@ export class SightLines {
     this.ray = new arena.rapier.Ray({ x: 0, y: h, z: 0 }, { x: 1, y: 0, z: 0 });
   }
 
-  /** True when no wall or box lies on the straight line between two floor points. */
-  clear(x0: number, z0: number, x1: number, z1: number): boolean {
+  /**
+   * True when nothing blocks the straight line between two floor points.
+   * `overBoxes` lets only walls block. Boxes `skipA` and `skipB` (indexes,
+   * -1 for none) do not block either.
+   */
+  clear(x0: number, z0: number, x1: number, z1: number, overBoxes = false, skipA = -1, skipB = -1): boolean {
     const dx = x1 - x0;
     const dz = z1 - z0;
     const len = Math.hypot(dx, dz);
@@ -32,7 +46,13 @@ export class SightLines {
     r.origin.z = z0;
     r.dir.x = dx / len;
     r.dir.z = dz / len;
-    return !this.arena.world.castRay(r, len, true, undefined, SIGHT_GROUPS);
+    const world = this.arena.world;
+    if (overBoxes) return !world.castRay(r, len, true, undefined, HIGH_SIGHT_GROUPS);
+    if (skipA < 0 && skipB < 0) return !world.castRay(r, len, true, undefined, SIGHT_GROUPS);
+    const boxes = this.arena.boxes;
+    this.skipA = skipA >= 0 ? boxes[skipA].collider(0).handle : -1;
+    this.skipB = skipB >= 0 ? boxes[skipB].collider(0).handle : -1;
+    return !world.castRay(r, len, true, undefined, SIGHT_GROUPS, undefined, undefined, this.notSkipped);
   }
 
   /**
@@ -42,16 +62,16 @@ export class SightLines {
    * body edges across the line of sight). Cheap checks run first, so most
    * calls cast no ray at all.
    */
-  sees(viewer: Pose, target: Pose): boolean {
+  sees(viewer: HideSeekAgent, target: HideSeekAgent): boolean {
     return this.check(viewer, target, true);
   }
 
   /** Like `sees`, but as if the viewer faced the target: range and a clear line only. */
-  inLine(viewer: Pose, target: Pose): boolean {
+  inLine(viewer: HideSeekAgent, target: HideSeekAgent): boolean {
     return this.check(viewer, target, false);
   }
 
-  private check(viewer: Pose, target: Pose, facing: boolean): boolean {
+  private check(viewer: HideSeekAgent, target: HideSeekAgent, facing: boolean): boolean {
     const p = this.arena.physics;
     const dx = target.x - viewer.x;
     const dz = target.z - viewer.z;
@@ -59,10 +79,14 @@ export class SightLines {
     if (d > p.vision.range) return false;
     if (d < 1e-6) return true;
     if (facing && Math.abs(bearing(dx, dz, viewer.yaw)) > p.vision.fov / 2) return false;
-    if (this.clear(viewer.x, viewer.z, target.x, target.z)) return true;
+    const high = p.climb.seeOverBoxes;
+    const over = viewer.elevation >= high || target.elevation >= high;
+    const va = viewer.climbRamp;
+    const ta = target.climbRamp;
+    if (this.clear(viewer.x, viewer.z, target.x, target.z, over, va, ta)) return true;
     const sx = (-dz / d) * p.agent.radius;
     const sz = (dx / d) * p.agent.radius;
-    return this.clear(viewer.x, viewer.z, target.x + sx, target.z + sz) || this.clear(viewer.x, viewer.z, target.x - sx, target.z - sz);
+    return this.clear(viewer.x, viewer.z, target.x + sx, target.z + sz, over, va, ta) || this.clear(viewer.x, viewer.z, target.x - sx, target.z - sz, over, va, ta);
   }
 }
 

@@ -7,13 +7,16 @@ import type { HideSeekMatch } from '../match/match';
 import { rayAabb, rayBox, rayCircle } from '../sensing/raycast2d';
 import { hideSeekRayAngles } from '../sensing/rays';
 import { createArenaPool } from '../world/pool';
-import { randomGenomes } from './helpers';
+import { CLIMB_RULES, placeBox, placeRamp } from './climbHelpers';
+import { idle, randomGenomes, scripted, scriptedMatch } from './helpers';
 
 /**
  * Casts every sensor ray of agent `i` with Rapier and returns distances and
  * hit kinds. Rapier sees the real wedge of a ramp; the engine's rules on
  * top are passing the ramp an agent climbs, and passing every box when it
- * stands high enough to see over them.
+ * stands high enough to see over them. Groups are always given, since a
+ * query without them would also hit the switched off collider of an agent
+ * on a ramp.
  */
 function rapierRays(m: HideSeekMatch, i: number, count: number, range: number) {
   const arena = m.state.arena;
@@ -22,7 +25,7 @@ function rapierRays(m: HideSeekMatch, i: number, count: number, range: number) {
   arena.agents.forEach((b) => kinds.set(b.collider(0).handle, HIT_AGENT));
   arena.boxes.forEach((b, k) => kinds.set(b.collider(0).handle, m.state.boxes[k].kind === 'ramp' ? HIT_RAMP : HIT_BOX));
   const own = a.climbRamp >= 0 ? arena.boxes[a.climbRamp].collider(0).handle : -1;
-  const groups = a.elevation >= m.state.physics.climb.seeOverBoxes ? interactionGroups(0xffff, GROUP_WALL | GROUP_AGENT) : undefined;
+  const groups = interactionGroups(0xffff, a.elevation >= m.state.physics.climb.seeOverBoxes ? GROUP_WALL | GROUP_AGENT : 0xffff);
   const ray = new arena.rapier.Ray({ x: a.x, y: m.state.physics.rayHeight, z: a.z }, { x: 1, y: 0, z: 0 });
   return hideSeekRayAngles(count).map((angle) => {
     ray.dir.x = Math.cos(a.yaw + angle);
@@ -74,5 +77,36 @@ describe('2D sensor rays', () => {
     pool.dispose();
     expect(compared).toBeGreaterThan(1000);
     expect(hits).toBeGreaterThan(compared / 4);
+  });
+
+  it('agree with Rapier for a seeker on its way up and over a ramp', async () => {
+    const pool = await createArenaPool();
+    const { count, range } = STANDARD_HIDESEEK_INPUTS.rays;
+    let climbing = 0;
+    let high = 0;
+    // A ramp turned 30 degrees, with a cube near its lip and another ahead of the hider, so rays meet the slope, crates and walls.
+    const m = scriptedMatch(pool, 'open', idle(), scripted(() => ({ move: 1 })), CLIMB_RULES);
+    placeRamp(m, 0, 0, Math.PI / 6, true);
+    placeBox(m, 0, 2.5, -3);
+    placeBox(m, 1, -3, 2);
+    const foot = { x: -1.5 * Math.cos(Math.PI / 6), z: 1.5 * Math.sin(Math.PI / 6) };
+    m.moveAgent('seeker', foot.x, foot.z, Math.PI / 6);
+    m.moveAgent('hider', 4, 3, 0);
+    for (let t = 0; t < 70; t++) {
+      m.step();
+      const a = m.seeker;
+      if (a.climbing) climbing++;
+      if (a.elevation >= CLIMB_RULES.climb.seeOverBoxes) high++;
+      rapierRays(m, 1, count, range).forEach((r, j) => {
+        expect(a.rays[j]).toBeCloseTo(r.d, 3);
+        if (Math.abs(a.rays[j] - r.d) < 1e-3 && r.kind !== HIT_NONE) expect(a.rayHits[j]).toBe(r.kind);
+      });
+      // The hider's rays meet the ramp from the floor, and pass the seeker while it is off the floor.
+      rapierRays(m, 0, count, range).forEach((r, j) => expect(m.hider.rays[j]).toBeCloseTo(r.d, 3));
+    }
+    expect(climbing).toBeGreaterThan(20);
+    expect(high).toBeGreaterThan(3);
+    m.release();
+    pool.dispose();
   });
 });
