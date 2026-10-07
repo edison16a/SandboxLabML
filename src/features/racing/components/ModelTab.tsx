@@ -48,7 +48,7 @@ export function ModelTab() {
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <p className="text-[12px] text-muted">Change the sensors, keep what it learned.</p>
+        <p className="text-[12px] text-muted">Add sensors, keep what it learned.</p>
         <Button size="sm" variant="outline" onClick={() => setGrowing(true)} disabled={run.blueprint.env !== 'racing'}>
           <Sprout />
           Grow this brain
