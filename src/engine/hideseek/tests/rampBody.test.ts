@@ -83,4 +83,46 @@ describe('ramp body', () => {
   it('never lets a pushing agent into its footprint', () => {
     for (const r of [push(RAMP, -4, 0, 0), push(RAMP, 4, 0, Math.PI), push(RAMP, 0, -3, FACE_SOUTH)]) expect(r.deepest).toBeGreaterThan(0.4 - 0.35);
   });
+
+  it('is grabbed from its side and carried like a crate', () => {
+    // The hider walks up to the ramp's side with grab on, then carries it off toward +z.
+    const m = scriptedMatch(pool, 'open', scripted((_, t) => ({ move: t < 60 ? 1 : 0, turn: t > 30 && t < 60 ? 0.5 : 0, grab: true })), idle(), NO_CLIMB);
+    m.moveAgent('seeker', 8, 8, 0);
+    stageBox(m, RAMP, 0, 0);
+    m.moveAgent('hider', 0, -3, FACE_SOUTH);
+    let held = false;
+    for (let t = 0; t < 60; t++) {
+      m.step();
+      held ||= m.hider.heldBox === RAMP;
+    }
+    expect(held).toBe(true);
+    expect(m.hider.heldBox).toBe(RAMP);
+    const b = m.state.boxes[RAMP];
+    expect(Math.hypot(b.x, b.z)).toBeGreaterThan(1.5);
+    // It stayed at its hold point the whole way, a crate's length from the hider at most.
+    expect(Math.hypot(b.x - m.hider.x, b.z - m.hider.z)).toBeLessThan(1.7);
+    m.release();
+  });
+
+  it('is locked by either team, and then nobody moves it', () => {
+    const lockFirst = (team: 'hider' | 'seeker') => {
+      const presser = scripted((_, t) => ({ lock: t < 5 }));
+      const pusher = scripted((_, t) => ({ move: t > 10 ? 1 : 0, grab: t > 10 }));
+      const m = scriptedMatch(pool, 'open', team === 'hider' ? presser : pusher, team === 'hider' ? pusher : presser, NO_CLIMB);
+      stageBox(m, RAMP, 0, 0);
+      m.moveAgent(team, 0, -1.4, FACE_SOUTH);
+      m.moveAgent(team === 'hider' ? 'seeker' : 'hider', 4, 0, Math.PI);
+      for (let t = 0; t < 80; t++) m.step();
+      const b = m.state.boxes[RAMP];
+      const out = { owner: b.lockedBy, moved: Math.hypot(b.x, b.z), pusherHeld: m.state.agents[team === 'hider' ? 1 : 0].holding };
+      m.release();
+      return out;
+    };
+    for (const team of ['hider', 'seeker'] as const) {
+      const r = lockFirst(team);
+      expect(r.owner).toBe(team === 'hider' ? 0 : 1);
+      expect(r.moved).toBeLessThan(1e-6);
+      expect(r.pusherHeld).toBe(false);
+    }
+  });
 });
