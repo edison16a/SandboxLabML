@@ -8,7 +8,7 @@ script "Intermediate: built-in rewards" for hideseek v1
 
 // hideseek-standard sees sixteen rays that also tell walls, boxes and players apart,
 // its velocity, whether it holds a box, the phase, the time left and where the
-// other player is or was last seen.
+// other player is or was last seen, and the nearest ramp.
 brain hideseek-standard
 
 // Runs for every player, 30 times per second.

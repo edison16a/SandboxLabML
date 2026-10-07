@@ -9,7 +9,7 @@ script "Beginner: first game of hide and seek" for hideseek v1
 
 // Every hider and every seeker has a brain: a small neural network.
 // hideseek-starter sees eight distance rays, its speed, whether the other
-// player is in sight and whether the match is still in the prep phase.
+// player is in sight, whether it is the prep phase and the nearest ramp.
 brain hideseek-starter
 
 // This block runs for every player, 30 times per second of the match.

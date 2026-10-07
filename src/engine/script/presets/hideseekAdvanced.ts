@@ -12,7 +12,7 @@
 export const HIDESEEK_ADVANCED = `// Advanced: real cover, shelters that stay built and a curriculum.
 script "Advanced: cover and shelters" for hideseek v1
 
-// hideseek-advanced sees what Standard sees plus where the two nearest boxes are
+// hideseek-advanced sees what Standard sees plus where the two nearest crates are
 // and whether they are locked, which makes shelters easier to find.
 brain hideseek-advanced
 
