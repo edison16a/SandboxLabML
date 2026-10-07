@@ -1,6 +1,7 @@
 import { Car, Cpu, Dna } from 'lucide-react';
 import { useRacingLab } from '@/features/racing/state/labStore';
 import type { Tour } from '@/ui/walkthrough/types';
+import { watchRacingLive } from './tourActions';
 
 const LEARN = 'How it learns';
 const DRIVE = 'How it drives';
@@ -81,7 +82,7 @@ export const RACING_TOUR: Tour = {
         doneLabel: 'Training flat out',
         then: {
           title: 'Learning in the background',
-          body: 'Generations now finish in seconds, out of sight. With Turbo the track replays the latest champion, so you still see the best driver.',
+          body: 'Generations now finish in seconds, out of sight. Turbo also replays the latest champion on the track. Next we drop back to 1x to watch one car drive.',
         },
       },
     },
@@ -90,6 +91,7 @@ export const RACING_TOUR: Tour = {
       chapter: DRIVE,
       target: '[data-tour="inputs"]',
       prefer: ['bottom', 'left'],
+      prepare: () => void watchRacingLive(),
       title: 'A network only sees numbers',
       body: 'Running a trained network starts with its inputs. Press Inputs to draw what the followed car senses.',
       action: {
@@ -109,6 +111,7 @@ export const RACING_TOUR: Tour = {
       chapter: DRIVE,
       target: '[data-tour="tab-network"]',
       prefer: ['left', 'bottom'],
+      prepare: () => void watchRacingLive(),
       title: 'Look inside the champion',
       body: 'The Network tab shows the champion network, the best driver of the latest finished generation.',
       action: {
