@@ -105,7 +105,7 @@ export const HIDE_SEEK_TOUR: Tour = {
       target: '[data-tour="nav-studio"]',
       prefer: ['bottom'],
       title: 'Write the rules yourself',
-      body: 'In the Studio you decide what each team scores for. The lessons walk you through it one step at a time.',
+      body: 'In the Studio you decide what each team scores for. The lessons walk you through it one step at a time. To see this tour again, use the ? button in the toolbar.',
       links: [{ label: 'Start the first lesson', href: '/studio?lesson=hideseek-01-points-for-hiding' }],
     },
   ],
