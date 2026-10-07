@@ -1,15 +1,14 @@
 'use client';
 
-import * as THREE from 'three';
 import { useMemo } from 'react';
 import type { Rect } from '@/engine/hideseek/layouts/types';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { wallsOfLayout } from '../layout/arenaWalls';
 import { HS_COLORS } from '../palette';
 import { floorAoMaterial } from '../room/floorAoMaterial';
-import { sharedPlasterMaps } from '../room/plasterMaps';
+import { groundedMaterial } from '../room/groundedMaterial';
 import { floorAoGeometry, floorGeometry, wallGeometry } from '../room/roomGeometry';
-import { FLOOR_TILE_METERS, sharedFloorMaps } from '../room/terrazzoMaps';
+import { tileFloorMaterial } from '../room/tileFloor';
 
 interface RoomProps {
   walls: Rect[];
@@ -20,38 +19,21 @@ interface RoomProps {
 }
 
 /**
- * A room built from any list of walls: a polished warm terrazzo floor in
- * 2 m slabs, soft matte plaster walls with round caps, and a baked band of
- * shade along the foot of every wall so the walls sit on the floor even
- * without screen space occlusion. Three draw calls whatever the walls.
- * The showcase arenas and the Sandbox rooms both use it, so a room the
- * user drew looks like a built in one.
+ * A room built from any list of walls: a floor of light grey tiles with
+ * crisp grout and a satin sheen, clean light grey slab walls, and a baked
+ * band of shade along the foot of every wall so the walls sit on the floor
+ * even without screen space occlusion. Three draw calls whatever the
+ * walls. The showcase arenas and the Sandbox rooms both use it, so a room
+ * the user drew looks like a built in one.
  */
 export function RoomMesh({ walls, wallsKey, ao = 0.5 }: RoomProps) {
   // Rebuilt only when wallsKey changes; the walls array can be new on every render.
   const wallGeo = useDisposable(() => wallGeometry(walls), [wallsKey]);
   const shade = useDisposable(() => floorAoGeometry(walls), [wallsKey]);
   const shadeMat = useDisposable(() => floorAoMaterial(ao), [ao]);
-  const floor = useDisposable(() => floorGeometry(FLOOR_TILE_METERS), []);
-  const floorMat = useDisposable(() => {
-    const maps = sharedFloorMaps();
-    return new THREE.MeshStandardMaterial({
-      color: HS_COLORS.floor,
-      map: maps.map,
-      normalMap: maps.normalMap,
-      normalScale: new THREE.Vector2(0.8, 0.8),
-      roughnessMap: maps.roughnessMap,
-      roughness: 1,
-      metalness: 0,
-      // Honed, so it mirrors a little of the sky. Kept faint, or the floor turns to glare in
-      // the first person views, which see it at a grazing angle.
-      envMapIntensity: 0.22,
-    });
-  }, []);
-  const wallMat = useDisposable(() => {
-    const maps = sharedPlasterMaps();
-    return new THREE.MeshStandardMaterial({ color: HS_COLORS.wall, ...maps, normalScale: new THREE.Vector2(0.15, 0.15), roughness: 1, metalness: 0, envMapIntensity: 0.7 });
-  }, []);
+  const floor = useDisposable(() => floorGeometry(), []);
+  const floorMat = useDisposable(() => tileFloorMaterial(), []);
+  const wallMat = useDisposable(() => groundedMaterial({ color: HS_COLORS.wall, roughness: 0.58, metalness: 0, envMapIntensity: 0.65 }, 0.8, 0.8), []);
 
   return (
     <group>

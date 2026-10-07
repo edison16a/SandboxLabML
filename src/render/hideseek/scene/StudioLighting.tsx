@@ -56,13 +56,13 @@ export function StudioLighting({ tier, shadows }: { tier: HsQualityTier; shadows
     <>
       <color attach="background" args={[HS_COLORS.background]} />
       <fog attach="fog" args={[HS_COLORS.background, HAZE.near, HAZE.far]} />
-      <hemisphereLight args={['#eef3fb', '#e2ded8', 0.6]} />
+      <hemisphereLight args={['#eef3fb', '#aeb5bf', 0.5]} />
       <primitive object={target} />
       <directionalLight
         ref={light}
         target={target}
-        intensity={2.9}
-        color="#fff9f2"
+        intensity={2.7}
+        color="#fff7ee"
         castShadow={shadows}
         shadow-mapSize={[mapSize, mapSize]}
         shadow-bias={-0.00025}
@@ -75,12 +75,12 @@ export function StudioLighting({ tier, shadows }: { tier: HsQualityTier; shadows
         shadow-camera-near={10}
         shadow-camera-far={80}
       />
-      <Environment resolution={tier === 'low' ? 64 : 256} frames={1} environmentIntensity={0.45}>
-        <color attach="background" args={['#cfd5dc']} />
-        <Lightformer form="rect" intensity={2.6} color="#ffffff" position={[0, 10, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[22, 22, 1]} />
-        <Lightformer form="rect" intensity={1.3} color="#e6eeff" position={[-12, 4, -3]} rotation={[0, Math.PI / 2, 0]} scale={[18, 5, 1]} />
-        <Lightformer form="rect" intensity={1.0} color="#ffe9d2" position={[12, 3, 4]} rotation={[0, -Math.PI / 2, 0]} scale={[16, 4, 1]} />
-        <Lightformer form="rect" intensity={0.8} color="#f4ede4" position={[0, -2, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[30, 30, 1]} />
+      <Environment resolution={tier === 'low' ? 64 : 256} frames={1} environmentIntensity={0.34}>
+        <color attach="background" args={['#c4cad2']} />
+        <Lightformer form="rect" intensity={2.4} color="#ffffff" position={[0, 10, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[22, 22, 1]} />
+        <Lightformer form="rect" intensity={0.8} color="#e4ecff" position={[-12, 4, -3]} rotation={[0, Math.PI / 2, 0]} scale={[18, 5, 1]} />
+        <Lightformer form="rect" intensity={0.55} color="#ffe9d2" position={[12, 3, 4]} rotation={[0, -Math.PI / 2, 0]} scale={[16, 4, 1]} />
+        <Lightformer form="rect" intensity={0.5} color="#eef0f3" position={[0, -2, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[30, 30, 1]} />
       </Environment>
     </>
   );

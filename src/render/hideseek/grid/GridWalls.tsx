@@ -9,6 +9,8 @@ import { useHsScene } from '../frame/sceneContext';
 import { arenaOrigin, ARENA_SPAN } from '../layout/gridLattice';
 import { MAX_WALLS_PER_ARENA, wallsOfLayout } from '../layout/arenaWalls';
 import { HS } from '../palette';
+import { groundedMaterial } from '../room/groundedMaterial';
+import { tileFloorMaterial } from '../room/tileFloor';
 import { floorQuad, standingUnitBox } from '../shared/basicGeometry';
 import { commit, makeScratch, MAX_ARENAS, placeInstance, GRID_LAYER } from './scratch';
 
@@ -19,7 +21,8 @@ interface Props {
 }
 
 /**
- * Floors and walls of every grid arena, two instanced draw calls. They only
+ * Floors and walls of every grid arena, two instanced draw calls, in the
+ * same tiles and slab walls as the showcase. They only
  * move when the lattice, the layouts or the focus change, so they are
  * rebuilt on the frame version rather than every frame.
  */
@@ -29,8 +32,9 @@ export function GridWalls({ onPick }: Props) {
   const walls = useRef<THREE.InstancedMesh>(null);
   const floorGeo = useDisposable(() => floorQuad(ARENA_SPAN), []);
   const wallGeo = useDisposable(() => standingUnitBox(), []);
-  const floorMat = useDisposable(() => new THREE.MeshStandardMaterial({ roughness: 0.92, metalness: 0 }), []);
-  const wallMat = useDisposable(() => new THREE.MeshStandardMaterial({ roughness: 0.7, metalness: 0 }), []);
+  // The same tiles and walls as up close; the instance color only dims an arena outside the focused one.
+  const floorMat = useDisposable(() => tileFloorMaterial({ color: '#ffffff' }), []);
+  const wallMat = useDisposable(() => groundedMaterial({ roughness: 0.6, metalness: 0, envMapIntensity: 0.65 }, 0.8, 0.8), []);
   const t = useMemo(() => makeScratch(), []);
   const wallSlot = useMemo(() => new Int16Array(MAX_ARENAS * MAX_WALLS_PER_ARENA), []);
 

@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
 import { followedAgent } from '../frame/followedAgent';
+import { BACKDROP_LAYER } from '../grid/scratch';
 import { arenaOrigin } from '../layout/gridLattice';
 import { HS_TONE_MAPPING } from '../palette';
 import { farPlane } from '../scene/haze';
@@ -40,6 +41,7 @@ export function PovViews() {
     const targets = [0, 1].map(() => new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, samples: 4 }));
     // Their far plane lies past the end of the haze, like the main camera's, so the ground fades out instead of stopping.
     const cameras = [0, 1].map(() => new THREE.PerspectiveCamera(80, w / h, 0.05, farPlane(0)));
+    cameras.forEach((c) => c.layers.enable(BACKDROP_LAYER));
     const overlay = new THREE.Scene();
     const ortho = new THREE.OrthographicCamera(0, 1, 1, 0, -1, 1);
     const plane = new THREE.PlaneGeometry(1, 1);

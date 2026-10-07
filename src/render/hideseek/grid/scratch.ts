@@ -11,6 +11,13 @@ export const MAX_ARENAS = 50;
 export const GRID_LAYER = 1;
 
 /**
+ * The city round the arenas draws on layer 2. The main and first person
+ * cameras see it; the contact shadow pass under the room does not, so the
+ * city is not drawn once more for shadows it can never cast into the room.
+ */
+export const BACKDROP_LAYER = 2;
+
+/**
  * Reusable math objects for one instanced component, so filling hundreds
  * of instances every frame allocates nothing.
  */

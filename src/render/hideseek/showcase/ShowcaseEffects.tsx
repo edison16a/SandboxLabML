@@ -18,7 +18,7 @@ import { arenaOrigin } from '../layout/gridLattice';
  */
 export function ShowcaseEffects({ tier, photo }: { tier: HsQualityTier; photo: boolean }) {
   const ultra = tier === 'ultra';
-  const ao = <N8AO ref={opaqueOnly} aoRadius={1.4} distanceFalloff={1.1} intensity={2.2} quality={ultra ? 'high' : 'medium'} halfRes={!ultra} color="#05070b" />;
+  const ao = <N8AO ref={opaqueOnly} aoRadius={1.8} distanceFalloff={1.1} intensity={2.8} quality={ultra ? 'high' : 'medium'} halfRes={!ultra} color="#05070b" />;
   // Lit white walls reach a little past 1 in linear light, so the threshold sits above them and only emissive parts glow.
   const bloom = <Bloom mipmapBlur levels={ultra ? 7 : 5} luminanceThreshold={1.5} luminanceSmoothing={0.2} intensity={0.9} radius={0.6} />;
   const finish = [<ToneMapping key="tm" mode={ToneMappingMode.NEUTRAL} />, <SMAA key="smaa" />, <Vignette key="v" eskil={false} offset={0.32} darkness={0.36} />];

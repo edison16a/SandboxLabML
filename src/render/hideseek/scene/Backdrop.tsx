@@ -1,49 +1,51 @@
 'use client';
 
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { useEffect, useMemo, useRef } from 'react';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { useHsScene } from '../frame/sceneContext';
-import { standingUnitBox } from '../shared/basicGeometry';
-import { commit, makeScratch, placeInstance } from '../grid/scratch';
+import { BACKDROP_LAYER, commit, makeScratch, placeInstance } from '../grid/scratch';
 import { HS_COLORS } from '../palette';
-import { backdropBlocks, CITY_MARGIN, CITY_REACH, distanceToClear, heightRamp } from './backdropBlocks';
+import { groundedMaterial } from '../room/groundedMaterial';
+import { openUnitBox } from '../shared/basicGeometry';
+import { cityBase, cityBlocks } from './backdropBlocks';
 
-const LIGHT = new THREE.Color('#f1f1ef');
-const DARK = new THREE.Color('#dcdcd9');
+/** Most blocks the city ever holds; cityBlocks stops there. */
+const CAPACITY = 8000;
+const LIGHT = new THREE.Color(HS_COLORS.blockLight);
+const DARK = new THREE.Color(HS_COLORS.blockDark);
 
 /**
- * The world beyond the arenas: open pale stone ground and, round it, a
- * quiet city of pale plaster blocks that stay low near the arenas and rise
- * into a skyline further out, fading into the haze. One instanced draw
- * call; the blocks are re-placed only when the arena grid changes size.
+ * The world beyond the arenas: a dense city of grey blocks of many heights
+ * packed round the arenas, low by the walls and rising into a skyline that
+ * fades into the haze, on open ground. One instanced draw call; the blocks
+ * are rebuilt only when the arena grid changes size.
  */
 export function Backdrop() {
   const { frame } = useHsScene();
   const mesh = useRef<THREE.InstancedMesh>(null);
-  const blocks = useMemo(() => backdropBlocks(), []);
-  const geometry = useDisposable(() => standingUnitBox(), []);
-  const blockMat = useDisposable(() => new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.92, metalness: 0, envMapIntensity: 0.7 }), []);
-  const groundMat = useDisposable(() => new THREE.MeshStandardMaterial({ color: HS_COLORS.ground, roughness: 0.95, metalness: 0, envMapIntensity: 0.5 }), []);
-  const t = useMemo(() => ({ ...makeScratch(), w: -1, d: -1 }), []);
+  const geometry = useDisposable(() => openUnitBox(), []);
+  const blockMat = useDisposable(() => groundedMaterial({ color: '#ffffff', roughness: 0.82, metalness: 0, envMapIntensity: 0.6 }, 0.62, 1.4), []);
+  const groundMat = useDisposable(() => new THREE.MeshStandardMaterial({ color: HS_COLORS.ground, roughness: 0.9, metalness: 0, envMapIntensity: 0.4 }), []);
+  const t = useMemo(() => ({ ...makeScratch(), w: -1, d: -1, n: -1 }), []);
+  const camera = useThree((s) => s.camera);
+  useEffect(() => void camera.layers.enable(BACKDROP_LAYER), [camera]);
 
   useFrame(() => {
     const m = mesh.current;
-    const { width, depth } = frame.lattice;
-    if (!m || (t.w === width && t.d === depth)) return;
+    const { width, depth, count } = frame.lattice;
+    if (!m || (t.w === width && t.d === depth && t.n === count)) return;
     t.w = width;
     t.d = depth;
-    const hx = width / 2 + CITY_MARGIN;
-    const hz = depth / 2 + CITY_MARGIN;
-    let n = 0;
-    for (const b of blocks) {
-      const gap = distanceToClear(b.x, b.z, hx, hz) - Math.max(b.w, b.d) / 2;
-      if (gap < 0 || gap > CITY_REACH) continue;
-      placeInstance(m, n, t, b.x, 0, b.z, 0, b.w, b.h * heightRamp(gap), b.d);
-      m.setColorAt(n++, t.c.copy(LIGHT).lerp(DARK, b.tone));
+    t.n = count;
+    const blocks = cityBlocks(width / 2, depth / 2, cityBase(count), CAPACITY);
+    for (let i = 0; i < blocks.length; i++) {
+      const b = blocks[i];
+      placeInstance(m, i, t, b.x, 0, b.z, 0, b.w, b.h, b.d);
+      m.setColorAt(i, t.c.copy(LIGHT).lerp(DARK, b.tone));
     }
-    commit(m, n);
+    commit(m, blocks.length);
   });
 
   return (
@@ -51,7 +53,7 @@ export function Backdrop() {
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow material={groundMat} raycast={() => null}>
         <planeGeometry args={[3000, 3000]} />
       </mesh>
-      <instancedMesh ref={mesh} args={[geometry, blockMat, blocks.length]} frustumCulled={false} raycast={() => null} />
+      <instancedMesh layers={BACKDROP_LAYER} ref={mesh} args={[geometry, blockMat, CAPACITY]} frustumCulled={false} raycast={() => null} />
     </group>
   );
 }

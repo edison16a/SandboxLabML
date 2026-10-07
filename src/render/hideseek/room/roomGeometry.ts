@@ -3,52 +3,30 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { Rect } from '@/engine/hideseek/layouts/types';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
-import { PLASTER_METERS } from './plasterMaps';
 
 const ARENA = DEFAULT_HIDESEEK_PHYSICS.arena;
 
+/** Rounding of every wall edge, m: small enough to read as a crisp slab, large enough to catch a line of light. */
+const WALL_EDGE = 0.03;
+
 /**
  * Every wall of a room merged into one mesh, so the room costs one draw
- * call however many walls it has. Each wall is a rounded box whose rounding
- * is almost half its thickness, which gives it a soft round cap along the
- * top and round ends. The box reaches below the floor by that radius, so
- * only the top is rounded and the foot meets the floor square.
+ * call however many walls it has. Each wall is a clean slab with lightly
+ * rounded edges. It reaches below the floor by the rounding, so its foot
+ * meets the floor square. Overlaps at corners share one material and
+ * normal, so they never show.
  */
-export function wallGeometry(rects: Rect[], segments = 4): THREE.BufferGeometry {
+export function wallGeometry(rects: Rect[], segments = 2): THREE.BufferGeometry {
   const parts = rects.map((r) => {
-    const radius = Math.min(r.hx, r.hz) * 0.96;
-    const g = new RoundedBoxGeometry(r.hx * 2, ARENA.wallHeight + radius, r.hz * 2, segments, radius);
-    g.translate(r.x, (ARENA.wallHeight - radius) / 2, r.z);
+    const g = new RoundedBoxGeometry(r.hx * 2, ARENA.wallHeight + WALL_EDGE, r.hz * 2, segments, WALL_EDGE);
+    g.translate(r.x, (ARENA.wallHeight - WALL_EDGE) / 2, r.z);
+    g.deleteAttribute('uv');
     return g;
   });
   const merged = mergeGeometries(parts) as THREE.BufferGeometry;
   parts.forEach((p) => p.dispose());
-  boxProjectUVs(merged, PLASTER_METERS);
   merged.computeBoundingSphere();
   return merged;
-}
-
-/**
- * Replaces per-face UVs with ones measured in meters, picked by the axis
- * each face looks along. A rounded box maps each face to 0..1, which would
- * stretch a texture twenty fold along a long wall; this keeps the plaster
- * the same scale on every wall and on both sides of it.
- */
-function boxProjectUVs(g: THREE.BufferGeometry, metersPerRepeat: number): void {
-  const pos = g.attributes.position;
-  const nor = g.attributes.normal;
-  const uv = g.attributes.uv as THREE.BufferAttribute;
-  for (let i = 0; i < pos.count; i++) {
-    const nx = Math.abs(nor.getX(i));
-    const ny = Math.abs(nor.getY(i));
-    const nz = Math.abs(nor.getZ(i));
-    const x = pos.getX(i);
-    const y = pos.getY(i);
-    const z = pos.getZ(i);
-    const [u, v] = ny >= nx && ny >= nz ? [x, z] : nx >= nz ? [z, y] : [x, y];
-    uv.setXY(i, u / metersPerRepeat, v / metersPerRepeat);
-  }
-  uv.needsUpdate = true;
 }
 
 /** Width of the soft shadow on the floor along the foot of every wall, m. */
@@ -89,11 +67,10 @@ export function floorAoGeometry(rects: Rect[]): THREE.BufferGeometry {
   return g;
 }
 
-/** The floor of the room, with UVs in meters divided by the texture span, so slabs stay square. */
-export function floorGeometry(metersPerRepeat: number): THREE.BufferGeometry {
+/** The floor of the room, facing up. The tile pattern comes from its position, so it needs no UVs. */
+export function floorGeometry(): THREE.BufferGeometry {
   const g = new THREE.PlaneGeometry(ARENA.size, ARENA.size, 1, 1);
   g.rotateX(-Math.PI / 2);
-  const uv = g.attributes.uv as THREE.BufferAttribute;
-  for (let i = 0; i < uv.count; i++) uv.setXY(i, (uv.getX(i) * ARENA.size) / metersPerRepeat, (uv.getY(i) * ARENA.size) / metersPerRepeat);
+  g.deleteAttribute('uv');
   return g;
 }
