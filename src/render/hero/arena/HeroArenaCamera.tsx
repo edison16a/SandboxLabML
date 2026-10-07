@@ -7,8 +7,8 @@ import { useHsScene } from '@/render/hideseek/frame/sceneContext';
 import { cityEdgeFrom, farPlane, hazeRange } from '@/render/hideseek/scene/haze';
 import { stepSpring } from '@/render/shared/interpolate';
 
-/** Elevation of the shot: steep enough to see a player over most walls, low enough that walls and ramps still read as 3D. */
-const ELEVATION = (56 * Math.PI) / 180;
+/** Elevation of the shot, the lab's own: steep enough to see a player over most walls, low enough that walls and ramps still read as 3D. */
+const ELEVATION = (60 * Math.PI) / 180;
 /** Camera distance from the followed player, m. About half the room fits, so players are big enough to read. */
 const DISTANCE = 18;
 /** How far past the player the camera aims, m. It puts the player in the lower third, under the page text. */
