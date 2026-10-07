@@ -8,6 +8,7 @@ import { LOCK_FREE, LOCK_SEEKERS } from '@/engine/hideseek/snapshot';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { BOX_LOOK } from '../boxes/boxMaterials';
 import { instancedCrateGeometry } from '../boxes/instancedCrate';
+import { instancedRampGeometry } from '../boxes/instancedRamp';
 import { useHsScene } from '../frame/sceneContext';
 import { blendFloorPose, boxAt, boxLock } from '../frame/snapshotRead';
 import { arenaOrigin } from '../layout/gridLattice';
@@ -23,10 +24,10 @@ const OF_KIND: Record<BoxKind, number[]> = { cube: [], plank: [], ramp: [] };
 BOX_KINDS.forEach((k, i) => OF_KIND[k].push(i));
 
 /**
- * Every crate of every grid arena, one instanced draw call per kind: the
- * cubes, the planks, then the ramps, drawn for now as crates of their
- * footprint. Locked crates light their braces in the color of the team
- * that owns the lock, which is all the grid needs to show a fort.
+ * Every box of every grid arena, one instanced draw call per kind: the
+ * cubes, the planks, then the ramps. Locked boxes light their braces in
+ * the color of the team that owns the lock, which is all the grid needs
+ * to show a fort.
  */
 export function GridBoxes({ onPick }: { onPick: (slot: number) => void }) {
   return (
@@ -42,7 +43,10 @@ function CrateKind({ kind, onPick }: { kind: BoxKind; onPick: (slot: number) => 
   const { frame } = useHsScene();
   const mesh = useRef<THREE.InstancedMesh>(null);
   const boxes = OF_KIND[kind];
-  const geometry = useDisposable(() => instancedCrateGeometry(kind, boxSize(DEFAULT_HIDESEEK_PHYSICS, boxes[0])), [kind, boxes]);
+  const geometry = useDisposable(() => {
+    const size = boxSize(DEFAULT_HIDESEEK_PHYSICS, boxes[0]);
+    return kind === 'ramp' ? instancedRampGeometry(size) : instancedCrateGeometry(kind, size);
+  }, [kind, boxes]);
   const material = useDisposable(() => tintMaskMaterial({ roughness: 0.45, metalness: 0.15, envMapIntensity: 1 }), []);
   const t = useMemo(() => makeScratch(), []);
 
