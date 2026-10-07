@@ -17,13 +17,13 @@ test.describe('Racing lab', () => {
     // seconds and the software renderer does not compete with training for the CPU.
     await page.keyboard.press('5');
     await page.getByRole('button', { name: 'Train' }).click();
-    await expect(page.getByText('The viewport is paused so Max can use every core')).toBeVisible();
+    await expect(page.getByText('Paused while Max trains')).toBeVisible();
     await expect(page.getByText('Recent champions')).toBeVisible();
     await expect.poll(async () => page.locator('tbody tr').count(), { timeout: 180_000 }).toBeGreaterThanOrEqual(3);
 
     // Pausing wakes the viewport and brings the ghosts back.
     await page.keyboard.press(' ');
-    await expect(page.getByText('The viewport is paused so Max can use every core')).toBeHidden();
+    await expect(page.getByText('Paused while Max trains')).toBeHidden();
     // V cycles the view: both, population, overlay. Keys avoid fighting the busy software renderer for clicks.
     await page.keyboard.press('v');
     await page.keyboard.press('v');

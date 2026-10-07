@@ -9,7 +9,7 @@ async function trainBriefly(page: Page) {
   await page.getByRole('button', { name: 'Train' }).click();
   await expect.poll(async () => page.locator('tbody tr').count(), { timeout: 180_000 }).toBeGreaterThanOrEqual(2);
   await page.keyboard.press(' ');
-  await expect(page.getByText('The viewport is paused so Max can use every core')).toBeHidden();
+  await expect(page.getByText('Paused while Max trains')).toBeHidden();
 }
 
 async function openSandbox(page: Page) {
