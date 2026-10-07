@@ -52,7 +52,8 @@ export function RacingLab() {
   const streams = ready ? racingSession().streams : null;
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
+    // Under lg the viewport and the side panel stack taller than the screen, so the stack scrolls.
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col max-lg:overflow-y-auto lg:flex-row">
       <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col lg:min-w-[600px]">
         <div data-tour="viewport" className="relative min-h-0 flex-1 bg-[#b9cfe6]">
           {track && streams ? (

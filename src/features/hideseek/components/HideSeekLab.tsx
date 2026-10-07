@@ -45,7 +45,8 @@ export function HideSeekLab() {
   const streams = ready ? session.streams : null;
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
+    // Under lg the viewport and the side panel stack taller than the screen, so the stack scrolls.
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col max-lg:overflow-y-auto lg:flex-row">
       <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col lg:min-w-[600px]">
         <div ref={viewport} className="@container relative min-h-0 flex-1 bg-bg" data-testid="hs-viewport" data-tour="viewport">
           {streams ? (
