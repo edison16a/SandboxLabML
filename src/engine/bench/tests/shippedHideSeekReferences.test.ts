@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { HIDESEEK_BENCHMARK_VERSION, HIDESEEK_ENGINE_VERSION } from '../../core/version';
 import { ELO_ANCHOR } from '../hideseek/elo';
+import { HS_REFERENCE_FINAL_WINDOW } from '../hideseek/exam';
 import { opponentsFrom } from '../hideseek/opponents';
 import { readReferences } from '../nodeReferences';
 import type { BenchReferences } from '../types';
@@ -44,7 +45,10 @@ describe('public/references/hideseek.json', () => {
         expect(p.p25).toBeLessThanOrEqual(p.median);
         expect(p.median).toBeLessThanOrEqual(p.p75);
       }
-      expect(r.finalScore).toBe(r.curve[r.curve.length - 1].median);
+      // The final score pools every seed over the last checkpoints, so it sits inside their bands.
+      const late = r.curve.slice(-HS_REFERENCE_FINAL_WINDOW);
+      expect(r.finalScore).toBeGreaterThanOrEqual(Math.min(...late.map((p) => p.p25)));
+      expect(r.finalScore).toBeLessThanOrEqual(Math.max(...late.map((p) => p.p75)));
     }
   });
 

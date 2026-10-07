@@ -24,6 +24,14 @@ const HS_BENCH_SEED = 0x45b7;
  */
 export const HS_BENCH_PHYSICS = DEFAULT_HIDESEEK_PHYSICS;
 
+/**
+ * Checkpoints pooled into a Hide and Seek reference's final score. Both
+ * teams co-evolve, so a single run swings by 10 to 25 points from one
+ * checkpoint to the next; the last three (generations 40, 50 and 60 at the
+ * nightly budget) of every seed give a steadier picture.
+ */
+export const HS_REFERENCE_FINAL_WINDOW = 3;
+
 /** Matches the exam plays for each reference opponent. */
 export function examMatchesPerOpponent(): number {
   return HIDESEEK_LAYOUT_IDS.length * HS_BENCH_STARTS_PER_ROOM * 2;

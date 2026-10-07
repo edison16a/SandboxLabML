@@ -59,6 +59,19 @@ describe('summarizeCurve', () => {
     ]);
     expect(curve.finalScore).toBe(30);
   });
+
+  it('pools every seed over the last checkpoints for the final score', () => {
+    const scores = [
+      [0, 10, 60],
+      [0, 20, 10],
+      [0, 70, 20],
+    ];
+    // The last checkpoint alone (60, 10, 20) has median 20, and so do the last two pooled (10, 60, 20, 10, 70, 20).
+    expect(summarizeCurve('beginner', [0, 10, 20], scores).finalScore).toBe(20);
+    expect(summarizeCurve('beginner', [0, 10, 20], scores, 2).finalScore).toBe(20);
+    expect(summarizeCurve('beginner', [0, 10, 20], [[0, 40, 50]], 2).finalScore).toBe(45);
+    expect(summarizeCurve('beginner', [0, 10, 20], [[0, 40, 50]], 9).finalScore).toBe(40);
+  });
 });
 
 describe('loadReferences', () => {

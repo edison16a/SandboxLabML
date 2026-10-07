@@ -1,4 +1,5 @@
 import { writeFileSync } from 'node:fs';
+import { HS_REFERENCE_FINAL_WINDOW } from '../../../src/engine/bench/hideseek/exam';
 import { opponentOf } from '../../../src/engine/bench/hideseek/opponents';
 import { hideSeekResult } from '../../../src/engine/bench/hideseek/result';
 import { REFERENCE_TIERS, summarizeCurve } from '../../../src/engine/bench/references';
@@ -87,6 +88,7 @@ export async function generateHideSeek(args: Args, pool: JobPool): Promise<void>
       tier,
       gens,
       tierRuns.map((r) => gens.map((g) => scoreOf(`${tier}:${r.job.seed}:${g}`))),
+      HS_REFERENCE_FINAL_WINDOW,
     );
   });
   writeReferences(out, {
@@ -101,7 +103,7 @@ export async function generateHideSeek(args: Args, pool: JobPool): Promise<void>
   if (args.raw) writeFileSync(args.raw, JSON.stringify({ champions, yardsticks: [...yardsticks.values()], exams: [...exams.values()] }));
   for (const r of references)
     console.log(
-      `${r.tier}: final median ${r.finalScore}, rating ${champions.find((c) => c.tier === r.tier)?.rating}, reference pair scores ${scoreOf(`ref:${r.tier}`).toFixed(1)}`,
+      `${r.tier}: final score ${r.finalScore}, rating ${champions.find((c) => c.tier === r.tier)?.rating}, reference pair scores ${scoreOf(`ref:${r.tier}`).toFixed(1)}`,
     );
   console.log(`Wrote ${out} in ${secondsSince(started)} s.`);
 }

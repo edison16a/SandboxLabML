@@ -76,11 +76,19 @@ const round1 = (x: number) => Math.round(x * 10) / 10;
  * Summarizes several seeds' benchmark scores into one curve: the median
  * and the middle half (25% to 75%) at each checkpoint generation. Scores
  * are rounded to a tenth, which keeps the shipped file small.
+ *
+ * The final score is the median of every seed's scores over the last
+ * `finalWindow` checkpoints. One checkpoint is enough for Racing. In Hide
+ * and Seek both teams keep chasing each other's latest tricks, so one run
+ * can swing 20 points from one checkpoint to the next, and a wider window
+ * says where a preset really ends up.
  */
-export function summarizeCurve(tier: ReferenceTier, generations: readonly number[], scoresBySeed: readonly (readonly number[])[]): ReferenceCurve {
+export function summarizeCurve(tier: ReferenceTier, generations: readonly number[], scoresBySeed: readonly (readonly number[])[], finalWindow = 1): ReferenceCurve {
   const curve = generations.map((generation, i) => {
     const at = scoresBySeed.map((s) => s[i]);
     return { generation, median: round1(quantile(at, 0.5)), p25: round1(quantile(at, 0.25)), p75: round1(quantile(at, 0.75)) };
   });
-  return { tier, finalScore: curve.length ? curve[curve.length - 1].median : 0, curve };
+  const from = Math.max(0, generations.length - finalWindow);
+  const late = scoresBySeed.flatMap((s) => s.slice(from, generations.length));
+  return { tier, finalScore: curve.length ? round1(quantile(late, 0.5)) : 0, curve };
 }
