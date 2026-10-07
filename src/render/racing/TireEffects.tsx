@@ -82,6 +82,7 @@ export function TireEffects() {
         else fx.puffs.spawn(gravel ? fx.kinds.grit : fx.kinds.blade, x, 0.15, z, -fwdX * speed * 0.35 + (Math.random() - 0.5) * 3, 2 + r * 3, -fwdZ * speed * 0.35 + (Math.random() - 0.5) * 3, r);
       }
     }
+    fx.marks.flush();
     fx.puffs.update(dt);
   });
 

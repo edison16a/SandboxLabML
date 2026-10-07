@@ -94,13 +94,13 @@ export function pickStation(stations: Station[], current: number, carS: number, 
   }
   let best = -1;
   let bestD = Infinity;
-  stations.forEach((st, k) => {
-    const d = lead(carS, st.s, len);
+  for (let k = 0; k < stations.length; k++) {
+    const d = lead(carS, stations[k].s, len);
     // The nearest station ahead, or the one the car has only just passed.
     if (d >= -KEEP_PAST && d < bestD) {
       bestD = d;
       best = k;
     }
-  });
+  }
   return best >= 0 ? best : 0;
 }

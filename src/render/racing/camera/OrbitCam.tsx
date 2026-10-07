@@ -29,7 +29,9 @@ function roofsOf(world: WorldData): Array<[Pad, number]> {
 /** Height of whatever is under (x, z): the ground, or a building's roof. */
 function floorAt(world: WorldData, x: number, z: number): number {
   let floor = terrainHeight(world.shape, x, z);
-  for (const [pad, roof] of roofsOf(world)) if (padWeight(pad, x, z, 0.01) > 0.5) floor = Math.max(floor, roof);
+  const roofs = roofsOf(world);
+  // Plain index loop: this runs every frame and should not build iterators.
+  for (let k = 0; k < roofs.length; k++) if (padWeight(roofs[k][0], x, z, 0.01) > 0.5) floor = Math.max(floor, roofs[k][1]);
   return floor;
 }
 

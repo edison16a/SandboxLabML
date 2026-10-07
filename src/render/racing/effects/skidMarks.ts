@@ -43,6 +43,11 @@ export class SkidMarks {
   private readonly birth: THREE.BufferAttribute;
   private readonly strength: THREE.BufferAttribute;
   private next = 0;
+  /** Segments written since the last flush, as a half open range; empty when lo >= hi. */
+  private lo = Infinity;
+  private hi = -Infinity;
+  /** Update ranges handed to three, reused every frame so a flush allocates nothing. */
+  private readonly ranges = { pos: { start: 0, count: 0 }, birth: { start: 0, count: 0 }, strength: { start: 0, count: 0 } };
 
   constructor(private readonly segments = 1600) {
     const g = new THREE.BufferGeometry();
@@ -98,12 +103,28 @@ export class SkidMarks {
       b[this.next * 6 + k] = now;
       s[this.next * 6 + k] = alpha;
     }
-    // Upload only the segment that changed, not the whole ring.
-    this.pos.addUpdateRange(o, 18);
-    this.birth.addUpdateRange(this.next * 6, 6);
-    this.strength.addUpdateRange(this.next * 6, 6);
-    this.pos.needsUpdate = this.birth.needsUpdate = this.strength.needsUpdate = true;
+    this.lo = Math.min(this.lo, this.next);
+    this.hi = Math.max(this.hi, this.next + 1);
     this.next = (this.next + 1) % this.segments;
+  }
+
+  /**
+   * Sends this frame's new segments to the GPU in one range per buffer,
+   * not the whole ring. Call once per frame after the last `add`.
+   */
+  flush(): void {
+    if (this.lo >= this.hi) return;
+    const r = this.ranges;
+    r.pos.start = this.lo * 18;
+    r.pos.count = (this.hi - this.lo) * 18;
+    r.birth.start = r.strength.start = this.lo * 6;
+    r.birth.count = r.strength.count = (this.hi - this.lo) * 6;
+    this.pos.updateRanges.push(r.pos);
+    this.birth.updateRanges.push(r.birth);
+    this.strength.updateRanges.push(r.strength);
+    this.pos.needsUpdate = this.birth.needsUpdate = this.strength.needsUpdate = true;
+    this.lo = Infinity;
+    this.hi = -Infinity;
   }
 
   /** Clears every mark, for a new track or episode. */

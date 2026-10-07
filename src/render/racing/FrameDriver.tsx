@@ -49,7 +49,8 @@ export function FrameDriver() {
       stream = population;
       index = focus.index;
     } else if (focus.kind === 'ghost' && showGhosts) {
-      const k = Array.from(ghosts!.tags).indexOf(focus.generation);
+      // Typed arrays search in place: no copy of the tags every frame.
+      const k = ghosts!.tags.indexOf(focus.generation);
       if (k >= 0) {
         stream = ghosts;
         index = k;
