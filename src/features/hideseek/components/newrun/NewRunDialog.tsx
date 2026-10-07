@@ -18,7 +18,7 @@ import { Field, TextInput } from '@/ui/primitives/Field';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { HS_LAST_RUN_KEY } from '../../hooks/useHideSeekBootstrap';
 import { hideSeekSession } from '../../session/HideSeekSession';
-import { RoomThumb } from '../RoomThumb';
+import { RoomThumb } from '../maps/RoomThumb';
 
 interface Props {
   open: boolean;

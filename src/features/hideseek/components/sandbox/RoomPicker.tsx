@@ -3,7 +3,7 @@
 import { Plus } from 'lucide-react';
 import { isPresetRoomId, PRESET_ROOMS, type SandboxRoom } from '@/engine/hideseek/sandbox/room';
 import { cn } from '@/ui/cn';
-import { RoomThumb } from '../RoomThumb';
+import { RoomThumb } from '../maps/RoomThumb';
 
 interface Props {
   rooms: readonly SandboxRoom[];
