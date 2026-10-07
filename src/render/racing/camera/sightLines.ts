@@ -26,8 +26,20 @@ export function occluders(l: StadiumLayout): Pad[] {
   return out;
 }
 
-/** True when the segment from (ax, az) to (bx, bz) passes through the pad's rectangle (a slab test in its frame). */
-export function crosses(p: Pad, ax: number, az: number, bx: number, bz: number): boolean {
+/** Where a segment enters and leaves a pad, as fractions of its length. */
+export interface Span {
+  lo: number;
+  hi: number;
+}
+
+const span: Span = { lo: 0, hi: 1 };
+
+/**
+ * Clips the segment from (ax, az) to (bx, bz) against the pad's rectangle
+ * (a slab test in the pad's frame). Returns false when it misses; on a hit
+ * `out` holds where it enters and leaves. Allocates nothing.
+ */
+export function hitSpan(p: Pad, ax: number, az: number, bx: number, bz: number, out: Span): boolean {
   const c = Math.cos(p.yaw);
   const s = Math.sin(p.yaw);
   // World to the pad's frame, the inverse of padOf's rotation.
@@ -37,19 +49,28 @@ export function crosses(p: Pad, ax: number, az: number, bx: number, bz: number):
   const dv = (bx - p.x) * s + (bz - p.z) * c - v0;
   let lo = 0;
   let hi = 1;
-  for (const [o, d, h] of [[u0, du, p.halfLength], [v0, dv, p.halfDepth]]) {
+  for (let axis = 0; axis < 2; axis++) {
+    const o = axis ? v0 : u0;
+    const d = axis ? dv : du;
+    const h = axis ? p.halfDepth : p.halfLength;
     if (Math.abs(d) < 1e-9) {
       if (Math.abs(o) > h) return false;
       continue;
     }
-    let t0 = (-h - o) / d;
-    let t1 = (h - o) / d;
-    if (t0 > t1) [t0, t1] = [t1, t0];
-    lo = Math.max(lo, t0);
-    hi = Math.min(hi, t1);
+    const t0 = (-h - o) / d;
+    const t1 = (h - o) / d;
+    lo = Math.max(lo, Math.min(t0, t1));
+    hi = Math.min(hi, Math.max(t0, t1));
     if (lo > hi) return false;
   }
+  out.lo = lo;
+  out.hi = hi;
   return true;
+}
+
+/** True when the segment from (ax, az) to (bx, bz) passes through the pad's rectangle. */
+export function crosses(p: Pad, ax: number, az: number, bx: number, bz: number): boolean {
+  return hitSpan(p, ax, az, bx, bz, span);
 }
 
 /**
