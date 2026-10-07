@@ -1,7 +1,7 @@
 import { Car, Cpu, Dna } from 'lucide-react';
 import { useRacingLab } from '@/features/racing/state/labStore';
 import type { Tour } from '@/ui/walkthrough/types';
-import { watchRacingLive } from './tourActions';
+import { keepRacingTraining, racingFlatOut, watchRacingLive } from './tourActions';
 
 const LEARN = 'How it learns';
 const DRIVE = 'How it drives';
@@ -50,6 +50,7 @@ export const RACING_TOUR: Tour = {
       target: '[data-tour="generation"]',
       fallback: '[data-tour="viewport"]',
       prefer: ['top'],
+      prepare: () => void keepRacingTraining(),
       title: 'The best become parents',
       body: 'When every car is done, the best ones breed the next generation. Their children start as copies, with small changes.',
       terms: [
@@ -82,12 +83,13 @@ export const RACING_TOUR: Tour = {
       chapter: LEARN,
       target: '[data-tour="speed"]',
       prefer: ['top'],
+      prepare: () => void keepRacingTraining(),
       title: 'Train faster',
       body: '1x to 4x let you watch every car. Turbo and Max train flat out on every core of your computer.',
       action: {
         prompt: 'Pick Turbo',
         shortcut: '4',
-        done: () => lab().speed === 'turbo' || lab().speed === 'max',
+        done: racingFlatOut,
         doneLabel: 'Training flat out',
         then: {
           title: 'Learning in the background',

@@ -7,15 +7,28 @@ import { isWatchSpeed } from '@/workers/shared/protocol';
 const racing = () => useRacingLab.getState();
 
 /**
+ * Starts Racing training when it is not running, for the steps about
+ * generations and speed. Someone who pressed Next instead of Train, or
+ * paused, would otherwise read about a counter and charts that never move.
+ * Starting a running lab does nothing, so steps can call this freely.
+ */
+export async function keepRacingTraining(): Promise<void> {
+  if (racing().status !== 'running') await racingSession().start();
+}
+
+/** True while Racing trains at Turbo or Max, flat out. */
+export function racingFlatOut(): boolean {
+  return racing().status === 'running' && !isWatchSpeed(racing().speed);
+}
+
+/**
  * Brings the Racing lab back to a speed where one car drives on screen, and
  * keeps it training. Turbo and Max train out of sight, so the inputs readout
- * and the network's live links would show dashes or sit still. Starting an
- * already running lab does nothing, so steps can call this freely.
+ * and the network's live links would show dashes or sit still.
  */
 export async function watchRacingLive(): Promise<void> {
-  const session = racingSession();
-  if (!isWatchSpeed(racing().speed)) await session.setSpeed('1x');
-  if (racing().status !== 'running') await session.start();
+  if (!isWatchSpeed(racing().speed)) await racingSession().setSpeed('1x');
+  await keepRacingTraining();
 }
 
 /**
