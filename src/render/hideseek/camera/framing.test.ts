@@ -19,10 +19,10 @@ function project(shot: Shot, x: number, y: number, z: number): THREE.Vector3 {
 describe('camera framing', () => {
   it('frames the close shot as a three quarter view about 50 degrees up', () => {
     const s = closeShot(0, 0, ARENA_SPAN, FOV, ASPECT);
-    const flat = Math.hypot(s.px, s.pz);
-    expect((Math.atan2(s.py, flat) * 180) / Math.PI).toBeCloseTo(50, 0);
+    const flat = Math.hypot(s.px - s.tx, s.pz - s.tz);
+    expect((Math.atan2(s.py - s.ty, flat) * 180) / Math.PI).toBeCloseTo(50, 0);
     // Turned off the room's axis, so walls and crates read as solid.
-    expect(Math.abs(s.px)).toBeGreaterThan(2);
+    expect(Math.abs(s.px - s.tx)).toBeGreaterThan(2);
   });
 
   it('fills the viewport with the room in the close shot and keeps the middle of the room in view', () => {
@@ -32,9 +32,25 @@ describe('camera framing', () => {
       expect(Math.abs(p.x)).toBeLessThan(1);
       expect(Math.abs(p.y)).toBeLessThan(1);
     }
-    // Close means close: the overview stands well back from it.
+    // Close stands nearer than the square on overview, which leaves a margin round the walls.
     const far = arenaShot(0, 0, ARENA_SPAN, FOV, ASPECT, false);
-    expect(Math.hypot(s.px, s.py, s.pz)).toBeLessThan(Math.hypot(far.px, far.py, far.pz) * 0.85);
+    expect(Math.hypot(s.px - s.tx, s.py - s.ty, s.pz - s.tz)).toBeLessThan(Math.hypot(far.px - far.tx, far.py - far.ty, far.pz - far.tz) * 0.95);
+  });
+
+  it('keeps the whole floor of one room above the picture in picture strip', () => {
+    const s = closeShot(0, 0, ARENA_SPAN, FOV, ASPECT);
+    const h = ARENA_SPAN / 2;
+    for (const shot of [s, arenaShot(0, 0, ARENA_SPAN, FOV, ASPECT, false)]) {
+      for (const [x, z] of [[-h, -h], [h, -h], [-h, h], [h, h]]) {
+        const p = project(shot, x, 0, z);
+        expect(Math.abs(p.x)).toBeLessThan(1);
+        expect(p.y).toBeGreaterThan(-0.61);
+      }
+    }
+    // The room still fills most of the width.
+    const left = project(s, -h, 0, h).x;
+    const right = project(s, h, 0, -h).x;
+    expect(right - left).toBeGreaterThan(1.3);
   });
 
   it('keeps the top down shot straight over the focused arena', () => {
