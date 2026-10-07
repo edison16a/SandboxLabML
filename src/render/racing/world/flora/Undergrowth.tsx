@@ -65,7 +65,8 @@ export function Undergrowth({ flora, tufts, tier }: { flora: Flora; tufts: Float
   const shadow = tier === 'high';
   return (
     <group>
-      {[0, 1].map((v) => (
+      {/* Low keeps only the lighter of the two shrub shapes, half the shrubs at a third of the triangles. */}
+      {(tier === 'low' ? [0] : [0, 1]).map((v) => (
         <Scatter key={`s${v}`} set={sets.shrub[v]} geometry={geo.shrub[v]} material={mats.shrub.material} castShadow={shadow} />
       ))}
       {grass && <Scatter set={grass} geometry={geo.tuft} material={mats.grass.material} castShadow={false} />}

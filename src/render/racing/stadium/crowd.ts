@@ -11,7 +11,7 @@ import { AISLE_EVERY, FRONT, ROW_DEPTH, ROWS, rowHeight } from './grandstandGeom
 export function spectatorGeometry(): THREE.BufferGeometry {
   const pieces: Array<[THREE.BufferGeometry, number]> = [
     [new THREE.CylinderGeometry(0.17, 0.21, 0.62, 7).translate(0, 0.62, 0), 0],
-    [new THREE.SphereGeometry(0.12, 8, 6).translate(0, 1.06, 0), 1],
+    [new THREE.SphereGeometry(0.12, 7, 5).translate(0, 1.06, 0), 1],
     [new THREE.BoxGeometry(0.09, 0.42, 0.09).translate(-0.24, 0.66, 0), 2],
     [new THREE.BoxGeometry(0.09, 0.42, 0.09).translate(0.24, 0.66, 0), 2],
   ];

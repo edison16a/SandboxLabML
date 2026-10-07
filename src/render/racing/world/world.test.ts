@@ -60,6 +60,14 @@ describe('racing world', () => {
     }
   });
 
+  it('keeps verge grass past the wall on every track', () => {
+    for (const track of tracks) {
+      const { tufts, field } = worldFor(track);
+      expect(tufts.length / STRIDE).toBeGreaterThan(track.length * 4);
+      for (let k = 0; k < tufts.length; k += STRIDE) expect(distanceAt(field, tufts[k], tufts[k + 2])).toBeGreaterThan(track.halfWidth + RUNOFF + 1.5);
+    }
+  });
+
   it('is the same world every time for the same track', () => {
     const a = worldFor(buildTrack(BUILT_IN_TRACKS[1]));
     const b = worldFor(tracks[1]);
