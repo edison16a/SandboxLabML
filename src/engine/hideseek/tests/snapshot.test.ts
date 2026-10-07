@@ -23,7 +23,10 @@ import {
   SNAPSHOT_RAYS,
 } from '../snapshot';
 import { createArenaPool } from '../world/pool';
-import { randomGenomes } from './helpers';
+import { SEEKER } from '../agents/agent';
+import { setBoxLock } from '../agents/lock';
+import { CLIMB_RULES, placeRamp, RAMP } from './climbHelpers';
+import { idle, randomGenomes, scripted, scriptedMatch } from './helpers';
 
 const f = Math.fround;
 
@@ -80,6 +83,33 @@ describe('arena snapshot', () => {
     expect(matches.some((m) => m.state.boxes.some((b) => b.lockedBy >= 0))).toBe(true);
     expect(matches.some((m) => m.seeker.frozen) && matches.some((m) => !m.seeker.frozen)).toBe(true);
     matches.forEach((m) => m.release());
+    pool.dispose();
+  });
+
+  it('carries climbing, the jump, elevation and a seeker-owned lock tick by tick', async () => {
+    const pool = await createArenaPool();
+    const L = CLIMB_RULES.box.ramp.length;
+    const m = scriptedMatch(pool, 'shelter', idle(), scripted(() => ({ move: 1 })), CLIMB_RULES);
+    placeRamp(m, -2.9 + L / 2 + 0.05, -6.5, Math.PI);
+    setBoxLock(m.state, RAMP, SEEKER);
+    m.moveAgent('seeker', 1.5, -6.5, Math.PI);
+    const buf = new Float32Array(HIDESEEK_SNAPSHOT.stride);
+    const seen = { climbing: 0, airborne: 0 };
+    for (let t = 0; t < 100; t++) {
+      m.step();
+      m.snapshot(buf);
+      const snap = readArenaSnapshot(buf);
+      const a = m.seeker;
+      expect(snap.agents[1]).toEqual({ x: f(a.x), z: f(a.z), yaw: f(a.yaw), flags: agentFlags(m.state, 1), elevation: f(a.elevation) });
+      expect(!!(snap.agents[1].flags & FLAG_CLIMBING)).toBe(a.climbing);
+      expect(!!(snap.agents[1].flags & FLAG_AIRBORNE)).toBe(a.airborne);
+      if (a.climbing) seen.climbing++;
+      if (a.airborne) seen.airborne++;
+      expect(snap.boxes[RAMP].lock).toBe(LOCK_SEEKERS);
+    }
+    expect(seen.climbing).toBeGreaterThan(10);
+    expect(seen.airborne).toBeGreaterThan(10);
+    m.release();
     pool.dispose();
   });
 

@@ -6,7 +6,8 @@ import type { MatchSpec } from '../match/types';
 import { HIDESEEK_SNAPSHOT } from '../snapshot';
 import { HideSeekTrainer } from '../trainer/trainer';
 import { createArenaPool, type ArenaPool } from '../world/pool';
-import { randomGenomes, traceMatch } from './helpers';
+import { CLIMB_RULES, placeRamp } from './climbHelpers';
+import { randomGenomes, scripted, scriptedMatch, traceMatch } from './helpers';
 
 let pool: ArenaPool;
 beforeAll(async () => {
@@ -15,6 +16,18 @@ beforeAll(async () => {
 afterAll(() => pool.dispose());
 
 const inputs = STANDARD_HIDESEEK_INPUTS;
+
+/** `count` matches between seeded random brains, cycling through the rooms. */
+function randomSpecs(count: number, seed: number): MatchSpec[] {
+  const hiders = randomGenomes(inputs, count, seed);
+  const seekers = randomGenomes(inputs, count, seed + 1);
+  return hiders.map((h, i) => ({
+    layout: (['open', 'shelter', 'corridor'] as const)[i % 3],
+    seed: 500 + i,
+    hider: { genome: h, inputs },
+    seeker: { genome: seekers[(i * 7) % count], inputs },
+  }));
+}
 
 describe('determinism', () => {
   it('a match seeded by (run, generation, round, index) replays exactly, even after its world ran other matches', () => {
@@ -38,19 +51,45 @@ describe('determinism', () => {
   });
 
   it('results do not depend on which matches ran before, whatever the order', async () => {
-    const hiders = randomGenomes(inputs, 18, 11);
-    const seekers = randomGenomes(inputs, 18, 12);
-    const specs: MatchSpec[] = hiders.map((h, i) => ({
-      layout: (['open', 'shelter', 'corridor'] as const)[i % 3],
-      seed: 500 + i,
-      hider: { genome: h, inputs },
-      seeker: { genome: seekers[(i * 7) % 18], inputs },
-    }));
+    const specs = randomSpecs(18, 11);
     const other = await createArenaPool();
     const forward = specs.map((s) => runMatch(s, pool));
     const backward = [...specs].reverse().map((s) => runMatch(s, other)).reverse();
     other.dispose();
     expect(backward).toEqual(forward);
+  });
+
+  it('matches with climbing and vaults replay exactly, on a fresh world or a reused one', async () => {
+    const stride = HIDESEEK_SNAPSHOT.stride;
+    const L = CLIMB_RULES.box.ramp.length;
+    // The seeker runs up a ramp by the shelter wall and vaults in; the hider wanders and bumps into things.
+    const play = (p: ArenaPool) => {
+      const hider = scripted((_, t) => ({ move: 1, turn: Math.sin(t / 25), grab: t % 90 < 45 }));
+      const m = scriptedMatch(p, 'shelter', hider, scripted(() => ({ move: 1 })), CLIMB_RULES, 9);
+      placeRamp(m, -2.9 + L / 2 + 0.05, -6.5, Math.PI);
+      m.moveAgent('seeker', 1.5, -6.5, Math.PI);
+      const frames = new Float32Array(300 * stride);
+      for (let t = 0; t < 300; t++) {
+        m.step();
+        m.snapshot(frames, t * stride);
+      }
+      const out = { frames, result: m.result() };
+      m.release();
+      return out;
+    };
+    const first = play(pool);
+    expect(first.result.seekerClimbs).toBeGreaterThan(0);
+    expect(first.result.seekerVaults).toBe(1);
+    // Other matches on the same pool, then again on the reused world, then on a brand new pool.
+    for (const spec of randomSpecs(6, 77)) runMatch(spec, pool);
+    const reused = play(pool);
+    const other = await createArenaPool();
+    const fresh = play(other);
+    other.dispose();
+    expect(reused.result).toEqual(first.result);
+    expect(reused.frames).toEqual(first.frames);
+    expect(fresh.result).toEqual(first.result);
+    expect(fresh.frames).toEqual(first.frames);
   });
 
   it('a Turbo replay of a round matches the live round stepped tick by tick', async () => {
