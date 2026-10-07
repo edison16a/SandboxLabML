@@ -32,7 +32,7 @@ function row(s: HideSeekGenerationStats, seconds: number): string {
   const f = (v: number | undefined, d = 2) => (v === undefined ? '     -' : v.toFixed(d).padStart(6));
   return (
     `${String(s.generation).padStart(4)} | hidden ${f(g.hiddenShare)} current ${f(g.currentHiddenShare)} sparring ${f(g.scriptedHiddenShare)} | ` +
-    `locks ${f(g.locksPerMatch)} moved ${f(g.boxesMovedPerMatch)} grabs ${f(g.grabsPerMatch)} | ` +
+    `locks ${f(g.locksPerMatch)} moved ${f(g.boxesMovedPerMatch)} grabs ${f(g.grabsPerMatch)} climbs ${f(g.climbsPerMatch)} vaults ${f(g.seekerVaultsPerMatch)} | ` +
     `hider ${f(s.hiders.best, 1)} ${f(s.hiders.mean, 1)} seeker ${f(s.seekers.best, 1)} ${f(s.seekers.mean, 1)} | ` +
     `species ${s.hiders.species.length}/${s.seekers.species.length} | ${seconds.toFixed(1)} s`
   );

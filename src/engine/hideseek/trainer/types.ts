@@ -134,6 +134,11 @@ export interface HideSeekMatchStats {
   locksPerMatch: number;
   boxesMovedPerMatch: number;
   grabsPerMatch: number;
+  /** Ramps mounted per match, by both teams. Missing in histories from before ramps. */
+  climbsPerMatch?: number;
+  /** Walls jumped off a ramp per match, by each team. Missing in histories from before ramps. */
+  hiderVaultsPerMatch?: number;
+  seekerVaultsPerMatch?: number;
   hallOfFame: { hiders: number; seekers: number };
   /** Mean share of seek time the hider was exposed, over every match. Missing in older histories. */
   exposedShare?: number;

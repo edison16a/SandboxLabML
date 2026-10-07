@@ -30,6 +30,9 @@ export function scoreGeneration(plan: MatchSpec[][], results: MatchResult[][], h
   let locks = 0;
   let moved = 0;
   let grabs = 0;
+  let climbs = 0;
+  let hiderVaults = 0;
+  let seekerVaults = 0;
   let exposed = 0;
   const vsSeeker = { n: 0, sum: 0 };
   const vsHider = { n: 0, sum: 0 };
@@ -59,6 +62,9 @@ export function scoreGeneration(plan: MatchSpec[][], results: MatchResult[][], h
       locks += res.locksPlaced;
       moved += res.boxesMoved;
       grabs += res.hiderGrabs + res.seekerGrabs;
+      climbs += res.hiderClimbs + res.seekerClimbs;
+      hiderVaults += res.hiderVaults;
+      seekerVaults += res.seekerVaults;
     }),
   );
   const mean = (sum: Float64Array, count: Float64Array) => sum.map((v, i) => (count[i] > 0 ? v / count[i] : 0));
@@ -74,6 +80,9 @@ export function scoreGeneration(plan: MatchSpec[][], results: MatchResult[][], h
       locksPerMatch: per(locks),
       boxesMovedPerMatch: per(moved),
       grabsPerMatch: per(grabs),
+      climbsPerMatch: per(climbs),
+      hiderVaultsPerMatch: per(hiderVaults),
+      seekerVaultsPerMatch: per(seekerVaults),
       exposedShare: per(exposed),
       ...(vsSeeker.n > 0 ? { scriptedHiddenShare: vsSeeker.sum / vsSeeker.n } : {}),
       ...(vsHider.n > 0 ? { scriptedSeenShare: vsHider.sum / vsHider.n } : {}),
