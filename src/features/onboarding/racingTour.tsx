@@ -99,8 +99,8 @@ export const RACING_TOUR: Tour = {
         doneLabel: 'Inputs on',
         then: {
           target: '[data-tour="viewport"]',
-          title: 'Rays and speed',
-          body: 'Each ray measures how far the road edge is in one direction. Those distances and the speed are all the network knows.',
+          title: 'What the car senses',
+          body: 'Each ray measures how far the road edge is in one direction. With the speed and the angle to the road, these numbers are all the network knows.',
         },
       },
     },
@@ -129,7 +129,7 @@ export const RACING_TOUR: Tour = {
       target: '[data-tour="view"]',
       prefer: ['bottom', 'left'],
       title: 'Ghosts of past champions',
-      body: 'Overlay replays champions of earlier generations as ghost cars beside the live ones. The gap between them is what training bought.',
+      body: 'Overlay and Both replay champions of earlier generations as ghost cars. The gap between them is what training bought.',
     },
     {
       id: 'sandbox',
