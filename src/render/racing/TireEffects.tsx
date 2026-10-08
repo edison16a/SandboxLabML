@@ -36,7 +36,7 @@ export function TireEffects() {
   // Rubber laid on another track has no business on this one.
   useEffect(() => fx.marks.clear(), [fx, track]);
 
-  useFrame((_, rawDt) => {
+  useFrame(({ camera }, rawDt) => {
     const dt = Math.min(rawDt, 0.1);
     s.now += dt;
     fx.marks.material.uniforms.uNow.value = s.now;
@@ -98,7 +98,7 @@ export function TireEffects() {
       }
     }
     fx.marks.flush();
-    fx.puffs.update(dt);
+    fx.puffs.update(dt, camera.position);
   });
 
   return (

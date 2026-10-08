@@ -50,9 +50,9 @@ export function StartLine({ track, paint }: { track: Track; paint: THREE.Materia
     checker.repeat.set(1, w / 1.6);
     const board = brandTexture('dark', 7);
     const steel = withHaze(new THREE.MeshStandardMaterial({ color: '#2b3038', metalness: 0.7, roughness: 0.38 }));
-    const line = new THREE.MeshStandardMaterial({ map: checker, roughness: 0.65, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
-    const face = new THREE.MeshStandardMaterial({ map: board, roughness: 0.4, emissive: '#ffffff', emissiveMap: board, emissiveIntensity: 0.35 });
-    const lamp = new THREE.MeshStandardMaterial({ color: '#1a0505', emissive: '#ff2414', emissiveIntensity: 0.06, roughness: 0.25, metalness: 0.2 });
+    const line = withHaze(new THREE.MeshStandardMaterial({ map: checker, roughness: 0.65, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }));
+    const face = withHaze(new THREE.MeshStandardMaterial({ map: board, roughness: 0.4, emissive: '#ffffff', emissiveMap: board, emissiveIntensity: 0.35 }));
+    const lamp = withHaze(new THREE.MeshStandardMaterial({ color: '#1a0505', emissive: '#ff2414', emissiveIntensity: 0.06, roughness: 0.25, metalness: 0.2 }));
     const all = [checker, board, steel, line, face, lamp];
     return { steel, line, face, lamp, dispose: () => all.forEach((x) => x.dispose()) };
   }, [w]);

@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { Track } from '@/engine/racing/track/types';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { sideOffset } from '../trackGeometry';
+import { withHaze } from '../world/atmosphere';
 import type { StadiumLayout } from './layout';
 
 /** Fence height above the wall top, m. */
@@ -78,8 +79,8 @@ export function Fence({ track, layout, offset }: { track: Track; layout: Stadium
   const built = useDisposable(() => {
     const geo = fenceGeometry(track, layout, offset);
     const tex = meshTexture();
-    const net = new THREE.MeshStandardMaterial({ map: tex, transparent: true, depthWrite: false, side: THREE.DoubleSide, roughness: 0.5, metalness: 0.6 });
-    const steel = new THREE.MeshStandardMaterial({ color: '#8a9098', roughness: 0.4, metalness: 0.7 });
+    const net = withHaze(new THREE.MeshStandardMaterial({ map: tex, transparent: true, depthWrite: false, side: THREE.DoubleSide, roughness: 0.5, metalness: 0.6 }));
+    const steel = withHaze(new THREE.MeshStandardMaterial({ color: '#8a9098', roughness: 0.4, metalness: 0.7 }));
     return { geo, net, steel, dispose: () => [geo?.mesh, geo?.posts, tex, net, steel].forEach((x) => x?.dispose()) };
   }, [track, layout, offset]);
   if (!built.geo) return null;
