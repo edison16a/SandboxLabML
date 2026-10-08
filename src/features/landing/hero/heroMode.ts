@@ -60,8 +60,8 @@ export function heroMode(f: HeroFacts): HeroMode {
  * The tier both hero scenes draw at. A quality picked in Settings, or
  * pinned with ?quality=, is used as is, stopping at High since Ultra is
  * only for lab screenshots. Otherwise the hero starts a step below the
- * labs' default: it fills the whole screen behind a scrim, where fine
- * detail barely shows, and a first visit should never stutter.
+ * labs' default: it draws two scenes at once, and a first visit should
+ * never stutter.
  */
 export function heroTier(quality: QualityPin, chosen: boolean, weakGpu: boolean): QualityTier {
   if (!chosen) return weakGpu ? 'low' : 'medium';

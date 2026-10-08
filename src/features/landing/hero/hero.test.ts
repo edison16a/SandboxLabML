@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { heroMode, heroTier, LIVE_MIN_HEIGHT, LIVE_MIN_WIDTH, PHONE_SCREEN_SHORT, type HeroFacts } from './heroMode';
-import { firstScene, nextScene } from './sceneCycle';
 
 const desktop: HeroFacts = { reducedMotion: false, saveData: false, width: 1600, height: 1000, coarsePointer: false, screenShort: 1080, cores: 8, memoryGb: 8, webgl2: true };
 
@@ -54,26 +53,5 @@ describe('heroMode', () => {
   it('starts a step below the labs when nobody picked a quality', () => {
     expect(heroTier('high', false, false)).toBe('medium');
     expect(heroTier('medium', false, true)).toBe('low');
-  });
-});
-
-describe('scene cycle', () => {
-  it('takes turns once both scenes are ready', () => {
-    const both = { car: true, arena: true };
-    expect(nextScene('car', both)).toBe('arena');
-    expect(nextScene('arena', both)).toBe('car');
-  });
-
-  it('stays on the one scene that loaded', () => {
-    expect(nextScene('car', { car: true, arena: false })).toBe('car');
-    expect(nextScene('arena', { car: false, arena: true })).toBe('arena');
-  });
-
-  it('leaves a scene that is not ready for one that is, and waits when neither is', () => {
-    expect(nextScene('car', { car: false, arena: true })).toBe('arena');
-    expect(nextScene('car', { car: false, arena: false })).toBe('car');
-    expect(firstScene({ car: false, arena: true })).toBe('arena');
-    expect(firstScene({ car: true, arena: true })).toBe('car');
-    expect(firstScene({ car: false, arena: false })).toBe('car');
   });
 });

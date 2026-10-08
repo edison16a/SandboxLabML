@@ -10,16 +10,18 @@ import { useHeroMode } from './useHeroMode';
 const HeroLive = lazy(() => import('./live/HeroLive'));
 
 /**
- * The landing hero: the first screen under the header. The poster and the
- * centered text are in the server HTML; on capable devices the live
- * scenes load after first paint and fade in over the poster. A flat scrim
- * between the scene and the text keeps the words readable on any frame,
- * white kerbs and barriers included, at 4.5:1 or better for the small
- * lines. The hero is one screen tall, down to a floor that still holds the
- * tightened text of a short window, so nothing is ever clipped.
+ * The landing hero: the first screen under the header, with the racing
+ * scene and the Hide and Seek arena side by side (one above the other on
+ * a tall screen). The poster, a still of both, and the centered text are
+ * in the server HTML; on capable devices the live scenes load after first
+ * paint and fade in over the poster. A flat scrim between the scenes and
+ * the text keeps the words readable on any frame. The hero is one screen
+ * tall, down to a floor that still holds the tightened text of a short
+ * window, so nothing is clipped.
  */
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
   const mode = useHeroMode();
   const active = useHeroActive(ref);
   return (
@@ -29,11 +31,11 @@ export function Hero() {
       </div>
       {mode === 'live' && (
         <Suspense fallback={null}>
-          <HeroLive active={active} />
+          <HeroLive active={active} hero={ref} panel={panel} />
         </Suspense>
       )}
       <div aria-hidden="true" data-hero-scrim className="absolute inset-0 z-10 bg-bg opacity-60" />
-      <HeroContent />
+      <HeroContent ref={panel} />
     </section>
   );
 }

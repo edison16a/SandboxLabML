@@ -2,62 +2,57 @@
 
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useMemo } from 'react';
-import { fitDistance } from '@/render/hideseek/camera/framing';
+import { useEffect, useMemo } from 'react';
 import { useHsScene } from '@/render/hideseek/frame/sceneContext';
-import { ARENA_SPAN } from '@/render/hideseek/layout/gridLattice';
+import { XRAY_LAYER } from '@/render/hideseek/grid/scratch';
 import { cityEdgeFrom, farPlane, hazeRange } from '@/render/hideseek/scene/haze';
 import { stepSpring } from '@/render/shared/interpolate';
+import type { PaneView } from '../stage/paneView';
 
-/** Elevation of the shot: steep enough to see players over the walls, low enough that walls and ramps still read as 3D. */
-const ELEVATION = (55 * Math.PI) / 180;
-/** Share of the lab's whole room fit the camera stands at. Closer than the fit, so players read larger. */
-const ZOOM = 0.8;
-/** Share of the way from the room center toward the followed player that the shot leans. Nearly all the way, so that player is the subject. */
-const LEAN = 0.9;
-/**
- * How far past the framed point the camera aims, as a share of its
- * distance. It sets the framed point about 80% down the hero, under the
- * page text and between the corner cards, like the car in the racing
- * scene, with room below for a player running toward the camera.
- */
-const LEAD = 0.3;
+/** Elevation of the shot: steep enough to see players over the walls, low enough that walls, ramps and faces still read. */
+const ELEVATION = (50 * Math.PI) / 180;
+/** Meters of floor around the followed player that the free part of the pane shows, across and deep. Close enough to read faces. */
+const SPAN = 10;
 /** Radians per second the camera circles the room. A full turn takes over two minutes. */
 const SPIN = 0.045;
 /**
- * Stiffness of the spring that follows the player, 1/s. A soft spring
- * trails a running player by about twice their speed over this, so at 2.4
- * a sprinting seeker stays within a few meters of the framed point while
- * the switch from hider to seeker still glides across the room.
+ * Stiffness of the spring that follows the player, 1/s. A spring trails a
+ * running player by about twice their speed over this, so at 3.2 a
+ * sprinting seeker stays about 2 m from the framed point, well inside the
+ * 10 m shot, while the switch from hider to seeker still glides across
+ * the room.
  */
-const FOLLOW = 2.4;
+const FOLLOW = 3.2;
 
 /**
  * A crane shot of the room for the landing page. It circles slowly and
- * leans toward the player whose brain is on screen (the first hider while
- * hiders hide, the first seeker once the seekers wake) on a soft spring,
- * keeping the action in the lower third under the page text with the rest
- * of the room behind it. The haze keeps in step with its distance like
- * the lab camera.
+ * follows the player whose brain is on screen (the first hider while
+ * hiders hide, the first seeker once the seekers wake) on a spring.
+ * The stage's shifted lens puts that point in the middle of the part of
+ * the pane the page text leaves free, and the distance sizes the shot to
+ * that part. Players behind walls show as faint silhouettes, like in the
+ * lab, and the haze keeps in step with the distance like the lab camera.
  */
-export function HeroArenaCamera() {
+export function HeroArenaCamera({ pane }: { pane: PaneView }) {
   const { frame } = useHsScene();
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const scene = useThree((s) => s.scene);
-  const size = useThree((s) => s.size);
-  // The lab's own fit for one room, brought closer. Worked out per size, not per frame.
-  const distance = useMemo(() => fitDistance(ARENA_SPAN, ARENA_SPAN, camera.fov, size.width / Math.max(1, size.height), ELEVATION) * ZOOM, [camera.fov, size]);
   const s = useMemo(
     () => ({ angle: 0.6, placed: false, x: { value: 0, velocity: 0 }, z: { value: 0, velocity: 0 }, pose: { x: 0, z: 0, yaw: 0, elevation: 0 }, haze: { near: 0, far: 0 } }),
     [],
   );
 
+  useEffect(() => {
+    camera.layers.enable(XRAY_LAYER);
+    return () => camera.layers.disable(XRAY_LAYER);
+  }, [camera]);
+
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.25);
     const angle = (s.angle += dt * SPIN);
     const followed = frame.agentPose !== null && frame.agentPose(frame.prep ? 0 : 1, s.pose) >= 0;
-    const tx = followed ? s.pose.x * LEAN : 0;
-    const tz = followed ? s.pose.z * LEAN : 0;
+    const tx = followed ? s.pose.x : 0;
+    const tz = followed ? s.pose.z : 0;
     if (followed && !s.placed) {
       // The first shot opens on the player rather than gliding over from the room center as the scene fades in.
       s.placed = true;
@@ -66,11 +61,15 @@ export function HeroArenaCamera() {
     }
     const cx = stepSpring(s.x, tx, FOLLOW, dt);
     const cz = stepSpring(s.z, tz, FOLLOW, dt);
+    // Far enough that SPAN fits the free zone both across and deep, the floor's depth foreshortened by the elevation.
+    const tan = Math.tan((camera.fov * Math.PI) / 360);
+    const aspect = pane.rect.w / Math.max(1, pane.rect.h);
+    const distance = Math.max(SPAN / (2 * tan * aspect * pane.zoneW), (SPAN * Math.sin(ELEVATION)) / (2 * tan * pane.zoneH));
     const dx = Math.sin(angle);
     const dz = Math.cos(angle);
     const flat = Math.cos(ELEVATION) * distance;
     camera.position.set(cx + dx * flat, Math.sin(ELEVATION) * distance, cz + dz * flat);
-    camera.lookAt(cx - dx * LEAD * distance, 0, cz - dz * LEAD * distance);
+    camera.lookAt(cx, 0.4, cz);
 
     const fog = scene.fog as THREE.Fog | null;
     if (fog) {
