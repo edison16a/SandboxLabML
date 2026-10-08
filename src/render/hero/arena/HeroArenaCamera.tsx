@@ -63,8 +63,9 @@ export function HeroArenaCamera({ pane }: { pane: PaneView }) {
   }, [camera]);
 
   useFrame((_, rawDt) => {
-    // Real time up to a second: the spring is stable at any step, and a slow machine must still keep the player framed.
-    const dt = Math.min(rawDt, 1);
+    // Real time up to four seconds: the spring is stable at any step, and a machine drawing a frame every few
+    // seconds must still keep the player framed rather than trail it across the room.
+    const dt = Math.min(rawDt, 4);
     const v = s.view;
     v.azimuth += dt * SPIN;
     const followed = frame.agentPose !== null && frame.agentPose(frame.prep ? 0 : 1, s.pose) >= 0;
