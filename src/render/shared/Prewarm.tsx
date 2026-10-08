@@ -39,6 +39,12 @@ interface Props {
   stepping: boolean;
   /** Called once the scene can draw without stalling the page. */
   onWarm: () => void;
+  /**
+   * Called right before the shaders compile. A scene that shares its
+   * renderer with another sets what its programs are built for here (the
+   * tone curve), or they would compile for the other scene's.
+   */
+  prepare?: (gl: THREE.WebGLRenderer) => void;
 }
 
 /**
@@ -49,7 +55,7 @@ interface Props {
  * is in and React has mounted it, then every shader compiles in the
  * background through KHR_parallel_shader_compile and every texture goes up.
  */
-export function Prewarm({ isReady, stepping, onWarm }: Props) {
+export function Prewarm({ isReady, stepping, onWarm, prepare }: Props) {
   const store = useStore();
   const [warm, setWarm] = useState(false);
 
@@ -69,6 +75,7 @@ export function Prewarm({ isReady, stepping, onWarm }: Props) {
       }
       // Without parallel compiling (Safari, software renderers) nothing can be polled, so the programs are only sent off.
       // Most drivers still finish them well before the scene first draws.
+      prepare?.(s.gl);
       const parallel = s.gl.extensions.has('KHR_parallel_shader_compile');
       const compiled = parallel ? s.gl.compileAsync(s.scene, s.camera) : Promise.resolve(s.gl.compile(s.scene, s.camera));
       void compiled.then(() => {
@@ -83,7 +90,7 @@ export function Prewarm({ isReady, stepping, onWarm }: Props) {
       gone = true;
       if (timer) clearTimeout(timer);
     };
-  }, [store, isReady, stepping, onWarm, warm]);
+  }, [store, isReady, stepping, onWarm, prepare, warm]);
 
   return warm ? null : <HoldDrawing />;
 }
