@@ -27,7 +27,9 @@ interface Props {
  * racing card moves to the top left so it stays in its own scene. Each
  * card shows the brain in charge lighting up live, with a line of real
  * numbers under it. In the arena the hider's brain shows while hiders
- * hide and the seeker's once seekers wake.
+ * hide and the seeker's once seekers wake. The arena card stays mounted
+ * through the switch and only its title, dot and graph change, so it
+ * never blinks out while a busy page catches up with a fade.
  */
 export function HeroPanels({ stacked, pool, car, arena, match, shown }: Props) {
   const team = match.prep ? 0 : 1;
@@ -50,8 +52,6 @@ export function HeroPanels({ stacked, pool, car, arena, match, shown }: Props) {
       {arena && shown.arena && (
         <div data-hero-card="arena" className="absolute right-6 bottom-6">
           <BrainPanel
-            key={team}
-            className="animate-fade-in"
             title={team === 0 ? 'Hider brain' : 'Seeker brain'}
             dot={team === 0 ? 'bg-hider' : 'bg-seeker'}
             genome={team === 0 ? arena.hider : arena.seeker}
