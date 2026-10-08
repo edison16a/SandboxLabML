@@ -1,8 +1,9 @@
 /**
- * Captures the landing hero's poster from the real racing scene and writes
- * the WebP files under public/hero that the page paints before any script
- * runs. Re-run it whenever the racing scene, the hero car or the camera
- * changes, so the poster still matches what fades in over it.
+ * Captures the landing hero's poster from the real live scenes, the racing
+ * scene and the arena side by side (stacked for the portrait frame), and
+ * writes the WebP files under public/hero that the page paints before any
+ * script runs. Re-run it whenever either scene, the hero car or the
+ * cameras change, so the poster still matches what fades in over it.
  *
  *   npm run build
  *   npx next start -p 3100
@@ -10,7 +11,7 @@
  *
  * Options, all optional: --url (default http://127.0.0.1:3100), --chromium
  * (a Chromium binary; Playwright's own is used when left out), --settle 9
- * (seconds the car drives before the shot), --quality medium and --out
+ * (seconds both scenes play before the shot), --quality medium and --out
  * public/hero. It needs a production build, Playwright and sharp (which
  * comes with Next). Chromium draws with its software renderer, so every
  * machine captures the same picture; it is slow, so expect a few minutes.
@@ -32,14 +33,14 @@ const out = args.out ?? 'public/hero';
 /** The quality the poster is drawn at. Medium matches what most visitors see once the scene goes live. */
 const quality = args.quality ?? 'medium';
 
-/** Everything in the hero except the scene: the scrim, the words and the corner cards. */
-const HIDE = '[data-hero-scrim], [data-hero-content], [data-hero-panels] { visibility: hidden !important; }';
+/** Everything in the hero over the scenes: the text panel and the corner cards. The line between the scenes stays. */
+const HIDE = '[data-hero-content], [data-hero-panels] { visibility: hidden !important; }';
 
-/** Opens the hero in a window of this size and returns a PNG of the scene alone, once the car has driven a while. */
+/** Opens the hero in a window of this size and returns a PNG of the scenes alone, once both have played a while. */
 async function capture(browser, width, height, scale) {
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: scale, locale: 'en-US' });
   await page.goto(`${url}/?quality=${quality}`, { waitUntil: 'load' });
-  await page.waitForSelector('[data-hero-scene="car"]', { state: 'attached', timeout: 10 * 60_000 });
+  await page.waitForSelector('[data-hero-shown~="car"][data-hero-shown~="arena"]', { state: 'attached', timeout: 10 * 60_000 });
   await page.addStyleTag({ content: HIDE });
   await page.waitForTimeout(settle);
   const png = await page.locator('section[aria-labelledby="hero-title"]').screenshot({ timeout: 5 * 60_000 });

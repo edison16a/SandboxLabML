@@ -1,8 +1,8 @@
 /**
- * Still frames of the hero's live racing scene, captured from the real
- * renderer by scripts/capture-hero-poster.mjs. Wide screens pick one by
- * the width it is drawn at; portrait screens, phones and tablets alike,
- * get a portrait frame of their own.
+ * Still frames of the hero's live scenes, captured from the real renderer
+ * by scripts/capture-hero-poster.mjs. Wide screens pick one by the width
+ * it is drawn at and show the scenes side by side; portrait screens,
+ * phones and tablets alike, get a portrait frame with them stacked.
  */
 export const POSTER = {
   wide: [
@@ -21,9 +21,11 @@ export const POSTER = {
 const WIDE_SIZES = 'max(100vw, calc((100vh - 3rem) * 16 / 9))';
 
 /**
- * The hero's first paint: a still of the live scene, sent with high
- * priority as plain HTML so it shows before any script runs. The live
- * scene, when it comes, fades in over it.
+ * The hero's first paint: a still of the live scenes, sent with high
+ * priority as plain HTML so it shows before any script runs. Each live
+ * scene, when it comes, fades in over its half. The frame is centered, so
+ * the line between the two scenes stays in the middle however the window
+ * crops it, where the live scenes split too.
  */
 export function HeroPoster() {
   return (
@@ -37,7 +39,7 @@ export function HeroPoster() {
         alt=""
         fetchPriority="high"
         decoding="async"
-        className="absolute inset-0 h-full w-full object-cover object-[50%_70%]"
+        className="absolute inset-0 h-full w-full object-cover"
       />
     </picture>
   );
