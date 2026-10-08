@@ -57,20 +57,25 @@ test.describe('Landing hero', () => {
       window.localStorage.setItem('sandboxlab.tour.racing', '1');
     });
     const workers: Worker[] = [];
-    page.on('worker', (w) => workers.push(w));
+    const gone = new Set<Worker>();
+    page.on('worker', (w) => {
+      workers.push(w);
+      w.once('close', () => gone.add(w));
+    });
     await page.goto('/?quality=low');
 
-    // The car scene comes up over the poster, driven by one replay worker.
+    // The car scene comes up over the poster, driven by one replay worker. The worker that built the hills and
+    // trees has finished and closed by the time the scene shows.
     await expect(page.locator('[data-hero-scene="car"]')).toBeAttached({ timeout: 240_000 });
     await expect(page.locator('[data-hero-panels]')).toContainText('Car brain');
-    expect(workers).toHaveLength(1);
+    await expect.poll(() => workers.filter((w) => !gone.has(w)).length).toBe(1);
 
     // On a small laptop the corner cards stay clear of the centered words and the button.
     await page.setViewportSize({ width: 1024, height: 768 });
     await expect(page.locator('[data-hero-panels]')).toBeVisible();
     await expect.poll(() => page.evaluate(cardsOverText)).toEqual([]);
     await page.setViewportSize({ width: 1440, height: 900 });
-    const heroWorker = workers[0];
+    const heroWorker = workers.find((w) => !gone.has(w)) as Worker;
     const closed = new Promise<void>((resolve) => heroWorker.once('close', () => resolve()));
     // The hero's scenes draw on canvases in the page. Off-page contexts belong to libraries that keep one for the
     // whole visit (the text renderer measures glyphs on one), so they are not the hero's to release.

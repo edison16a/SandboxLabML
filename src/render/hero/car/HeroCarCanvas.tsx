@@ -7,13 +7,13 @@ import type { InputSpec } from '@/engine/env/types';
 import type { Track } from '@/engine/racing/track/types';
 import type { QualityTier } from '@/features/racing/state/labStore';
 import { ChampionCar } from '@/render/racing/ChampionCar';
-import { Grandstand } from '@/render/racing/Grandstand';
-import { RacingEnvironment } from '@/render/racing/RacingEnvironment';
-import { Scenery } from '@/render/racing/Scenery';
+import { RacingEffects } from '@/render/racing/post/RacingEffects';
+import { RacingWorld } from '@/render/racing/RacingWorld';
 import { createFrame, RacingSceneContext } from '@/render/racing/sceneContext';
 import { TireEffects } from '@/render/racing/TireEffects';
-import { TrackMesh } from '@/render/racing/TrackMesh';
-import { Effects } from '@/render/shared/Effects';
+import { TERRAIN_STEP } from '@/render/racing/world/terrain/Terrain';
+import { useWorld } from '@/render/racing/world/useWorld';
+import { readTerrain } from '@/render/racing/world/worldStore';
 import { FramePacer } from '@/render/shared/FramePacer';
 import { Prewarm } from '@/render/shared/Prewarm';
 import { useFrameLoop } from '@/render/shared/frameLoop';
@@ -46,7 +46,9 @@ export function HeroCarCanvas({ track, stream, schema, tier, running, onShown }:
   const target = useRef(new THREE.Vector3());
   const value = useMemo(() => ({ track, population: null, ghosts: stream, frame }), [track, stream, frame]);
   const [warm, setWarm] = useState(false);
-  const isReady = useCallback(() => stream.curr !== null, [stream]);
+  // The hills and trees are built in a worker; the scene only shows once they and the car's first frame are in.
+  const world = useWorld(track, TERRAIN_STEP[tier]);
+  const isReady = useCallback(() => stream.curr !== null && world !== null && readTerrain(world, TERRAIN_STEP[tier]) !== null, [stream, world, tier]);
   const onWarm = useCallback(() => {
     setWarm(true);
     onShown();
@@ -68,16 +70,13 @@ export function HeroCarCanvas({ track, stream, schema, tier, running, onShown }:
       <RacingSceneContext.Provider value={value}>
         <Prewarm isReady={isReady} stepping={!running} onWarm={onWarm} />
         <HeroCarDriver />
-        <RacingEnvironment tier={tier} focus={target} />
-        <TrackMesh track={track} />
-        <Scenery track={track} count={tier === 'low' ? 140 : 320} />
-        <Grandstand track={track} />
+        <RacingWorld track={track} tier={tier} focus={target} />
         <ChampionCar tier={tier} ring={false} />
         {tier !== 'low' && <TireEffects />}
         <HeroCarRays schema={schema} />
         <HeroChaseCamera target={target} />
         {/* The composer draws on its own, so it joins once everything else has compiled. */}
-        {warm && <Effects tier={tier} />}
+        {warm && <RacingEffects tier={tier} chase={false} />}
       </RacingSceneContext.Provider>
     </Canvas>
   );

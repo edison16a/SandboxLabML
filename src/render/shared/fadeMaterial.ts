@@ -1,14 +1,18 @@
 import * as THREE from 'three';
 
 /**
- * A MeshStandardMaterial that reads a per-instance opacity attribute, so one
- * instanced draw call can show ghosts at different transparencies. three.js
+ * Makes any lit material read a per-instance opacity attribute, so one
+ * instanced draw call can show cars at different transparencies. three.js
  * has per-instance color but not alpha, so the shader is patched to multiply
- * the fragment alpha by `instanceOpacity`.
+ * the fragment alpha by `instanceOpacity`. Stacks on an existing patch.
  */
-export function createFadeMaterial(params: THREE.MeshStandardMaterialParameters = {}): THREE.MeshStandardMaterial {
-  const m = new THREE.MeshStandardMaterial({ transparent: true, depthWrite: false, ...params });
-  m.onBeforeCompile = (shader) => {
+export function withInstanceOpacity<T extends THREE.Material>(material: T): T {
+  const before = material.onBeforeCompile.bind(material);
+  const key = material.customProgramCacheKey.bind(material);
+  material.transparent = true;
+  material.depthWrite = false;
+  material.onBeforeCompile = (shader, renderer) => {
+    before(shader, renderer);
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nattribute float instanceOpacity;\nvarying float vInstanceOpacity;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvInstanceOpacity = instanceOpacity;');
@@ -16,8 +20,13 @@ export function createFadeMaterial(params: THREE.MeshStandardMaterialParameters 
       .replace('#include <common>', '#include <common>\nvarying float vInstanceOpacity;')
       .replace('#include <dithering_fragment>', '#include <dithering_fragment>\ngl_FragColor.a *= vInstanceOpacity;');
   };
-  m.customProgramCacheKey = () => 'fade-instanced';
-  return m;
+  material.customProgramCacheKey = () => `${key()}|fade-instanced`;
+  return material;
+}
+
+/** A MeshStandardMaterial with per-instance opacity, for the ghosts. */
+export function createFadeMaterial(params: THREE.MeshStandardMaterialParameters = {}): THREE.MeshStandardMaterial {
+  return withInstanceOpacity(new THREE.MeshStandardMaterial(params));
 }
 
 /** Adds the opacity attribute to an instanced geometry, one float per instance. */
