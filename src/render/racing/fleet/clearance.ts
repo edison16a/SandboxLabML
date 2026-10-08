@@ -21,6 +21,11 @@ export function apart(x: number, z: number, focus: THREE.Vector3, yaw: number): 
   return Math.max(ramp(along, 4.3, 4.9), ramp(across, 1.9, 2.3));
 }
 
+/** How much of a car at (x, z) to keep near the lens: none within about 6 m, where it would fill the frame or clip. */
+export function atLens(x: number, z: number, cam: THREE.Vector3): number {
+  return ramp(Math.hypot(x - cam.x, z - cam.z), 5.6, 6.4);
+}
+
 /**
  * How much of a car at (x, z) to keep in views about one car: none right
  * at the lens, across the line of sight to the followed car, or overlapping
@@ -33,7 +38,7 @@ export function clearance(x: number, z: number, focus: THREE.Vector3, yaw: numbe
   const fz = focus.z - cam.z;
   const fLen = Math.hypot(fx, fz) || 1e-3;
   const along = (cx * fx + cz * fz) / fLen;
-  let keep = Math.min(ramp(Math.hypot(cx, cz), 5.6, 6.4), apart(x, z, focus, yaw));
+  let keep = Math.min(atLens(x, z, cam), apart(x, z, focus, yaw));
   // Across the line of sight in front of the followed car: it would veil it.
   if (along > 0 && along < fLen - 1.2) keep = Math.min(keep, ramp(Math.abs(cx * fz - cz * fx) / fLen, 2.3, 2.7));
   return keep;

@@ -12,7 +12,7 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { crowdGeometry } from './car/geometry/crowd';
 import { withCarSurface } from './car/materials/carSurface';
 import { useCarReflections } from './car/materials/useCarReflections';
-import { apart, clearance } from './fleet/clearance';
+import { apart, atLens, clearance } from './fleet/clearance';
 import { FadeSplit } from './fleet/fadeSplit';
 import { FleetMotion } from './motion/fleetMotion';
 import { CRASHED_COLOR, speciesColor } from './palette';
@@ -107,9 +107,10 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
       const x = poses[i * 3];
       const y = poses[i * 3 + 1];
       const hidden = i === frame.hiddenPopulation;
-      // In every view a car overlapping the detailed followed car fades; chase and trackside also clear the lens and the line of sight.
-      const focused = frame.focusIndex >= 0;
-      let target = hidden ? 0 : clearFocus ? clearance(x, -y, frame.focusPos, frame.focusYaw, state.camera.position) : focused ? apart(x, -y, frame.focusPos, frame.focusYaw) : 1;
+      // In every view a car at the lens or overlapping the detailed followed car fades; chase and trackside also clear the line of sight.
+      const cam = state.camera.position;
+      let target = hidden ? 0 : clearFocus ? clearance(x, -y, frame.focusPos, frame.focusYaw, cam) : atLens(x, -y, cam);
+      if (!clearFocus && frame.focusIndex >= 0) target = Math.min(target, apart(x, -y, frame.focusPos, frame.focusYaw));
       // A car on top of an earlier one would draw the same body twice.
       if (target > 0 && overlapsEarlier(poses, i)) target = 0;
       const solidBefore = split.solidCount;
