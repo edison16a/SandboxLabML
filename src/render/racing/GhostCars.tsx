@@ -12,6 +12,8 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { crowdGeometry } from './car/geometry/crowd';
 import { withCarSurface } from './car/materials/carSurface';
 import { apart, atLens, clearance } from './fleet/clearance';
+import { FadeSplit } from './fleet/fadeSplit';
+import { settle } from './fleet/packView';
 import { FleetMotion } from './motion/fleetMotion';
 import { ghostColor, ghostOpacity } from './palette';
 import { useRacingScene } from './sceneContext';
@@ -44,6 +46,8 @@ export function GhostCars() {
   }, []);
   const tmp = useMemo(() => ({ m: new THREE.Matrix4(), c: new THREE.Color(), pose: { x: 0, y: 0, heading: 0 } as Pose, stopAt: new Float64Array(MAX_GHOSTS), epoch: -1 }), []);
   const fleet = useMemo(() => new FleetMotion(MAX_GHOSTS), []);
+  // Eases each ghost's clearance over time, as the pack does, so a ghost on the edge of a rule never hangs half gone.
+  const clears = useMemo(() => new FadeSplit(MAX_GHOSTS), []);
 
   useFrame((state, dt) => {
     const m = mesh.current;
@@ -58,10 +62,12 @@ export function GhostCars() {
       m.count = d.count = 0;
       return;
     }
-    if (tmp.epoch !== ghosts.epoch) {
+    const restart = tmp.epoch !== ghosts.epoch;
+    if (restart) {
       tmp.epoch = ghosts.epoch;
       tmp.stopAt.fill(0);
     }
+    clears.begin(Math.min(dt, 1));
     const now = state.clock.elapsedTime;
     const buf = ghosts.curr.buffer;
     const prev = ghosts.prev?.buffer ?? null;
@@ -82,6 +88,7 @@ export function GhostCars() {
       const gz = -tmp.pose.y;
       let clear = clearFocus ? clearance(gx, gz, frame.focusPos, frame.focusYaw, state.camera.position) : atLens(gx, gz, state.camera.position);
       if (!clearFocus && frame.focusIndex >= 0) clear = Math.min(clear, apart(gx, gz, frame.focusPos, frame.focusYaw));
+      clear = clears.place(i, settle(clear, clears.shown[i]), restart);
       const opacity = (hover ? 0.9 : ghostOpacity(t)) * fade * clear;
       // A fully faded ghost is dropped outright, so its depth pass cannot hide smoke or other ghosts behind it.
       fleet.compose(i, tmp.pose.x, 0.01, -tmp.pose.y, tmp.pose.heading, i === frame.hiddenGhost || opacity < 0.02 ? 0 : 1, tmp.m);
