@@ -109,7 +109,8 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
       poses[i * 3 + 1] = tmp.pose.y;
       poses[i * 3 + 2] = tmp.pose.heading;
     }
-    split.begin(step);
+    // Fades follow real time even when frames are slow, so a weak GPU never shows a car half gone for long.
+    split.begin(Math.min(dt, 1));
     // A new episode puts every car back on the grid at once: no easing then, or the copies on the grid would linger over the followed car.
     const restart = population.epoch !== tmp.epoch;
     tmp.epoch = population.epoch;
