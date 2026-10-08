@@ -9,6 +9,7 @@ import { chaseRig, restoreFov, stepChase } from './camera/chaseRig';
 import { keepAboveGround } from './camera/floor';
 import { OrbitCam } from './camera/OrbitCam';
 import { TracksideCam } from './camera/TracksideCam';
+import { FRAME_PRIORITY } from './framePriority';
 import { useRacingScene } from './sceneContext';
 import { useWorld } from './world/useWorld';
 
@@ -58,7 +59,7 @@ export function CameraRig({ mode, target }: { mode: CameraMode; target: React.Re
       if (mode === 'free') keepAboveGround(camera, world, 2);
       target.current?.set(camera.position.x, 0, camera.position.z - 30);
     }
-  });
+  }, FRAME_PRIORITY.camera);
 
   if (mode === 'orbit') return <OrbitCam world={world} target={target} />;
   if (mode === 'trackside') return <TracksideCam world={world} target={target} />;

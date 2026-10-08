@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { RACING_SNAPSHOT } from '@/engine/racing/env';
 import { useRacingLab } from '@/features/racing/state/labStore';
 import { blendField, blendPose, type Pose } from '@/render/shared/interpolate';
+import { FRAME_PRIORITY } from './framePriority';
 import { updateFocusMotion } from './motion/focusMotion';
 import { useRacingScene } from './sceneContext';
 
@@ -83,6 +84,6 @@ export function FrameDriver() {
       frame.focusSpeed = blendField(prev, stream.curr.buffer, index * STRIDE + 3, a);
     }
     updateFocusMotion(frame, stream, index, track, run?.racing?.car);
-  }, -1);
+  }, FRAME_PRIORITY.driver);
   return null;
 }

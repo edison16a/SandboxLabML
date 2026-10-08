@@ -5,6 +5,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useMemo } from 'react';
 import { stepSpring } from '@/render/shared/interpolate';
 import { useRacingScene } from '../sceneContext';
+import { FRAME_PRIORITY } from '../framePriority';
 import type { WorldData } from '../world/worldData';
 import { pickStation, trackStations } from './stations';
 
@@ -55,6 +56,6 @@ export function TracksideCam({ world, target }: { world: WorldData | null; targe
       camera.fov = fov;
       camera.updateProjectionMatrix();
     }
-  });
+  }, FRAME_PRIORITY.camera);
   return null;
 }

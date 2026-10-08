@@ -8,6 +8,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { insideAt } from '../world/trackField';
 import type { WorldData } from '../world/worldData';
 import { useRacingScene } from '../sceneContext';
+import { FRAME_PRIORITY } from '../framePriority';
 import { keepAboveGround } from './floor';
 import { clearFraction } from './orbitBlockers';
 
@@ -111,7 +112,7 @@ export function OrbitCam({ world, target }: { world: WorldData | null; target: R
     }
     keepAboveGround(camera, world, 1.2);
     target.current?.copy(c.target);
-  });
+  }, FRAME_PRIORITY.camera);
 
   return null;
 }

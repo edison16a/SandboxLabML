@@ -2,6 +2,7 @@
 
 import { useFrame } from '@react-three/fiber';
 import { blendField, blendPose, type Pose } from '@/render/shared/interpolate';
+import { FRAME_PRIORITY } from '@/render/racing/framePriority';
 import { updateFocusMotion } from '@/render/racing/motion/focusMotion';
 import { useRacingScene } from '@/render/racing/sceneContext';
 
@@ -37,6 +38,6 @@ export function HeroCarDriver() {
     frame.focusYaw = pose.heading;
     frame.focusSpeed = blendField(prev, curr.buffer, 3, a);
     updateFocusMotion(frame, ghosts, 0, track);
-  }, -1);
+  }, FRAME_PRIORITY.driver);
   return null;
 }

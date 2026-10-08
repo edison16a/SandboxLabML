@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useMemo } from 'react';
+import { FRAME_PRIORITY } from '@/render/racing/framePriority';
 import { Trail } from '@/render/racing/camera/trail';
 import { useRacingScene } from '@/render/racing/sceneContext';
 import { stepSpring } from '@/render/shared/interpolate';
@@ -54,6 +55,6 @@ export function HeroChaseCamera({ target }: { target: React.RefObject<THREE.Vect
     s.look.set(focus.x + fx * 20, 0, focus.z + fz * 20);
     camera.lookAt(s.look);
     target.current?.copy(focus);
-  });
+  }, FRAME_PRIORITY.camera);
   return null;
 }
