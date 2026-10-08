@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fitDistance } from '../camera/framing';
+import { fitDistance } from '../camera/fit';
 import { arenaOrigin, ARENA_SPAN, latticeFor } from '../layout/gridLattice';
 import { BACKDROP_HALF, CITY_MARGIN, CITY_REACH } from './backdropBlocks';
 import { cityEdgeFrom, farPlane, HAZE, hazeRange } from './haze';

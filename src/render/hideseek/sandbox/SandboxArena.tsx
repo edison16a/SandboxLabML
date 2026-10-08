@@ -86,6 +86,7 @@ export function SandboxArena({ tier, aoPass, room: shownRoom }: { tier: HsQualit
     }
     field.readSandbox(frame, curr, players, boxes);
     field.walls = frame.walls = walls;
+    frame.field = field;
     sandboxStats.agents = players;
     sandboxStats.boxes = boxes;
     sandboxStats.locked = locked;
@@ -105,10 +106,11 @@ export function SandboxArena({ tier, aoPass, room: shownRoom }: { tier: HsQualit
     const off = getFeed()?.on(() => invalidate());
     return () => {
       frame.agentPose = null;
+      if (frame.field === field) frame.field = null;
       off?.();
       Object.assign(sandboxStats, { agents: 0, boxes: 0, locked: 0, ramps: 0 });
     };
-  }, [frame, getFeed, invalidate]);
+  }, [frame, field, getFeed, invalidate]);
 
   return (
     <group>

@@ -1,4 +1,5 @@
 import type { Lattice } from '../layout/gridLattice';
+import { ELEVATION, fitDistance, fitWindow, type ScreenWindow } from './fit';
 
 /** Where the camera sits and what it looks at. */
 export interface Shot {
@@ -10,27 +11,11 @@ export interface Shot {
   tz: number;
 }
 
-/** Elevation of the overview shots: steep enough to see into every room past its walls, low enough to read heights. */
-const ELEVATION = (60 * Math.PI) / 180;
 /** The close shot: a three quarter view from 50 degrees up, turned a little off the room's axis so walls and crates read as solid. */
 export const CLOSE_ELEVATION = (50 * Math.PI) / 180;
 export const CLOSE_AZIMUTH = (18 * Math.PI) / 180;
 const TOP = Math.PI / 2 - 1e-3;
-/** Wall height, m: the tops of the far walls must fit in the shot too. */
-const WALL = 2.5;
-/**
- * Where a shot may put the room on screen, as shares of the half screen:
- * across, and above and below the middle. Less than 1 keeps clear of the
- * HUD along the edges.
- */
-export interface ScreenWindow {
-  h: number;
-  up: number;
-  down: number;
-}
 
-/** The grid overviews and the top down shot keep clear of the HUD along the top and bottom edges, and may run wider. */
-const FILL: ScreenWindow = { h: 0.94, up: 0.84, down: 0.84 };
 /**
  * One room seen at an angle keeps its whole floor above the picture in
  * picture strip along the bottom, so no agent hides under it. The top row
@@ -38,61 +23,7 @@ const FILL: ScreenWindow = { h: 0.94, up: 0.84, down: 0.84 };
  */
 const ROOM_FILL: ScreenWindow = { h: 0.94, up: 0.9, down: 0.6 };
 /** The close shot also fills the width. */
-const CLOSE_FILL: ScreenWindow = { h: 0.99, up: 0.95, down: 0.6 };
-
-/**
- * Smallest camera distance at which a floor rectangle, walls included,
- * fits the window from the given elevation, seen from `azimuth` rad round
- * from the +z side, with the aim moved `shift` m toward the camera. Exact
- * for a perspective camera: each corner gives a bound from its screen x
- * and one from its screen y, and near corners, which look bigger, decide it.
- */
-function fitAt(width: number, depth: number, fovDeg: number, aspect: number, elevation: number, azimuth: number, fill: ScreenWindow, shift: number): number {
-  const tan = Math.tan((fovDeg * Math.PI) / 360);
-  const tanH = tan * aspect * fill.h;
-  const dy = Math.sin(elevation);
-  const dz = Math.cos(elevation);
-  const ca = Math.cos(azimuth);
-  const sa = Math.sin(azimuth);
-  let best = 0;
-  for (const cx of [-width / 2, width / 2]) {
-    for (const cz of [-depth / 2, depth / 2]) {
-      // The corner in the camera's own frame: x across the screen, z toward the camera.
-      const x = cx * ca - cz * sa;
-      const z = cx * sa + cz * ca - shift;
-      for (const y of [0, WALL]) {
-        const along = y * dy + z * dz;
-        const up = y * dz - z * dy;
-        best = Math.max(best, Math.abs(x) / tanH + along, Math.abs(up) / (tan * (up >= 0 ? fill.up : fill.down)) + along);
-      }
-    }
-  }
-  return best;
-}
-
-/** Smallest camera distance at which a floor rectangle, walls included, fits the view, aimed at its middle. */
-export function fitDistance(width: number, depth: number, fovDeg: number, aspect: number, elevation = ELEVATION, azimuth = 0, fill = FILL): number {
-  return fitAt(width, depth, fovDeg, aspect, elevation, azimuth, fill, 0);
-}
-
-/**
- * The closest framing of a floor rectangle in a window that need not be
- * centered: how far the camera stands and how far its aim moves from the
- * middle toward the camera (negative away), m. The distance only grows as
- * the aim leaves its best place, so a ternary search finds it.
- */
-export function fitWindow(width: number, depth: number, fovDeg: number, aspect: number, elevation: number, azimuth: number, fill: ScreenWindow): { distance: number; shift: number } {
-  let lo = -Math.max(width, depth) / 2;
-  let hi = -lo;
-  for (let i = 0; i < 60; i++) {
-    const a = lo + (hi - lo) / 3;
-    const b = hi - (hi - lo) / 3;
-    if (fitAt(width, depth, fovDeg, aspect, elevation, azimuth, fill, a) < fitAt(width, depth, fovDeg, aspect, elevation, azimuth, fill, b)) hi = b;
-    else lo = a;
-  }
-  const shift = (lo + hi) / 2;
-  return { distance: fitAt(width, depth, fovDeg, aspect, elevation, azimuth, fill, shift), shift };
-}
+export const CLOSE_FILL: ScreenWindow = { h: 0.99, up: 0.95, down: 0.6 };
 
 /** A camera `distance` m from (cx, cz) at `elevation`, `azimuth` rad round from the +z side toward +x. */
 export function orbitShot(cx: number, cz: number, distance: number, elevation: number, azimuth = 0, ty = 0): Shot {

@@ -3,6 +3,7 @@ import type { InputSpec } from '@/engine/env/types';
 import type { Rect } from '@/engine/hideseek/layouts/types';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
 import { latticeFor, type Lattice } from '../layout/gridLattice';
+import type { SceneField } from './sceneField';
 import type { AgentPose } from './snapshotRead';
 
 /**
@@ -55,6 +56,8 @@ export interface HsFrame {
    * look. Null reads the arena snapshot (see followedAgent).
    */
   agentPose: AgentPoseReader | null;
+  /** The players and boxes of the room drawn in full, read this frame by the scene that draws it (so the Close view can frame the play), or null. */
+  field: SceneField | null;
 }
 
 export function createHsFrame(): HsFrame {
@@ -77,6 +80,7 @@ export function createHsFrame(): HsFrame {
     timeScale: 1,
     walls: [],
     agentPose: null,
+    field: null,
   };
 }
 

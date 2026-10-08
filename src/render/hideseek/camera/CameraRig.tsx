@@ -10,6 +10,7 @@ import { useHsScene } from '../frame/sceneContext';
 import { followedAgent } from '../frame/followedAgent';
 import { boxDrag } from '../interaction/useBoxDrag';
 import { arenaOrigin, ARENA_SPAN } from '../layout/gridLattice';
+import { ActionCam, type ActionRoom } from './actionCam';
 import { firstPersonAgent, followedAgentOf, presetShot, shotKey } from './cameraViews';
 import { fitDepthRange } from './depthRange';
 import { Flight } from './flight';
@@ -22,6 +23,8 @@ const EYE = 1.32;
 const MIN_HEIGHT = 0.3;
 /** How far past the arenas the orbit point may be panned, m. */
 const PAN_MARGIN = 12;
+/** No HUD card covers the viewport yet. */
+const NO_COVER = { w: 0, h: 0 };
 /** Key of the free view: it has no shot of its own, it only follows the scene when that changes. */
 const FREE = -1;
 
@@ -29,7 +32,8 @@ type Controls = React.ComponentRef<typeof OrbitControls>;
 
 /**
  * Every camera view of the lab. Set shots fly into place whenever the
- * view, the focus or the grid changes; follow views keep an agent in frame
+ * view, the focus or the grid changes; Close follows the play in the
+ * focused room (see ActionCam); follow views keep an agent in frame
  * and swing round walls that hide it (see FollowCam); the free view never
  * moves by itself and carries over to a new scene; first person views
  * ride on an agent. Orbit, pan and zoom work in every view but first
@@ -47,6 +51,8 @@ export function CameraRig() {
     () => ({
       flight: new Flight(),
       follow: new FollowCam(),
+      action: new ActionCam(),
+      room: { agents: [], count: 0, walls: frame.walls, half: ARENA_SPAN / 2, ox: 0, oz: 0 } as ActionRoom,
       o: { x: 0, z: 0 },
       /** The scene the free view was last fit to: its key, its center and the close shot's distance there. */
       scene: { key: Number.NaN, x: 0, z: 0, size: 1 },
@@ -72,6 +78,7 @@ export function CameraRig() {
     if (!c) return;
     const team = crowd ? -1 : followedAgentOf(m);
     if (team >= 0 && agentInWorld(team)) follow(c, m, dt);
+    else if (m === 'close' && !crowd) action(c, dt);
     else if (m === 'free') free(c);
     else preset(c, m);
     if (f.t < 1) {
@@ -123,6 +130,21 @@ export function CameraRig() {
     t.epoch = frame.epoch;
     t.walls = frame.walls;
     r.follow.update(camera, c, f, t, dt, frame.timeScale);
+    invalidate();
+  }
+
+  /** The Close view of the focused room: an action shot of its players (see ActionCam). */
+  function action(c: Controls, dt: number): void {
+    const room = r.room;
+    const field = frame.field;
+    room.agents = field?.agents ?? room.agents;
+    room.count = field?.agentCount ?? 0;
+    room.walls = frame.walls;
+    const o = focusOrigin();
+    room.ox = o.x;
+    room.oz = o.z;
+    const key = shotKey('close', frame.focusSlot, frame.count, frame.lattice.cols);
+    r.action.update(camera, c, f, key, room, NO_COVER, size.width / Math.max(1, size.height), dt, frame.timeScale);
     invalidate();
   }
 
@@ -178,8 +200,8 @@ export function CameraRig() {
       maxPolarAngle={loose ? 1.48 : 1.5}
       minDistance={loose ? 1.2 : 2.5}
       maxDistance={700}
-      onStart={() => void (r.follow.dragging = true)}
-      onEnd={() => void (r.follow.dragging = false)}
+      onStart={() => void (r.follow.dragging = r.action.dragging = true)}
+      onEnd={() => void (r.follow.dragging = r.action.dragging = false)}
     />
   );
 }
