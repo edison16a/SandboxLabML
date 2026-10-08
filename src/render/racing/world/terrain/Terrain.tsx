@@ -9,7 +9,7 @@ import { FlatGround } from './FlatGround';
 import { createTerrainMaterial } from './terrainMaterial';
 
 /** Fine grid spacing per tier, m. The ground has the most pixels on screen, so Low trades shape detail for speed. */
-export const TERRAIN_STEP = { low: 6, medium: 4, high: 3 } as const;
+export const TERRAIN_STEP = { low: 8, medium: 4, high: 3 } as const;
 
 /**
  * The hills around the circuit. One mesh from the road out to the horizon,
