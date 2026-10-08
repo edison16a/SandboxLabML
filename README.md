@@ -5,6 +5,7 @@
 <h1 align="center">SandboxLabML</h1>
 
 <p align="center">A live machine learning lab in your browser, where you watch neural networks learn to race and play hide and seek in 3D.</p>
+https://sandboxlabs.vercel.app/
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-4C9AFF?style=flat-square" alt="License: MIT" /></a>
