@@ -45,7 +45,7 @@ export function HeroArenaCamera({ pane }: { pane: PaneView }) {
       view: { azimuth: 0.6, elevation: HERO_ELEVATION },
       dodge: new WallDodge(),
       heads: [{ x: 0, y: 0, z: 0 }],
-      center: { x: 0, y: 0.4, z: 0 },
+      center: { x: 0, y: 0, z: 0 },
       placed: false,
       x: { value: 0, velocity: 0 },
       z: { value: 0, velocity: 0 },
