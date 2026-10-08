@@ -23,8 +23,6 @@ import { HeroArenaDriver } from './HeroArenaDriver';
  * the lab's exposure its white floor read grey next to them.
  */
 export const ARENA_TONE: Tone = { mapping: HS_TONE_MAPPING, exposure: 1.15 };
-/** Brightness of the city blocks and the ground between them against the lab's, so the room stands out from its city. */
-const CITY_SHADE = 0.6;
 
 const prepareTone = (gl: THREE.WebGLRenderer) => {
   gl.toneMapping = ARENA_TONE.mapping;
@@ -63,7 +61,7 @@ export function HeroArenaScene({ room, stream, tier, pane, stepping, onWarm }: P
       <Prewarm isReady={isReady} stepping={stepping} onWarm={onWarm} prepare={prepareTone} />
       <HeroArenaDriver />
       <StudioLighting tier={tier} shadows={tier !== 'low'} />
-      <Backdrop shade={CITY_SHADE} />
+      <Backdrop />
       <SandboxArena tier={tier} aoPass={false} room={room} />
       <HeroArenaCamera pane={pane} />
     </HsSceneContext.Provider>
