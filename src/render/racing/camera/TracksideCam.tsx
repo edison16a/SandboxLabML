@@ -16,7 +16,10 @@ const FRAMING = 6.5;
  * A cinematic trackside view, like race coverage on TV: fixed cameras on
  * short towers round the circuit, each panning to follow the car with a
  * long lens that zooms to keep it the same size, cutting to the next camera
- * once the car has gone by. The pan lags a touch, like a hand on a tripod.
+ * once the car has gone by. The aim leads the car a little and eases into
+ * each change of direction, like a hand on a tripod. The ease works on
+ * the aim's offset from the car, so at any playback speed the car stays
+ * in frame instead of the long lens trailing behind it.
  */
 export function TracksideCam({ world, target }: { world: WorldData | null; target: React.RefObject<THREE.Vector3> }) {
   const { frame, track } = useRacingScene();
@@ -36,18 +39,17 @@ export function TracksideCam({ world, target }: { world: WorldData | null; targe
     if (next !== rig.station) {
       // A cut: snap the pan straight onto the car, as a director would.
       rig.station = next;
-      rig.x.value = focus.x;
+      rig.x.value = rig.z.value = 0;
       rig.y.value = 0.9;
-      rig.z.value = focus.z;
       rig.x.velocity = rig.y.velocity = rig.z.velocity = 0;
     }
     camera.position.set(st.x, st.y, st.z);
     // Lead the car a little in the direction it travels, so it drives into the frame.
     const lead = frame.focusSpeed * 0.18;
     rig.look.set(
-      stepSpring(rig.x, focus.x + Math.cos(frame.focusYaw) * lead, 7, dt),
+      focus.x + stepSpring(rig.x, Math.cos(frame.focusYaw) * lead, 7, dt),
       stepSpring(rig.y, 0.9, 7, dt),
-      stepSpring(rig.z, focus.z - Math.sin(frame.focusYaw) * lead, 7, dt),
+      focus.z + stepSpring(rig.z, -Math.sin(frame.focusYaw) * lead, 7, dt),
     );
     camera.lookAt(rig.look);
     const dist = camera.position.distanceTo(focus);
