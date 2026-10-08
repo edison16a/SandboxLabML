@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import type uPlot from 'uplot';
 import { modelMetrics } from '@/engine/neat/metrics';
 import type { GenerationRecord } from '@/engine/training/records';
-import { axis, UPlotChart } from '@/features/charts/UPlotChart';
+import { axis, generationAxis, UPlotChart } from '@/features/charts/UPlotChart';
 
 /**
  * Parameters and size of each generation's champion, next to a flat line for
@@ -16,7 +16,7 @@ export function GrowthChart({ records, reference }: { records: GenerationRecord[
       legend: { show: false },
       cursor: { points: { size: 5 } },
       scales: { x: { time: false }, kb: { auto: true } },
-      axes: [axis('Generation'), axis('Parameters', 3), { ...axis('KB', 1), scale: 'kb', grid: { show: false } }],
+      axes: [generationAxis(), axis('Parameters', 3), { ...axis('KB', 1), scale: 'kb', grid: { show: false } }],
       series: [
         {},
         { label: 'Parameters', stroke: '#4c9aff', width: 2 },

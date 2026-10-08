@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import type uPlot from 'uplot';
 import type { GenerationRecord } from '@/engine/training/records';
-import { axis, UPlotChart } from './UPlotChart';
+import { axis, generationAxis, UPlotChart } from './UPlotChart';
 
 /**
  * Best, mean and median fitness per generation. Script edits show up as
@@ -17,7 +17,7 @@ export function FitnessChart({ records, height = 180 }: { records: GenerationRec
       legend: { show: false },
       cursor: { drag: { x: true, y: false }, points: { size: 6 } },
       scales: { x: { time: false } },
-      axes: [axis('Generation'), axis('Fitness', 3)],
+      axes: [generationAxis(), axis('Fitness', 3)],
       series: [
         {},
         { label: 'Best', stroke: '#4c9aff', width: 2, fill: '#4c9aff14' },

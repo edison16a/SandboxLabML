@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import type uPlot from 'uplot';
-import { axis, UPlotChart } from '@/features/charts/UPlotChart';
+import { axis, generationAxis, UPlotChart } from '@/features/charts/UPlotChart';
 
 export interface Series {
   label: string;
@@ -35,7 +35,7 @@ export function HsLineChart({ generations, series, yLabel, height = 150, range }
       legend: { show: false },
       cursor: { drag: { x: true, y: false }, points: { size: 5 } },
       scales: { x: { time: false }, y: range ? { range: () => range } : {} },
-      axes: [axis('Generation'), axis(yLabel, 3)],
+      axes: [generationAxis(), axis(yLabel, 3)],
       series: [{}, ...series.map((s) => ({ label: s.label, stroke: s.color, width: s.width ?? 1.75, dash: s.dash, fill: s.fill ? `${s.color}18` : undefined, spanGaps: true }))],
     }),
     // The series shape only changes when the labels do; values flow through `data`.

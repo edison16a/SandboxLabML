@@ -45,6 +45,14 @@ export function UPlotChart({ options, data, className, onReady }: Props) {
   return <div ref={host} className={className} />;
 }
 
+/** Tick steps for a generation axis: whole numbers only, since there is no generation 1.5. */
+const GENERATION_STEPS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
+
+/** The x axis of every per generation chart, ticked at whole generations only. */
+export function generationAxis(): uPlot.Axis {
+  return { ...axis('Generation'), incrs: GENERATION_STEPS };
+}
+
 /** Axis styling shared by every chart. */
 export function axis(label?: string, side: 0 | 1 | 2 | 3 = 2): uPlot.Axis {
   return {

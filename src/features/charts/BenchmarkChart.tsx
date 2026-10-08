@@ -6,7 +6,7 @@ import type uPlot from 'uplot';
 import { loadReferences } from '@/engine/bench/references';
 import type { BenchReferences } from '@/engine/bench/types';
 import type { EnvId } from '@/engine/env/types';
-import { axis, UPlotChart } from './UPlotChart';
+import { axis, generationAxis, UPlotChart } from './UPlotChart';
 
 const TIER_COLORS = { beginner: '#5d6779', intermediate: '#8a94a7', advanced: '#ff9f43' } as const;
 
@@ -57,7 +57,7 @@ export function BenchmarkChart({ env = 'racing', records, height = 160 }: Props)
     return {
       legend: { show: false },
       scales: { x: { time: false }, y: { range: [0, 100] } },
-      axes: [axis('Generation'), axis('Score', 3)],
+      axes: [generationAxis(), axis('Score', 3)],
       series,
       bands,
       cursor: { points: { size: 5 } },
