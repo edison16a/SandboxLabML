@@ -35,7 +35,8 @@ export function brakeMapGeometry(track: Track, telemetry: GhostTelemetry[]): THR
     const [bx, bz] = side(i, outer);
     const [cx2, cz] = side(j, inner);
     const [dx, dz] = side(j, outer);
-    const y = 0.03;
+    // Just over the run-off; polygon offset in the material keeps it on top without lifting it off the ground.
+    const y = 0.01;
     pos.push(ax, y, az, cx2, y, cz, bx, y, bz, bx, y, bz, cx2, y, cz, dx, y, dz);
     for (let v = 0; v < 6; v++) col.push(c.r, c.g, c.b);
   }
@@ -43,5 +44,7 @@ export function brakeMapGeometry(track: Track, telemetry: GhostTelemetry[]): THR
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  // Lit like the ground under it, so it needs normals.
+  g.computeVertexNormals();
   return g;
 }

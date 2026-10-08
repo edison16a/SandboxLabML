@@ -146,7 +146,7 @@ export const useRacingLab = create<RacingLabState>((set, get) => ({
   ghostSelection: { mode: 'auto' },
   ghostTrails: true,
   ghostCrashRings: true,
-  brakeMap: true,
+  brakeMap: false,
   ghostGenerations: [],
   telemetry: [],
   telemetryTrack: null,
