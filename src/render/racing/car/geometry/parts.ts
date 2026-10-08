@@ -33,11 +33,13 @@ export interface Detail {
   fine: boolean;
 }
 
-export const DETAIL: Record<'high' | 'medium' | 'low' | 'crowd', Detail> = {
+/** `crowdLow` is the crowd car on the Low tier: a third fewer triangles, since a hundred of them dominate that tier's frame. */
+export const DETAIL: Record<'high' | 'medium' | 'low' | 'crowd' | 'crowdLow', Detail> = {
   high: { stations: 96, archSteps: 18, bands: [2, 3, 6, 5, 6, 4, 4], canopy: [6, 8], wheel: 64, brakes: true, fine: true },
   medium: { stations: 72, archSteps: 14, bands: [2, 2, 5, 4, 5, 3, 3], canopy: [5, 6], wheel: 48, brakes: true, fine: true },
   low: { stations: 48, archSteps: 10, bands: [1, 2, 4, 3, 4, 2, 2], canopy: [4, 5], wheel: 36, brakes: true, fine: false },
   crowd: { stations: 18, archSteps: 6, bands: [1, 1, 2, 2, 2, 1, 1], canopy: [2, 3], wheel: 14, brakes: false, fine: false },
+  crowdLow: { stations: 10, archSteps: 3, bands: [1, 1, 1, 1, 1, 1, 1], canopy: [1, 1], wheel: 8, brakes: false, fine: false },
 };
 
 /** Collects geometry by slot while the car is assembled. */

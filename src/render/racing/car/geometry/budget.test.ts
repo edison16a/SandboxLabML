@@ -26,8 +26,13 @@ describe('procedural car', () => {
     expect(heroTriangles('low')).toBeLessThan(heroTriangles('medium'));
   });
 
-  it('keeps the crowd car light enough for 256 instances', () => {
-    expect(triangles(crowdGeometry())).toBeLessThan(8_000);
+  it('keeps the crowd car light enough for 256 instances, and lighter still on Low', () => {
+    const crowd = triangles(crowdGeometry());
+    expect(crowd).toBeLessThan(8_000);
+    const low = triangles(crowdGeometry(DETAIL.crowdLow));
+    expect(low).toBeLessThan(crowd * 0.75);
+    // Low's budget: a 100 car field plus 32 ghosts, each ghost drawn twice (depth, then color), under 550k triangles.
+    expect(low * (100 + 2 * 32)).toBeLessThan(550_000);
   });
 
   it('fits the footprint the simulation and tire marks assume', () => {

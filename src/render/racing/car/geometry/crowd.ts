@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { CAR, WHEEL_SPOTS } from '../dimensions';
 import { buildBody } from './assemble';
 import { merge, mirrorZ } from './grid';
-import { DETAIL, type Slot } from './parts';
+import { DETAIL, type Detail, type Slot } from './parts';
 import { caliper, buildWheel } from './wheels';
 
 /**
@@ -47,9 +47,9 @@ function bake(g: THREE.BufferGeometry, slot: Slot): THREE.BufferGeometry {
  * The crowd car: the same design built at its lightest detail and merged
  * into one geometry, wheels included, for a single instanced draw call per
  * generation. Pair it with a material passed through withCarSurface.
+ * The Low tier passes DETAIL.crowdLow for a lighter build.
  */
-export function crowdGeometry(): THREE.BufferGeometry {
-  const detail = DETAIL.crowd;
+export function crowdGeometry(detail: Detail = DETAIL.crowd): THREE.BufferGeometry {
   const parts: THREE.BufferGeometry[] = [];
   for (const [slot, g] of buildBody(detail)) parts.push(bake(g, slot));
   const wheel = [...buildWheel(detail), ['caliper', merge([caliper(detail)])] as const];

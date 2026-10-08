@@ -10,6 +10,7 @@ import { attachOpacity, withInstanceOpacity } from '@/render/shared/fadeMaterial
 import { blendPose, type Pose } from '@/render/shared/interpolate';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { crowdGeometry } from './car/geometry/crowd';
+import { DETAIL } from './car/geometry/parts';
 import { withCarSurface } from './car/materials/carSurface';
 import { useCarReflections } from './car/materials/useCarReflections';
 import { FadeSplit } from './fleet/fadeSplit';
@@ -49,9 +50,10 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
   const fading = useRef<THREE.InstancedMesh>(null);
   const depth = useRef<THREE.InstancedMesh>(null);
   const shape = useDisposable(() => {
-    const geometry = crowdGeometry();
+    // A hundred crowd cars are most of the Low tier's triangles, so Low builds them lighter.
+    const geometry = crowdGeometry(tier === 'low' ? DETAIL.crowdLow : DETAIL.crowd);
     return { geometry, opacity: attachOpacity(geometry, MAX_CARS), dispose: () => geometry.dispose() };
-  }, []);
+  }, [tier]);
   const look = useDisposable(() => {
     const body = withCarSurface(carMaterial(tier));
     const fade = withCarSurface(withInstanceOpacity(carMaterial(tier)));
