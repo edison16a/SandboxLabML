@@ -16,29 +16,34 @@
 
 SandboxLabML lets you see machine learning happen. Press Train and a population of neural networks starts learning right in front of you. Cars find the racing line and learn where to brake. Hiders grab crates for cover and lock them in place. Seekers can push a ramp against a wall and jump right over it.
 
-None of it is a canned animation. Every car and every agent is driven by a real network that evolved seconds ago, inside a real physics simulation, on your own machine. Open any brain and its neurons light up as it decides. Change the rewards, the inputs or the brain itself, and the next generation shows you what that change did. Even the landing page plays real brains: a trained car laps the Grand Prix and reference champions play hide and seek behind the title.
+None of it is a canned animation. Every car and every agent is driven by a real network that evolved seconds ago, inside a real physics simulation, on your own machine. Open any brain and its neurons light up as it decides. Change the rewards, the inputs or the brain itself, and the next generation shows you what that change did. Even the home screen plays real brains: a trained car laps the Grand Prix beside a live hide and seek match.
 
 This is the loop that makes machine learning click. You shape the goal and press Train, then watch behavior appear that nobody programmed.
 
 ## Screenshots
 
-![Racing lab: a generation of hypercars leaving the grid on the Grand Prix while the champion's network lights up live](assets/screenshots/racing-lab.png)
+![Racing lab: the followed hypercar on a road through sunlit hills while the champion's network lights up live](assets/screenshots/racing-lab.png)
 
 | | |
 | --- | --- |
-| ![Hide and Seek: hiders and seekers in the showcase arena](assets/screenshots/hideseek-showcase.png) | ![Hide and Seek: 25 matches of one round at once, each marked hidden or seen](assets/screenshots/hideseek-grid.png) |
-| ![Hide and Seek Sandbox: five hiders and four seekers in the Shelter room](assets/screenshots/hideseek-sandbox.png) | ![Racing Sandbox: eight copies of a champion racing the Grand Prix](assets/screenshots/racing-sandbox.png) |
-| ![The landing page, with a trained car driving behind the title and its brain in the corner](assets/screenshots/landing.png) | ![Script Studio, blocks view](assets/screenshots/studio-blocks.png) |
+| ![Hide and Seek: the close action shot of a match in the Shelter room](assets/screenshots/hideseek-showcase.png) | ![Hide and Seek: 25 matches of one round at once, each marked hidden or seen](assets/screenshots/hideseek-grid.png) |
+| ![Hide and Seek Sandbox: three hiders and three seekers in the Shelter room](assets/screenshots/hideseek-sandbox.png) | ![Racing Sandbox: eight champions racing the Oval](assets/screenshots/racing-sandbox.png) |
+| ![The home screen: a trained car and a live hide and seek match side by side, each with its brain](assets/screenshots/landing.png) | ![The first run walkthrough explaining the champion network as it drives](assets/screenshots/walkthrough.png) |
+| ![Racing lab, orbit view: tire smoke as a car slides through a corner](assets/screenshots/racing-orbit.png) | ![Script Studio, blocks view](assets/screenshots/studio-blocks.png) |
 
 ## What you can do
 
+### Learn as you go
+
+The first time you open a lab, a short walkthrough points at each part and explains it in plain words: how the cars learn, and how a trained brain drives. Skip it anytime, or replay it from the help menu.
+
 ### Train cars to race
 
-A hundred hypercars learn to drive a 3D circuit from nothing. The tires have a real grip limit, so braking and turning fight over the same grip and the cars have to discover braking points on their own. Ghosts of earlier champions drive beside the live generation. A speed trace and a brake map show the braking points move later as they learn.
+A hundred hypercars learn to drive a circuit through sunlit hills, from nothing. The tires have a real grip limit, so braking and turning fight over the same grip and the cars have to discover braking points on their own. Ghosts of earlier champions drive beside the live generation. A speed trace and a brake map show the braking points move later as they learn. Watch from the chase camera, trackside, top down or a free camera you move yourself.
 
 ### Train hiders and seekers
 
-Two teams co-evolve in a physics arena. Agents grab crates, carry them and lock them for their team, and a lock only opens for the team that made it. Ramps let an agent run up and vault a wall, so a fort is only safe if the seekers cannot get a ramp to it. Watch all 50 matches of a round at once, then click one to follow it up close with a first person view of what each agent sees.
+Two teams co-evolve in a physics arena. Agents grab crates, carry them and lock them for their team, and a lock only opens for the team that made it. Ramps let an agent run up and vault a wall, so a fort is only safe if the seekers cannot get a ramp to it. Watch all 50 matches of a round at once, then click one to follow it up close, from an action shot that tracks the players to a first person view of what each agent sees.
 
 ### Play with what you trained
 
@@ -115,7 +120,7 @@ src/render/        React Three Fiber scenes and shared render helpers
 src/features/      Lab pages, Sandboxes, charts, network graph, model card, runs, landing
 src/studio/        Script Studio
 src/storage/       IndexedDB (Dexie): runs, generations, checkpoints, scripts, tracks, rooms
-src/ui/            Design system on Radix primitives, logo and GitHub button
+src/ui/            Design system on Radix primitives, the walkthrough, logo and GitHub button
 content/lessons/   Lesson content
 public/references/ Benchmark reference results
 public/hero/       The landing page's trained car and its poster stills
