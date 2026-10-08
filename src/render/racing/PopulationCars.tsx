@@ -77,7 +77,7 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
   const fleet = useMemo(() => new FleetMotion(MAX_CARS), []);
   const split = useMemo(() => new FadeSplit(MAX_CARS), []);
   const tmp = useMemo(
-    () => ({ m: new THREE.Matrix4(), c: new THREE.Color(), pose: { x: 0, y: 0, heading: 0 } as Pose, poses: new Float32Array(MAX_CARS * 3), casters: new Int32Array(MAX_CARS), others: new Int32Array(MAX_CARS) }),
+    () => ({ m: new THREE.Matrix4(), c: new THREE.Color(), pose: { x: 0, y: 0, heading: 0 } as Pose, poses: new Float32Array(MAX_CARS * 3), epoch: -1, casters: new Int32Array(MAX_CARS), others: new Int32Array(MAX_CARS) }),
     [],
   );
 
@@ -110,6 +110,9 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
       poses[i * 3 + 2] = tmp.pose.heading;
     }
     split.begin(step);
+    // A new episode puts every car back on the grid at once: no easing then, or the copies on the grid would linger over the followed car.
+    const restart = population.epoch !== tmp.epoch;
+    tmp.epoch = population.epoch;
     let casters = 0;
     let others = 0;
     for (let i = 0; i < n; i++) {
@@ -124,7 +127,7 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
       if (target > 0 && overlapsEarlier(poses, i)) target = 0;
       const solidBefore = split.solidCount;
       const fadeBefore = split.fadeCount;
-      const opacity = split.place(i, target, hidden);
+      const opacity = split.place(i, target, hidden || restart);
       let mesh: THREE.InstancedMesh | null = split.solidCount > solidBefore ? a : split.fadeCount > fadeBefore ? f : null;
       if (!mesh) continue;
       let slot = fadeBefore;
