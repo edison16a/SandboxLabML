@@ -14,7 +14,8 @@ vec4 asphalt(vec2 uv, vec3 wp, vec2 line, float dist) {
   vec4 grit = texture2D(uDetail, wp.xz * 3.7 + 0.5);
   vec4 blot = texture2D(uDetail, wp.xz * 0.045);
   float near = 1.0 - smoothstep(25.0, 140.0, dist);
-  vec3 c = vec3(0.156, 0.151, 0.146);
+  // A cool grey binder: the warm late sun then lands it on a neutral grey, where a warmer base read as packed dirt.
+  vec3 c = vec3(0.122, 0.125, 0.136);
   c *= 0.86 + blot.g * 0.3;
   c *= 1.0 + ((fine.r - 0.5) * 0.28 + (grit.r - 0.5) * 0.3) * near;
   // Pale aggregate stones catching the light.
@@ -23,7 +24,7 @@ vec4 asphalt(vec2 uv, vec3 wp, vec2 line, float dist) {
   c *= 1.0 - 0.18 * smoothstep(0.006, 0.0, abs(blot.b - 0.5)) * near;
   // Dust and grit swept to the edges, where nobody drives.
   float edge = min(uv.x, 1.0 - uv.x);
-  c = mix(c, vec3(0.2, 0.19, 0.175), (1.0 - smoothstep(0.0, 0.09, edge)) * 0.55);
+  c = mix(c, vec3(0.17, 0.165, 0.16), (1.0 - smoothstep(0.0, 0.09, edge)) * 0.55);
   // Rubber: a band the width of a car round the line, darkest in the two tire tracks.
   float off = abs(uv.x - line.x) * uRoadWidth;
   float band = 1.0 - smoothstep(0.6, 1.7, off);
