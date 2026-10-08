@@ -1,5 +1,10 @@
-/** How fast a car's opacity follows its target, per second: gone or back in about a third of a second. */
-const RATE = 9;
+/**
+ * How fast a car's opacity follows its target, per second. Leaving is
+ * quick, about a fifth of a second, so a car in the way barely shows as a
+ * glassy shape; coming back is gentler, so nothing pops in.
+ */
+const RATE_OUT = 16;
+const RATE_IN = 7;
 /** Opacity at or above which a car simply draws solid, and below which it is not drawn at all. */
 const SOLID = 0.985;
 const GONE = 0.02;
@@ -19,7 +24,8 @@ export class FadeSplit {
   readonly fading: Int32Array;
   solidCount = 0;
   fadeCount = 0;
-  private ease = 1;
+  private easeOut = 1;
+  private easeIn = 1;
 
   constructor(capacity: number) {
     this.shown = new Float32Array(capacity).fill(1);
@@ -30,7 +36,8 @@ export class FadeSplit {
   /** Starts a frame `dt` seconds long with both lists empty. */
   begin(dt: number): void {
     this.solidCount = this.fadeCount = 0;
-    this.ease = 1 - Math.exp(-RATE * dt);
+    this.easeOut = 1 - Math.exp(-RATE_OUT * dt);
+    this.easeIn = 1 - Math.exp(-RATE_IN * dt);
   }
 
   /**
@@ -39,7 +46,8 @@ export class FadeSplit {
    * Returns the opacity to draw it with.
    */
   place(i: number, target: number, snap = false): number {
-    let v = snap ? target : this.shown[i] + (target - this.shown[i]) * this.ease;
+    const ease = target < this.shown[i] ? this.easeOut : this.easeIn;
+    let v = snap ? target : this.shown[i] + (target - this.shown[i]) * ease;
     if (v < GONE && target < GONE) v = 0;
     this.shown[i] = v;
     if (v >= SOLID) this.solid[this.solidCount++] = i;

@@ -21,9 +21,9 @@ export function apart(x: number, z: number, focus: THREE.Vector3, yaw: number): 
   return Math.max(ramp(along, 4.3, 4.9), ramp(across, 1.9, 2.3));
 }
 
-/** How much of a car at (x, z) to keep near the lens: none within about 6 m, where it would fill the frame or clip. */
+/** How much of a car at (x, z) to keep near the lens: none within 6 m, where it would fill the frame or clip, fading from 8 m. */
 export function atLens(x: number, z: number, cam: THREE.Vector3): number {
-  return ramp(Math.hypot(x - cam.x, z - cam.z), 5.6, 6.4);
+  return ramp(Math.hypot(x - cam.x, z - cam.z), 6, 8);
 }
 
 /**

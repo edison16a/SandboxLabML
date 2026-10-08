@@ -11,11 +11,14 @@ describe('fading the pack off the followed car', () => {
       split.begin(1 / 60);
       seen.push(split.place(0, 0));
     }
-    expect(seen[0]).toBeGreaterThan(0.8);
-    expect(seen[10]).toBeGreaterThan(0.1);
-    expect(seen[10]).toBeLessThan(0.5);
+    expect(seen[0]).toBeGreaterThan(0.7);
+    expect(seen[6]).toBeGreaterThan(0.08);
+    expect(seen[6]).toBeLessThan(0.3);
     expect(seen[59]).toBe(0);
     expect(split.solidCount + split.fadeCount).toBe(0);
+    // Coming back takes longer than leaving, so nothing pops in.
+    split.begin(1 / 60);
+    expect(split.place(0, 1)).toBeLessThan(1 - seen[0]);
   });
 
   it('files cars as solid, fading or gone, and snaps the one the detailed car replaces', () => {
