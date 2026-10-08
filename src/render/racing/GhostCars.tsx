@@ -26,7 +26,8 @@ const STRIDE = RACING_SNAPSHOT.stride;
 /**
  * Past champions replayed as translucent ghosts in one instanced draw call.
  * Older generations are cooler and fainter; a crashed ghost holds still for
- * a second, then fades.
+ * a second, then fades, and an older ghost fades out where a newer one
+ * drives through it.
  *
  * A depth only pass draws first, so each pixel keeps just the nearest ghost
  * surface. Without it every wheel, seat of glass and car behind shows
@@ -44,7 +45,19 @@ export function GhostCars() {
     const depth = new THREE.MeshBasicMaterial({ colorWrite: false, transparent: true, depthWrite: true });
     return { geometry, opacity, material, depth, dispose: () => (geometry.dispose(), material.dispose(), depth.dispose()) };
   }, []);
-  const tmp = useMemo(() => ({ m: new THREE.Matrix4(), c: new THREE.Color(), pose: { x: 0, y: 0, heading: 0 } as Pose, stopAt: new Float64Array(MAX_GHOSTS), epoch: -1 }), []);
+  const tmp = useMemo(
+    () => ({
+      m: new THREE.Matrix4(),
+      c: new THREE.Color(),
+      pose: { x: 0, y: 0, heading: 0 } as Pose,
+      poses: new Float32Array(MAX_GHOSTS * 3),
+      keep: new Float32Array(MAX_GHOSTS),
+      other: new THREE.Vector3(),
+      stopAt: new Float64Array(MAX_GHOSTS),
+      epoch: -1,
+    }),
+    [],
+  );
   const fleet = useMemo(() => new FleetMotion(MAX_GHOSTS), []);
   // Eases each ghost's clearance over time, as the pack does, so a ghost on the edge of a rule never hangs half gone.
   const clears = useMemo(() => new FadeSplit(MAX_GHOSTS), []);
@@ -74,9 +87,16 @@ export function GhostCars() {
     const a = ghosts.alpha();
     const n = Math.min(ghosts.count, MAX_GHOSTS);
     fleet.update(ghosts, n, run?.racing?.car ?? DEFAULT_CAR, Math.min(dt, 0.1));
+    const poses = tmp.poses;
     for (let i = 0; i < n; i++) {
-      const t = n > 1 ? i / (n - 1) : 1;
       blendPose(prev, buf, i * STRIDE, a, tmp.pose);
+      poses[i * 3] = tmp.pose.x;
+      poses[i * 3 + 1] = tmp.pose.y;
+      poses[i * 3 + 2] = tmp.pose.heading;
+    }
+    // Newest first, so an older ghost can give way to a newer one that stays.
+    for (let i = n - 1; i >= 0; i--) {
+      const t = n > 1 ? i / (n - 1) : 1;
       const stopped = buf[i * STRIDE + 6] !== 0;
       if (stopped && tmp.stopAt[i] === 0) tmp.stopAt[i] = now;
       if (!stopped) tmp.stopAt[i] = 0;
@@ -84,14 +104,21 @@ export function GhostCars() {
       const fade = since < 1 ? 1 : Math.max(0.12, 1 - (since - 1) / 0.6);
       const hover = hoveredGhost === ghosts.tags[i];
       // A ghost at the lens or driving through the followed car would veil it in every view; chase and trackside clear the line of sight too.
-      const gx = tmp.pose.x;
-      const gz = -tmp.pose.y;
+      const gx = poses[i * 3];
+      const gz = -poses[i * 3 + 1];
       let clear = clearFocus ? clearance(gx, gz, frame.focusPos, frame.focusYaw, state.camera.position) : atLens(gx, gz, state.camera.position);
       if (!clearFocus && frame.focusIndex >= 0) clear = Math.min(clear, apart(gx, gz, frame.focusPos, frame.focusYaw));
+      // Late champions drive one line, and stacked see through shells read as a jumble of panels: the older ghost gives way.
+      for (let j = i + 1; j < n; j++) {
+        if (tmp.keep[j] < 0.5) continue;
+        tmp.other.set(poses[j * 3], 0, -poses[j * 3 + 1]);
+        clear = Math.min(clear, apart(gx, gz, tmp.other, poses[j * 3 + 2]));
+      }
       clear = clears.place(i, settle(clear, clears.shown[i]), restart);
       const opacity = (hover ? 0.9 : ghostOpacity(t)) * fade * clear;
+      tmp.keep[i] = i === frame.hiddenGhost || fade < 0.5 ? 0 : clear;
       // A fully faded ghost is dropped outright, so its depth pass cannot hide smoke or other ghosts behind it.
-      fleet.compose(i, tmp.pose.x, 0.01, -tmp.pose.y, tmp.pose.heading, i === frame.hiddenGhost || opacity < 0.02 ? 0 : 1, tmp.m);
+      fleet.compose(i, poses[i * 3], 0.01, gz, poses[i * 3 + 2], i === frame.hiddenGhost || opacity < 0.02 ? 0 : 1, tmp.m);
       m.setMatrixAt(i, tmp.m);
       ghostColor(t, tmp.c);
       if (hover) tmp.c.set('#ffffff');
