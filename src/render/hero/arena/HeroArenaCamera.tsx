@@ -11,15 +11,22 @@ import type { PaneView } from '../stage/paneView';
 
 /** Elevation of the shot: steep enough to see players over the walls, low enough that walls, ramps and faces still read. */
 const ELEVATION = (50 * Math.PI) / 180;
-/** Meters of floor around the followed player that the free part of the pane shows, across and deep. Close enough to read faces. */
-const SPAN = 10;
+/**
+ * CSS px per meter of floor in the free part of the pane, so the players
+ * keep one size on screen whatever the pane's shape: close enough to read
+ * faces. The span it gives stays between a tight 9 m and a 16 m that holds
+ * most of the room, on a wide pane beside the text or a stacked one under it.
+ */
+const PX_PER_M = 48;
+const SPAN_MIN = 9;
+const SPAN_MAX = 16;
 /** Radians per second the camera circles the room. A full turn takes over two minutes. */
 const SPIN = 0.045;
 /**
  * Stiffness of the spring that follows the player, 1/s. A spring trails a
  * running player by about twice their speed over this, so at 3.2 a
  * sprinting seeker stays about 2 m from the framed point, well inside the
- * 10 m shot, while the switch from hider to seeker still glides across
+ * shot, while the switch from hider to seeker still glides across
  * the room.
  */
 const FOLLOW = 3.2;
@@ -61,10 +68,12 @@ export function HeroArenaCamera({ pane }: { pane: PaneView }) {
     }
     const cx = stepSpring(s.x, tx, FOLLOW, dt);
     const cz = stepSpring(s.z, tz, FOLLOW, dt);
-    // Far enough that SPAN fits the free zone both across and deep, the floor's depth foreshortened by the elevation.
+    // Far enough that the span fits the free zone both across and deep, the floor's depth foreshortened by the elevation.
+    const { w, h } = pane.rect;
+    const span = THREE.MathUtils.clamp(Math.min(pane.zoneW * w, pane.zoneH * h) / PX_PER_M, SPAN_MIN, SPAN_MAX);
     const tan = Math.tan((camera.fov * Math.PI) / 360);
-    const aspect = pane.rect.w / Math.max(1, pane.rect.h);
-    const distance = Math.max(SPAN / (2 * tan * aspect * pane.zoneW), (SPAN * Math.sin(ELEVATION)) / (2 * tan * pane.zoneH));
+    const aspect = w / Math.max(1, h);
+    const distance = Math.max(span / (2 * tan * aspect * pane.zoneW), (span * Math.sin(ELEVATION)) / (2 * tan * pane.zoneH));
     const dx = Math.sin(angle);
     const dz = Math.cos(angle);
     const flat = Math.cos(ELEVATION) * distance;
