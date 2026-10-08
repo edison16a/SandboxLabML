@@ -39,7 +39,7 @@ export function InputBars({ schema, outputs, read, hovered, onHover, compact = f
   const data = read();
   const rows = compact ? schema.filter((s) => s.group !== 'ray') : schema;
   // The compact card over the viewport is narrow, so its bars give the labels room to read in full.
-  const grid = compact ? 'grid-cols-[1fr_48px_56px]' : 'grid-cols-[1fr_88px_64px]';
+  const grid = compact ? 'grid-cols-[1fr_40px_64px]' : 'grid-cols-[1fr_88px_64px]';
 
   return (
     <div className="flex flex-col gap-0.5">
@@ -64,7 +64,7 @@ export function InputBars({ schema, outputs, read, hovered, onHover, compact = f
               )}
             </span>
             <Bar value={v} signed={signed} tone={spec.group === 'ray' ? 'ray' : spec.group === 'custom' ? 'custom' : 'scalar'} />
-            <span className="tabular text-right font-mono text-[11px] text-fg">{data ? display(spec, v) : '-'}</span>
+            <span className="tabular text-right font-mono text-[11px] whitespace-nowrap text-fg">{data ? display(spec, v) : '-'}</span>
           </div>
         );
       })}
