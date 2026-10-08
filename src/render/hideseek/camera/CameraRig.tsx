@@ -77,7 +77,8 @@ export function CameraRig() {
     if (!c) return;
     const team = crowd ? -1 : followedAgentOf(m);
     if (team >= 0 && agentInWorld(team)) follow(c, m, dt);
-    else if (m === 'close' && !crowd) action(c, dt);
+    // Like a flight, the action shot runs on wall time up to a quarter second a frame, so it keeps up on a slow machine.
+    else if (m === 'close' && !crowd) action(c, Math.min(rawDt, 0.25));
     else if (m === 'free') free(c);
     else preset(c, m);
     if (f.t < 1) {
