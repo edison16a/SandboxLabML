@@ -16,13 +16,15 @@ import { ATLAS_TILE, foliageAtlas, releaseFoliageAtlas } from './textures/foliag
 import { createGrassMaterial } from './grassMaterial';
 import { grassTexture } from './textures/grassTexture';
 import { tuftGeometry } from './tufts';
+import { SplitInstances } from './SplitInstances';
+import { SHADOW_BOX } from '../lighting/SunLight';
 
 const SHRUB_LOOK = { sink: 0.15, stretch: 0.2, from: new THREE.Color(0.84, 0.86, 0.76), to: new THREE.Color(1.12, 1.06, 0.86) };
 const TUFT_LOOK = { sink: 0.05, stretch: 0.3, from: new THREE.Color(0.82, 0.82, 0.76), to: new THREE.Color(1.15, 1.08, 0.86) };
 const ROCK_LOOK = { sink: 0.22, stretch: 0.25, from: new THREE.Color(0.86, 0.84, 0.82), to: new THREE.Color(1.1, 1.04, 0.98) };
 
-/** Static instances: every item written once when the set changes. */
-function Scatter({ set, geometry, material, depth, castShadow }: { set: InstanceSet; geometry: THREE.BufferGeometry; material: THREE.Material; depth?: THREE.Material; castShadow: boolean }) {
+/** Static instances that never cast: every item written once when the set changes. */
+function Scatter({ set, geometry, material }: { set: InstanceSet; geometry: THREE.BufferGeometry; material: THREE.Material }) {
   const ref = useRef<THREE.InstancedMesh>(null);
   useLayoutEffect(() => {
     const m = ref.current;
@@ -34,15 +36,17 @@ function Scatter({ set, geometry, material, depth, castShadow }: { set: Instance
     if (m.instanceColor) m.instanceColor.needsUpdate = true;
   }, [set]);
   if (!set.count) return null;
-  return <instancedMesh key={set.count} ref={ref} args={[geometry, material, set.count]} castShadow={castShadow} receiveShadow customDepthMaterial={depth} frustumCulled={false} />;
+  return <instancedMesh key={set.count} ref={ref} args={[geometry, material, set.count]} receiveShadow frustumCulled={false} />;
 }
 
 /**
  * Shrubs, boulders and verge grass scattered over the hills. Shrubs and
  * grass sway a little in the same breeze as the trees. Low skips the
- * grass, Medium draws every other tuft.
+ * grass, Medium draws every other tuft. Only shrubs and boulders near the
+ * sun's shadow box cast shadows: there are thousands of them, and the box
+ * covers a hundred meters or so.
  */
-export function Undergrowth({ flora, tufts, tier }: { flora: Flora; tufts: Float32Array; tier: QualityTier }) {
+export function Undergrowth({ flora, tufts, tier, box }: { flora: Flora; tufts: Float32Array; tier: QualityTier; box: React.RefObject<THREE.Vector3> }) {
   const geo = useDisposable(() => {
     const detail = tier === 'low' ? 1 : tier === 'medium' ? 2 : 3;
     const g = [shrubGeometry(0), shrubGeometry(1), rockGeometry(0, detail), rockGeometry(1, detail), tuftGeometry()];
@@ -70,16 +74,17 @@ export function Undergrowth({ flora, tufts, tier }: { flora: Flora; tufts: Float
     mats.shrub.time.value += step;
     mats.grass.time.value += step;
   });
-  const shadow = tier === 'high';
+  // Low shrubs and boulders throw short shadows, so only those just past the box's half diagonal can reach it.
+  const shadow = useMemo(() => ({ shrub: tier === 'high' ? { at: box, reach: SHADOW_BOX.high * 1.42 + 4 } : null, rock: tier === 'low' ? null : { at: box, reach: SHADOW_BOX[tier] * 1.42 + 12 } }), [tier, box]);
   return (
     <group>
       {/* Low keeps only one of the two shrub shapes: half the shrubs. */}
       {(tier === 'low' ? [0] : [0, 1]).map((v) => (
-        <Scatter key={`s${v}`} set={sets.shrub[v]} geometry={geo.shrub[v]} material={mats.shrub.material} depth={mats.shrub.depth} castShadow={shadow} />
+        <SplitInstances key={`s${v}`} set={sets.shrub[v]} hi={geo.shrub[v]} lo={geo.shrub[v]} material={mats.shrub.material} depth={mats.shrub.depth} radius={Infinity} shadow={shadow.shrub} />
       ))}
-      {grass && <Scatter set={grass} geometry={geo.tuft} material={mats.grass.material} castShadow={false} />}
+      {grass && <Scatter set={grass} geometry={geo.tuft} material={mats.grass.material} />}
       {[0, 1].map((v) => (
-        <Scatter key={`r${v}`} set={sets.rock[v]} geometry={geo.rock[v]} material={mats.rock} castShadow={tier !== 'low'} />
+        <SplitInstances key={`r${v}`} set={sets.rock[v]} hi={geo.rock[v]} lo={geo.rock[v]} material={mats.rock} radius={Infinity} shadow={shadow.rock} />
       ))}
     </group>
   );

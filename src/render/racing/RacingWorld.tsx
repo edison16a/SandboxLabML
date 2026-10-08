@@ -1,7 +1,7 @@
 'use client';
 
-import type * as THREE from 'three';
-import { useMemo } from 'react';
+import * as THREE from 'three';
+import { useMemo, useRef } from 'react';
 import type { Track } from '@/engine/racing/track/types';
 import type { QualityTier } from '@/features/racing/state/labStore';
 import { RacingEnvironment } from './RacingEnvironment';
@@ -29,13 +29,15 @@ interface Props {
  */
 export function RacingWorld({ track, tier, focus, editing = false }: Props) {
   const world = useMemo(() => (editing ? null : worldFor(track)), [track, editing]);
+  // Where the sun's shadow box sits this frame: only scenery near it goes through the shadow pass.
+  const box = useRef(new THREE.Vector3(1e9, 0, 0));
   return (
     <>
-      <RacingEnvironment tier={tier} focus={focus} />
+      <RacingEnvironment tier={tier} focus={focus} box={box} />
       {world ? <Terrain world={world} tier={tier} /> : <FlatGround />}
       <TrackMesh track={track} />
-      {world && <Forest flora={world.flora} tier={tier} />}
-      {world && <Undergrowth flora={world.flora} tufts={world.tufts} tier={tier} />}
+      {world && <Forest flora={world.flora} tier={tier} box={box} />}
+      {world && <Undergrowth flora={world.flora} tufts={world.tufts} tier={tier} box={box} />}
       {world && <Stadium world={world} tier={tier} />}
     </>
   );

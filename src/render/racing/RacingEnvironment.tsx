@@ -12,6 +12,8 @@ interface Props {
   tier: QualityTier;
   /** World position the shadow box follows (the camera target). */
   focus: React.RefObject<THREE.Vector3>;
+  /** Filled with the shadow box's center every frame. */
+  box?: React.RefObject<THREE.Vector3>;
 }
 
 /** Cloud octaves per tier: the sky covers much of the screen, so Low keeps it cheap. */
@@ -24,7 +26,7 @@ const OCTAVES = { low: 3, medium: 5, high: 6 } as const;
  * HDR download. Terrain, trees and buildings take their ambient light from
  * it too, which is what gives shade its blue tint.
  */
-export function RacingEnvironment({ tier, focus }: Props) {
+export function RacingEnvironment({ tier, focus, box }: Props) {
   return (
     <>
       <SkyDome octaves={OCTAVES[tier]} />
@@ -33,7 +35,7 @@ export function RacingEnvironment({ tier, focus }: Props) {
         <ReflectedGround />
         {tier !== 'low' && <Highlights sun={SUN_DIR} />}
       </Environment>
-      <SunLight tier={tier} focus={focus} />
+      <SunLight tier={tier} focus={focus} box={box} />
     </>
   );
 }

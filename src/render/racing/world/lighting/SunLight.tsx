@@ -10,10 +10,12 @@ interface Props {
   tier: QualityTier;
   /** World point the shadow box follows (the camera target). */
   focus: React.RefObject<THREE.Vector3>;
+  /** Written every frame with the shadow box's center, so scenery can tell which items may cast into it. */
+  box?: React.RefObject<THREE.Vector3>;
 }
 
 /** Shadow box half size per tier, m. High covers more road so tree shadows reach across it. */
-const SHADOW_BOX = { low: 40, medium: 46, high: 60 } as const;
+export const SHADOW_BOX = { low: 40, medium: 46, high: 60 } as const;
 
 /**
  * The shadow camera's own right and up axes. It looks down SUN_DIR with
@@ -31,7 +33,7 @@ const UP = new THREE.Vector3().crossVectors(SUN_DIR, RIGHT);
  * and warm bounce from the dry ground below, the way open country lights
  * a car's flanks.
  */
-export function SunLight({ tier, focus }: Props) {
+export function SunLight({ tier, focus, box }: Props) {
   const light = useRef<THREE.DirectionalLight>(null);
   const target = useMemo(() => new THREE.Object3D(), []);
   const tmp = useMemo(() => ({ center: new THREE.Vector3(), look: new THREE.Vector3() }), []);
@@ -54,6 +56,7 @@ export function SunLight({ tier, focus }: Props) {
     const d = c.dot(SUN_DIR);
     c.copy(RIGHT).multiplyScalar(a).addScaledVector(UP, b).addScaledVector(SUN_DIR, d);
     target.position.copy(c);
+    box?.current?.copy(c);
     l.position.copy(c).addScaledVector(SUN_DIR, 220);
     target.updateMatrixWorld();
   });

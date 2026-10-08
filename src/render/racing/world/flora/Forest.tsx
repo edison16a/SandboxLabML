@@ -8,7 +8,8 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import type { Flora } from './placement';
 import { broadleafGeometry, broadleafLodGeometry } from './broadleafGeometry';
 import { instanceSet } from './instances';
-import { LodTrees } from './LodTrees';
+import { SplitInstances } from './SplitInstances';
+import { SHADOW_BOX } from '../lighting/SunLight';
 import { PINE_HEIGHT, pineGeometry, pineLodGeometry } from './pineGeometry';
 import { createFoliageMaterial } from './foliageMaterial';
 import { ATLAS_TILE, foliageAtlas, releaseFoliageAtlas } from './textures/foliageAtlas';
@@ -25,7 +26,7 @@ const BROAD_LOOK = { sink: 0.25, stretch: 0.12, from: new THREE.Color(0.82, 0.86
  * from bark limbs and needle or leaf cards and all swaying in one breeze.
  * Geometry is built once per scene and shared by every track.
  */
-export function Forest({ flora, tier }: { flora: Flora; tier: QualityTier }) {
+export function Forest({ flora, tier, box }: { flora: Flora; tier: QualityTier; box: React.RefObject<THREE.Vector3> }) {
   const geo = useDisposable(() => {
     const g = {
       pine: [pineGeometry(0), pineGeometry(1)],
@@ -58,14 +59,15 @@ export function Forest({ flora, tier }: { flora: Flora; tier: QualityTier }) {
   });
 
   const radius = DETAIL_RADIUS[tier];
-  const shadow = tier !== 'low';
+  // A tree can cast into the box from beyond its edge: the box's half diagonal plus a tall pine's shadow in the low sun.
+  const shadow = useMemo(() => (tier === 'low' ? null : { at: box, reach: SHADOW_BOX[tier] * 1.42 + 32 }), [tier, box]);
   return (
     <group>
       {[0, 1].map((v) => (
-        <LodTrees key={`p${v}`} set={sets.pine[v]} hi={geo.pine[v]} lo={geo.pineLo[v]} material={mats.pine.material} depth={mats.pine.depth} radius={radius} castShadow={shadow} />
+        <SplitInstances key={`p${v}`} set={sets.pine[v]} hi={geo.pine[v]} lo={geo.pineLo[v]} material={mats.pine.material} depth={mats.pine.depth} radius={radius} shadow={shadow} />
       ))}
       {[0, 1].map((v) => (
-        <LodTrees key={`b${v}`} set={sets.broad[v]} hi={geo.broad[v]} lo={geo.broadLo[v]} material={mats.broad.material} depth={mats.broad.depth} radius={radius} castShadow={shadow} />
+        <SplitInstances key={`b${v}`} set={sets.broad[v]} hi={geo.broad[v]} lo={geo.broadLo[v]} material={mats.broad.material} depth={mats.broad.depth} radius={radius} shadow={shadow} />
       ))}
     </group>
   );

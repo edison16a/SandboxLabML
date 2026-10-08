@@ -20,6 +20,8 @@ import { useRacingScene } from './sceneContext';
 
 const MAX_CARS = 256;
 const STRIDE = RACING_SNAPSHOT.stride;
+/** Cars within this many meters of the followed car may cast into the sun's shadow box. */
+const SHADOW_REACH = 100;
 
 /**
  * True when car i sits within a meter of a car listed before it. Clones
@@ -56,6 +58,7 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
   const { population, frame } = useRacingScene();
   const tier = useRacingLab((s) => s.activeTier);
   const solid = useRef<THREE.InstancedMesh>(null);
+  const rest = useRef<THREE.InstancedMesh>(null);
   const fading = useRef<THREE.InstancedMesh>(null);
   const depth = useRef<THREE.InstancedMesh>(null);
   const shape = useDisposable(() => {
@@ -73,18 +76,22 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
   useCarReflections([look.body, look.fade]);
   const fleet = useMemo(() => new FleetMotion(MAX_CARS), []);
   const split = useMemo(() => new FadeSplit(MAX_CARS), []);
-  const tmp = useMemo(() => ({ m: new THREE.Matrix4(), c: new THREE.Color(), pose: { x: 0, y: 0, heading: 0 } as Pose, poses: new Float32Array(MAX_CARS * 3) }), []);
+  const tmp = useMemo(
+    () => ({ m: new THREE.Matrix4(), c: new THREE.Color(), pose: { x: 0, y: 0, heading: 0 } as Pose, poses: new Float32Array(MAX_CARS * 3), casters: new Int32Array(MAX_CARS), others: new Int32Array(MAX_CARS) }),
+    [],
+  );
 
   useFrame((state, dt) => {
     const a = solid.current;
+    const r = rest.current;
     const f = fading.current;
     const d = depth.current;
-    if (!a || !f || !d) return;
+    if (!a || !r || !f || !d) return;
     // The depth pass reads the fading cars' matrices; only the count needs copying.
     if (d.instanceMatrix !== f.instanceMatrix) d.instanceMatrix = f.instanceMatrix;
     const { view, camera, run } = useRacingLab.getState();
     if (!population?.curr || view === 'overlay') {
-      a.count = f.count = d.count = 0;
+      a.count = r.count = f.count = d.count = 0;
       return;
     }
     // The chase and trackside views are about one car: clear the pack off it there.
@@ -103,6 +110,8 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
       poses[i * 3 + 2] = tmp.pose.heading;
     }
     split.begin(step);
+    let casters = 0;
+    let others = 0;
     for (let i = 0; i < n; i++) {
       const x = poses[i * 3];
       const y = poses[i * 3 + 1];
@@ -116,9 +125,18 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
       const solidBefore = split.solidCount;
       const fadeBefore = split.fadeCount;
       const opacity = split.place(i, target, hidden);
-      const mesh: THREE.InstancedMesh | null = split.solidCount > solidBefore ? a : split.fadeCount > fadeBefore ? f : null;
+      let mesh: THREE.InstancedMesh | null = split.solidCount > solidBefore ? a : split.fadeCount > fadeBefore ? f : null;
       if (!mesh) continue;
-      const slot = mesh === a ? solidBefore : fadeBefore;
+      let slot = fadeBefore;
+      if (mesh === a) {
+        // Only cars near the sun's shadow box, which follows the followed car, go through the shadow pass.
+        const near = castShadow && (x - frame.focusPos.x) ** 2 + (y + frame.focusPos.z) ** 2 < SHADOW_REACH * SHADOW_REACH;
+        mesh = near ? a : r;
+        slot = near ? casters : others;
+        (near ? tmp.casters : tmp.others)[slot] = i;
+        if (near) casters++;
+        else others++;
+      }
       const status = buf[i * STRIDE + 6];
       fleet.compose(i, x, status === 0 ? 0 : -0.06, -y, poses[i * 3 + 2], 1, tmp.m);
       mesh.setMatrixAt(slot, tmp.m);
@@ -127,10 +145,12 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
       mesh.setColorAt(slot, tmp.c);
       if (mesh === f) shape.opacity.setX(slot, opacity);
     }
-    a.count = split.solidCount;
+    a.count = casters;
+    r.count = others;
     f.count = d.count = split.fadeCount;
-    a.instanceMatrix.needsUpdate = f.instanceMatrix.needsUpdate = true;
+    a.instanceMatrix.needsUpdate = r.instanceMatrix.needsUpdate = f.instanceMatrix.needsUpdate = true;
     if (a.instanceColor) a.instanceColor.needsUpdate = true;
+    if (r.instanceColor) r.instanceColor.needsUpdate = true;
     if (f.instanceColor) f.instanceColor.needsUpdate = true;
     shape.opacity.needsUpdate = true;
   });
@@ -142,7 +162,8 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
   };
   return (
     <group>
-      <instancedMesh ref={solid} args={[shape.geometry, look.body, MAX_CARS]} castShadow={castShadow} receiveShadow frustumCulled={false} onClick={follow(split.solid)} />
+      <instancedMesh ref={solid} args={[shape.geometry, look.body, MAX_CARS]} castShadow={castShadow} receiveShadow frustumCulled={false} onClick={follow(tmp.casters)} />
+      <instancedMesh ref={rest} args={[shape.geometry, look.body, MAX_CARS]} receiveShadow frustumCulled={false} onClick={follow(tmp.others)} />
       <instancedMesh ref={depth} args={[shape.geometry, look.prepass, MAX_CARS]} frustumCulled={false} renderOrder={1} raycast={() => null} />
       <instancedMesh ref={fading} args={[shape.geometry, look.fade, MAX_CARS]} receiveShadow frustumCulled={false} renderOrder={2} onClick={follow(split.fading)} />
     </group>
