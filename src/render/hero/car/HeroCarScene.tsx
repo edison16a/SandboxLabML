@@ -19,13 +19,16 @@ import type { Tone } from '../stage/SplitRenderer';
 import { HeroCarDriver } from './HeroCarDriver';
 import { HeroCarRays } from './HeroCarRays';
 import { HeroChaseCamera } from './HeroChaseCamera';
+import { installHeroGrade } from './heroGrade';
+
+installHeroGrade();
 
 /**
- * The lab draws Medium and Low with this curve and exposure. High there
- * hands tone mapping to its effect composer, which the hero leaves out,
- * so the hero uses this curve on every tier.
+ * ACES at the lab's exposure with the lab's High grade baked in (see
+ * heroGrade). The hero has no effect composer, so this is how its racing
+ * pane gets the lab's warm, rich look, on every tier.
  */
-export const CAR_TONE: Tone = { mapping: THREE.ACESFilmicToneMapping, exposure: 0.92 };
+export const CAR_TONE: Tone = { mapping: THREE.CustomToneMapping, exposure: 0.92 };
 
 const prepareTone = (gl: THREE.WebGLRenderer) => {
   gl.toneMapping = CAR_TONE.mapping;

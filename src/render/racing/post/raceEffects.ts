@@ -39,6 +39,9 @@ export class SpeedBlurEffect extends Effect {
   }
 }
 
+/** The High grade's settings, shared with the landing hero, which bakes them into its tone curve (see heroGrade). */
+export const GRADE = { saturation: 1.16, contrast: 0.28, warmth: [1.03, 1.0, 0.96] as const };
+
 const grade = /* glsl */ `
 uniform float saturation;
 uniform float contrast;
@@ -64,9 +67,9 @@ export class GradeEffect extends Effect {
   constructor() {
     super('GradeEffect', grade, {
       uniforms: new Map<string, THREE.Uniform>([
-        ['saturation', new THREE.Uniform(1.16)],
-        ['contrast', new THREE.Uniform(0.28)],
-        ['warmth', new THREE.Uniform(new THREE.Vector3(1.03, 1.0, 0.96))],
+        ['saturation', new THREE.Uniform(GRADE.saturation)],
+        ['contrast', new THREE.Uniform(GRADE.contrast)],
+        ['warmth', new THREE.Uniform(new THREE.Vector3(...GRADE.warmth))],
       ]),
     });
   }
