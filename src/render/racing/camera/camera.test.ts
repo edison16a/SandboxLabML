@@ -5,7 +5,7 @@ import { BUILT_IN_TRACKS } from '@/engine/racing/track/presets';
 import { terrainHeight } from '../world/terrain/terrainHeight';
 import { distanceAt } from '../world/trackField';
 import { padWeight } from '../stadium/layout';
-import { PIT_TOP } from '../stadium/pitGeometry';
+import { PIT_TOP } from '../stadium/dimensions';
 import { worldFor } from '../world/worldData';
 import { canSee, keepOut, occluders } from './sightLines';
 import { ahead, pickStation, trackStations } from './stations';

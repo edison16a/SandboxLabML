@@ -2,8 +2,7 @@ import { RUNOFF } from '@/engine/racing/car/runtime';
 import type { Track } from '@/engine/racing/track/types';
 import { distanceAt, type TrackField } from '../world/trackField';
 import { straightAnchor } from './anchor';
-import { roofFront } from './grandstandGeometry';
-import { PIT_CANOPY, PIT_LANE } from './pitGeometry';
+import { PIT_CANOPY, PIT_LANE, roofFront } from './dimensions';
 
 /** A level rectangle in world space: the terrain flattens under it and scenery keeps off it. */
 export interface Pad {

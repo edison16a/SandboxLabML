@@ -1,7 +1,7 @@
 import { RUNOFF } from '@/engine/racing/car/runtime';
 import { nearestSample } from '@/engine/racing/track/locate';
 import { padWeight, type Pad, type StadiumLayout } from '../stadium/layout';
-import { PIT_CANOPY, PIT_TOP } from '../stadium/pitGeometry';
+import { PIT_CANOPY, PIT_TOP } from '../stadium/dimensions';
 import { terrainHeight } from '../world/terrain/terrainHeight';
 import { distanceAt } from '../world/trackField';
 import type { WorldData } from '../world/worldData';

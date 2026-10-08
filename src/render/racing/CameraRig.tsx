@@ -10,7 +10,7 @@ import { keepAboveGround } from './camera/floor';
 import { OrbitCam } from './camera/OrbitCam';
 import { TracksideCam } from './camera/TracksideCam';
 import { useRacingScene } from './sceneContext';
-import { worldFor } from './world/worldData';
+import { useWorld } from './world/useWorld';
 
 /**
  * The cameras. Chase rides behind the focus car on springs with weight,
@@ -22,7 +22,7 @@ export function CameraRig({ mode, target }: { mode: CameraMode; target: React.Re
   const { frame, track } = useRacingScene();
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const editing = useRacingLab((s) => s.editingTrack);
-  const world = useMemo(() => (editing ? null : worldFor(track)), [track, editing]);
+  const world = useWorld(editing ? null : track);
   const chase = useMemo(() => chaseRig(), []);
 
   const center = useMemo(() => {

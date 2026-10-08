@@ -1,7 +1,6 @@
 import type * as THREE from 'three';
-import { roofFront } from '../stadium/grandstandGeometry';
 import { padOf, type Pad } from '../stadium/layout';
-import { PIT_CANOPY, PIT_TOP } from '../stadium/pitGeometry';
+import { PIT_CANOPY, PIT_TOP, roofFront } from '../stadium/dimensions';
 import { barrierOffset } from '../TrackMesh';
 import type { WorldData } from '../world/worldData';
 import { hitSpan, type Span } from './sightLines';

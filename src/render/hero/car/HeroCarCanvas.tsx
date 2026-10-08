@@ -11,6 +11,9 @@ import { RacingEffects } from '@/render/racing/post/RacingEffects';
 import { RacingWorld } from '@/render/racing/RacingWorld';
 import { createFrame, RacingSceneContext } from '@/render/racing/sceneContext';
 import { TireEffects } from '@/render/racing/TireEffects';
+import { TERRAIN_STEP } from '@/render/racing/world/terrain/Terrain';
+import { useWorld } from '@/render/racing/world/useWorld';
+import { readTerrain } from '@/render/racing/world/worldStore';
 import { FramePacer } from '@/render/shared/FramePacer';
 import { Prewarm } from '@/render/shared/Prewarm';
 import { useFrameLoop } from '@/render/shared/frameLoop';
@@ -43,7 +46,9 @@ export function HeroCarCanvas({ track, stream, schema, tier, running, onShown }:
   const target = useRef(new THREE.Vector3());
   const value = useMemo(() => ({ track, population: null, ghosts: stream, frame }), [track, stream, frame]);
   const [warm, setWarm] = useState(false);
-  const isReady = useCallback(() => stream.curr !== null, [stream]);
+  // The hills and trees are built in a worker; the scene only shows once they and the car's first frame are in.
+  const world = useWorld(track, TERRAIN_STEP[tier]);
+  const isReady = useCallback(() => stream.curr !== null && world !== null && readTerrain(world, TERRAIN_STEP[tier]) !== null, [stream, world, tier]);
   const onWarm = useCallback(() => {
     setWarm(true);
     onShown();

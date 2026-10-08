@@ -2,9 +2,8 @@ import { RUNOFF } from '@/engine/racing/car/runtime';
 import type { Track } from '@/engine/racing/track/types';
 import { cornerWeight } from '../track/roadGeometry';
 import { distanceAt, insideAt, type TrackField } from '../world/trackField';
-import { BOWL_DEPTH, roofBack } from './grandstandGeometry';
+import { BOWL_DEPTH, PIT_TOP, roofBack } from './dimensions';
 import { padWeight, type StadiumLayout } from './layout';
-import { PIT_TOP } from './pitGeometry';
 
 /** A thing standing by the circuit: world position, yaw and, for boards, which way it faces. */
 export interface Spot {

@@ -15,7 +15,7 @@ import type { Flora } from './placement';
 import { ATLAS_TILE, foliageAtlas, releaseFoliageAtlas } from './textures/foliageAtlas';
 import { createGrassMaterial } from './grassMaterial';
 import { grassTexture } from './textures/grassTexture';
-import { tuftGeometry } from './tufts';
+import { tuftGeometry } from './grassGeometry';
 import { SplitInstances } from './SplitInstances';
 import { SHADOW_BOX } from '../lighting/SunLight';
 

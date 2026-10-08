@@ -5,7 +5,8 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { withHaze } from '../world/atmosphere';
 import { brandTexture } from './brandTexture';
 import type { StadiumLayout } from './layout';
-import { PIT_LANE as LANE, PIT_TOP, pitGlass, pitMullions, pitShell } from './pitGeometry';
+import { PIT_LANE as LANE, PIT_TOP } from './dimensions';
+import { pitGlass, pitMullions, pitShell } from './pitGeometry';
 
 /**
  * The pit building on the infield side of the main straight, facing the

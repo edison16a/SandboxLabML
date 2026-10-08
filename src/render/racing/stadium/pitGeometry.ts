@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { ColoredParts } from './coloredParts';
+import { PIT_CANOPY, PIT_GROUND, PIT_TOP } from './dimensions';
 
 const WHITE = new THREE.Color('#e8e9e7');
 const GREY = new THREE.Color('#9da3a9');
@@ -7,12 +8,6 @@ const DARK = new THREE.Color('#202429');
 const GARAGE = new THREE.Color('#3b4047');
 const BLUE = new THREE.Color('#2f6fd0');
 
-/** Floor heights, m. */
-export const PIT_GROUND = 4.6;
-export const PIT_TOP = 8.6;
-/** How far the roof's canopy reaches over the pit lane, and the lane's width, m. */
-export const PIT_CANOPY = 4.2;
-export const PIT_LANE = 7.2;
 /** Garage width along the building, m. */
 const BAY = 5.2;
 

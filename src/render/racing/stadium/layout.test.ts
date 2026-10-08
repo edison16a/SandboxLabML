@@ -4,9 +4,8 @@ import { buildTrack } from '@/engine/racing/track/buildTrack';
 import { BUILT_IN_TRACKS } from '@/engine/racing/track/presets';
 import { distanceAt } from '../world/trackField';
 import { worldFor } from '../world/worldData';
-import { roofFront } from './grandstandGeometry';
+import { PIT_CANOPY, PIT_LANE, roofFront } from './dimensions';
 import type { StadiumLayout } from './layout';
-import { PIT_CANOPY, PIT_LANE } from './pitGeometry';
 
 /** Closest the road comes to a rectangle in a building's frame (x along, z away from the road). */
 function nearest(world: ReturnType<typeof worldFor>, l: StadiumLayout, side: number, along: number, offset: number, half: number, z0: number, z1: number): number {

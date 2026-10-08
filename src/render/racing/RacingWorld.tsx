@@ -1,7 +1,7 @@
 'use client';
 
 import * as THREE from 'three';
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 import type { Track } from '@/engine/racing/track/types';
 import type { QualityTier } from '@/features/racing/state/labStore';
 import { RacingEnvironment } from './RacingEnvironment';
@@ -10,8 +10,8 @@ import { TrackMesh } from './TrackMesh';
 import { Forest } from './world/flora/Forest';
 import { Undergrowth } from './world/flora/Undergrowth';
 import { FlatGround } from './world/terrain/FlatGround';
-import { Terrain } from './world/terrain/Terrain';
-import { worldFor } from './world/worldData';
+import { Terrain, TERRAIN_STEP } from './world/terrain/Terrain';
+import { useWorld } from './world/useWorld';
 
 interface Props {
   track: Track;
@@ -28,7 +28,8 @@ interface Props {
  * so the two always look the same.
  */
 export function RacingWorld({ track, tier, focus, editing = false }: Props) {
-  const world = useMemo(() => (editing ? null : worldFor(track)), [track, editing]);
+  // Built in a worker; the level ground and the road show until the hills and trees arrive.
+  const world = useWorld(editing ? null : track, TERRAIN_STEP[tier]);
   // Where the sun's shadow box sits this frame: only scenery near it goes through the shadow pass.
   const box = useRef(new THREE.Vector3(1e9, 0, 0));
   return (

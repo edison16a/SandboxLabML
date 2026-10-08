@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Rng } from '@/engine/core/rng';
 import { withHaze } from '../world/atmosphere';
-import { AISLE_EVERY, FRONT, ROW_DEPTH, ROWS, rowHeight } from './grandstandGeometry';
+import { AISLE_EVERY, FRONT, ROW_DEPTH, ROWS, rowHeight } from './dimensions';
 
 /**
  * A seated spectator: hips and thighs on the seat, a torso that narrows to

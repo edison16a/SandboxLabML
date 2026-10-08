@@ -1,5 +1,5 @@
 import { padOf, type Pad, type StadiumLayout } from '../stadium/layout';
-import { PIT_LANE } from '../stadium/pitGeometry';
+import { PIT_LANE } from '../stadium/dimensions';
 import { terrainHeight, type TerrainShape } from '../world/terrain/terrainHeight';
 
 /**

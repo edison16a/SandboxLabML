@@ -1,17 +1,6 @@
 import * as THREE from 'three';
 import { ColoredParts } from './coloredParts';
-
-/** Seating rows, their depth and rise, m. The first row sits on a podium above the fence. */
-export const ROWS = 14;
-export const ROW_DEPTH = 0.85;
-export const ROW_RISE = 0.42;
-export const PODIUM = 1.4;
-/** Distance from the stand's front edge to the first row, m. */
-export const FRONT = 0.9;
-/** Aisles every this many meters along the stand. */
-export const AISLE_EVERY = 11;
-/** Depth of the seating bowl, m. */
-export const BOWL_DEPTH = FRONT + ROWS * ROW_DEPTH;
+import { AISLE_EVERY, BACK, BOWL_DEPTH, FRONT, PODIUM, REACH, ROW_DEPTH, ROWS, rowHeight, SLOPE } from './dimensions';
 
 const CONCRETE = new THREE.Color('#b8bab9');
 const STEP = new THREE.Color('#9ea1a3');
@@ -20,17 +9,6 @@ const SEAT_GREY = new THREE.Color('#d7dadf');
 const SEAT_DARK = new THREE.Color('#1b2533');
 const STEEL = new THREE.Color('#3a414b');
 const DECK = new THREE.Color('#dfe2e5');
-
-/** Height of row `r`'s tread, m. */
-export function rowHeight(r: number): number {
-  return PODIUM + r * ROW_RISE;
-}
-
-/** Height of the back wall's top, where the roof sits, m. */
-const BACK = rowHeight(ROWS) + 3.6;
-/** How far the roof reaches from the back wall toward the track, and its downward slope, rad. */
-const REACH = BOWL_DEPTH + 2.6;
-const SLOPE = 0.06;
 
 /**
  * The concrete bowl of a stand `length` meters long, in its own frame:
@@ -73,14 +51,4 @@ export function roofGeometry(length: number): THREE.BufferGeometry {
     b.add(new THREE.BoxGeometry(0.25, 0.5, REACH).rotateX(-SLOPE * 1.9).translate(x, BACK + 1.25, center), STEEL);
   }
   return b.build();
-}
-
-/** Where the roof's front edge sits, for the fascia board: y and z in the stand's frame. */
-export function roofFront(): { y: number; z: number } {
-  return { y: BACK + 0.45 - Math.sin(SLOPE) * (REACH / 2) - 0.45, z: BOWL_DEPTH - REACH + 0.6 };
-}
-
-/** The roof's back edge, for the flag poles along it. */
-export function roofBack(): { y: number; z: number } {
-  return { y: BACK + 1.6, z: BOWL_DEPTH + 0.5 };
 }

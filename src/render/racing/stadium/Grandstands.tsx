@@ -9,7 +9,8 @@ import { useRacingScene } from '../sceneContext';
 import { withHaze } from '../world/atmosphere';
 import { brandTexture } from './brandTexture';
 import { createCrowdMaterial, seatCrowd, spectatorGeometry } from './crowd';
-import { bowlGeometry, roofFront, roofGeometry } from './grandstandGeometry';
+import { roofFront } from './dimensions';
+import { bowlGeometry, roofGeometry } from './grandstandGeometry';
 import type { Placed, StadiumLayout } from './layout';
 
 /** One stand's crowd: an instanced mesh filled once from precomputed seats. */
