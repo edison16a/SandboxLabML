@@ -10,10 +10,11 @@ declare global {
 /**
  * Runs in the page: the hero text a corner card covers, as a list of the
  * covered lines. Text is measured by its line boxes rather than its block,
- * since a centered paragraph's block is far wider than its words.
+ * since a centered paragraph's block is far wider than its words. The
+ * text panel itself counts too, so a card never sits on its edge.
  */
 function cardsOverText(): string[] {
-  const cards = [...document.querySelectorAll('[data-hero-panels] > div > div')].map((c) => c.getBoundingClientRect());
+  const cards = [...document.querySelectorAll('[data-hero-card]')].map((c) => c.getBoundingClientRect());
   const hit = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
   const covered: string[] = [];
   for (const el of document.querySelectorAll('[data-hero-content] > *')) {
@@ -22,6 +23,8 @@ function cardsOverText(): string[] {
     const boxes = el.tagName === 'P' || el.tagName === 'H1' ? [...range.getClientRects()] : [el.getBoundingClientRect()];
     if (boxes.some((b) => cards.some((c) => hit(b, c)))) covered.push(el.textContent || el.tagName);
   }
+  const panel = document.querySelector('[data-hero-content]')?.getBoundingClientRect();
+  if (panel && cards.some((c) => hit(panel, c))) covered.push('the text panel');
   return covered;
 }
 
@@ -39,12 +42,12 @@ test.describe('Landing hero', () => {
     await expect.poll(() => poster.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
     // Give the hero the time it would take to go live, then check it never did.
     await page.waitForTimeout(3000);
-    await expect(page.locator('[data-hero-scene]')).toHaveCount(0);
+    await expect(page.locator('[data-hero-shown]')).toHaveCount(0);
     expect(workers).toHaveLength(0);
     await context.close();
   });
 
-  test('goes live on a desktop and lets go of its worker and WebGL contexts when you leave', async ({ page }) => {
+  test('goes live on a desktop with both scenes in one canvas and lets go of its worker and context when you leave', async ({ page }) => {
     await page.addInitScript(() => {
       const contexts: Array<WebGLRenderingContext | WebGL2RenderingContext> = [];
       window.__glContexts = contexts;
@@ -64,11 +67,13 @@ test.describe('Landing hero', () => {
     });
     await page.goto('/?quality=low');
 
-    // The car scene comes up over the poster, driven by one replay worker. The worker that built the hills and
-    // trees has finished and closed by the time the scene shows.
-    await expect(page.locator('[data-hero-scene="car"]')).toBeAttached({ timeout: 240_000 });
+    // The car scene comes up over its half of the poster, driven by one replay worker. The worker that built the
+    // hills and trees has finished and closed by the time the scene shows. The arena then joins it beside it.
+    await expect(page.locator('[data-hero-shown~="car"]')).toBeAttached({ timeout: 240_000 });
     await expect(page.locator('[data-hero-panels]')).toContainText('Car brain');
     await expect.poll(() => workers.filter((w) => !gone.has(w)).length).toBe(1);
+    await expect(page.locator('[data-hero-shown~="arena"]')).toBeAttached({ timeout: 240_000 });
+    await expect(page.locator('[data-hero-panels]')).toContainText(/Hider brain|Seeker brain/);
 
     // On a small laptop the corner cards stay clear of the centered words and the button.
     await page.setViewportSize({ width: 1024, height: 768 });
@@ -77,10 +82,10 @@ test.describe('Landing hero', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     const heroWorker = workers.find((w) => !gone.has(w)) as Worker;
     const closed = new Promise<void>((resolve) => heroWorker.once('close', () => resolve()));
-    // The hero's scenes draw on canvases in the page. Off-page contexts belong to libraries that keep one for the
+    // Both scenes draw on one canvas in the page. Off-page contexts belong to libraries that keep one for the
     // whole visit (the text renderer measures glyphs on one), so they are not the hero's to release.
     const heroContexts = await page.evaluate(() => (window.__glContexts ?? []).flatMap((c, i) => (c.canvas instanceof HTMLCanvasElement && c.canvas.isConnected ? [i] : [])));
-    expect(heroContexts.length).toBeGreaterThanOrEqual(1);
+    expect(heroContexts).toHaveLength(1);
 
     await page.getByRole('link', { name: 'Go Train' }).click();
     await expect(page).toHaveURL(/\/lab\/racing$/);
