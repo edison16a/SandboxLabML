@@ -45,9 +45,9 @@ export function Grandstands({ layout, tier, seed }: { layout: StadiumLayout; tie
     const metal = withHaze(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.5, envMapIntensity: 0.9 }));
     const board = brandTexture('dark', 12);
     const fascia = withHaze(new THREE.MeshStandardMaterial({ map: board, roughness: 0.5, emissive: '#ffffff', emissiveMap: board, emissiveIntensity: 0.25 }));
-    const crowd = createCrowdMaterial();
+    const crowd = createCrowdMaterial(tier);
     return { concrete, metal, fascia, crowd, dispose: () => [concrete, metal, board, fascia, crowd.material].forEach((x) => x.dispose()) };
-  }, []);
+  }, [tier]);
   const center = useMemo(() => new THREE.Vector3(layout.x, 0, layout.z), [layout]);
 
   useFrame((_, dt) => {

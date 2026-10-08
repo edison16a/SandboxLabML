@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Rng } from '@/engine/core/rng';
+import type { QualityTier } from '@/features/racing/state/labStore';
 import { withHaze } from '../world/atmosphere';
 import { AISLE_EVERY, FRONT, ROW_DEPTH, ROWS, rowHeight } from './dimensions';
 
@@ -76,12 +77,14 @@ export function seatCrowd(length: number, seed: number, occupancy: number): { ma
  * `uExcite` rises (a car is close) they bounce, half of them jump up and
  * arms go in the air. Rows further back sit deeper under the roof and get
  * darker, hair tops the heads, and trousers stay dark. All in the vertex
- * shader, so a thousand fans cost one draw call and no CPU.
+ * shader, so a thousand fans cost one draw call and no CPU. Medium and
+ * High light each pixel with the sky's reflections, which rounds the
+ * figures; Low keeps cheap per vertex light.
  */
-export function createCrowdMaterial(): { material: THREE.MeshLambertMaterial; time: { value: number }; excite: { value: number } } {
+export function createCrowdMaterial(tier: QualityTier): { material: THREE.MeshLambertMaterial | THREE.MeshStandardMaterial; time: { value: number }; excite: { value: number } } {
   const time = { value: 0 };
   const excite = { value: 0 };
-  const m = new THREE.MeshLambertMaterial({ vertexColors: false });
+  const m = tier === 'low' ? new THREE.MeshLambertMaterial() : new THREE.MeshStandardMaterial({ roughness: 0.86, metalness: 0, envMapIntensity: 0.7 });
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = time;
     shader.uniforms.uExcite = excite;
@@ -112,6 +115,6 @@ export function createCrowdMaterial(): { material: THREE.MeshLambertMaterial; ti
       .replace('#include <common>', '#include <common>\nvarying vec3 vFan;')
       .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = vFan;');
   };
-  m.customProgramCacheKey = () => 'racing-crowd';
+  m.customProgramCacheKey = () => `racing-crowd-${tier === 'low' ? 'lambert' : 'standard'}`;
   return { material: withHaze(m), time, excite };
 }
