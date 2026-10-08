@@ -40,6 +40,7 @@ describe('car surface shader patch', () => {
   it('stacks on the ghost fade without losing either patch', () => {
     const shader = patch(withCarSurface(createFadeMaterial({ vertexColors: true }), { ghost: true }), 'standard');
     expectAll(shader.vertexShader, [...SURFACE_VERTEX, 'attribute float instanceOpacity;', 'vInstanceOpacity = instanceOpacity;', 'instanceColor.rgb * mix( 0.45, 1.0, surface.w )']);
-    expectAll(shader.fragmentShader, [...SURFACE_FRAGMENT, 'gl_FragColor.a *= vInstanceOpacity;']);
+    // A ghost is satin with a firm rim: no mirror finish, and alpha rises toward the outline.
+    expectAll(shader.fragmentShader, ['float roughnessFactor = max( vSurface.x, 0.5 );', 'float metalnessFactor = 0.0;', 'totalEmissiveRadiance += vRawColor * vSurface.z;', 'float ghostRim', 'vInstanceOpacity * ( 1.0 + 1.2 * ghostRim )']);
   });
 });

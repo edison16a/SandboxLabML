@@ -18,8 +18,9 @@ export function ghostColor(t: number, out = new THREE.Color()): THREE.Color {
   return out.copy(EARLY).lerp(RECENT, t);
 }
 
+/** Older ghosts are fainter. Even the oldest keeps enough body to read as a car rather than a tint on the road. */
 export function ghostOpacity(t: number): number {
-  return 0.25 + 0.35 * t;
+  return 0.4 + 0.35 * t;
 }
 
 export const CRASHED_COLOR = new THREE.Color('#3b3f47');
