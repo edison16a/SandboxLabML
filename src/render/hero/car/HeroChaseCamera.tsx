@@ -9,8 +9,8 @@ import { useRacingScene } from '@/render/racing/sceneContext';
 import { stepSpring } from '@/render/shared/interpolate';
 import type { PaneView } from '../stage/paneView';
 
-/** Elevation of the shot. Low enough to keep a thin band of sky and hills over the road, high enough to see the line ahead. */
-const ELEVATION = (19 * Math.PI) / 180;
+/** Elevation of the shot. Low enough to keep a band of sky and clouds over the hills, high enough to see the line ahead. */
+const ELEVATION = (12 * Math.PI) / 180;
 /** The span of the car the shot sizes for, m: its length seen from three quarters behind. */
 const CAR_SPAN = 3.2;
 /** Share of the free part of the pane that span fills. */
