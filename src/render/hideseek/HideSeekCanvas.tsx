@@ -73,7 +73,8 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
       shadows={{ enabled: tier !== 'low', type: THREE.PCFShadowMap }}
       dpr={tierDpr(tier)}
       frameloop={loop.frameloop}
-      gl={{ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true }}
+      // The stencil keeps a character's see through silhouette off its own body (see CharacterMaterials).
+      gl={{ antialias: true, stencil: true, powerPreference: 'high-performance', preserveDrawingBuffer: true }}
       camera={{ fov: 42, near: 0.1, far: 2500, position: [0, 140, 160] }}
       onCreated={({ gl, camera, raycaster }) => {
         gl.outputColorSpace = THREE.SRGBColorSpace;

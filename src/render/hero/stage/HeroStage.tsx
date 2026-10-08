@@ -98,7 +98,8 @@ export function HeroStage({ car, arena, layout, tier, running, onShown }: Props)
     <Canvas
       shadows={{ enabled: tier !== 'low', type: THREE.PCFShadowMap }}
       dpr={tierDpr(tier)}
-      gl={{ antialias: tier !== 'low', powerPreference: 'high-performance' }}
+      // The arena's characters mask their see through silhouettes with the stencil (see CharacterMaterials).
+      gl={{ antialias: tier !== 'low', stencil: true, powerPreference: 'high-performance' }}
       frameloop={loop.frameloop}
       onCreated={({ gl }) => {
         gl.outputColorSpace = THREE.SRGBColorSpace;

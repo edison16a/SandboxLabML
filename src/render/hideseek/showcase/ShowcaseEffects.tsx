@@ -14,7 +14,8 @@ import { arenaOrigin } from '../layout/gridLattice';
  * crates and agents, bloom lifts only emissive parts (anything pushed past
  * 1), neutral tone mapping keeps the whites white and the team colors
  * true, SMAA cleans edges and a light vignette frames the room. Photo mode adds depth
- * of field focused on the arena.
+ * of field focused on the arena. The scene buffer keeps a stencil, which
+ * the characters' silhouettes need.
  */
 export function ShowcaseEffects({ tier, photo }: { tier: HsQualityTier; photo: boolean }) {
   const ultra = tier === 'ultra';
@@ -23,14 +24,14 @@ export function ShowcaseEffects({ tier, photo }: { tier: HsQualityTier; photo: b
   const bloom = <Bloom mipmapBlur levels={ultra ? 7 : 5} luminanceThreshold={1.5} luminanceSmoothing={0.2} intensity={0.9} radius={0.6} />;
   const finish = [<ToneMapping key="tm" mode={ToneMappingMode.NEUTRAL} />, <SMAA key="smaa" />, <Vignette key="v" eskil={false} offset={0.32} darkness={0.36} />];
   return photo ? (
-    <EffectComposer multisampling={0} enableNormalPass={false} frameBufferType={THREE.HalfFloatType}>
+    <EffectComposer multisampling={0} enableNormalPass={false} stencilBuffer frameBufferType={THREE.HalfFloatType}>
       {ao}
       {bloom}
       <FocusedDof />
       {finish}
     </EffectComposer>
   ) : (
-    <EffectComposer multisampling={0} enableNormalPass={false} frameBufferType={THREE.HalfFloatType}>
+    <EffectComposer multisampling={0} enableNormalPass={false} stencilBuffer frameBufferType={THREE.HalfFloatType}>
       {ao}
       {bloom}
       {finish}

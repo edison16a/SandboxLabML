@@ -17,6 +17,12 @@ const WHITE = new THREE.Color('#ffffff');
 const BLOB_OPACITY = 0.42;
 /** How strongly a character shows through a wall in front of it. */
 const GHOST_OPACITY = 0.3;
+/**
+ * Stencil value a character's body leaves where it is the nearest surface.
+ * The silhouette never draws there, so a character never shows its own
+ * arms or ears through its head, nor another character through its body.
+ */
+const BODY_STENCIL = 1;
 /** The ring takes the seeker red, pushed past 1 so bloom catches it. */
 const RING = new THREE.Color(HS_COLORS.seekerBody).multiplyScalar(1.6);
 
@@ -44,6 +50,13 @@ function addInnerGlow(material: THREE.MeshStandardMaterial, uniforms: { uGlowCol
   material.customProgramCacheKey = () => 'hs-character-glow';
 }
 
+/** Sets BODY_STENCIL wherever the material draws. Free: the stencil shares the depth buffer, and nothing allocates per frame. */
+function markStencil(material: THREE.Material): void {
+  material.stencilWrite = true;
+  material.stencilRef = BODY_STENCIL;
+  material.stencilZPass = THREE.ReplaceStencilOp;
+}
+
 /**
  * The materials of one character. They are its own, not shared, because
  * the glow, the sleepy fade and the ring change per character every frame;
@@ -58,6 +71,9 @@ export class CharacterMaterials {
    * The silhouette that shows where a wall or a box hides the character:
    * flat team color, drawn only where something already stands in front
    * of it (a greater depth), so a hider tucked behind a wall still reads.
+   * The stencil keeps it off any pixel a body already covers, and it marks
+   * each pixel it draws, so overlapping hidden parts blend once and the
+   * silhouette stays one flat shape.
    */
   readonly ghost: THREE.MeshBasicMaterial;
   private readonly tint: THREE.Color;
@@ -71,9 +87,12 @@ export class CharacterMaterials {
         ? new THREE.MeshPhysicalMaterial({ color: this.tint, vertexColors: true, roughness: 0.3, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.07, envMapIntensity: 1.1 })
         : new THREE.MeshStandardMaterial({ color: this.tint, vertexColors: true, roughness: 0.28, metalness: 0, envMapIntensity: 1.1 });
     addInnerGlow(this.body, this.uniforms);
+    markStencil(this.body);
     // Drawn with the see through pass (after it, see HsCharacter), so the head behind the eyes never tints them.
     this.face = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.16, metalness: 0, envMapIntensity: 1.2, transparent: true });
     this.ghost = new THREE.MeshBasicMaterial({ color: this.tint, transparent: true, opacity: GHOST_OPACITY, depthFunc: THREE.GreaterDepth, depthWrite: false });
+    markStencil(this.ghost);
+    this.ghost.stencilFunc = THREE.NotEqualStencilFunc;
     this.blob = new THREE.MeshBasicMaterial({ color: HS_COLORS.blobShadow, alphaMap: blobMap, transparent: true, opacity: BLOB_OPACITY, depthWrite: false });
     this.ring = seekerRingMaterial(RING);
   }
