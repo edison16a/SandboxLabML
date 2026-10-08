@@ -9,7 +9,7 @@ import { withHaze } from '../atmosphere';
 import { detailNoise, releaseDetailNoise } from '../detailNoise';
 import { shrubGeometry } from './broadleafGeometry';
 import { createFoliageMaterial } from './foliageMaterial';
-import { createRockMaterial, rockGeometry } from './groundCover';
+import { createRockMaterial, rockGeometry } from './rocks';
 import { instanceSet, withColors, writeInstance, type InstanceSet } from './instances';
 import type { Flora } from './placement';
 import { ATLAS_TILE, foliageAtlas, releaseFoliageAtlas } from './textures/foliageAtlas';
@@ -44,7 +44,8 @@ function Scatter({ set, geometry, material, depth, castShadow }: { set: Instance
  */
 export function Undergrowth({ flora, tufts, tier }: { flora: Flora; tufts: Float32Array; tier: QualityTier }) {
   const geo = useDisposable(() => {
-    const g = [shrubGeometry(0), shrubGeometry(1), rockGeometry(0), rockGeometry(1), tuftGeometry()];
+    const detail = tier === 'low' ? 1 : tier === 'medium' ? 2 : 3;
+    const g = [shrubGeometry(0), shrubGeometry(1), rockGeometry(0, detail), rockGeometry(1, detail), tuftGeometry()];
     return { shrub: g.slice(0, 2), rock: g.slice(2, 4), tuft: g[4], dispose: () => g.forEach((x) => x.dispose()) };
   }, [tier]);
   const mats = useDisposable(() => {
