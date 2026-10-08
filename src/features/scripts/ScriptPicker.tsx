@@ -5,19 +5,18 @@ import { FileCode2, Sparkles } from 'lucide-react';
 import type { EnvId } from '@/engine/env/types';
 import { listScripts } from '@/storage/scripts';
 import { cn } from '@/ui/cn';
+import { firstSentence } from '@/ui/firstSentence';
 import { Field } from '@/ui/primitives/Field';
 import { choiceFromPreset, choiceFromSource, presetsFor, type BlueprintOf, type ScriptChoice } from './scriptChoice';
 
 /** What the built-in option does in each lab, said in one line. */
 const BUILTIN: Record<EnvId, string> = {
-  racing: 'Checkpoints, laps and a little speed. The fastest path.',
-  hideseek: 'Hiders score while unseen, seekers while they see. Tuned cover rewards.',
+  racing: 'Checkpoints, laps and a little speed.',
+  hideseek: 'Hiders score while unseen, seekers while they see.',
 };
 
-const HINT: Record<EnvId, string> = {
-  racing: 'A script decides the rewards, when a car stops and how each generation breeds. Edit your own in Studio.',
-  hideseek: 'A script decides each team’s rewards, the rounds and how each generation breeds. Edit your own in Studio.',
-};
+/** What a training script is, in one line. */
+const HINT = 'Sets the rewards and how each generation breeds.';
 
 interface Props<E extends EnvId> {
   env: E;
@@ -34,12 +33,12 @@ export function ScriptPicker<E extends EnvId>({ env, value, onChange }: Props<E>
   }, [env]);
   const selected = value.kind === 'builtin' ? 'builtin' : value.id;
   return (
-    <Field label="Training script" hint={HINT[env]}>
+    <Field label="Training script" hint={HINT}>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Option active={selected === 'builtin'} icon={<Sparkles />} title="Built-in" body={BUILTIN[env]} onClick={() => onChange({ kind: 'builtin' })} />
         {presets.map(({ preset, choice }) =>
           choice ? (
-            <Option key={preset.id} active={selected === preset.id} icon={<FileCode2 />} title={preset.name} body={preset.description} onClick={() => onChange(choice)} />
+            <Option key={preset.id} active={selected === preset.id} icon={<FileCode2 />} title={preset.name} body={firstSentence(preset.description)} onClick={() => onChange(choice)} />
           ) : null,
         )}
         {mine.map(({ id, name, choice }) => (
@@ -48,7 +47,7 @@ export function ScriptPicker<E extends EnvId>({ env, value, onChange }: Props<E>
             active={selected === id}
             icon={<FileCode2 />}
             title={name}
-            body={choice ? 'Your script from Studio.' : 'Has errors. Fix it in Studio first.'}
+            body={choice ? 'Your script' : 'Has errors. Fix it in Studio first.'}
             disabled={!choice}
             onClick={() => choice && onChange(choice)}
           />

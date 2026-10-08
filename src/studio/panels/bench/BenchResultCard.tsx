@@ -33,7 +33,6 @@ interface Props {
  */
 export function BenchResultCard({ result, references, generation }: Props) {
   const refs = references && references.benchmarkVersion === result.benchmarkVersion ? references.references : [];
-  const summary = [`You ${Math.round(result.score)}`, ...refs.map((r) => `${TIER_LABEL[r.tier]} ${Math.round(r.finalScore)}`)].join(', ');
   return (
     <div className="flex flex-col gap-5 rounded-lg border border-border bg-surface-2 p-4">
       <div className="grid grid-cols-2 gap-3">
@@ -42,14 +41,13 @@ export function BenchResultCard({ result, references, generation }: Props) {
       </div>
       <section className="flex flex-col gap-2">
         <h4 className="text-[12px] font-semibold tracking-wide text-muted uppercase">Compared with the presets</h4>
-        <p className="text-[13px]">{summary}</p>
         <div className="flex flex-col gap-1.5">
           <Bar label="You" score={result.score} you />
           {refs.map((r) => (
             <Bar key={r.tier} label={TIER_LABEL[r.tier]} score={r.finalScore} />
           ))}
         </div>
-        {refs.length === 0 && <p className="text-[12px] text-subtle">Reference scores for this benchmark version are not available yet.</p>}
+        {refs.length === 0 && <p className="text-[12px] text-subtle">No reference scores for this version yet.</p>}
       </section>
       {refs.length > 0 && (
         <section className="flex flex-col gap-2">

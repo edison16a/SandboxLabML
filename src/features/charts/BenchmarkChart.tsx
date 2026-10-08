@@ -12,8 +12,8 @@ const TIER_COLORS = { beginner: '#5d6779', intermediate: '#8a94a7', advanced: '#
 
 /** What the chart says before the first benchmark lands. */
 const EMPTY: Record<EnvId, string> = {
-  racing: 'The champion is scored on held-out roads every 5 generations.',
-  hideseek: 'The champion pair plays the reference champions every 10 generations.',
+  racing: 'Every 5 generations, the champion drives tracks it never trained on.',
+  hideseek: 'Every 10 generations, the champions play fixed reference teams.',
 };
 
 /** Any record with a generation and, once benchmarked, its score. Racing and Hide and Seek records both fit. */

@@ -82,7 +82,7 @@ export function InputsTab() {
             />
           </div>
           <p className="text-muted">
-            Click an input name to {lesionKind === 'off' ? 'force it to 0' : 'hold it at its current reading'} for every {agent === 0 ? 'hider' : 'seeker'} on the field. The brains keep acting; affected links turn amber in the Network tab.
+            Click an input to {lesionKind === 'off' ? 'switch it off' : 'freeze its reading'} for every {agent === 0 ? 'hider' : 'seeker'}.
           </p>
           {lesioned.size > 0 && (
             <Button size="sm" variant="outline" className="self-start" onClick={() => hideSeekSession().sandbox?.clearLesions()}>
@@ -92,7 +92,7 @@ export function InputsTab() {
         </div>
       )}
       <p className="text-[12px] text-muted">
-        {schemas[agent].length} inputs from the <span className="text-fg">{run?.env === 'hideseek' ? hideSeekBlueprints(run)[agent === 0 ? 'hider' : 'seeker'].name : ''}</span> blueprint. Hover a row to highlight that sensor in 3D and in the network.
+        {schemas[agent].length} inputs, <span className="text-fg">{run?.env === 'hideseek' ? hideSeekBlueprints(run)[agent === 0 ? 'hider' : 'seeker'].name : ''}</span> blueprint
       </p>
       <InputBars
         schema={schemas[agent]}

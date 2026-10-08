@@ -43,7 +43,7 @@ export function TestRunControls({ value, onChange, sources, disabled }: Props) {
         />
       </Field>
       {value.brain === 'random' ? (
-        <Field label="Seed" hint="A random brain built from the script's blueprint. Same seed, same brain.">
+        <Field label="Seed" hint="Same seed, same brain.">
           <div className="flex gap-2">
             <TextInput type="number" aria-label="Seed" value={value.seed} disabled={disabled} onChange={(e) => set({ seed: Number(e.target.value) || 0 })} className="w-32" />
             <Button variant="outline" size="icon" aria-label="New random seed" disabled={disabled} onClick={() => set({ seed: Math.floor(Math.random() * 1e6) })}>
@@ -52,7 +52,7 @@ export function TestRunControls({ value, onChange, sources, disabled }: Props) {
           </div>
         </Field>
       ) : sources.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border px-3 py-2 text-[12px] text-muted">No racing runs with a champion yet. Train a run in the Racing lab, then come back.</p>
+        <p className="rounded-md border border-dashed border-border px-3 py-2 text-[12px] text-muted">No trained racing runs yet.</p>
       ) : (
         <Field label="Run">
           <Select

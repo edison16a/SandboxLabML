@@ -39,9 +39,9 @@ export function StatusLine() {
             <Gauge className="size-3.5" />
             <span className="tabular font-mono">{a.micros.toFixed(2)} µs</span> per tick
           </span>
-          <span className="inline-flex items-center gap-1" title="Compared with the built-in reward at Turbo speed">
+          <span className="inline-flex items-center gap-1" title="Turbo speed compared with the built-in reward">
             <Zap className="size-3.5" />
-            Turbo about <span className="tabular font-mono">{Math.round(a.turboShare * 100)}%</span> of built-in speed
+            Turbo <span className="tabular font-mono">{Math.round(a.turboShare * 100)}%</span>
           </span>
         </>
       ) : (

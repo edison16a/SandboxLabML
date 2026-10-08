@@ -10,9 +10,9 @@ import { ROOT_LIST } from './model/paths';
 import { StatementList, allEntries } from './StatementList';
 
 const HINTS: Record<string, string> = {
-  top: 'Sensors and constants. These run before the sections below.',
-  tick: 'Runs for every agent, 30 times per second.',
-  generation: 'Runs once after every generation.',
+  top: 'Sensors and constants',
+  tick: 'Every agent, 30 times a second',
+  generation: 'Once after each generation',
 };
 
 function SectionFrame({ title, hint, actions, children }: { title: string; hint: string; actions?: React.ReactNode; children: React.ReactNode }) {

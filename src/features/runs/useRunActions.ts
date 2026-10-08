@@ -55,7 +55,7 @@ export function useRunActions(reload: () => Promise<void>) {
     reset: (run: RunRow) =>
       guard(async () => {
         const c = await resetRun(run.id);
-        await done('Started over. The old run is in Trash.', async () => {
+        await done('Started over', async () => {
           await restoreRun(run.id);
           await destroyRun(c.id);
         });

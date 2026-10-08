@@ -117,7 +117,7 @@ export function FieldEditor() {
           </Button>
         </div>
       </div>
-      <p className="text-[11px] leading-snug text-white/50">The newest champion on the grid starts on pole. Picking generations in the Ghosts menu also sets the grid.</p>
+      <p className="text-[11px] leading-snug text-white/50">The Ghosts menu also sets the grid.</p>
     </div>
   );
 }

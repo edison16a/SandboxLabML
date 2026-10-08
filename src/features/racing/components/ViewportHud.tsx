@@ -34,7 +34,7 @@ function HeldNote() {
     <div className="pointer-events-none absolute inset-x-0 bottom-14 flex justify-center px-4">
       <div className="flex items-center gap-2 rounded-md border border-white/10 bg-black/60 px-3 py-2 text-[12px] text-white/85 backdrop-blur-sm">
         <Gauge className="size-3.5 text-accent" />
-        The viewport is paused so Max can use every core. Pause or pick Turbo to watch again.
+        Paused while Max trains. Pick Turbo to watch.
       </div>
     </div>
   );

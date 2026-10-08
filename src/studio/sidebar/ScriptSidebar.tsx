@@ -82,10 +82,10 @@ export function ScriptSidebar({ className }: { className?: string }) {
         />
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-2">
-        <Group title="My scripts" empty={!loading && mine.length === 0 ? 'No scripts yet. Press New, or duplicate a preset.' : undefined}>
+        <Group title="My scripts" empty={!loading && mine.length === 0 ? 'None yet' : undefined}>
           {mine.map(row)}
         </Group>
-        <Group title="Presets" empty={presets.length === 0 ? 'No presets for this environment yet.' : undefined}>
+        <Group title="Presets" empty={presets.length === 0 ? 'None yet' : undefined}>
           {presets.map(row)}
         </Group>
       </div>

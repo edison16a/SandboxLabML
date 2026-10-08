@@ -6,7 +6,7 @@ import { Tooltip } from '@/ui/primitives/Tooltip';
 import type { SpeedMode } from '@/workers/shared/protocol';
 
 const OPTIONS: Array<{ value: SpeedMode; label: React.ReactNode; title: string }> = [
-  { value: '1x', label: '1x', title: 'Real time. Every arena of the round plays live.' },
+  { value: '1x', label: '1x', title: 'Real time' },
   { value: '2x', label: '2x', title: 'Twice real time' },
   { value: '4x', label: '4x', title: 'Four times real time' },
   {
@@ -17,7 +17,7 @@ const OPTIONS: Array<{ value: SpeedMode; label: React.ReactNode; title: string }
         Turbo
       </>
     ),
-    title: 'Train headless on every core. The grid replays the latest round at real time.',
+    title: 'Trains on every core and replays the latest round',
   },
   {
     value: 'max',
@@ -27,7 +27,7 @@ const OPTIONS: Array<{ value: SpeedMode; label: React.ReactNode; title: string }
         Max
       </>
     ),
-    title: 'Train headless and stop the replay for the last bit of speed.',
+    title: 'Fastest. The arenas pause.',
   },
 ];
 

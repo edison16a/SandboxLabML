@@ -10,8 +10,8 @@ import { usePlayback } from './usePlayback';
 import { usePreview } from './usePreview';
 
 const CAPTION: Record<EnvId, string> = {
-  racing: "One test drive on the script's track with the fixed test brain, not a trained one. It is the drive a check runs.",
-  hideseek: "One test match in the script's first room with the fixed test players, not trained brains. Hider in blue, seeker in red. A locked box is edged in the color of the team that locked it, and the ramp's chevrons point uphill. It is the match a check plays.",
+  racing: 'The drive a check runs, with a fixed test brain.',
+  hideseek: 'The match a check plays, with fixed test players. Hider blue, seeker red.',
 };
 
 const GAME: Record<EnvId, string> = { racing: 'racing', hideseek: 'Hide and Seek' };
@@ -67,7 +67,7 @@ export function LessonPreview({ lesson, step, text }: Props) {
       </div>
       <p className="text-[11px] text-subtle">
         {CAPTION[lesson.course]}
-        {!own && ` This is the step's starter, since the editor holds no ${GAME[lesson.course]} script.`}
+        {!own && ` Playing the starter, since the editor holds no ${GAME[lesson.course]} script.`}
       </p>
     </section>
   );

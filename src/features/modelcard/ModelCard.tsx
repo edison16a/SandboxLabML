@@ -85,7 +85,7 @@ export function ModelCard({ runId, genome, records, reference, blueprintName, se
       )}
       <Section title="Connections">
         <Row label="Enabled" value={m.connections.enabled} />
-        <Row label="Disabled" value={m.connections.disabled} hint="Disabled genes stay in the genome and can switch back on." />
+        <Row label="Disabled" value={m.connections.disabled} hint="Links switched off by mutation. They can switch back on." />
         <Row label="Cost per decision" value={`${m.costPerDecision} multiply-adds`} />
       </Section>
       <Section title="Training">

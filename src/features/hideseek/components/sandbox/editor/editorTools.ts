@@ -20,19 +20,19 @@ export const TURN_KEY = 'T';
 
 /** The editor's tools in toolbar order, each with its shortcut key and hint. */
 export const EDITOR_TOOLS: readonly ToolInfo[] = [
-  { id: 'wall', label: 'Wall', key: 'W', icon: BrickWall, hint: 'Drag along the grid to draw a wall. It runs straight across or straight down.' },
+  { id: 'wall', label: 'Wall', key: 'W', icon: BrickWall, hint: 'Drag along the grid to draw a wall.' },
   { id: 'cube', label: 'Cube', key: 'C', icon: Box, hint: 'Click to place a cube. Drag any box to move it.' },
-  { id: 'plank', label: 'Plank', key: 'P', icon: RectangleHorizontal, hint: `Click to place a plank, ${TURN_KEY} turns it. Click a plank to turn it in place.` },
+  { id: 'plank', label: 'Plank', key: 'P', icon: RectangleHorizontal, hint: `Click to place a plank. ${TURN_KEY} turns it.` },
   {
     id: 'ramp',
     label: 'Ramp',
     key: 'R',
     icon: TriangleRight,
-    hint: `Click to place a ramp, ${TURN_KEY} turns it. The chevrons point uphill, and agents jump off the high end. Click a ramp to turn it.`,
+    hint: `Click to place a ramp. ${TURN_KEY} turns it. The chevrons point uphill.`,
   },
-  { id: 'hiders', label: 'Hider spawn', key: 'H', icon: Users, hint: 'Drag a rectangle where the hiders start. A click sets a 4 m square.' },
-  { id: 'seekers', label: 'Seeker spawn', key: 'S', icon: Users, hint: 'Drag a rectangle where the seekers start. A click sets a 4 m square.' },
-  { id: 'erase', label: 'Erase', key: 'E', icon: Eraser, hint: 'Click a wall or a box to remove it.' },
+  { id: 'hiders', label: 'Hider spawn', key: 'H', icon: Users, hint: 'Drag a rectangle where the hiders start.' },
+  { id: 'seekers', label: 'Seeker spawn', key: 'S', icon: Users, hint: 'Drag a rectangle where the seekers start.' },
+  { id: 'erase', label: 'Erase', key: 'E', icon: Eraser, hint: 'Click a wall or box to remove it.' },
 ];
 
 export function toolForKey(key: string): EditorTool | null {
@@ -67,4 +67,4 @@ export function turnNext(tool: EditorTool, yaws: PlaceYaws): PlaceYaws {
 }
 
 /** The keyboard part of the hint, the same for every tool. */
-export const KEYBOARD_HINT = 'Arrows move the cursor, Enter acts there, Delete erases, Ctrl+Z undoes.';
+export const KEYBOARD_HINT = 'Arrows move, Enter places, Delete erases, Ctrl+Z undoes.';

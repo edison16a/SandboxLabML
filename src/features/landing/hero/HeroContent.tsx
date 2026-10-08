@@ -38,7 +38,6 @@ export function HeroContent() {
       <p className="mt-6 text-[14px] text-balance text-fg short:mt-3">
         Or play <SubLink href="/lab/hide-seek">Hide and Seek</SubLink>, or write your own rules in the <SubLink href="/studio">Studio</SubLink>.
       </p>
-      <p className="mt-2 text-[12px] text-fg">No account, no server. Your runs stay in this browser.</p>
     </div>
   );
 }

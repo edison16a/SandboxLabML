@@ -38,7 +38,7 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
           {running ? 'Pause' : 'Train'}
         </Button>
       </Tooltip>
-      <Tooltip content="Run exactly one generation" shortcut="S">
+      <Tooltip content="Step one generation" shortcut="S">
         <Button size="icon" variant="outline" onClick={() => void session.start(1)} disabled={!run || running} aria-label="Step one generation">
           <SkipForward />
         </Button>
@@ -61,7 +61,7 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
             {run.name}
           </span>
         )}
-        <Tooltip content={mode === 'sandbox' ? 'Back to training' : 'Play trained champions, as many as you like, in a preset room or one you build'}>
+        <Tooltip content={mode === 'sandbox' ? 'Back to training' : 'Play your champions in any room'}>
           <Button
             variant={mode === 'sandbox' ? 'secondary' : 'outline'}
             onClick={() => void (mode === 'sandbox' ? session.exitSandbox() : session.enterSandbox())}

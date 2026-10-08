@@ -18,7 +18,8 @@ function SaveState() {
   const dirty = useStudio(isDirty);
   const saving = useStudio((s) => s.saving);
   const readonly = useStudio((s) => s.script?.readonly ?? false);
-  if (readonly) return <Badge>Read only</Badge>;
+  // A preset says it is read only in the banner under the toolbar, so the toolbar keeps quiet.
+  if (readonly) return null;
   if (saving) return <span className="text-[12px] text-muted">Saving</span>;
   return dirty ? <span className="text-[12px] text-warn">Unsaved changes</span> : <span className="text-[12px] text-subtle">Saved</span>;
 }

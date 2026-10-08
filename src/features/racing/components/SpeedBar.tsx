@@ -9,8 +9,8 @@ const OPTIONS: Array<{ value: SpeedMode; label: React.ReactNode; title: string }
   { value: '1x', label: '1x', title: 'Real time' },
   { value: '2x', label: '2x', title: 'Twice real time' },
   { value: '4x', label: '4x', title: 'Four times real time' },
-  { value: 'turbo', label: <><Zap />Turbo</>, title: 'Train flat out on every core. The viewport loops recent champions.' },
-  { value: 'max', label: <><Gauge />Max</>, title: 'Train flat out and pause the viewport for the last bit of speed.' },
+  { value: 'turbo', label: <><Zap />Turbo</>, title: 'Trains on every core and replays recent champions' },
+  { value: 'max', label: <><Gauge />Max</>, title: 'Fastest. The viewport pauses.' },
 ];
 
 /** The speed selector. Watch speeds show the live generation; Turbo and Max run headless. */

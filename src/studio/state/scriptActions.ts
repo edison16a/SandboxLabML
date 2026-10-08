@@ -91,7 +91,7 @@ export async function saveCurrent(): Promise<boolean> {
   const s = useStudio.getState();
   if (!s.script) return false;
   if (s.script.readonly) {
-    toast.info('Presets are read only', 'Duplicate it to make a copy you can edit.');
+    toast.info('Presets are read only', 'Duplicate it to edit.');
     return false;
   }
   const text = s.history.present;
@@ -123,7 +123,7 @@ export async function duplicate(id: string): Promise<void> {
   if (!entry) return;
   bumpList();
   await openScript(entry.id, { force: true });
-  toast.success('Copy created', `"${entry.name}" is yours to edit.`);
+  toast.success(`Created "${entry.name}"`);
 }
 
 export async function rename(id: string, name: string): Promise<void> {

@@ -110,7 +110,6 @@ export function RoomEditorDialog({ room, saved, onSave, onDelete, onClose }: Pro
       onEscapeKeyDown={onEscapeKeyDown}
       onInteractOutside={onInteractOutside}
       title="Room editor"
-      description="Build a room for the Sandbox. Every trained model can play in it."
       footer={footer}
       className="max-w-[980px]"
     >

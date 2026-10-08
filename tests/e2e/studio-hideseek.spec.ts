@@ -11,7 +11,7 @@ test.describe('Studio with Hide and Seek scripts', () => {
 
   test('a test match plays the open script for both teams', async ({ page }) => {
     await page.goto('/studio');
-    await page.getByRole('button', { name: /Advanced\s*Hide and Seek preset/ }).click();
+    await page.getByRole('button', { name: /^Advanced\s*Hide and Seek$/ }).click();
     await page.getByRole('tab', { name: 'Test run' }).click();
     await page.getByRole('button', { name: 'Play one match' }).click();
     // The first match loads the physics engine in the worker, which takes a moment.

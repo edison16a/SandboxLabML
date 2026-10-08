@@ -35,7 +35,7 @@ export function BranchDialog({ run, onClose, onBranch }: Base & { onBranch: (gen
       open
       onOpenChange={(o) => !o && onClose()}
       title="Branch from a generation"
-      description="Starts a new run from that generation's champion. Nothing in this run changes."
+      description="A new run starts from that generation's champion."
       footer={<Button variant="primary" onClick={() => onBranch(gen)}>Create branch</Button>}
     >
       <Field label={`Generation ${gen + 1} of ${run.generation}`}>
@@ -60,10 +60,10 @@ export function RewindDialog({ run, onClose, onRewind }: Base & { onRewind: (gen
       open
       onOpenChange={(o) => !o && onClose()}
       title="Rewind to a checkpoint"
-      description="Generations after the checkpoint are removed. The run as it is now stays in Trash for 7 days."
+      description="Later generations are removed. The current run stays in Trash for 7 days."
       footer={<Button variant="primary" disabled={pick === null} onClick={() => pick !== null && onRewind(pick)}>Rewind</Button>}
     >
-      {cps && cps.length === 0 && <p className="text-[13px] text-muted">No checkpoints yet. One is saved every 10 generations and whenever you pause.</p>}
+      {cps && cps.length === 0 && <p className="text-[13px] text-muted">No checkpoints yet. One is saved every 10 generations and on pause.</p>}
       <div className="flex flex-col gap-2">
         {cps?.map((c) => (
           <button
@@ -97,7 +97,7 @@ export function DeleteAllDialog({ onClose, onConfirm }: { onClose: () => void; o
       open
       onOpenChange={(o) => !o && onClose()}
       title="Delete all data"
-      description="Removes every run, script, blueprint and cache from this browser. This cannot be undone."
+      description="Removes every run, script and blueprint. This cannot be undone."
       footer={<Button variant="danger" disabled={text !== phrase} onClick={onConfirm}>Delete all data</Button>}
     >
       <Field label={`Type "${phrase}" to confirm`}>

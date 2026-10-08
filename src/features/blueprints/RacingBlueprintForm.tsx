@@ -6,13 +6,13 @@ import { Field, TextInput } from '@/ui/primitives/Field';
 import { Slider } from '@/ui/primitives/Slider';
 import { BrainStartFields, InputToggle } from './BrainStartFields';
 
-const SCALAR_LABELS: Record<RacingScalar, [string, string]> = {
-  speed: ['Speed', 'How fast the car is going.'],
-  headingError: ['Heading error', 'Angle between the car and the road direction.'],
-  steerAngle: ['Steering angle', 'Where the front wheels point right now.'],
+const SCALAR_LABELS: Record<RacingScalar, [string, string?]> = {
+  speed: ['Speed'],
+  headingError: ['Heading error', 'Angle between the car and the road.'],
+  steerAngle: ['Steering angle', 'Where the front wheels point.'],
   curvatureNear: ['Curve at 15 m', 'How sharply the road bends just ahead.'],
-  curvatureFar: ['Curve at 40 m', 'How sharply it bends further ahead, for braking early.'],
-  slip: ['Lateral slip', 'How much grip the tires are missing.'],
+  curvatureFar: ['Curve at 40 m', 'The bend further on, for braking early.'],
+  slip: ['Lateral slip', 'How much the car slides sideways.'],
 };
 
 /** Every editable part of a racing brain blueprint. Changes are reported up as a new object. */

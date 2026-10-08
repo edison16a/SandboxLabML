@@ -52,7 +52,7 @@ export function HideSeekLab() {
           {streams ? (
             <HideSeekCanvas getFeed={getFeed} feeds={feeds} schemas={schemas} onMoveBox={onMoveBox} onToggleLock={onToggleLock} />
           ) : (
-            <div className="flex h-full items-center justify-center text-[13px] text-muted">Starting the simulation workers...</div>
+            <div className="flex h-full items-center justify-center text-[13px] text-muted">Starting...</div>
           )}
           {streams && <ViewportHud viewport={viewport} />}
           <div className="pointer-events-auto absolute bottom-3 left-3 flex flex-col items-start gap-2">

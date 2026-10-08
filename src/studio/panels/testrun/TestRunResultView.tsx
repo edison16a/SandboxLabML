@@ -40,7 +40,7 @@ export function TestRunResultView({ result, estimate }: { result: TestRunOk; est
           <Stat label="Whole tick" value={`${result.tickMicros.toFixed(2)} µs`} hint="Physics, rays, brain and script for one car" />
           <Stat label="Turbo" value={`${Math.round(result.turboShare * 100)}%`} hint="Share of built-in Turbo speed this script keeps" />
         </div>
-        {estimate !== null && <p className="text-[11px] text-subtle">The editor estimated {estimate.toFixed(3)} µs for the script. Measurements vary with the machine and what else is running.</p>}
+        {estimate !== null && <p className="text-[11px] text-subtle">Editor estimate {estimate.toFixed(3)} µs</p>}
       </Section>
       <Section title="Ticks">
         <RacingTicks log={result.log} />

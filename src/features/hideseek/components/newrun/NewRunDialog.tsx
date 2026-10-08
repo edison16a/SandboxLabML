@@ -12,6 +12,7 @@ import { ScriptPicker } from '@/features/scripts/ScriptPicker';
 import type { ScriptChoice } from '@/features/scripts/scriptChoice';
 import { setSetting } from '@/storage/settings';
 import { cn } from '@/ui/cn';
+import { firstSentence } from '@/ui/firstSentence';
 import { Button } from '@/ui/primitives/Button';
 import { Dialog } from '@/ui/primitives/Dialog';
 import { Field, TextInput } from '@/ui/primitives/Field';
@@ -78,7 +79,7 @@ export function NewRunDialog({ open, onOpenChange, initialScript }: Props) {
       open={open}
       onOpenChange={onOpenChange}
       title="New Hide and Seek run"
-      description="These settings are frozen once the run starts, so every round can be replayed exactly."
+      description="Fixed once the run starts."
       className="max-w-2xl"
       footer={
         <>
@@ -96,7 +97,7 @@ export function NewRunDialog({ open, onOpenChange, initialScript }: Props) {
           <TextInput value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
         </Field>
         <ScriptPicker env="hideseek" value={script} onChange={setScript} />
-        <Field label="Rooms" hint={script.kind === 'script' ? 'Rounds cycle through these rooms unless the script picks its own.' : 'Rounds cycle through the rooms you pick. Blue and red mark where each team starts.'}>
+        <Field label="Rooms" hint={script.kind === 'script' ? 'Used unless the script picks its own.' : 'Rounds cycle through the rooms you pick.'}>
           <div className="grid grid-cols-3 gap-2">
             {HIDESEEK_LAYOUT_IDS.map((id) => {
               const on = layouts.includes(id);
@@ -104,7 +105,7 @@ export function NewRunDialog({ open, onOpenChange, initialScript }: Props) {
                 <button key={id} type="button" onClick={() => toggleLayout(id)} className={cn(choice(on), 'flex flex-col items-center gap-1.5')} aria-pressed={on}>
                   <RoomThumb room={presetRoom(id)} className={on ? 'text-fg' : 'text-muted'} />
                   <span className="text-[13px] font-medium">{HIDESEEK_LAYOUTS[id].name}</span>
-                  <span className="text-center text-[11px] text-muted">{HIDESEEK_LAYOUTS[id].description}</span>
+                  <span className="text-center text-[11px] text-muted">{firstSentence(HIDESEEK_LAYOUTS[id].description)}</span>
                 </button>
               );
             })}

@@ -39,7 +39,7 @@ export function ViewControls() {
   return (
     <div className="flex flex-wrap items-center justify-end gap-1.5">
       {mode === 'train' && (
-        <Tooltip content={weak ? 'Arenas on screen. This GPU shows up to 25 until you pick a quality in Settings.' : 'Arenas on screen'} shortcut="G">
+        <Tooltip content={weak ? 'Arenas on screen. Up to 25 until you pick a quality in Settings.' : 'Arenas on screen'} shortcut="G">
           <span>
             <Segmented<`${GridSize}`>
               label="Arenas on screen"
@@ -64,17 +64,17 @@ export function ViewControls() {
           Inputs
         </Button>
       </Tooltip>
-      <Tooltip content="Picture in picture views from both agents of the focused arena">
+      <Tooltip content="First person views of both agents">
         <Button size="icon-sm" variant="secondary" className={pov ? on : glass} onClick={() => set({ pov: !pov })} aria-pressed={pov} aria-label="Agent views">
           <SquareSplitHorizontal />
         </Button>
       </Tooltip>
-      <Tooltip content="Ambient occlusion, bloom and tone mapping on the focused arena, at High quality">
+      <Tooltip content="Lighting effects, at High quality">
         <Button size="icon-sm" variant="secondary" className={effects ? on : glass} onClick={() => set({ effects: !effects })} aria-pressed={effects} aria-label="Post-processing">
           <Sparkles />
         </Button>
       </Tooltip>
-      <Tooltip content="Photo mode: hide the controls, add depth of field and save a PNG">
+      <Tooltip content="Photo mode: hide the controls and save a PNG">
         <Button size="icon-sm" variant="secondary" className={glass} onClick={() => set({ photoMode: true, focus: useHideSeekLab.getState().focus ?? 0 })} aria-label="Photo mode">
           <Camera />
         </Button>

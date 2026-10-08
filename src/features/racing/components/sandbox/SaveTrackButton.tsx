@@ -35,7 +35,7 @@ export function SaveTrackButton({ spec, picked }: { spec: TrackSpec; picked: Tra
     try {
       const track = await save(name, spec);
       set({ sandboxTrack: track, sandboxPicked: track });
-      toast.success(`Saved ${track.name}`, 'It is in the Saved row of the track gallery.');
+      toast.success(`Saved ${track.name}`);
       setOpen(false);
     } catch (e) {
       toast.error('Could not save the track', e instanceof Error ? e.message : undefined);
@@ -64,7 +64,7 @@ export function SaveTrackButton({ spec, picked }: { spec: TrackSpec; picked: Tra
           void submit();
         }}
       >
-        <Field label="Track name" hint="Saving under a name you already used replaces that track.">
+        <Field label="Track name" hint="A name in use replaces that track.">
           <TextInput autoFocus value={name} maxLength={40} onChange={(e) => setName(e.target.value)} />
         </Field>
         <div className="flex justify-end gap-2">

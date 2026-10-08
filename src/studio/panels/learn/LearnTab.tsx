@@ -50,10 +50,7 @@ export default function LearnTab() {
       {lessons.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border px-6 py-10 text-center">
           <GraduationCap className="size-6 text-muted" />
-          <p className="text-[13px] font-medium">Lessons are on their way</p>
-          <p className="max-w-72 text-[12px] text-muted">
-            Until they arrive, open a preset and switch on Explain in the blocks view to read each line in plain words.
-          </p>
+          <p className="text-[13px] font-medium">No lessons yet</p>
         </div>
       ) : (
         <ul className="flex flex-col gap-2" aria-label="Lessons">

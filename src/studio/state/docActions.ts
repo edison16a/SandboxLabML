@@ -19,7 +19,7 @@ function current(): { text: string; readonly: boolean } {
 
 function refuseReadonly(): boolean {
   if (!current().readonly) return false;
-  toast.info('Presets are read only', 'Duplicate it to make a copy you can edit.');
+  toast.info('Presets are read only', 'Duplicate it to edit.');
   return true;
 }
 
@@ -41,7 +41,7 @@ export function fixAllDocument(): void {
   const { text } = current();
   const result = fixAll(text);
   if (result.applied.length === 0) {
-    toast.info('Nothing to fix automatically', 'The remaining problems need a decision from you.');
+    toast.info('Nothing to fix automatically', 'The rest need a decision from you.');
     return;
   }
   useStudio.getState().edit(result.source);
@@ -76,7 +76,7 @@ export function insertExample(example: string, scope: InsertScope, anyBlock = fa
   }
   const next = appendToSection(text, scope, example);
   if (next === null) {
-    toast.info('Fix the syntax error first', 'Examples can be added once the script reads cleanly.');
+    toast.info('Fix the syntax error first');
     return;
   }
   s.edit(next);

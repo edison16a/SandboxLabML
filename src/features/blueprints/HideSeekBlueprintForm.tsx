@@ -12,11 +12,11 @@ type Inputs = HideSeekInputConfig;
 /** The input groups that are a plain on or off switch. */
 type Flag = 'holding' | 'phase' | 'time' | 'opponentVisible' | 'opponentLastSeen' | 'ramp';
 
-const FLAGS: ReadonlyArray<[Flag, string, string]> = [
-  ['holding', 'Holding a box', 'Whether it carries a box right now.'],
+const FLAGS: ReadonlyArray<[Flag, string, string?]> = [
+  ['holding', 'Holding a box'],
   ['phase', 'Prep phase', 'Whether the seekers are still frozen.'],
-  ['time', 'Time left', 'How much of the match remains.'],
-  ['opponentVisible', 'Opponent in sight', 'Whether it sees the other player.'],
+  ['time', 'Time left'],
+  ['opponentVisible', 'Opponent in sight'],
   ['opponentLastSeen', 'Last sighting', 'Which way the other player was last seen.'],
   ['ramp', 'Nearest ramp', 'Where it is, which way is uphill and who locked it.'],
 ];
@@ -41,18 +41,18 @@ export function HideSeekBlueprintForm({ value, onChange }: { value: HideSeekBlue
         <TextInput value={value.name} onChange={(e) => onChange({ ...value, name: e.target.value })} maxLength={40} />
       </Field>
       <section className="grid gap-4 sm:grid-cols-3">
-        <Field label={`Rays: ${rays.count}`} hint="Spread evenly all the way round.">
+        <Field label={`Rays: ${rays.count}`} hint="Distance feelers, spread all the way round.">
           <Slider label="Ray count" min={1} max={32} value={rays.count} onChange={(v) => setInputs({ rays: { ...rays, count: v } })} />
         </Field>
         <Field label={`Range: ${rays.range} m`}>
           <Slider label="Ray range" min={4} max={20} value={rays.range} onChange={(v) => setInputs({ rays: { ...rays, range: v } })} />
         </Field>
-        <Field label="Hit types" hint="Tells walls, boxes and players apart. Triples the rays.">
+        <Field label="Hit types" hint="Tells walls, boxes and players apart. Triples the ray inputs.">
           <Switch label="Ray hit types" checked={rays.hitTypes} onChange={(v) => setInputs({ rays: { ...rays, hitTypes: v } })} />
         </Field>
       </section>
       <section className="grid gap-4 sm:grid-cols-2">
-        <Field label="Own motion" hint={inputs.velocity ? 'Speed forward and sideways, 2 inputs.' : inputs.speed ? 'Forward speed, 1 input.' : 'It does not feel itself move.'}>
+        <Field label="Own motion" hint={inputs.velocity ? 'Forward and sideways, 2 inputs.' : inputs.speed ? 'Forward only, 1 input.' : 'No sense of its own motion.'}>
           <Segmented<Motion>
             label="Own motion"
             size="sm"
@@ -66,7 +66,7 @@ export function HideSeekBlueprintForm({ value, onChange }: { value: HideSeekBlue
             ]}
           />
         </Field>
-        <Field label="Nearest crates" hint="Where the closest cubes and planks are and whether they are locked, 4 inputs each.">
+        <Field label="Nearest crates" hint="Where the closest boxes are and if they are locked. 4 inputs each.">
           <Segmented
             label="Nearest crates"
             size="sm"
