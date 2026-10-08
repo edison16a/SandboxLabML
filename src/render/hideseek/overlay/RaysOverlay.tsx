@@ -1,5 +1,6 @@
 'use client';
 
+import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { DEFAULT_HIDESEEK_PHYSICS } from '@/engine/hideseek/physics';
@@ -14,12 +15,15 @@ import { arenaOrigin } from '../layout/gridLattice';
 import { MAX_ARENAS } from '../grid/scratch';
 import { HS_COLORS } from '../palette';
 import { sandboxFrame } from '../sandbox/sandboxRead';
+import { LabelSpacing } from './labelSpacing';
 import { arenaHitColor, sandboxHitColor } from './rayHits';
 import { MAX_RAY_LABELS, RayLabels, type RayLabelsHandle } from './RayLabels';
 
 const Y = DEFAULT_HIDESEEK_PHYSICS.rayHeight;
 const RAY_STRIDE = HIDESEEK_RAY_SNAPSHOT.stride;
 const CAPACITY = MAX_ARENAS * (2 * SNAPSHOT_RAYS + 1) + 64;
+/** Nearest two distance chips may sit on screen, px: about one chip's width. */
+const CHIP_GAP = 40;
 
 /** Line counts drawn last frame, published with the render stats for tests. */
 export const overlayCounts = { rays: 0, sightLines: 0 };
@@ -38,11 +42,12 @@ export function RaysOverlay() {
   const buffer = useDisposable(() => new RayBuffer(CAPACITY, HS_COLORS.rayHighlight), []);
   const labels = useRef<RayLabelsHandle>(null);
   const rayRange = schemas[0].find((s) => s.ray)?.ray?.maxLength ?? 12;
-  const t = useMemo(() => ({ o: { x: 0, z: 0 }, s: { x: 0, z: 0, yaw: 0, elevation: 0 }, h: { x: 0, z: 0, yaw: 0, elevation: 0 } }), []);
+  const t = useMemo(() => ({ o: { x: 0, z: 0 }, s: { x: 0, z: 0, yaw: 0, elevation: 0 }, h: { x: 0, z: 0, yaw: 0, elevation: 0 }, chip: new THREE.Vector3(), spacing: new LabelSpacing(MAX_RAY_LABELS, CHIP_GAP) }), []);
 
-  useFrame(() => {
+  useFrame(({ camera, size }) => {
     const curr = frame.curr;
     labels.current?.hideAll();
+    t.spacing.clear();
     buffer.begin();
     overlayCounts.rays = overlayCounts.sightLines = 0;
     const { inputsOverlay, inputsScope, hoveredInput } = useHideSeekLab.getState();
@@ -114,7 +119,11 @@ export function RaysOverlay() {
           const color = !hit ? null : sandbox ? sandboxHitColor(sandbox, agent, ex - t.o.x, ez - t.o.z) : frame.agentPose ? null : arenaHitColor(curr, arena, agent, ex - t.o.x, ez - t.o.z);
           if (color && hoveredInput !== spec.index) buffer.tintDot(color);
           overlayCounts.rays++;
-          if (label < MAX_RAY_LABELS) labels.current?.show(label++, ex, y + 0.45, ez, `${len.toFixed(1)} m`);
+          if (label < MAX_RAY_LABELS) {
+            // A chip that would sit on top of another one is left out, so the ones shown stay readable.
+            const p = t.chip.set(ex, y + 0.45, ez).project(camera);
+            if (p.z < 1 && t.spacing.claim(((p.x + 1) / 2) * size.width, ((1 - p.y) / 2) * size.height)) labels.current?.show(label++, ex, y + 0.45, ez, `${len.toFixed(1)} m`);
+          }
         }
       }
     }
