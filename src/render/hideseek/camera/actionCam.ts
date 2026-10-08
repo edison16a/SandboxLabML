@@ -25,6 +25,8 @@ const HEAD = 1.05;
 const STIFFNESS = 2.2;
 /** Seconds after you let go of the orbit before the shot reframes by itself. */
 const HANDS_OFF = 0.8;
+/** Most players the shot tries to keep out from behind walls: the lead and a few framed with it. */
+const IN_SIGHT = 4;
 /** How far a hand zoom may push the shot in or out of its framing. */
 const ZOOM_MIN = 0.35;
 const ZOOM_MAX = 3;
@@ -45,8 +47,8 @@ const spring = (): Spring => ({ value: 0, velocity: 0 });
 /**
  * The Close view: a three quarter action shot that frames the players
  * with a margin of floor (see actionBox), kept inside the room, and
- * follows the play on critically damped springs. When a wall hides the
- * lead player, the view turns or climbs to see it (see WallDodge). Orbit
+ * follows the play on critically damped springs. When a wall hides a
+ * framed player, the view turns or climbs to see it (see WallDodge). Orbit
  * and zoom stay yours: the angle is whatever you leave it at, and a zoom
  * is kept as a share of the framing, so the shot still breathes with the
  * play. A new room or view flies in with the shared Flight. Allocates
@@ -68,7 +70,7 @@ export class ActionCam {
   private readonly goal = { x: 0, z: 0 };
   private readonly dodge = new WallDodge();
   private readonly eye: RoomPoint = { x: 0, y: 0, z: 0 };
-  private readonly head: RoomPoint = { x: 0, y: 0, z: 0 };
+  private readonly heads: RoomPoint[] = Array.from({ length: IN_SIGHT }, () => ({ x: 0, y: 0, z: 0 }));
   private readonly aim: RoomPoint = { x: 0, y: 0, z: 0 };
 
   /** Moves the camera for one frame of `dt` wall seconds while the simulation runs `timeScale` times faster. */
@@ -100,7 +102,7 @@ export class ActionCam {
     if (hands) {
       this.rest = this.view.elevation;
       this.dodge.reset();
-    } else this.keepLeadInSight(camera, c, room, now, dt);
+    } else this.keepPlayersInSight(camera, c, room, now, dt);
     this.frame(camera, room, cover, aspect);
     if (hands) {
       // Your zoom is kept as a share of the framing, and the distance spring rests where you put it.
@@ -118,21 +120,34 @@ export class ActionCam {
     camera.lookAt(c.target);
   }
 
-  /** Turns this.view toward a clear sight of the lead player when a wall hides it, in the room's own coordinates. */
-  private keepLeadInSight(camera: THREE.Camera, c: Orbit, room: ActionRoom, distance: number, dt: number): void {
+  /**
+   * Turns this.view toward a clear sight of the players in the shot when a
+   * wall hides one, the lead first, in the room's own coordinates. Uses the
+   * box framed last frame, which the springs keep close to this one.
+   */
+  private keepPlayersInSight(camera: THREE.Camera, c: Orbit, room: ActionRoom, distance: number, dt: number): void {
     const lead = leadPlayer(room.agents, room.count);
     if (lead < 0) return;
-    const p = room.agents[lead];
-    this.head.x = p.x;
-    this.head.y = p.elevation + HEAD;
-    this.head.z = p.z;
+    const b = this.box;
+    let count = 0;
+    for (let k = -1; k < room.count && count < IN_SIGHT; k++) {
+      // The lead goes first, then every other player inside the framed box.
+      const i = k < 0 ? lead : k;
+      if (k >= 0 && i === lead) continue;
+      const p = room.agents[i];
+      if (k >= 0 && (Math.abs(p.x - b.x) > b.w / 2 || Math.abs(p.z - b.z) > b.d / 2)) continue;
+      const h = this.heads[count++];
+      h.x = p.x;
+      h.y = p.elevation + HEAD;
+      h.z = p.z;
+    }
     this.eye.x = camera.position.x - room.ox;
     this.eye.y = camera.position.y;
     this.eye.z = camera.position.z - room.oz;
     this.aim.x = c.target.x - room.ox;
     this.aim.y = c.target.y;
     this.aim.z = c.target.z - room.oz;
-    this.dodge.update(this.view, this.eye, this.head, this.aim, distance, this.rest, room.walls, dt);
+    this.dodge.update(this.view, this.eye, this.heads, count, this.aim, distance, this.rest, room.walls, dt);
   }
 
   /** Frames the room's action from this.view into this.fit and this.goal, the aim in world space. */

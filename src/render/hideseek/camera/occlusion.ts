@@ -75,3 +75,43 @@ export function clearView(ax: number, ay: number, az: number, distance: number, 
   }
   return false;
 }
+
+/** A point in a room's own coordinates, m. */
+export interface RoomPoint {
+  x: number;
+  y: number;
+  z: number;
+}
+
+/** Whether a wall hides any of the first `count` points from a camera at (cx, cy, cz). */
+export function anyBlocked(points: readonly RoomPoint[], count: number, cx: number, cy: number, cz: number, walls: readonly Rect[], top: number): boolean {
+  for (let i = 0; i < count; i++) {
+    const p = points[i];
+    if (sightBlocked(p.x, p.y, p.z, cx, cy, cz, walls, top)) return true;
+  }
+  return false;
+}
+
+/**
+ * Like clearView, for a camera that orbits `center` at `distance` and must
+ * see all of the first `count` points: the same angle if they are all in
+ * sight, else the smallest turn round the center, and only then a steeper
+ * angle. Writes it to `out` and returns true, or false when nothing clears.
+ */
+export function clearViewOf(points: readonly RoomPoint[], count: number, center: RoomPoint, distance: number, from: ViewAngle, walls: readonly Rect[], top: number, out: ViewAngle): boolean {
+  for (let r = 0; r < RAISE.length; r++) {
+    const elevation = Math.min(STEEPEST, from.elevation + RAISE[r]);
+    const flat = Math.cos(elevation) * distance;
+    const y = center.y + Math.sin(elevation) * distance;
+    for (let k = 0; k <= TURNS; k++) {
+      for (let side = k === 0 ? 1 : -1; side <= 1; side += 2) {
+        const azimuth = from.azimuth + side * k * (Math.PI / TURNS);
+        if (anyBlocked(points, count, center.x + Math.sin(azimuth) * flat, y, center.z + Math.cos(azimuth) * flat, walls, top)) continue;
+        out.azimuth = azimuth;
+        out.elevation = elevation;
+        return true;
+      }
+    }
+  }
+  return false;
+}

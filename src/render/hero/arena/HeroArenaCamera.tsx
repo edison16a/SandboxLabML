@@ -44,7 +44,7 @@ export function HeroArenaCamera({ pane }: { pane: PaneView }) {
     () => ({
       view: { azimuth: 0.6, elevation: HERO_ELEVATION },
       dodge: new WallDodge(),
-      head: { x: 0, y: 0, z: 0 },
+      heads: [{ x: 0, y: 0, z: 0 }],
       center: { x: 0, y: 0.4, z: 0 },
       placed: false,
       x: { value: 0, velocity: 0 },
@@ -82,12 +82,13 @@ export function HeroArenaCamera({ pane }: { pane: PaneView }) {
     place(cx, cz, shot.distance);
     if (followed) {
       // The room sits at the origin, so world and room coordinates agree.
-      s.head.x = s.pose.x;
-      s.head.y = s.pose.elevation + SIGHT;
-      s.head.z = s.pose.z;
+      const head = s.heads[0];
+      head.x = s.pose.x;
+      head.y = s.pose.elevation + SIGHT;
+      head.z = s.pose.z;
       s.center.x = cx;
       s.center.z = cz;
-      if (s.dodge.update(v, camera.position, s.head, s.center, shot.distance, HERO_ELEVATION, frame.walls, dt)) place(cx, cz, shot.distance);
+      if (s.dodge.update(v, camera.position, s.heads, 1, s.center, shot.distance, HERO_ELEVATION, frame.walls, dt)) place(cx, cz, shot.distance);
     }
 
     const fog = scene.fog as THREE.Fog | null;
