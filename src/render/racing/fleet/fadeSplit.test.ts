@@ -37,7 +37,9 @@ describe('fading the pack off the followed car', () => {
     const focus = new THREE.Vector3(10, 0, 0);
     expect(clearance(1, 0.5, focus, 0, cam)).toBe(0);
     expect(clearance(7, 0.4, focus, 0, cam)).toBe(0);
-    expect(clearance(7, 6, focus, 0, cam)).toBe(1);
+    expect(clearance(7, 8, focus, 0, cam)).toBe(1);
+    // Tucked in just behind the followed car, close to the lens: cleared.
+    expect(clearance(6, 3, focus, 0, cam)).toBe(0);
     expect(clearance(30, 0, focus, 0, cam)).toBe(1);
     // Half a car ahead on the same line overlaps it; a car in the next lane does not.
     expect(clearance(12, 0.3, focus, 0, cam)).toBe(0);

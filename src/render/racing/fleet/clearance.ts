@@ -27,9 +27,12 @@ export function atLens(x: number, z: number, cam: THREE.Vector3): number {
 }
 
 /**
- * How much of a car at (x, z) to keep in views about one car: none right
- * at the lens, across the line of sight to the followed car, or overlapping
- * it, where late in training a whole generation drives the same line.
+ * How much of a car at (x, z) to keep in views about one car: none across
+ * the line of sight to the followed car, none overlapping it (late in
+ * training a whole generation drives the same line), and none within 7 m
+ * of the lens, back to full by 10 m. The chase camera rides about 10 m
+ * back, so this clears the copies tucked in behind the followed car, which
+ * would fill the bottom of the frame, and keeps the ones running beside it.
  */
 export function clearance(x: number, z: number, focus: THREE.Vector3, yaw: number, cam: THREE.Vector3): number {
   const cx = x - cam.x;
@@ -38,7 +41,7 @@ export function clearance(x: number, z: number, focus: THREE.Vector3, yaw: numbe
   const fz = focus.z - cam.z;
   const fLen = Math.hypot(fx, fz) || 1e-3;
   const along = (cx * fx + cz * fz) / fLen;
-  let keep = Math.min(atLens(x, z, cam), apart(x, z, focus, yaw));
+  let keep = Math.min(ramp(Math.hypot(cx, cz), 7, 10), apart(x, z, focus, yaw));
   // Across the line of sight in front of the followed car: it would veil it.
   if (along > 0 && along < fLen - 1.2) keep = Math.min(keep, ramp(Math.abs(cx * fz - cz * fx) / fLen, 2.3, 2.7));
   return keep;
