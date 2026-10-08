@@ -12,6 +12,7 @@ import { useHideSeekBootstrap } from '../hooks/useHideSeekBootstrap';
 import { useHideSeekInspect } from '../hooks/useHideSeekInspect';
 import { useHideSeekQuality } from '../hooks/useHideSeekQuality';
 import { useHideSeekShortcuts } from '../hooks/useHideSeekShortcuts';
+import { useHudCover } from '../hooks/useHudCover';
 import { useTeamSchemas } from '../hooks/useTeamSchema';
 import { hideSeekSession } from '../session/HideSeekSession';
 import { InputsCard } from './hud/InputsCard';
@@ -29,9 +30,11 @@ export function HideSeekLab() {
   const openNewRun = useCallback(() => setNewRun(true), []);
   const pendingScript = useTrainScriptParam('hideseek', params, openNewRun);
   const viewport = useRef<HTMLDivElement>(null);
+  const cards = useRef<HTMLDivElement>(null);
   const schemas = useTeamSchemas();
   useHideSeekShortcuts(openNewRun);
   useCameraPreference();
+  useHudCover(viewport, cards);
   useHideSeekInspect(ready);
   // ?quality=low|medium|high|ultra pins the render tier over Settings, handy on slow machines and in browser tests.
   useHideSeekQuality(params.get('quality'));
@@ -57,7 +60,7 @@ export function HideSeekLab() {
             <div className="flex h-full items-center justify-center text-[13px] text-muted">Starting...</div>
           )}
           {streams && <ViewportHud viewport={viewport} />}
-          <div className="pointer-events-auto absolute bottom-3 left-3 flex flex-col items-start gap-2">
+          <div ref={cards} className="pointer-events-auto absolute bottom-3 left-3 flex flex-col items-start gap-2">
             <InputsCard />
             <SandboxCard />
           </div>

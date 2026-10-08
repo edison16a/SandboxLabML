@@ -16,6 +16,7 @@ import { fitDepthRange } from './depthRange';
 import { Flight } from './flight';
 import { FollowCam } from './followCam';
 import { carryShot } from './framing';
+import { hudCover } from './hudCover';
 
 /** Eye height of the first person cameras, m: just under the top of a 1.5 m agent. */
 const EYE = 1.32;
@@ -23,8 +24,6 @@ const EYE = 1.32;
 const MIN_HEIGHT = 0.3;
 /** How far past the arenas the orbit point may be panned, m. */
 const PAN_MARGIN = 12;
-/** No HUD card covers the viewport yet. */
-const NO_COVER = { w: 0, h: 0 };
 /** Key of the free view: it has no shot of its own, it only follows the scene when that changes. */
 const FREE = -1;
 
@@ -144,7 +143,7 @@ export function CameraRig() {
     room.ox = o.x;
     room.oz = o.z;
     const key = shotKey('close', frame.focusSlot, frame.count, frame.lattice.cols);
-    r.action.update(camera, c, f, key, room, NO_COVER, size.width / Math.max(1, size.height), dt, frame.timeScale);
+    r.action.update(camera, c, f, key, room, hudCover, size.width / Math.max(1, size.height), dt, frame.timeScale);
     invalidate();
   }
 
