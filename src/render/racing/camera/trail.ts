@@ -29,8 +29,9 @@ export class Trail {
 
   /**
    * The point `back` meters behind the newest one, measured along the path,
-   * written to `out` with the path's direction there (unit x and z). With a
-   * path shorter than that, the oldest point stands in.
+   * written to `out` with the path's direction there (unit x and z). A path
+   * shorter than that, just after a restart, is carried on straight back
+   * from its oldest point, so the camera never ends up over the car.
    */
   behind(back: number, out: { x: number; z: number; dx: number; dz: number }): boolean {
     if (this.count < 2) return false;
@@ -51,8 +52,8 @@ export class Trail {
       left -= len;
       i = j;
     }
-    out.x = this.xs[i];
-    out.z = this.zs[i];
+    out.x = this.xs[i] - out.dx * left;
+    out.z = this.zs[i] - out.dz * left;
     return true;
   }
 }
