@@ -31,7 +31,8 @@ export function HeroChaseCamera({ target }: { target: React.RefObject<THREE.Vect
     const fx = Math.cos(frame.focusYaw);
     const fz = -Math.sin(frame.focusYaw);
     s.trail.push(focus.x, focus.z);
-    const back = 14 + frame.focusSpeed * 0.08;
+    // Further back the faster the car goes, so at racing speed it sits just under the page text, whole and clear of the bottom edge.
+    const back = 14 + frame.focusSpeed * 0.3;
     if (!s.trail.behind(back, s.at)) {
       s.at.x = focus.x - fx * back;
       s.at.z = focus.z - fz * back;
