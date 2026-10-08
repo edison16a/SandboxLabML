@@ -3,9 +3,10 @@ import { withHaze } from '../atmosphere';
 
 /**
  * Close up detail for the ground, layered on the per vertex colors: grass
- * grain and clumps at two scales, darker sun baked tufts, sandstone strata
- * on rock, and a gentle fade of all of it with distance so the far hills
- * do not shimmer. Lighting, shadows and haze stay three's own.
+ * grain and clumps at two scales, combed blade streaks near the camera,
+ * sandstone strata on rock, a small relief that bends the light, and a
+ * gentle fade of all of it with distance so the far hills do not shimmer.
+ * Lighting, shadows and haze stay three's own.
  */
 const DETAIL = /* glsl */ `
 vec3 terrainDetail(vec3 base, vec3 wp, vec2 surf, float dist) {
@@ -24,10 +25,33 @@ vec3 terrainDetail(vec3 base, vec3 wp, vec2 surf, float dist) {
   float strata = sin(wp.y * 2.3 + n2.g * 6.0) * 0.5 + 0.5;
   float crack = smoothstep(0.22, 0.05, abs(n1.b - 0.5));
   vec3 r = base * (0.86 + strata * 0.2 + (n3.r - 0.5) * 0.25) * (1.0 - crack * 0.3 * fade);
+  // Up close the grass shows its blades: streaks of light and shade, each patch combed its own way.
+  float comb = n2.g * 6.28;
+  vec2 bladeUv = mat2(cos(comb), sin(comb), -sin(comb), cos(comb)) * wp.xz * vec2(3.4, 0.55);
+  float blades = texture2D(uDetail, bladeUv).r;
+  g *= 1.0 + (blades - 0.5) * 0.42 * (1.0 - smoothstep(6.0, 34.0, dist)) * (1.0 - surf.x);
   // Far away the fine detail is gone; broad patches of scrub and bare ground keep distant slopes from looking painted flat.
   vec4 n4 = texture2D(uDetail, wp.xz * 0.0045 + 0.11);
   float far = smoothstep(250.0, 900.0, dist);
   return mix(g, r, surf.x) * (1.0 + (n4.g - 0.5) * 0.5 * far + (n2.r - 0.5) * 0.25 * far);
+}
+
+/** Small scale relief: grass clumps and tussocks, or the ledges of the rock. Feeds the bump below. */
+float terrainRelief(vec3 wp, vec2 surf) {
+  float tussock = texture2D(uDetail, wp.xz * 0.8).r * 0.6 + texture2D(uDetail, wp.xz * 0.21).g * 0.4;
+  float ledges = sin(wp.y * 2.3 + texture2D(uDetail, wp.xz * 0.031 + 0.37).g * 6.0) * 0.5 + 0.5;
+  return mix(tussock * 0.6, ledges * 1.4 + tussock * 0.3, surf.x);
+}
+
+/** Bends the shading normal by the slope of a height, from screen space derivatives, so no tangents are needed. */
+vec3 terrainBump(vec3 surf, vec3 n, float h, float k) {
+  vec3 sx = normalize(dFdx(surf));
+  vec3 sy = normalize(dFdy(surf));
+  vec3 r1 = cross(sy, n);
+  vec3 r2 = cross(n, sx);
+  float det = dot(sx, r1);
+  vec3 grad = sign(det) * (dFdx(h) * k * r1 + dFdy(h) * k * r2);
+  return normalize(abs(det) * n - grad);
 }
 `;
 
@@ -46,7 +70,9 @@ export function createTerrainMaterial(detail: boolean, noise: THREE.Texture): TH
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSurface = surface;\nvGround = transformed;');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>\nuniform sampler2D uDetail;\nvarying vec2 vSurface;\nvarying vec3 vGround;\n${DETAIL}`)
-      .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = terrainDetail( diffuseColor.rgb, vGround, vSurface, length( vViewPosition ) );');
+      .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = terrainDetail( diffuseColor.rgb, vGround, vSurface, length( vViewPosition ) );')
+      // The low sun rakes across the relief, so tussocks and ledges catch light close to the camera; it fades out before it could shimmer.
+      .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = terrainBump( - vViewPosition, normal, terrainRelief( vGround, vSurface ), 0.9 * ( 1.0 - smoothstep( 15.0, 90.0, length( vViewPosition ) ) ) );');
   };
   m.customProgramCacheKey = () => 'racing-terrain';
   return withHaze(m);
