@@ -85,7 +85,7 @@ describe('the close action shot', () => {
         const p = new THREE.Vector3(a.x, y, a.z).project(camera);
         expect(Math.abs(p.x)).toBeLessThan(0.97);
         expect(p.y).toBeGreaterThan(-0.6);
-        expect(p.y).toBeLessThan(0.95);
+        expect(p.y).toBeLessThan(0.86);
       }
     }
   });
