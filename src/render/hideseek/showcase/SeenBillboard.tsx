@@ -9,6 +9,7 @@ import { FLAG_SEEN } from '@/engine/hideseek/snapshot';
 import { useHsScene, type HsFrame } from '../frame/sceneContext';
 import { agentAt, agentFlags, blendAgentPose, hasFlag, type AgentPose } from '../frame/snapshotRead';
 import { GRID_LAYER } from '../grid/scratch';
+import { LabelSpacing } from '../overlay/labelSpacing';
 
 /**
  * The SDF font for 3D text, served from the app itself. Without one, the
@@ -35,10 +36,33 @@ const CAP = 0.72;
  */
 const CAP_PX = 30;
 /** Half the word's size on screen, as multiples of CAP_PX: across (four wide letters) and up (with the outline). */
-const HALF_W = 2.5;
+const HALF_W = 3;
 const HALF_H = 0.75;
 /** Highest the word may sit, in screen units from the middle (1 is the top edge), clear of the top HUD row. */
 const TOP = 0.9;
+/** How far past the screen's edge a hider may stand and still get its word, pinned to the edge, in screen units. */
+const OFF_SCREEN = 0.08;
+
+/**
+ * The spots SEEN words took this frame, per scene. Hiders seen side by
+ * side would stack their words into a smudge; the second one is left out.
+ * Each scene keeps its own, cleared on the first word of a new frame.
+ */
+const taken = new WeakMap<HsFrame, { time: number; spacing: LabelSpacing }>();
+
+/** The spots for this scene and frame, fresh at the start of each frame. */
+function spotsFor(frame: HsFrame, time: number): LabelSpacing {
+  let t = taken.get(frame);
+  if (!t) {
+    t = { time, spacing: new LabelSpacing(16, 2 * HALF_W * CAP_PX * 0.8) };
+    taken.set(frame, t);
+  }
+  if (t.time !== time) {
+    t.time = time;
+    t.spacing.clear();
+  }
+  return t.spacing;
+}
 /** Pushed past 1 so bloom gives the word a glow. */
 const RED = new THREE.Color('#ff5f6d').multiplyScalar(2.4);
 
@@ -75,7 +99,8 @@ export function SeenWord({ read, scale = 1 }: { read: SeenReader; scale?: number
     // A short overshoot when the word appears: 0.7 to about 1.12 and back to 1 in a quarter second.
     const t = Math.min(1, state.since / 0.25);
     const pop = seen ? 0.7 + 0.3 * t + 0.42 * Math.sin(t * Math.PI) * (1 - t) : 1;
-    const k = place(g, state.at, state.pose, three.camera as THREE.PerspectiveCamera, three.size, scale);
+    const k = place(g, state.at, state.pose, three.camera as THREE.PerspectiveCamera, three.size, scale, spotsFor(frame, three.clock.elapsedTime));
+    g.visible = k > 0;
     g.scale.setScalar(pop * (0.5 + 0.5 * state.show) * k);
   });
 
@@ -94,9 +119,10 @@ export function SeenWord({ read, scale = 1 }: { read: SeenReader; scale?: number
  * Puts the word just over the hider's head, kept inside the screen, and
  * returns the scale that makes its capitals CAP_PX tall there. Works in
  * screen space, so a hider at the top edge never has its word cut off.
- * `at` is scratch; nothing is allocated.
+ * Returns 0 (no word) for a hider well off screen, or one whose word
+ * would sit on another's. `at` is scratch; nothing is allocated.
  */
-function place(g: THREE.Group, at: THREE.Vector3, pose: AgentPose, camera: THREE.PerspectiveCamera, size: { width: number; height: number }, scale: number): number {
+function place(g: THREE.Group, at: THREE.Vector3, pose: AgentPose, camera: THREE.PerspectiveCamera, size: { width: number; height: number }, scale: number, spots: LabelSpacing): number {
   at.set(pose.x, pose.elevation + HEAD, pose.z);
   g.parent?.localToWorld(at);
   const distance = Math.max(0.5, at.distanceTo(camera.position));
@@ -106,12 +132,13 @@ function place(g: THREE.Group, at: THREE.Vector3, pose: AgentPose, camera: THREE
   // Lift it by a little over half its own height, so its bottom clears the head.
   at.y += (px * 0.9) / pxPerM;
   at.project(camera);
-  if (at.z < 1) {
-    const hx = (2 * HALF_W * px) / Math.max(1, size.width);
-    const hy = (2 * HALF_H * px) / Math.max(1, size.height);
-    at.x = Math.min(1 - hx, Math.max(-1 + hx, at.x));
-    at.y = Math.min(TOP - hy, Math.max(-1 + hy, at.y));
-  }
+  const edge = 1 + OFF_SCREEN;
+  if (at.z >= 1 || Math.abs(at.x) > edge || Math.abs(at.y) > edge) return 0;
+  const hx = (2 * HALF_W * px) / Math.max(1, size.width);
+  const hy = (2 * HALF_H * px) / Math.max(1, size.height);
+  at.x = Math.min(1 - hx, Math.max(-1 + hx, at.x));
+  at.y = Math.min(TOP - hy, Math.max(-1 + hy, at.y));
+  if (!spots.claim(((at.x + 1) / 2) * size.width, ((1 - at.y) / 2) * size.height)) return 0;
   at.unproject(camera);
   g.parent?.worldToLocal(at);
   g.position.copy(at);
