@@ -41,8 +41,8 @@ export function PitBuilding({ layout }: { layout: StadiumLayout }) {
         <mesh geometry={geo.shell} material={mat.shell} castShadow receiveShadow />
         <mesh geometry={geo.glass} material={mat.glass} />
         <mesh geometry={geo.mullions} material={mat.shell} />
-        {/* The board stands on the roof's front edge. */}
-        <mesh position={[0, PIT_TOP + 0.45 + sign / 20, -3.9]} rotation={[0, Math.PI, 0]} material={mat.sign}>
+        {/* The board stands on the roof's front edge, just over the parapet. */}
+        <mesh position={[0, PIT_TOP + 0.77 + sign / 20, -3.9]} rotation={[0, Math.PI, 0]} material={mat.sign}>
           <planeGeometry args={[sign, sign / 10]} />
         </mesh>
         <mesh position={[0, 0.008, -LANE / 2]} rotation={[-Math.PI / 2, 0, 0]} material={mat.lane} receiveShadow>

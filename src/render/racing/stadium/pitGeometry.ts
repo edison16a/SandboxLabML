@@ -7,6 +7,9 @@ const GREY = new THREE.Color('#9da3a9');
 const DARK = new THREE.Color('#202429');
 const GARAGE = new THREE.Color('#3b4047');
 const BLUE = new THREE.Color('#2f6fd0');
+const MEMBRANE = new THREE.Color('#858a90');
+const PLANT = new THREE.Color('#b8bdc2');
+const SKYLIGHT = new THREE.Color('#27313c');
 
 /** Garage width along the building, m. */
 const BAY = 5.2;
@@ -43,9 +46,34 @@ export function pitShell(length: number, depth: number): THREE.BufferGeometry {
     for (let z = 2.2; z < depth - 1; z += 2.4) b.box(0.16, PIT_TOP - PIT_GROUND - 0.6, 0.14, x, (PIT_GROUND + PIT_TOP) / 2 + 0.1, z, GREY);
   }
   // Roof deck and a cantilevered canopy over the pit lane, with a dark fascia; no posts, so a pit lane camera has a clear view.
-  b.box(length + 1.2, 0.45, depth + PIT_CANOPY, 0, PIT_TOP + 0.22, (depth - PIT_CANOPY) / 2, WHITE);
+  b.box(length + 1.2, 0.45, depth + PIT_CANOPY, 0, PIT_TOP + 0.22, (depth - PIT_CANOPY) / 2, MEMBRANE);
   b.box(length + 1.2, 0.9, 0.12, 0, PIT_TOP + 0.1, -PIT_CANOPY, DARK);
+  addRoofTop(b, length, depth);
   return b.build();
+}
+
+/**
+ * What sits on the flat roof, so seen from above it reads as a building
+ * and not a blank slab: a white parapet round the edge, a row of dark
+ * skylights over the garages, and plant units with fan tops at the back.
+ */
+function addRoofTop(b: ColoredParts, length: number, depth: number): void {
+  const deck = PIT_TOP + 0.45;
+  const w = length + 1.2;
+  const front = -PIT_CANOPY;
+  const mid = (depth + front) / 2;
+  const span = depth - front;
+  for (const z of [front + 0.15, depth - 0.15]) b.box(w, 0.32, 0.3, 0, deck + 0.16, z, WHITE);
+  for (const s of [-1, 1]) b.box(0.3, 0.32, span, s * (w / 2 - 0.15), deck + 0.16, mid, WHITE);
+  const bays = Math.floor(length / BAY);
+  for (let k = 0; k < bays; k++) b.box(BAY - 2, 0.14, 1.3, -(bays * BAY) / 2 + (k + 0.5) * BAY, deck + 0.07, depth * 0.38, SKYLIGHT);
+  const units = Math.max(1, Math.floor(length / 14));
+  for (let k = 0; k < units; k++) {
+    const x = (k - (units - 1) / 2) * 12;
+    b.box(2.6, 1, 1.8, x, deck + 0.5, depth * 0.74, PLANT);
+    b.add(new THREE.CylinderGeometry(0.42, 0.42, 0.06, 12).translate(x - 0.6, deck + 1.03, depth * 0.74), DARK);
+    b.add(new THREE.CylinderGeometry(0.42, 0.42, 0.06, 12).translate(x + 0.6, deck + 1.03, depth * 0.74), DARK);
+  }
 }
 
 /** The upper floor's glass, one band along the front behind the slab edge. */

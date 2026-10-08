@@ -38,7 +38,8 @@ function blockersOf(world: WorldData): Blocker[] {
   for (const s of l.stands) list.push({ pad: padOf(l, l.side, { ...s, offset: s.offset + roof, depth: s.depth - roof }), bottom: 0, top: STAND_TOP });
   const pit = l.pit;
   if (pit) {
-    list.push({ pad: padOf(l, -l.side, pit), bottom: 0, top: PIT_TOP + 1 });
+    // The roof's plant units stand about a meter and a half over the deck.
+    list.push({ pad: padOf(l, -l.side, pit), bottom: 0, top: PIT_TOP + 1.6 });
     list.push({ pad: padOf(l, -l.side, { ...pit, offset: pit.offset - PIT_CANOPY, depth: PIT_CANOPY }), bottom: PIT_TOP - 0.3, top: PIT_TOP + 1 });
   }
   cache.set(world, list);
