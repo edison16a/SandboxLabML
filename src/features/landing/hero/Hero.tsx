@@ -14,10 +14,10 @@ const HeroLive = lazy(() => import('./live/HeroLive'));
  * scene and the Hide and Seek arena side by side (one above the other on
  * a tall screen). The poster, a still of both, and the centered text are
  * in the server HTML; on capable devices the live scenes load after first
- * paint and fade in over the poster. A flat scrim between the scenes and
- * the text keeps the words readable on any frame. The hero is one screen
- * tall, down to a floor that still holds the tightened text of a short
- * window, so nothing is clipped.
+ * paint and fade in over the poster. The text sits on its own blurred
+ * panel rather than under a scrim over the whole picture, so the scenes
+ * keep their color. The hero is one screen tall, down to a floor that
+ * still holds the tightened text of a short window, so nothing is clipped.
  */
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
@@ -34,7 +34,6 @@ export function Hero() {
           <HeroLive active={active} hero={ref} panel={panel} />
         </Suspense>
       )}
-      <div aria-hidden="true" data-hero-scrim className="absolute inset-0 z-10 bg-bg opacity-60" />
       <HeroContent ref={panel} />
     </section>
   );
