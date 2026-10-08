@@ -12,7 +12,7 @@
  * Options, all optional: --url (default http://127.0.0.1:3100), --chromium
  * (a Chromium binary; Playwright's own is used when left out), --settle 9
  * (seconds both scenes play before the shot), --quality medium, --out
- * public/hero and --only wide or --only portrait. It needs a production build, Playwright and sharp (which
+ * public/hero and --only wide, --only standard or --only portrait. It needs a production build, Playwright and sharp (which
  * comes with Next). Chromium draws with its software renderer, so every
  * machine captures the same picture; it is slow, so expect a few minutes.
  */
@@ -32,7 +32,7 @@ const settle = Number(args.settle ?? 9) * 1000;
 const out = args.out ?? 'public/hero';
 /** The quality the poster is drawn at. Medium matches what most visitors see once the scene goes live. */
 const quality = args.quality ?? 'medium';
-/** Captures only the wide or only the portrait frames when set. */
+/** Captures only the wide, the 4:3 or the portrait frames when set. */
 const only = args.only ?? null;
 
 /** Everything in the hero over the scenes: the text panel and the corner cards. The line between the scenes stays. */
@@ -67,13 +67,20 @@ async function main() {
   try {
     await mkdir(out, { recursive: true });
     // Wide: a 1920 x 1080 window at 4/3 scale gives a 2560 px frame, scaled down for the smaller files.
-    const wide = only === 'portrait' ? null : await capture(browser, 1920, 1128, 4 / 3);
+    const wide = only && only !== 'wide' ? null : await capture(browser, 1920, 1128, 4 / 3);
     for (const w of wide ? [2560, 1920, 1280] : []) {
       const file = join(out, `poster-${w}.webp`);
       const info = await sharp(wide).resize({ width: w }).webp({ quality: 72, effort: 6 }).toFile(file);
       console.log(`${file}: ${info.width} x ${info.height}, ${(info.size / 1024).toFixed(0)} KB`);
     }
-    if (only === 'wide') return;
+    // 4:3 for squarer windows: a 1440 x 1080 hero at 4/3 scale gives a 1920 px frame.
+    const standard = only && only !== 'standard' ? null : await capture(browser, 1440, 1128, 4 / 3);
+    for (const w of standard ? [1920, 1280] : []) {
+      const file = join(out, `poster-4x3-${w}.webp`);
+      const info = await sharp(standard).resize({ width: w }).webp({ quality: 72, effort: 6 }).toFile(file);
+      console.log(`${file}: ${info.width} x ${info.height}, ${(info.size / 1024).toFixed(0)} KB`);
+    }
+    if (only && only !== 'portrait') return;
     // Portrait for phones and tablets. The window is just wide enough for the live scene to run (LIVE_MIN_WIDTH)
     // and tall like a phone, and the frame is scaled to 900 x 1600: the shot depends only on the shape.
     const tall = await capture(browser, 1024, 1868, 1, PHONE_PANEL);
