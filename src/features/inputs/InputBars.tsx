@@ -38,6 +38,8 @@ export function InputBars({ schema, outputs, read, hovered, onHover, compact = f
   void tick;
   const data = read();
   const rows = compact ? schema.filter((s) => s.group !== 'ray') : schema;
+  // The compact card over the viewport is narrow, so its bars give the labels room to read in full.
+  const grid = compact ? 'grid-cols-[1fr_48px_56px]' : 'grid-cols-[1fr_88px_64px]';
 
   return (
     <div className="flex flex-col gap-0.5">
@@ -50,7 +52,7 @@ export function InputBars({ schema, outputs, read, hovered, onHover, compact = f
             key={spec.key}
             onPointerEnter={() => onHover(spec.index)}
             onPointerLeave={() => onHover(null)}
-            className={cn('grid grid-cols-[1fr_88px_64px] items-center gap-2 rounded px-1.5 py-1 text-[12px]', hovered === spec.index && 'bg-surface-3')}
+            className={cn('grid items-center gap-2 rounded px-1.5 py-1 text-[12px]', grid, hovered === spec.index && 'bg-surface-3')}
           >
             <span className={cn('truncate', off ? 'text-subtle line-through' : 'text-muted')} title={spec.label}>
               {onToggleLesion ? (
@@ -68,7 +70,7 @@ export function InputBars({ schema, outputs, read, hovered, onHover, compact = f
       })}
       <div className="mt-2 border-t border-border pt-2">
         {outputs.map((o) => (
-          <div key={o.key} className="grid grid-cols-[1fr_88px_64px] items-center gap-2 px-1.5 py-1 text-[12px]">
+          <div key={o.key} className={cn('grid items-center gap-2 px-1.5 py-1 text-[12px]', grid)}>
             <span className="font-medium text-fg">{o.label}</span>
             <Bar value={data?.out[o.index] ?? 0} signed tone="output" />
             <span className="tabular text-right font-mono text-[11px]">{data ? (data.out[o.index] ?? 0).toFixed(2) : '-'}</span>

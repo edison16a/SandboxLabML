@@ -80,7 +80,7 @@ export function hideSeekInputSchema(
     specs.push(scalar('ramp:right', 'Ramp to the right', 'm', size));
     specs.push(scalar('ramp:distance', 'Ramp distance', 'm', size));
     specs.push(scalar('ramp:uphill', 'Facing up the ramp', '', 1));
-    specs.push(scalar('ramp:lock', 'Ramp lock (ours +1, theirs -1)', '', 1));
+    specs.push(scalar('ramp:lock', 'Ramp lock (us +1, them -1)', '', 1));
     specs.push(scalar('ramp:elevation', 'Own elevation', 'm', physics.box.ramp.height));
   }
   for (const c of custom) {
