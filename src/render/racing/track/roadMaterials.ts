@@ -44,8 +44,21 @@ function roadVaryings(shader: THREE.WebGLProgramParametersWithUniforms, extra: s
     .replace('#include <begin_vertex>', `#include <begin_vertex>\nvRoadWorld = transformed;\nvRoadUv = uv;\n${assign}`);
 }
 
+/**
+ * The sky's share of the light on the road, mostly drained of its color.
+ * Asphalt in shade is lit by the sky alone, and at full color the blue fill
+ * turned it navy; real tarmac in shade reads a neutral dark grey with only
+ * a hint of blue. Sun and its warmth are untouched.
+ */
+const NEUTRAL_SKY = /* glsl */ `
+float skyDiffuse = dot( reflectedLight.indirectDiffuse, vec3( 0.2126, 0.7152, 0.0722 ) );
+reflectedLight.indirectDiffuse = mix( vec3( skyDiffuse ), reflectedLight.indirectDiffuse, 0.35 );
+float skySpecular = dot( reflectedLight.indirectSpecular, vec3( 0.2126, 0.7152, 0.0722 ) );
+reflectedLight.indirectSpecular = mix( vec3( skySpecular ), reflectedLight.indirectSpecular, 0.5 );
+`;
+
 export function createAsphaltMaterial(noise: THREE.Texture, roadWidth: number): THREE.MeshStandardMaterial {
-  const m = new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0, envMapIntensity: 0.7 });
+  const m = new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0, envMapIntensity: 0.6 });
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uDetail = { value: noise };
     shader.uniforms.uRoadWidth = { value: roadWidth };
@@ -53,7 +66,8 @@ export function createAsphaltMaterial(noise: THREE.Texture, roadWidth: number): 
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>\nuniform sampler2D uDetail;\nuniform float uRoadWidth;\nvarying vec3 vRoadWorld;\nvarying vec2 vRoadUv;\nvarying vec2 vLine;\n${ASPHALT}`)
       .replace('#include <map_fragment>', 'vec4 road = asphalt( vRoadUv, vRoadWorld, vLine, length( vViewPosition ) );\ndiffuseColor.rgb = road.rgb;')
-      .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = road.a;');
+      .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = road.a;')
+      .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>\n${NEUTRAL_SKY}`);
   };
   m.customProgramCacheKey = () => 'racing-asphalt';
   return withHaze(m);
