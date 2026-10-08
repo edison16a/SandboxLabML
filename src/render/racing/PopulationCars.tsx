@@ -12,8 +12,8 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { crowdGeometry } from './car/geometry/crowd';
 import { withCarSurface } from './car/materials/carSurface';
 import { useCarReflections } from './car/materials/useCarReflections';
-import { apart, atLens, clearance } from './fleet/clearance';
 import { FadeSplit } from './fleet/fadeSplit';
+import { PackView, type PackFocus } from './fleet/packView';
 import { FleetMotion } from './motion/fleetMotion';
 import { CRASHED_COLOR, speciesColor } from './palette';
 import { useRacingScene } from './sceneContext';
@@ -22,19 +22,6 @@ const MAX_CARS = 256;
 const STRIDE = RACING_SNAPSHOT.stride;
 /** Cars within this many meters of the followed car may cast into the sun's shadow box. */
 const SHADOW_REACH = 100;
-
-/**
- * True when car i sits within a meter of a car listed before it. Clones
- * on the grid, or late generations driving one line, would otherwise draw
- * the same body twice and flicker in stripes of both colors; the later
- * one fades out until the two part.
- */
-function overlapsEarlier(poses: Float32Array, i: number): boolean {
-  const x = poses[i * 3];
-  const y = poses[i * 3 + 1];
-  for (let j = 0; j < i; j++) if ((poses[j * 3] - x) ** 2 + (poses[j * 3 + 1] - y) ** 2 < 1) return true;
-  return false;
-}
 
 /** The crowd car's paint: a clear coat on High, cheaper standard shading below. */
 function carMaterial(tier: QualityTier): THREE.MeshStandardMaterial {
@@ -48,11 +35,11 @@ function carMaterial(tier: QualityTier): THREE.MeshStandardMaterial {
  * lighter build of the hero car. The paint takes the species color;
  * stopped cars turn graphite and sink slightly so the ones still driving
  * stand out. Every body pitches, rolls and slides on its own springs from
- * its own accelerations, and a car on top of another fades out until they
- * part. In the chase and trackside views, cars at the
- * lens or between it and the followed car melt away: they move to a small
- * transparent pass whose opacity eases over time, with a depth pass first
- * so each pixel shows only a fading car's nearest surface.
+ * its own accelerations. A car whose body cuts into another one's, or that
+ * sits at the lens, fades out until the two part (see PackView); chase
+ * and trackside also clear the line of sight to the followed car. Fading
+ * cars move to a small transparent pass whose opacity eases over time,
+ * with a depth pass first so each pixel shows only their nearest surface.
  */
 export function PopulationCars({ castShadow }: { castShadow: boolean }) {
   const { population, frame } = useRacingScene();
@@ -76,8 +63,19 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
   useCarReflections([look.body, look.fade]);
   const fleet = useMemo(() => new FleetMotion(MAX_CARS), []);
   const split = useMemo(() => new FadeSplit(MAX_CARS), []);
+  const pack = useMemo(() => new PackView(MAX_CARS), []);
   const tmp = useMemo(
-    () => ({ m: new THREE.Matrix4(), c: new THREE.Color(), pose: { x: 0, y: 0, heading: 0 } as Pose, poses: new Float32Array(MAX_CARS * 3), epoch: -1, casters: new Int32Array(MAX_CARS), others: new Int32Array(MAX_CARS) }),
+    () => ({
+      m: new THREE.Matrix4(),
+      c: new THREE.Color(),
+      pose: { x: 0, y: 0, heading: 0 } as Pose,
+      poses: new Float32Array(MAX_CARS * 3),
+      stopped: new Uint8Array(MAX_CARS),
+      epoch: -1,
+      casters: new Int32Array(MAX_CARS),
+      others: new Int32Array(MAX_CARS),
+      aim: { hidden: -1, clearFocus: false, hasFocus: false, cam: new THREE.Vector3(), focus: new THREE.Vector3(), yaw: 0 } as PackFocus,
+    }),
     [],
   );
 
@@ -108,27 +106,30 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
       poses[i * 3] = tmp.pose.x;
       poses[i * 3 + 1] = tmp.pose.y;
       poses[i * 3 + 2] = tmp.pose.heading;
+      tmp.stopped[i] = buf[i * STRIDE + 6] === 0 ? 0 : 1;
     }
     // Fades follow real time even when frames are slow, so a weak GPU never shows a car half gone for long.
     split.begin(Math.min(dt, 1));
     // A new episode puts every car back on the grid at once: no easing then, or the copies on the grid would linger over the followed car.
     const restart = population.epoch !== tmp.epoch;
     tmp.epoch = population.epoch;
+    const aim = tmp.aim;
+    aim.hidden = frame.hiddenPopulation;
+    aim.clearFocus = clearFocus;
+    aim.hasFocus = frame.focusIndex >= 0;
+    aim.cam.copy(state.camera.position);
+    aim.focus.copy(frame.focusPos);
+    aim.yaw = frame.focusYaw;
+    pack.decide(n, poses, tmp.stopped, split.shown, aim);
     let casters = 0;
     let others = 0;
     for (let i = 0; i < n; i++) {
       const x = poses[i * 3];
       const y = poses[i * 3 + 1];
       const hidden = i === frame.hiddenPopulation;
-      // In every view a car at the lens or overlapping the detailed followed car fades; chase and trackside also clear the line of sight.
-      const cam = state.camera.position;
-      let target = hidden ? 0 : clearFocus ? clearance(x, -y, frame.focusPos, frame.focusYaw, cam) : atLens(x, -y, cam);
-      if (!clearFocus && frame.focusIndex >= 0) target = Math.min(target, apart(x, -y, frame.focusPos, frame.focusYaw));
-      // A car on top of an earlier one would draw the same body twice.
-      if (target > 0 && overlapsEarlier(poses, i)) target = 0;
       const solidBefore = split.solidCount;
       const fadeBefore = split.fadeCount;
-      const opacity = split.place(i, target, hidden || restart);
+      const opacity = split.place(i, pack.target[i], hidden || restart);
       let mesh: THREE.InstancedMesh | null = split.solidCount > solidBefore ? a : split.fadeCount > fadeBefore ? f : null;
       if (!mesh) continue;
       let slot = fadeBefore;
@@ -141,10 +142,10 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
         if (near) casters++;
         else others++;
       }
-      const status = buf[i * STRIDE + 6];
-      fleet.compose(i, x, status === 0 ? 0 : -0.06, -y, poses[i * 3 + 2], 1, tmp.m);
+      const stopped = tmp.stopped[i] === 1;
+      fleet.compose(i, x, stopped ? -0.06 : 0, -y, poses[i * 3 + 2], 1, tmp.m);
       mesh.setMatrixAt(slot, tmp.m);
-      if (status === 0) speciesColor(population.tags[i] ?? 0, tmp.c);
+      if (!stopped) speciesColor(population.tags[i] ?? 0, tmp.c);
       else tmp.c.copy(CRASHED_COLOR);
       mesh.setColorAt(slot, tmp.c);
       if (mesh === f) shape.opacity.setX(slot, opacity);

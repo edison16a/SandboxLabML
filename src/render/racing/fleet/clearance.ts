@@ -1,7 +1,7 @@
 import type * as THREE from 'three';
 
 /** 0 below a, 1 above b, linear between. Module level, so the per car call below builds no closure. */
-function ramp(v: number, a: number, b: number): number {
+export function ramp(v: number, a: number, b: number): number {
   return Math.min(1, Math.max(0, (v - a) / (b - a)));
 }
 
