@@ -10,6 +10,8 @@ interface Props {
   hi: THREE.BufferGeometry;
   lo: THREE.BufferGeometry;
   material: THREE.Material;
+  /** The shadow pass's material, carrying the same wind and card layout. */
+  depth: THREE.Material;
   /** Within this many meters of the camera a tree draws in full detail, m. Zero keeps every tree simple. */
   radius: number;
   castShadow: boolean;
@@ -24,7 +26,7 @@ const RESORT = 6;
  * camera has moved a few meters, by copying precomputed matrices, so it
  * costs a short loop now and then and allocates nothing.
  */
-export function LodTrees({ set, hi, lo, material, radius, castShadow }: Props) {
+export function LodTrees({ set, hi, lo, material, depth, radius, castShadow }: Props) {
   const near = useRef<THREE.InstancedMesh>(null);
   const far = useRef<THREE.InstancedMesh>(null);
   const last = useMemo(() => new THREE.Vector3(1e9, 0, 0), []);
@@ -58,8 +60,8 @@ export function LodTrees({ set, hi, lo, material, radius, castShadow }: Props) {
   if (!set.count) return null;
   return (
     <>
-      <instancedMesh ref={near} args={[hi, material, set.count]} count={0} castShadow={castShadow} receiveShadow frustumCulled={false} />
-      <instancedMesh ref={far} args={[lo, material, set.count]} count={0} receiveShadow={castShadow} frustumCulled={false} />
+      <instancedMesh ref={near} args={[hi, material, set.count]} count={0} castShadow={castShadow} receiveShadow customDepthMaterial={depth} frustumCulled={false} />
+      <instancedMesh ref={far} args={[lo, material, set.count]} count={0} receiveShadow={castShadow} customDepthMaterial={depth} frustumCulled={false} />
     </>
   );
 }

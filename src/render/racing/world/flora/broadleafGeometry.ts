@@ -1,81 +1,59 @@
 import * as THREE from 'three';
 import { Rng } from '@/engine/core/rng';
-import { valueNoise } from '../noise';
-import { MeshBuilder } from './meshBuilder';
+import { crownCloud } from './crown';
+import { FoliageBuilder } from './foliageBuilder';
+import { TILE } from './textures/atlasLayout';
 
-const BARK = new THREE.Color('#5e4a38');
-const LEAF_DEEP = new THREE.Color('#2c3d1c');
-const LEAF = new THREE.Color('#4d6a2b');
-const LEAF_LIT = new THREE.Color('#7a9140');
+const LEAVES = [TILE.leaves, TILE.leaves, TILE.leavesLight] as const;
 
 /**
- * One clump of leaves: a lumpy ball. Normals blend the clump's own roundness
- * with the direction out from the whole crown, so the tree lights as one
- * soft volume with bumps, the way a real canopy reads from a distance.
+ * A broadleaf tree like a holm oak: a short trunk forking into a few
+ * spreading limbs under a wide crown built from two or three overlapping
+ * leafy masses, so the outline is lumpy and uneven instead of a ball.
+ * `detail` drops limbs and most leaf cards for the distant version.
  */
-export function clump(b: MeshBuilder, base: THREE.IcosahedronGeometry, center: THREE.Vector3, radius: number, crown: THREE.Vector3, seed: number): void {
-  const pos = base.attributes.position as THREE.BufferAttribute;
-  const c = new THREE.Color();
-  const idx: number[] = [];
-  const map = new Map<string, number>();
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i);
-    const y = pos.getY(i);
-    const z = pos.getZ(i);
-    // Shared corners must stay shared, or the lumps tear apart.
-    const key = `${x.toFixed(3)},${y.toFixed(3)},${z.toFixed(3)}`;
-    const known = map.get(key);
-    if (known !== undefined) {
-      idx.push(known);
-      continue;
+function broadleaf(b: FoliageBuilder, rng: Rng, variant: number, detail: number): void {
+  const top = variant ? 6.6 : 5.8;
+  const forkAt = top * 0.42;
+  b.limb(new THREE.Vector3(0, -0.4, 0), new THREE.Vector3(rng.range(-0.1, 0.1), 1, rng.range(-0.1, 0.1)), forkAt + 0.4, 0.36, 0.24, detail > 0.5 ? 8 : 5, TILE.greyBark);
+  const fork = new THREE.Vector3(0, forkAt, 0);
+  const masses = variant ? 3 : 2;
+  for (let k = 0; k < masses; k++) {
+    const a = (k / masses) * Math.PI * 2 + rng.range(-0.5, 0.5);
+    const out = rng.range(1.2, 2.0);
+    const center = new THREE.Vector3(Math.cos(a) * out, top + rng.range(-0.6, 0.8), Math.sin(a) * out);
+    const radii = new THREE.Vector3(rng.range(2.4, 3.1), rng.range(1.9, 2.4), rng.range(2.4, 3.1));
+    if (detail > 0.5) {
+      const dir = center.clone().sub(fork);
+      b.limb(fork, dir, dir.length() * 0.85, 0.18, 0.06, 5, TILE.greyBark);
     }
-    const lump = 0.72 + valueNoise(x * 2.6 + seed, z * 2.6 + y * 1.9, seed) * 0.56;
-    const px = center.x + x * radius * lump;
-    const py = center.y + y * radius * lump * 0.86;
-    const pz = center.z + z * radius * lump;
-    const out = new THREE.Vector3(px - crown.x, (py - crown.y) * 0.8, pz - crown.z).normalize();
-    const nx = x * 0.45 + out.x;
-    const ny = y * 0.45 + out.y + 0.15;
-    const nz = z * 0.45 + out.z;
-    const light = THREE.MathUtils.clamp(0.5 + ny * 0.5, 0, 1);
-    c.copy(LEAF_DEEP).lerp(LEAF, Math.min(1, light * 1.4)).lerp(LEAF_LIT, Math.max(0, light - 0.6) * 1.5);
-    const v = b.vertex(px, py, pz, nx, ny, nz, c);
-    map.set(key, v);
-    idx.push(v);
+    const cards = detail > 0.5 ? Math.round(64 / masses) + 8 : 6;
+    crownCloud(b, rng, center, radii, cards, detail > 0.5 ? [1.5, 2.2] : [3, 3.8], LEAVES, 0.7);
   }
-  for (let i = 0; i < idx.length; i += 3) b.tri(idx[i], idx[i + 1], idx[i + 2]);
 }
 
-/** A broadleaf tree: a short trunk that forks into a wide crown of leafy clumps. */
 export function broadleafGeometry(variant: number): THREE.BufferGeometry {
-  const rng = new Rng(301 + variant * 13);
-  const b = new MeshBuilder();
-  const base = new THREE.IcosahedronGeometry(1, 1);
-  const crown = new THREE.Vector3(0, variant ? 6.4 : 5.6, 0);
-  b.limb(new THREE.Vector3(0, -0.4, 0), new THREE.Vector3(0, 1, 0), crown.y - 1.2, 0.34, 0.2, 7, BARK);
-  for (let k = 0; k < 3; k++) {
-    const a = rng.range(0, Math.PI * 2);
-    b.limb(new THREE.Vector3(0, crown.y - 2.4, 0), new THREE.Vector3(Math.cos(a) * 0.8, 1, Math.sin(a) * 0.8), 2.6, 0.16, 0.06, 5, BARK);
-  }
-  // Many smaller, lumpier clumps at uneven heights: the crown's outline breaks up like a real canopy.
-  const clumps = variant ? 9 : 8;
-  for (let k = 0; k < clumps; k++) {
-    const a = (k / clumps) * Math.PI * 2 * 1.6 + rng.range(-0.4, 0.4);
-    const out = k === 0 ? 0 : rng.range(1.4, 2.7);
-    const center = new THREE.Vector3(Math.cos(a) * out, crown.y + rng.range(-1.1, 1.8) + (k === 0 ? 1.6 : 0), Math.sin(a) * out);
-    clump(b, base, center, rng.range(1.4, 2.2), crown, k + variant * 10);
-  }
-  base.dispose();
+  const b = new FoliageBuilder();
+  broadleaf(b, new Rng(301 + variant * 13), variant, 1);
   return b.build();
 }
 
-/** A distant broadleaf: one lumpy ball on a stub. */
+/** A distant broadleaf: the same masses from a dozen big cards. */
 export function broadleafLodGeometry(variant: number): THREE.BufferGeometry {
-  const b = new MeshBuilder();
-  const base = new THREE.IcosahedronGeometry(1, 0);
-  const crown = new THREE.Vector3(0, variant ? 6.6 : 5.9, 0);
-  b.limb(new THREE.Vector3(0, -0.4, 0), new THREE.Vector3(0, 1, 0), crown.y - 2, 0.34, 0.24, 4, BARK);
-  clump(b, base, crown, 3.9, crown.clone().setY(crown.y - 1), 50 + variant);
-  base.dispose();
+  const b = new FoliageBuilder();
+  broadleaf(b, new Rng(301 + variant * 13), variant, 0);
+  return b.build();
+}
+
+/**
+ * A low shrub of dry scrub, about a meter tall at scale 1: a dome of small
+ * leaf cards, the second shape twiggier and drier. No stems: at this size
+ * the leaves hide them.
+ */
+export function shrubGeometry(variant: number): THREE.BufferGeometry {
+  const b = new FoliageBuilder();
+  const rng = new Rng(401 + variant * 3);
+  const tiles = variant ? [TILE.brush, TILE.brush, TILE.scrub] : [TILE.scrub, TILE.scrub, TILE.brush];
+  crownCloud(b, rng, new THREE.Vector3(0, 0.42, 0), new THREE.Vector3(0.85, 0.55, 0.85), variant ? 9 : 11, [0.75, 1.15], tiles, 0.5);
   return b.build();
 }

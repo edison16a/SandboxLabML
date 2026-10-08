@@ -1,77 +1,90 @@
 import * as THREE from 'three';
 import { Rng } from '@/engine/core/rng';
-import { MeshBuilder } from './meshBuilder';
+import { FoliageBuilder } from './foliageBuilder';
+import { crownCloud } from './crown';
+import { TILE } from './textures/atlasLayout';
 
 /** A pine is about this tall at scale 1, m. */
 export const PINE_HEIGHT = 15;
 
-const BARK = new THREE.Color('#5b4434');
-const NEEDLE_DEEP = new THREE.Color('#1d2c17');
-const NEEDLE = new THREE.Color('#2f4524');
-const NEEDLE_TIP = new THREE.Color('#4f6b33');
+const UP = new THREE.Vector3(0, 1, 0);
 
 /**
- * One whorl of branches: a drooping, ragged skirt round the trunk. The rim
- * is jittered in and out and up and down so the silhouette breaks into
- * clumps, and its normals point out from the trunk and a little up, so the
- * whorl shades like a soft mass of needles, light on top and dark beneath.
+ * Whorls of branches up a straight trunk, each branch carrying needle
+ * tufts along its outer half: a tall pine whose crown narrows to a point,
+ * with gaps between the layers where the trunk and the sky show through.
+ * `detail` thins the tufts for the distant version.
  */
-function whorl(b: MeshBuilder, rng: Rng, y: number, radius: number, height: number, points: number, lean: number): void {
-  const spin = rng.range(0, Math.PI * 2);
-  const apex = b.vertex(0, y + height, 0, 0, 1, 0, NEEDLE);
-  const mid: number[] = [];
-  const rim: number[] = [];
-  for (let k = 0; k < points; k++) {
-    const a = spin + (k / points) * Math.PI * 2 + rng.range(-0.18, 0.18);
-    const r = radius * rng.range(0.72, 1.18);
-    const droop = rng.range(0.15, 0.55) * height;
-    const cx = Math.cos(a);
-    const cz = Math.sin(a);
-    // Halfway out the branches bulge up, then droop to their tips.
-    mid.push(b.vertex(cx * r * 0.55, y + height * 0.62, cz * r * 0.55, cx, 0.9, cz, NEEDLE));
-    rim.push(b.vertex(cx * r, y - droop + lean * cx, cz * r, cx, 0.35, cz, NEEDLE_TIP));
+function conical(b: FoliageBuilder, rng: Rng, detail: number): void {
+  const h = PINE_HEIGHT;
+  b.limb(new THREE.Vector3(0, -0.4, 0), UP, h * 0.97, 0.34, 0.05, detail > 0.5 ? 9 : 5);
+  const layers = detail > 0.5 ? 9 : 5;
+  const p = new THREE.Vector3();
+  const n = new THREE.Vector3();
+  for (let i = 0; i < layers; i++) {
+    const t = i / (layers - 1);
+    const y = h * (0.3 + 0.64 * t);
+    const count = Math.max(3, Math.round((6 - t * 3) * (detail > 0.5 ? 1 : 0.7)));
+    const spin = rng.range(0, Math.PI * 2);
+    const reach = (3.5 * (1 - t) ** 0.9 + 0.7) * rng.range(0.85, 1.15);
+    for (let k = 0; k < count; k++) {
+      const a = spin + (k / count) * Math.PI * 2 + rng.range(-0.35, 0.35);
+      const len = reach * rng.range(0.8, 1.1);
+      const dir = new THREE.Vector3(Math.cos(a), rng.range(-0.25, 0.2), Math.sin(a)).normalize();
+      if (detail > 0.5) b.limb(new THREE.Vector3(0, y, 0), dir, len, 0.05 + 0.06 * (1 - t), 0.02, 4);
+      const tufts = detail > 0.5 ? (len > 2.2 ? 3 : 2) : 1;
+      for (let j = 0; j < tufts; j++) {
+        const f = tufts === 1 ? 0.7 : 0.4 + (0.55 * j) / (tufts - 1);
+        // Tips droop a little under their own weight.
+        p.set(0, y, 0).addScaledVector(dir, len * f).add(new THREE.Vector3(rng.range(-0.2, 0.2), -f * f * 0.5 + rng.range(-0.15, 0.25), rng.range(-0.2, 0.2)));
+        n.set(p.x, 0.9 + (1 - t) * 0.2, p.z);
+        const size = (1.25 + len * 0.42) * rng.range(0.85, 1.15) * (detail > 0.5 ? 1 : 1.5);
+        b.card(p, size, rng.next() < 0.3 ? TILE.needleTips : TILE.needles, rng.range(0, Math.PI * 2), n, 0.55 + 0.45 * f);
+      }
+    }
   }
-  const under = b.vertex(0, y + height * 0.12, 0, 0, -1, 0, NEEDLE_DEEP);
-  for (let k = 0; k < points; k++) {
-    const n = (k + 1) % points;
-    b.tri(apex, mid[n], mid[k]);
-    b.tri(mid[k], mid[n], rim[k]);
-    b.tri(mid[n], rim[n], rim[k]);
-    b.tri(under, rim[k], rim[n]);
+  // The leader: a few small tufts at the very top.
+  for (let k = 0; k < (detail > 0.5 ? 3 : 1); k++) {
+    p.set(rng.range(-0.25, 0.25), h * (0.95 + k * 0.025), rng.range(-0.25, 0.25));
+    b.card(p, 1.2 - k * 0.2, TILE.needleTips, rng.range(0, Math.PI * 2), n.set(p.x, 1, p.z), 1);
   }
 }
 
 /**
- * A detailed pine. Variant 0 is a full, conical pine with branches most of
- * the way down; variant 1 is a tall umbrella pine with a long bare trunk
- * and a few big clumps up top, like the pines on dry southern hills.
+ * A stone pine of dry southern hills: a long bare trunk with a slight lean
+ * that forks into a few limbs under a broad, flat topped canopy.
  */
-export function pineGeometry(variant: number): THREE.BufferGeometry {
-  const rng = new Rng(101 + variant * 7);
-  const b = new MeshBuilder();
-  const tall = variant === 1;
-  b.limb(new THREE.Vector3(0, -0.4, 0), new THREE.Vector3(0, 1, 0), PINE_HEIGHT * 0.93, tall ? 0.36 : 0.32, 0.07, 7, BARK);
-  const layers = tall ? 6 : 9;
-  const start = tall ? 0.46 : 0.18;
-  for (let i = 0; i < layers; i++) {
-    const t = i / (layers - 1);
-    const y = PINE_HEIGHT * (start + (0.9 - start) * t);
-    const radius = tall ? 3.1 - t * 1.9 : 3.6 * (1 - t) ** 0.85 + 0.55;
-    const height = tall ? 1.9 - t * 0.4 : 2.4 - t * 0.9;
-    whorl(b, rng, y, radius, height, tall ? 8 : 9, rng.range(-0.3, 0.3));
+function umbrella(b: FoliageBuilder, rng: Rng, detail: number): void {
+  const h = PINE_HEIGHT;
+  const lean = new THREE.Vector3(rng.range(-0.08, 0.08), 1, rng.range(-0.08, 0.08));
+  const fork = new THREE.Vector3(0, -0.4, 0).addScaledVector(lean.clone().normalize(), h * 0.6);
+  b.limb(new THREE.Vector3(0, -0.4, 0), lean, h * 0.62, 0.4, 0.22, detail > 0.5 ? 9 : 5);
+  const center = new THREE.Vector3(fork.x, h * 0.84, fork.z);
+  const radii = new THREE.Vector3(4.4, 1.5, 4.4);
+  const limbs = detail > 0.5 ? 4 : 0;
+  for (let k = 0; k < limbs; k++) {
+    const a = (k / limbs) * Math.PI * 2 + rng.range(-0.4, 0.4);
+    const tip = center.clone().add(new THREE.Vector3(Math.cos(a) * 2.6, -0.4, Math.sin(a) * 2.6));
+    const dir = tip.clone().sub(fork);
+    b.limb(fork, dir, dir.length(), 0.2, 0.06, 5);
   }
-  // The leader at the top.
-  whorl(b, rng, PINE_HEIGHT * 0.93, 0.5, 1.6, 5, 0);
+  crownCloud(b, rng, center, radii, detail > 0.5 ? 64 : 12, detail > 0.5 ? [1.9, 2.7] : [3.4, 4.2], [TILE.needles, TILE.needleTips], 0.35);
+}
+
+/** A detailed pine. Variant 0 is a tall conical pine, variant 1 a stone pine with a flat crown. */
+export function pineGeometry(variant: number): THREE.BufferGeometry {
+  const b = new FoliageBuilder();
+  const rng = new Rng(101 + variant * 7);
+  if (variant === 0) conical(b, rng, 1);
+  else umbrella(b, rng, 1);
   return b.build();
 }
 
-/** A distant pine: two cones on a stick, close to the same silhouette and color, at a tenth of the cost. */
+/** A distant pine: the same silhouette from a fraction of the tufts, each bigger. */
 export function pineLodGeometry(variant: number): THREE.BufferGeometry {
+  const b = new FoliageBuilder();
   const rng = new Rng(201 + variant * 7);
-  const b = new MeshBuilder();
-  const tall = variant === 1;
-  b.limb(new THREE.Vector3(0, -0.4, 0), new THREE.Vector3(0, 1, 0), PINE_HEIGHT * 0.6, 0.34, 0.12, 4, BARK);
-  const tiers = tall ? [[0.52, 2.8, 3], [0.75, 2.1, 3.2]] : [[0.2, 3.6, 6.2], [0.6, 2.2, 6]];
-  for (const [at, radius, height] of tiers) whorl(b, rng, PINE_HEIGHT * at, radius, height, 6, 0);
+  if (variant === 0) conical(b, rng, 0);
+  else umbrella(b, rng, 0);
   return b.build();
 }

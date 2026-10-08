@@ -1,27 +1,5 @@
 import * as THREE from 'three';
-import { Rng } from '@/engine/core/rng';
 import { valueNoise } from '../noise';
-import { clump } from './broadleafGeometry';
-import { MeshBuilder } from './meshBuilder';
-
-/**
- * A low shrub: three or four leafy lumps huddled together, about a meter
- * tall at scale 1. Coarse lumps on purpose: there are thousands of them, and
- * the noise in their lumps and the foliage grain carry the detail.
- */
-export function shrubGeometry(variant: number): THREE.BufferGeometry {
-  const rng = new Rng(401 + variant * 3);
-  const b = new MeshBuilder();
-  const base = new THREE.IcosahedronGeometry(1, 0);
-  const center = new THREE.Vector3(0, 0.3, 0);
-  for (let k = 0; k < (variant ? 4 : 3); k++) {
-    const a = rng.range(0, Math.PI * 2);
-    const at = new THREE.Vector3(Math.cos(a) * 0.45, rng.range(0.3, 0.6), Math.sin(a) * 0.45);
-    clump(b, base, at, rng.range(0.55, 0.85), center, 90 + k + variant * 5);
-  }
-  base.dispose();
-  return b.build();
-}
 
 const SAND = new THREE.Color('#b3a086');
 const SAND_DARK = new THREE.Color('#786956');

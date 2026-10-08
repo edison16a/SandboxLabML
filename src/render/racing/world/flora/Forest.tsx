@@ -10,19 +10,20 @@ import { broadleafGeometry, broadleafLodGeometry } from './broadleafGeometry';
 import { instanceSet } from './instances';
 import { LodTrees } from './LodTrees';
 import { PINE_HEIGHT, pineGeometry, pineLodGeometry } from './pineGeometry';
-import { detailNoise, releaseDetailNoise } from '../detailNoise';
-import { createWindMaterial } from './windMaterial';
+import { createFoliageMaterial } from './foliageMaterial';
+import { ATLAS_TILE, foliageAtlas, releaseFoliageAtlas } from './textures/foliageAtlas';
 
 /** Full detail radius per tier, m. Low draws every tree as its simple silhouette. */
 const DETAIL_RADIUS = { low: 0, medium: 110, high: 190 } as const;
 
-const PINE_LOOK = { sink: 0.25, stretch: 0.18, from: new THREE.Color(0.82, 0.86, 0.8), to: new THREE.Color(1.12, 1.08, 0.94) };
-const BROAD_LOOK = { sink: 0.25, stretch: 0.12, from: new THREE.Color(0.85, 0.88, 0.78), to: new THREE.Color(1.18, 1.1, 0.86) };
+const PINE_LOOK = { sink: 0.25, stretch: 0.18, from: new THREE.Color(0.8, 0.84, 0.78), to: new THREE.Color(1.1, 1.08, 0.92) };
+const BROAD_LOOK = { sink: 0.25, stretch: 0.12, from: new THREE.Color(0.82, 0.86, 0.74), to: new THREE.Color(1.14, 1.1, 0.84) };
+
 
 /**
- * The trees: tall pines and rounder broadleaf trees, each in two shapes,
- * all swaying in one breeze. Geometry is built once per scene and shared by
- * every track.
+ * The trees: tall pines and broadleaf trees, each in two shapes, built
+ * from bark limbs and needle or leaf cards and all swaying in one breeze.
+ * Geometry is built once per scene and shared by every track.
  */
 export function Forest({ flora, tier }: { flora: Flora; tier: QualityTier }) {
   const geo = useDisposable(() => {
@@ -35,11 +36,13 @@ export function Forest({ flora, tier }: { flora: Flora; tier: QualityTier }) {
     return { ...g, dispose: () => Object.values(g).flat().forEach((x) => x.dispose()) };
   }, []);
   const mats = useDisposable(() => {
-    const grain = detailNoise();
-    const pine = createWindMaterial(PINE_HEIGHT, 0.45, grain);
-    const broad = createWindMaterial(8, 0.3, grain);
-    return { pine, broad, dispose: () => (pine.material.dispose(), broad.material.dispose(), releaseDetailNoise()) };
-  }, []);
+    const atlas = foliageAtlas(ATLAS_TILE[tier]);
+    // Medium draws with multisampling, which turns the cut out edges into soft coverage.
+    const pine = createFoliageMaterial(atlas, PINE_HEIGHT, 0.45, tier === 'medium');
+    const broad = createFoliageMaterial(atlas, 8, 0.3, tier === 'medium');
+    const all = [pine.material, pine.depth, broad.material, broad.depth];
+    return { pine, broad, dispose: () => (all.forEach((m) => m.dispose()), releaseFoliageAtlas()) };
+  }, [tier]);
   const sets = useMemo(
     () => ({
       pine: [instanceSet(flora.pines, 0, PINE_LOOK), instanceSet(flora.pines, 1, PINE_LOOK)],
@@ -59,10 +62,10 @@ export function Forest({ flora, tier }: { flora: Flora; tier: QualityTier }) {
   return (
     <group>
       {[0, 1].map((v) => (
-        <LodTrees key={`p${v}`} set={sets.pine[v]} hi={geo.pine[v]} lo={geo.pineLo[v]} material={mats.pine.material} radius={radius} castShadow={shadow} />
+        <LodTrees key={`p${v}`} set={sets.pine[v]} hi={geo.pine[v]} lo={geo.pineLo[v]} material={mats.pine.material} depth={mats.pine.depth} radius={radius} castShadow={shadow} />
       ))}
       {[0, 1].map((v) => (
-        <LodTrees key={`b${v}`} set={sets.broad[v]} hi={geo.broad[v]} lo={geo.broadLo[v]} material={mats.broad.material} radius={radius} castShadow={shadow} />
+        <LodTrees key={`b${v}`} set={sets.broad[v]} hi={geo.broad[v]} lo={geo.broadLo[v]} material={mats.broad.material} depth={mats.broad.depth} radius={radius} castShadow={shadow} />
       ))}
     </group>
   );
