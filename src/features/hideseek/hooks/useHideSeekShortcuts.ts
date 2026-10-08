@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { inDialog, isTyping } from '@/ui/typing';
 import type { SpeedMode } from '@/workers/shared/protocol';
 import { hideSeekSession } from '../session/HideSeekSession';
 import { useSettings } from '@/features/settings/settingsStore';
@@ -29,8 +30,7 @@ export function allowedGridSizes(capped: boolean): GridSize[] {
 export function useHideSeekShortcuts(onNewRun: () => void) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const el = e.target as HTMLElement | null;
-      if (el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.closest?.('[role="dialog"]'))) return;
+      if (isTyping(e.target) || inDialog(e.target)) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const s = useHideSeekLab.getState();
       const session = hideSeekSession();

@@ -59,7 +59,7 @@ export function ViewControls() {
         </span>
       </Tooltip>
       <Tooltip content="Show what the agents sense" shortcut="I">
-        <Button size="sm" variant="secondary" className={inputs ? on : glass} onClick={() => set({ inputsOverlay: !inputs })} aria-pressed={inputs}>
+        <Button data-tour="inputs" size="sm" variant="secondary" className={inputs ? on : glass} onClick={() => set({ inputsOverlay: !inputs })} aria-pressed={inputs}>
           <ScanEye />
           Inputs
         </Button>

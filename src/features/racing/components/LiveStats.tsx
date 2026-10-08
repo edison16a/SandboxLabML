@@ -42,9 +42,9 @@ function useLive(stream: SnapshotStream | null): Live {
   return live;
 }
 
-function Chip({ label, value }: { label: string; value: React.ReactNode }) {
+function Chip({ label, value, tour }: { label: string; value: React.ReactNode; tour?: string }) {
   return (
-    <div className="flex flex-col rounded-md border border-white/10 bg-black/45 px-2.5 py-1.5 leading-tight backdrop-blur-sm">
+    <div data-tour={tour} className="flex flex-col rounded-md border border-white/10 bg-black/45 px-2.5 py-1.5 leading-tight backdrop-blur-sm">
       <span className="text-[10px] font-medium tracking-wide text-white/60 uppercase">{label}</span>
       <span className="tabular font-mono text-[14px] font-semibold text-white">{value}</span>
     </div>
@@ -63,7 +63,7 @@ export function LiveStats({ stream }: { stream: SnapshotStream | null }) {
   const watching = status === 'running' && (speed === '1x' || speed === '2x' || speed === '4x');
   return (
     <div className="pointer-events-none flex flex-wrap gap-1.5">
-      <Chip label="Generation" value={gen + 1} />
+      <Chip label="Generation" value={gen + 1} tour="hud-generation" />
       {watching && live.total > 0 && <Chip label="Driving" value={`${live.alive} / ${live.total}`} />}
       {watching && <Chip label="Leader" value={`${Math.round(live.leaderDistance)} m`} />}
       {watching && <Chip label="Speed" value={`${Math.round(live.leaderSpeed * 3.6)} km/h`} />}

@@ -14,8 +14,9 @@ import { racingSession } from '../session/RacingSession';
 import { useRacingLab } from '../state/labStore';
 import { LabToolbar } from './LabToolbar';
 import { NewRunDialog } from './NewRunDialog';
-import { RacingTour } from './RacingTour';
+import { RACING_TOUR } from '@/features/onboarding/racingTour';
 import { useTrainScriptParam } from '@/features/scripts/useTrainScriptParam';
+import { Walkthrough } from '@/ui/walkthrough/Walkthrough';
 import { ResizeHandle } from '@/ui/split/ResizeHandle';
 import { SidePanel } from './SidePanel';
 import { ViewportHud } from './ViewportHud';
@@ -38,7 +39,6 @@ export function RacingLab() {
   const view = useRacingLab((s) => s.view);
   const hasTelemetry = useRacingLab((s) => s.telemetry.length > 0);
   const [newRun, setNewRun] = useState(false);
-  const tourSignal = useRacingLab((s) => s.tourSignal);
   const openNewRun = useCallback(() => setNewRun(true), []);
   const pendingScript = useTrainScriptParam('racing', params, openNewRun);
   useLabShortcuts(openNewRun);
@@ -52,9 +52,10 @@ export function RacingLab() {
   const streams = ready ? racingSession().streams : null;
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
+    // Under lg the viewport and the side panel stack taller than the screen, so the stack scrolls.
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col max-lg:overflow-y-auto lg:flex-row">
       <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col lg:min-w-[600px]">
-        <div className="relative min-h-0 flex-1 bg-[#b9cfe6]">
+        <div data-tour="viewport" className="relative min-h-0 flex-1 bg-[#b9cfe6]">
           {track && streams ? (
             <RacingCanvas track={track} population={streams.population} ghosts={streams.ghosts} schema={schema}>
               {mode === 'sandbox' && editing && spec && (
@@ -87,7 +88,7 @@ export function RacingLab() {
         <SidePanel network={<NetworkTab />} inputs={<InputsTab />} model={<ModelTab />} />
       </aside>
       <NewRunDialog open={newRun} onOpenChange={setNewRun} initialScript={pendingScript} />
-      {ready && <RacingTour openSignal={tourSignal} />}
+      <Walkthrough tour={RACING_TOUR} ready={ready} />
     </div>
   );
 }

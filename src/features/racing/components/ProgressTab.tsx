@@ -6,9 +6,9 @@ import { BenchmarkChart } from '@/features/charts/BenchmarkChart';
 import { Stat } from '@/ui/primitives/Panel';
 import { useRacingLab } from '../state/labStore';
 
-function Section({ title, children, hint }: { title: string; children: React.ReactNode; hint?: string }) {
+function Section({ title, children, hint, tour }: { title: string; children: React.ReactNode; hint?: string; tour?: string }) {
   return (
-    <section className="flex flex-col gap-2">
+    <section data-tour={tour} className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between">
         <h3 className="text-[12px] font-semibold tracking-wide text-muted uppercase">{title}</h3>
         {hint && <span className="text-[11px] text-subtle">{hint}</span>}
@@ -24,8 +24,9 @@ export function ProgressTab() {
   const last = records[records.length - 1];
   const recent = records.slice(-8).reverse();
   if (!last) {
+    // The walkthrough's fitness step frames this placeholder until the chart exists.
     return (
-      <div className="p-4">
+      <div className="p-4" data-tour="fitness">
         <Empty />
       </div>
     );
@@ -37,13 +38,13 @@ export function ProgressTab() {
         <Stat label="Species" value={last.stats.species.length} hint="Groups of similar brains that breed among themselves" />
         <Stat label="Avg links" value={last.stats.meanConnections.toFixed(1)} hint="Average number of working connections in a brain" />
       </div>
-      <Section title="Fitness" hint="best, median, mean">
+      <Section title="Fitness" hint="best, median, mean" tour="fitness">
         <FitnessChart records={records} />
       </Section>
       <Section title="Benchmark" hint="unseen tracks, 0 to 100">
         <BenchmarkChart records={records} />
       </Section>
-      <Section title="Species" hint="share of the population">
+      <Section title="Species" hint="share of the population" tour="species">
         <SpeciesChart records={records} />
       </Section>
       <Section title="Recent champions">

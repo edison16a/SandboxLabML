@@ -10,9 +10,9 @@ SandboxLabML trains NEAT neural networks in the browser and draws them in 3D. Th
 | `src/workers/` | Web Workers that wrap the engine: a coordinator, a pool of sim workers and a replay worker, plus the main-thread client. | `engine` |
 | `src/render/` | React Three Fiber scenes. Reads snapshots, never simulates. | `engine` types, `features` stores |
 | `src/storage/` | The only IndexedDB code (Dexie): runs, generations, checkpoints, scripts, blueprints, saved Sandbox tracks, lesson progress. | `engine` |
-| `src/features/` | Pages and panels: labs, charts, network graph, model card, runs, landing. | everything above |
+| `src/features/` | Pages and panels: labs, charts, network graph, model card, runs, landing, onboarding tours. | everything above |
 | `src/studio/` | Script Studio: code editor, block editor, reference, test runs, lessons and the benchmark tab. | everything above |
-| `src/ui/` | Small design system on Radix primitives, plus the logo and GitHub button. | nothing app specific |
+| `src/ui/` | Small design system on Radix primitives, plus the logo, the GitHub button and the walkthrough engine. | nothing app specific |
 | `app/` | Next.js routes. Thin wrappers around `features`. | `features` |
 
 ## Threads
@@ -94,6 +94,17 @@ The first screen of the landing page plays both labs live behind the page text, 
 * Before a scene first shows, `Prewarm` gets it ready without drawing: its logic steps until its data is in, then its shaders compile in the background through `KHR_parallel_shader_compile` and its textures upload. Getting the second scene ready never stalls the first.
 * The brain card runs the inputs the worker sends with each frame through a local copy of the network and repaints with `NetworkPainter`, which uses the graph's layout and colors but allocates nothing per paint. During Hide and Seek it shows the hider's brain while hiders hide and the seeker's once seekers wake, and the camera follows that player.
 * Leaving the page terminates the worker and R3F loses both WebGL contexts. A browser test checks both.
+
+## Walkthrough
+
+Each lab opens a guided tour the first time someone visits it. The engine lives in `src/ui/walkthrough/` and knows nothing about the labs; the steps live in `src/features/onboarding/`.
+
+* A step names what it frames with a selector, almost always a `data-tour` attribute, so restyling a control never breaks the tour. A selector that matches several elements frames them all, and a `fallback` covers controls a narrow layout hides.
+* One `requestAnimationFrame` loop in `useStage` measures the target each frame and springs the hole, its outline and the card toward it, writing straight to the DOM. The frame follows a target that moves or resizes, and React renders only when the step changes. Reduced motion snaps instead and fades.
+* The dim layer is one SVG path drawn with the evenodd rule, so the hole is unpainted and the page under it stays live and clickable. `placeCard` puts the card beside the frame without covering it; under 640 px it becomes a sheet along whichever edge hides less of the frame.
+* A step can wait for the user to press the real control, like Train. Its `done` check runs a few times a second, and once it passes the step shows its follow up text, often framing what the action set going. A step's `prepare` puts the lab in the state its words describe, like back to 1x before the steps that show one car drive.
+* Right or Enter goes on, Left goes back and Escape skips. The page keeps the keys it needs: the arrows inside tab lists, toggle groups and sliders, Enter on a focused control, and Escape while a lab has something to back out of. The card is a non modal dialog, so lab shortcuts like Space still work from inside it.
+* The localStorage keys `sandboxlab.tour.racing` and `sandboxlab.tour.hideseek` hold `1` once a tour was finished or skipped. The browser tests set them to keep tours out of the way, and each lab's help menu replays its tour.
 
 ## Scripts
 

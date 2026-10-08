@@ -2,9 +2,11 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { HIDE_SEEK_TOUR } from '@/features/onboarding/hideSeekTour';
 import { useTrainScriptParam } from '@/features/scripts/useTrainScriptParam';
 import { HideSeekCanvas } from '@/render/hideseek/HideSeekCanvas';
 import { ResizeHandle } from '@/ui/split/ResizeHandle';
+import { Walkthrough } from '@/ui/walkthrough/Walkthrough';
 import { useCameraPreference } from '../hooks/useCameraPreference';
 import { useHideSeekBootstrap } from '../hooks/useHideSeekBootstrap';
 import { useHideSeekInspect } from '../hooks/useHideSeekInspect';
@@ -16,7 +18,6 @@ import { InputsCard } from './hud/InputsCard';
 import { SandboxCard } from './hud/SandboxCard';
 import { ViewportHud } from './hud/ViewportHud';
 import { NewRunDialog } from './newrun/NewRunDialog';
-import { HideSeekTour } from './HideSeekTour';
 import { SidePanel } from './panel/SidePanel';
 import { HideSeekToolbar } from './toolbar/HideSeekToolbar';
 
@@ -46,9 +47,10 @@ export function HideSeekLab() {
   const streams = ready ? session.streams : null;
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
+    // Under lg the viewport and the side panel stack taller than the screen, so the stack scrolls.
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col max-lg:overflow-y-auto lg:flex-row">
       <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col lg:min-w-[600px]">
-        <div ref={viewport} className="@container relative min-h-0 flex-1 bg-bg" data-testid="hs-viewport">
+        <div ref={viewport} className="@container relative min-h-0 flex-1 bg-bg" data-testid="hs-viewport" data-tour="viewport">
           {streams ? (
             <HideSeekCanvas getFeed={getFeed} feeds={feeds} schemas={schemas} onMoveBox={onMoveBox} onToggleLock={onToggleLock} />
           ) : (
@@ -64,11 +66,11 @@ export function HideSeekLab() {
       </div>
       {/* The props mirror the panel's classes below. 380 px keeps every tab visible, and with the viewport's 600 px it fits a 1024 px (lg) window. */}
       <ResizeHandle id="hideseek" cssVar="--panel-w" pane="after" defaultSize={400} min={380} max={900} label="Resize the side panel" />
-      <aside className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[var(--panel-w,400px)] lg:min-w-[380px] lg:shrink lg:border-t-0 lg:border-l">
+      <aside data-tour="panel" className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[var(--panel-w,400px)] lg:min-w-[380px] lg:shrink lg:border-t-0 lg:border-l">
         <SidePanel />
       </aside>
       <NewRunDialog open={newRun} onOpenChange={setNewRun} initialScript={pendingScript} />
-      {ready && <HideSeekTour />}
+      <Walkthrough tour={HIDE_SEEK_TOUR} ready={ready} />
     </div>
   );
 }
