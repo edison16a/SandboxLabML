@@ -21,6 +21,8 @@ import { useRacingScene } from './sceneContext';
 import { GhostTrails } from './GhostTrails';
 
 const MAX_GHOSTS = 64;
+/** Distance between two car centers along either axis past which their bodies cannot touch, m. */
+const TOUCH = 5.2;
 
 const STRIDE = RACING_SNAPSHOT.stride;
 
@@ -28,14 +30,14 @@ const STRIDE = RACING_SNAPSHOT.stride;
  * Past champions replayed as translucent ghosts in one instanced draw call.
  * Older generations are cooler and fainter; a crashed ghost holds still for
  * a second, then fades, and an older ghost fades out where a newer one
- * drives through it.
+ * or a live car drives through it.
  *
  * A depth only pass draws first, so each pixel keeps just the nearest ghost
  * surface. Without it every wheel, seat of glass and car behind shows
  * through, and a pack of ghosts on the start line turns to mud.
  */
 export function GhostCars() {
-  const { ghosts, frame } = useRacingScene();
+  const { ghosts, frame, population } = useRacingScene();
   const mesh = useRef<THREE.InstancedMesh>(null);
   const depthMesh = useRef<THREE.InstancedMesh>(null);
   const tier = useRacingLab((s) => s.activeTier);
@@ -90,6 +92,9 @@ export function GhostCars() {
     const a = ghosts.alpha();
     const n = Math.min(ghosts.count, MAX_GHOSTS);
     fleet.update(ghosts, n, run?.racing?.car ?? DEFAULT_CAR, Math.min(dt, 0.1));
+    // In Both, the live cars drive the same line: a see through ghost inside a solid car reads as a glitch, so it gives way.
+    const live = view === 'both' && population?.curr ? population.curr.buffer : null;
+    const liveCount = live ? Math.min(population?.count ?? 0, Math.floor(live.length / STRIDE)) : 0;
     const poses = tmp.poses;
     for (let i = 0; i < n; i++) {
       blendPose(prev, buf, i * STRIDE, a, tmp.pose);
@@ -116,6 +121,12 @@ export function GhostCars() {
         if (tmp.keep[j] < 0.5) continue;
         tmp.other.set(poses[j * 3], 0, -poses[j * 3 + 1]);
         clear = Math.min(clear, apart(gx, gz, tmp.other, poses[j * 3 + 2]));
+      }
+      for (let j = 0; live && j < liveCount; j++) {
+        const o = j * STRIDE;
+        if (j === frame.hiddenPopulation || Math.abs(live[o] - gx) > TOUCH || Math.abs(live[o + 1] + gz) > TOUCH) continue;
+        tmp.other.set(live[o], 0, -live[o + 1]);
+        clear = Math.min(clear, apart(gx, gz, tmp.other, live[o + 2]));
       }
       clear = clears.place(i, settle(clear, clears.shown[i]), restart);
       const opacity = (hover ? 0.9 : ghostOpacity(t)) * fade * clear;
