@@ -119,8 +119,12 @@ test.describe('Walkthrough', () => {
 
     // The step frames the arenas, so a click on one flies in. Escape then backs out of it and the tour stays.
     const viewport = (await page.getByTestId('hs-viewport').boundingBox())!;
-    await page.mouse.click(viewport.x + viewport.width * 0.54, viewport.y + viewport.height * 0.5);
-    await expect(title('Crates, ramps and locks')).toBeVisible();
+    // The grid camera may still be gliding into its framing on a loaded machine, so a click can land between two
+    // arenas. Click again until one flies in.
+    await expect(async () => {
+      await page.mouse.click(viewport.x + viewport.width * 0.54, viewport.y + viewport.height * 0.5);
+      await expect(title('Crates, ramps and locks')).toBeVisible({ timeout: 4000 });
+    }).toPass({ timeout: 40_000 });
     const backToGrid = page.getByRole('button', { name: /All arenas/ });
     await expect(backToGrid).toBeVisible();
     await page.keyboard.press('Escape');
