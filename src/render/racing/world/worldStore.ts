@@ -68,17 +68,32 @@ function store(key: string, world: WorldData | null, step: number, terrain: Terr
   notify();
 }
 
-/** The shared builder worker, started on first use; null where workers do not exist, which builds on this thread. */
+/**
+ * The builder worker, started when something needs building; null where
+ * workers do not exist, which builds on this thread. Once nothing is left
+ * to build it is closed, so a scene that has its world holds no worker and
+ * a page that leaves the lab or the landing hero keeps nothing running.
+ */
 function builder(): Worker | null {
   if (worker !== undefined) return worker;
   if (typeof Worker === 'undefined') return (worker = null);
-  worker = new Worker(new URL('./world.worker.ts', import.meta.url), { type: 'module', name: 'racing-world' });
-  worker.onmessage = (e: MessageEvent<WorldReply>) => {
+  const w = new Worker(new URL('./world.worker.ts', import.meta.url), { type: 'module', name: 'racing-world' });
+  w.onmessage = (e: MessageEvent<WorldReply>) => {
     const { key, step, parts, terrain } = e.data;
     const track = tracks.get(key);
     if (track) store(key, worlds.has(key) ? null : assembleWorld(track, parts), step, terrain);
+    else {
+      // The track was dropped from the cache while this was on its way; only clear what was asked.
+      pendingWorld.delete(key);
+      pendingTerrain.delete(`${key}:${step}`);
+    }
+    if (pendingWorld.size === 0 && pendingTerrain.size === 0 && worker === w) {
+      w.terminate();
+      worker = undefined;
+    }
   };
-  return worker;
+  worker = w;
+  return w;
 }
 
 /**
