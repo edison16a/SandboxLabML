@@ -9,16 +9,20 @@ import { AISLE_EVERY, FRONT, ROW_DEPTH, ROWS, rowHeight } from './dimensions';
  * the shoulders, a neck and head, and two arms. A `part` attribute tells
  * the shader which is which: 0 takes the shirt color, 1 skin, 2 an arm
  * that lifts when the crowd cheers, 3 trousers. Smooth enough at the
- * distance a crowd is seen from, a few hundred triangles each.
+ * distance a crowd is seen from, a few hundred triangles each. `light`
+ * builds the Low tier's fan with fewer sides: a full stand of them was a
+ * third of that tier's triangles.
  */
-export function spectatorGeometry(): THREE.BufferGeometry {
-  const arm = (s: number) => new THREE.CylinderGeometry(0.045, 0.05, 0.46, 6).rotateZ(s * 0.18).translate(s * 0.22, 0.7, 0.02);
+export function spectatorGeometry(light = false): THREE.BufferGeometry {
+  // Sides round the torso, the shoulders and head (around, then up) and each arm.
+  const n = light ? { torso: 6, shoulders: [6, 3], head: [7, 5], arm: 4 } : { torso: 9, shoulders: [9, 5], head: [10, 8], arm: 6 };
+  const arm = (s: number) => new THREE.CylinderGeometry(0.045, 0.05, 0.46, n.arm).rotateZ(s * 0.18).translate(s * 0.22, 0.7, 0.02);
   const pieces: Array<[THREE.BufferGeometry, number]> = [
     [new THREE.BoxGeometry(0.34, 0.14, 0.42).translate(0, 0.42, -0.08), 3],
-    [new THREE.CylinderGeometry(0.15, 0.17, 0.5, 9).scale(1, 1, 0.72).translate(0, 0.72, 0.02), 0],
-    [new THREE.SphereGeometry(0.17, 9, 5, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.15, 0.5, 0.75).translate(0, 0.96, 0.02), 0],
-    [new THREE.CylinderGeometry(0.045, 0.05, 0.08, 6).translate(0, 1.04, 0.02), 1],
-    [new THREE.SphereGeometry(0.105, 10, 8).scale(0.92, 1.1, 1).translate(0, 1.16, 0.03), 1],
+    [new THREE.CylinderGeometry(0.15, 0.17, 0.5, n.torso, 1, light).scale(1, 1, 0.72).translate(0, 0.72, 0.02), 0],
+    [new THREE.SphereGeometry(0.17, n.shoulders[0], n.shoulders[1], 0, Math.PI * 2, 0, Math.PI / 2).scale(1.15, 0.5, 0.75).translate(0, 0.96, 0.02), 0],
+    [new THREE.CylinderGeometry(0.045, 0.05, 0.08, n.arm, 1, true).translate(0, 1.04, 0.02), 1],
+    [new THREE.SphereGeometry(0.105, n.head[0], n.head[1]).scale(0.92, 1.1, 1).translate(0, 1.16, 0.03), 1],
     [arm(-1), 2],
     [arm(1), 2],
   ];

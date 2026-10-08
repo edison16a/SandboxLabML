@@ -37,9 +37,9 @@ export function Grandstands({ layout, tier, seed }: { layout: StadiumLayout; tie
   const { frame } = useRacingScene();
   const stands = layout.stands;
   const geo = useDisposable(() => {
-    const g = { bowls: stands.map((s) => bowlGeometry(s.length)), roofs: stands.map((s) => roofGeometry(s.length)), fan: spectatorGeometry() };
+    const g = { bowls: stands.map((s) => bowlGeometry(s.length)), roofs: stands.map((s) => roofGeometry(s.length)), fan: spectatorGeometry(tier === 'low') };
     return { ...g, dispose: () => [...g.bowls, ...g.roofs, g.fan].forEach((x) => x.dispose()) };
-  }, [stands]);
+  }, [stands, tier]);
   const look = useDisposable(() => {
     const concrete = withHaze(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.82, envMapIntensity: 0.8 }));
     const metal = withHaze(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.5, envMapIntensity: 0.9 }));
