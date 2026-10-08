@@ -69,9 +69,9 @@ function Portal({ view, pane, children }: { view: StageView; pane: Pane; childre
  * The landing hero's live scenes in one WebGL canvas: the racing scene and
  * the arena side by side (or stacked on a tall screen), each in a portal
  * with its own camera, drawn into its own pane by SplitRenderer. One
- * context instead of two halves the GPU memory and keeps the browser's
- * context limit well clear. The hero has no effect composer, so both
- * scenes share one renderer cleanly.
+ * context instead of two saves a second set of buffers and compiled
+ * programs, and keeps well clear of the browser's limit on contexts. The
+ * hero has no effect composer, so both scenes share one renderer cleanly.
  */
 export function HeroStage({ car, arena, layout, tier, running, onShown }: Props) {
   const loop = useFrameLoop(running ? 'live' : 'held');
