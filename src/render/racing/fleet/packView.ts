@@ -34,7 +34,7 @@ const TOUCH = 5.2;
  * another car, or any car but the followed one in the chase view. Faint
  * enough that a stack of them reads as one shape, solid enough to count.
  */
-export const GHOST = 0.32;
+export const GHOST = 0.4;
 
 /**
  * Picks how to draw each car of the live generation: solid, as a ghost or
