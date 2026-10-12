@@ -5,6 +5,7 @@ import { Dices, PencilRuler } from 'lucide-react';
 import { BUILT_IN_TRACKS } from '@/engine/racing/track/presets';
 import { randomTrackSpec } from '@/engine/racing/track/randomTrack';
 import type { TrackSpec } from '@/engine/racing/track/types';
+import { Loading } from '@/ui/feedback/Spinner';
 import { toast } from '@/ui/toast/toastStore';
 import { racingSession } from '../../session/RacingSession';
 import { blankLoop, sameRoad } from '../../session/trackChoice';
@@ -25,6 +26,7 @@ export function TrackGallery() {
   const picked = useRacingLab((s) => s.sandboxPicked);
   const set = useRacingLab((s) => s.set);
   const saved = useSavedTracks((s) => s.tracks);
+  const loaded = useSavedTracks((s) => s.loaded);
   const load = useSavedTracks((s) => s.load);
   const remove = useSavedTracks((s) => s.remove);
   const restore = useSavedTracks((s) => s.restore);
@@ -80,8 +82,10 @@ export function TrackGallery() {
               <TrackTile key={t.id} label={t.name} spec={t} tag={tag(t)} selected={exact === t.id} onSelect={() => pick(t)} onRemove={() => void onRemove(t)} />
             ))}
           </div>
-        ) : (
+        ) : loaded ? (
           <p className="text-[12px] text-white/50">None yet</p>
+        ) : (
+          <Loading label="Loading your tracks" className="justify-start text-[12px] text-white/50" />
         )}
       </div>
     </div>
