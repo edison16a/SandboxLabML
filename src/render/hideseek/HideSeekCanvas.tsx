@@ -18,9 +18,8 @@ import { GRID_LAYER, XRAY_LAYER } from './grid/scratch';
 import { overlayCounts, RaysOverlay } from './overlay/RaysOverlay';
 import { SandboxArena, sandboxStats } from './sandbox/SandboxArena';
 import { Backdrop } from './scene/Backdrop';
-import { InvalidateOnChange, MainPass, tierDpr, ToneMappingSync } from './scene/RenderHelpers';
+import { InvalidateOnChange, tierDpr, ToneMappingSync } from './scene/RenderHelpers';
 import { StudioLighting } from './scene/StudioLighting';
-import { PovViews } from './showcase/PovViews';
 import { ShowcaseArena } from './showcase/ShowcaseArena';
 import { ShowcaseEffects } from './showcase/ShowcaseEffects';
 
@@ -44,14 +43,12 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
   const sandbox = useHideSeekLab((s) => s.mode === 'sandbox');
   const effectsOn = useHideSeekLab((s) => s.effects);
   const photo = useHideSeekLab((s) => s.photoMode);
-  const pov = useHideSeekLab((s) => s.pov);
   // Max trains headless with no replay, so nothing moves: draw only when the camera does.
   const animating = useHideSeekLab((s) => (s.status === 'running' && s.speed !== 'max') || s.replaying || (s.mode === 'sandbox' && s.sandbox.playing));
   const loop = useFrameLoop(animating ? 'live' : 'idle');
   const frame = useMemo(() => createHsFrame(), []);
   const value = useMemo(() => ({ frame, getFeed, schemas, onMoveBox, onToggleLock }), [frame, getFeed, schemas, onMoveBox, onToggleLock]);
   const composer = showcase && effectsOn && (tier === 'high' || tier === 'ultra');
-  const pip = showcase && pov && tier !== 'low' && !photo;
   const instances = useCallback(
     () => ({
       arenas: frame.count,
@@ -97,8 +94,6 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
         <RaysOverlay />
         <CameraRig />
         {composer && <ShowcaseEffects tier={tier} photo={photo} />}
-        {pip && <PovViews />}
-        {pip && !composer && <MainPass />}
         <StatsProbe wholeFrame instances={instances} />
       </HsSceneContext.Provider>
     </Canvas>

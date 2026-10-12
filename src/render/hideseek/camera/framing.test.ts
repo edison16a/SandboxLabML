@@ -37,7 +37,7 @@ describe('camera framing', () => {
     expect(Math.hypot(s.px - s.tx, s.py - s.ty, s.pz - s.tz)).toBeLessThan(Math.hypot(far.px - far.tx, far.py - far.ty, far.pz - far.tz) * 0.95);
   });
 
-  it('keeps the whole floor of one room above the picture in picture strip', () => {
+  it('keeps the whole floor of one room above the bottom HUD', () => {
     const s = closeShot(0, 0, ARENA_SPAN, FOV, ASPECT);
     const h = ARENA_SPAN / 2;
     for (const shot of [s, arenaShot(0, 0, ARENA_SPAN, FOV, ASPECT, false)]) {

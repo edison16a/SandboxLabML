@@ -1,6 +1,6 @@
 'use client';
 
-import { Camera, ScanEye, Sparkles, SquareSplitHorizontal } from 'lucide-react';
+import { Camera, ScanEye, Sparkles } from 'lucide-react';
 import { Button } from '@/ui/primitives/Button';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Select } from '@/ui/primitives/Select';
@@ -31,7 +31,6 @@ export function ViewControls() {
   const grid = useHideSeekLab((s) => s.gridSize);
   const camera = useHideSeekLab((s) => s.camera);
   const inputs = useHideSeekLab((s) => s.inputsOverlay);
-  const pov = useHideSeekLab((s) => s.pov);
   const effects = useHideSeekLab((s) => s.effects);
   const weak = useSettings(gridCapped);
   const set = useHideSeekLab((s) => s.set);
@@ -62,11 +61,6 @@ export function ViewControls() {
         <Button data-tour="inputs" size="sm" variant="secondary" className={inputs ? on : glass} onClick={() => set({ inputsOverlay: !inputs })} aria-pressed={inputs}>
           <ScanEye />
           Inputs
-        </Button>
-      </Tooltip>
-      <Tooltip content="First person views of both agents">
-        <Button size="icon-sm" variant="secondary" className={pov ? on : glass} onClick={() => set({ pov: !pov })} aria-pressed={pov} aria-label="Agent views">
-          <SquareSplitHorizontal />
         </Button>
       </Tooltip>
       <Tooltip content="Lighting effects, at High quality">

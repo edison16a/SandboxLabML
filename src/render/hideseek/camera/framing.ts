@@ -17,8 +17,8 @@ export const CLOSE_AZIMUTH = (18 * Math.PI) / 180;
 const TOP = Math.PI / 2 - 1e-3;
 
 /**
- * One room seen at an angle keeps its whole floor above the picture in
- * picture strip along the bottom, so no agent hides under it. The top row
+ * One room seen at an angle keeps its whole floor above the bottom row of
+ * hints and the Sandbox card, so no agent hides under them. The top row
  * of HUD chips may sit over the far wall, which can take it.
  */
 const ROOM_FILL: ScreenWindow = { h: 0.94, up: 0.9, down: 0.6 };

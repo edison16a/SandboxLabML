@@ -77,7 +77,7 @@ describe('the close action shot', () => {
     expect(d).toBeLessThan(Math.hypot(room.px - room.tx, room.py - room.ty, room.pz - room.tz) * 0.7);
   });
 
-  it('keeps both players on screen, above the picture in picture strip', () => {
+  it('keeps both players on screen, above the bottom HUD', () => {
     const agents = [hider(-5, 4), seeker(3, -2)];
     const { camera } = film(agents, 3);
     for (const a of agents) {

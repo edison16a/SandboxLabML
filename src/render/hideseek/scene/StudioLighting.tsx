@@ -33,8 +33,7 @@ export function StudioLighting({ tier, shadows }: { tier: HsQualityTier; shadows
 
   useEffect(() => {
     // Shadow maps are redrawn by hand once a frame. Left automatic, every
-    // render call (each first person view, the contact shadow pass) would
-    // redraw them again.
+    // render call (the contact shadow pass too) would redraw them again.
     gl.shadowMap.autoUpdate = false;
     return () => {
       gl.shadowMap.autoUpdate = true;

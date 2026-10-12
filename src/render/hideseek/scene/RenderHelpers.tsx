@@ -1,22 +1,12 @@
 'use client';
 
 import * as THREE from 'three';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useThree } from '@react-three/fiber';
 import { useEffect } from 'react';
 import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
 import type { HsQualityTier } from '@/features/hideseek/state/types';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
 import { HS_TONE_MAPPING } from '../palette';
-
-/**
- * Renders the main scene when nothing else does. R3F stops its own render
- * as soon as any frame callback has a positive priority, which the picture
- * in picture pass does; with the effect composer off, this takes its place.
- */
-export function MainPass() {
-  useFrame(({ gl, scene, camera }) => gl.render(scene, camera), 1);
-  return null;
-}
 
 /**
  * The renderer tone maps unless the effect composer does it, in which

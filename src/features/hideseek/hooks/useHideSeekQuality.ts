@@ -10,9 +10,8 @@ import type { HsQualityTier } from '../state/types';
  * Maps a Settings quality onto the Hide and Seek tiers. High stays high
  * rather than ultra: ultra quadruples the shadow map and runs ambient
  * occlusion at full resolution, which an ordinary discrete GPU cannot hold
- * next to the two picture in picture views, and High is the default there.
- * Photo mode turns those views off and is about the still, so High steps
- * up to ultra while it is open. ?quality=ultra still pins ultra outright.
+ * at a steady frame rate. Photo mode is about the still, so High steps up
+ * to ultra while it is open. ?quality=ultra still pins ultra outright.
  */
 export function hideSeekTier(quality: QualityPin, photo: boolean): HsQualityTier {
   return quality === 'high' && photo ? 'ultra' : quality;

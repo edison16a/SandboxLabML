@@ -32,8 +32,6 @@ export interface HideSeekLabState {
   /** Arena shown in the showcase, or null for the grid overview. */
   focus: number | null;
   camera: HsCamera;
-  /** Picture in picture views from both agents' eyes. */
-  pov: boolean;
   /** Render tier. Settings own the choice; useHideSeekQuality copies it here for the renderer. */
   activeTier: HsQualityTier;
   effects: boolean;
@@ -89,7 +87,6 @@ export const useHideSeekLab = create<HideSeekLabState>((set, get) => ({
   gridSize: 50,
   focus: null,
   camera: 'close',
-  pov: true,
   activeTier: 'high',
   effects: true,
   photoMode: false,

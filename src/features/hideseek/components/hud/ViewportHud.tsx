@@ -5,7 +5,6 @@ import { useHideSeekLab } from '../../state/hideSeekStore';
 import { FocusBar } from './FocusBar';
 import { HiddenHistogram } from './HiddenHistogram';
 import { PhotoBar } from './PhotoBar';
-import { PipFrames } from './PipFrames';
 import { RoundChips } from './RoundChips';
 import { ViewControls } from './ViewControls';
 
@@ -26,7 +25,6 @@ export function ViewportHud({ viewport }: { viewport: React.RefObject<HTMLDivEle
   const overview = mode === 'train' && grid > 1 && focus === null;
   return (
     <>
-      <PipFrames />
       <div className="pointer-events-none absolute top-3 left-3 flex max-w-[52%] flex-col items-start gap-2">
         <RoundChips />
         <FocusBar />
