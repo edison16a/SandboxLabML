@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { blueprintInputCount, blueprintShape, validateBlueprint } from '@/engine/blueprints/shape';
 import type { Blueprint } from '@/engine/blueprints/types';
+import { startingLinks } from '@/engine/neat/startShape';
 import { copyId, saveBlueprint } from '@/storage/blueprints';
 import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
@@ -23,13 +24,7 @@ interface Props<B extends Blueprint> {
 
 /** Starting parameter count for a shape, so the dialog can show how big the brain begins. */
 function startingParameters(b: Blueprint): number {
-  const s = blueprintShape(b);
-  if (s.wiring === 'hidden') {
-    const h = s.hiddenCount ?? 4;
-    return (s.inputCount + 1) * h + (h + 1) * s.outputCount;
-  }
-  const links = (s.inputCount + 1) * s.outputCount;
-  return s.wiring === 'sparse' ? Math.round(links * 0.5 + s.outputCount * 0.5) : links;
+  return startingLinks(blueprintShape(b));
 }
 
 /** The form for a blueprint's game. The draft keeps the base's game, so the casts only undo the narrowing. */

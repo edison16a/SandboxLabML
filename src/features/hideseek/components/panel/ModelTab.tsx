@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { blueprintShape } from '@/engine/blueprints/shape';
+import { startingLinks } from '@/engine/neat/startShape';
 import type { HideSeekRecord } from '@/engine/training/hideseekRecords';
 import { hideSeekBlueprints } from '@/engine/training/hideseekRunConfig';
 import type { GenerationRecord } from '@/engine/training/records';
@@ -52,10 +53,8 @@ export function ModelTab() {
   const reference = useMemo(() => {
     if (!blueprint) return 0;
     const shape = blueprintShape(blueprint, 0);
-    // Direct wiring links every input and the bias to every output.
-    return shape.wiring === 'hidden'
-      ? (shape.inputCount + 1) * (shape.hiddenCount ?? 4) + ((shape.hiddenCount ?? 4) + 1) * shape.outputCount
-      : (shape.inputCount + 1) * shape.outputCount;
+    // Sparse wiring is measured against the full direct wiring, the brain it can grow into.
+    return startingLinks(shape.wiring === 'sparse' ? { ...shape, wiring: 'direct' } : shape);
   }, [blueprint]);
   const latest = cards[cards.length - 1];
   return (
