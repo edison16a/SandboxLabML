@@ -16,6 +16,7 @@ import { LabToolbar } from './LabToolbar';
 import { NewRunDialog } from './NewRunDialog';
 import { RACING_TOUR } from '@/features/onboarding/racingTour';
 import { useTrainScriptParam } from '@/features/scripts/useTrainScriptParam';
+import { LoadingCover } from '@/ui/feedback/LoadingCover';
 import { Walkthrough } from '@/ui/walkthrough/Walkthrough';
 import { ResizeHandle } from '@/ui/split/ResizeHandle';
 import { SidePanel } from './SidePanel';
@@ -39,6 +40,8 @@ export function RacingLab() {
   const view = useRacingLab((s) => s.view);
   const hasTelemetry = useRacingLab((s) => s.telemetry.length > 0);
   const [newRun, setNewRun] = useState(false);
+  // False until the circuit's scenery has drawn, and again while a new track builds it.
+  const [sceneReady, setSceneReady] = useState(false);
   const openNewRun = useCallback(() => setNewRun(true), []);
   const pendingScript = useTrainScriptParam('racing', params, openNewRun);
   useLabShortcuts(openNewRun);
@@ -57,7 +60,7 @@ export function RacingLab() {
       <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col lg:min-w-[600px]">
         <div data-tour="viewport" className="relative min-h-0 flex-1 bg-[#b9cfe6]">
           {track && streams ? (
-            <RacingCanvas track={track} population={streams.population} ghosts={streams.ghosts} schema={schema}>
+            <RacingCanvas track={track} population={streams.population} ghosts={streams.ghosts} schema={schema} onReady={setSceneReady}>
               {mode === 'sandbox' && editing && spec && (
                 <TrackEditor
                   spec={spec}
@@ -69,8 +72,9 @@ export function RacingLab() {
               )}
             </RacingCanvas>
           ) : (
-            <div className="flex h-full items-center justify-center bg-bg text-[13px] text-muted">Starting...</div>
+            <div className="h-full bg-bg" />
           )}
+          <LoadingCover loading={!streams || !sceneReady} label={streams ? 'Building the circuit' : 'Starting the lab'} />
           {streams && <ViewportHud population={streams.population} />}
           <InputsCard />
           <SandboxPanel />
@@ -88,7 +92,7 @@ export function RacingLab() {
         <SidePanel network={<NetworkTab />} inputs={<InputsTab />} model={<ModelTab />} />
       </aside>
       <NewRunDialog open={newRun} onOpenChange={setNewRun} initialScript={pendingScript} />
-      <Walkthrough tour={RACING_TOUR} ready={ready} />
+      <Walkthrough tour={RACING_TOUR} ready={ready && sceneReady} />
     </div>
   );
 }

@@ -23,6 +23,7 @@ import { RacingWorld } from './RacingWorld';
 import { RaysOverlay } from './RaysOverlay';
 import { createFrame, RacingSceneContext } from './sceneContext';
 import { TireEffects } from './TireEffects';
+import { WorldReady } from './world/WorldReady';
 
 interface Props {
   track: Track;
@@ -30,13 +31,15 @@ interface Props {
   ghosts: SnapshotStream | null;
   schema: InputSpec[];
   children?: React.ReactNode;
+  /** Told when the scenery is in and drawn, and when a new track starts building it again. */
+  onReady?: (ready: boolean) => void;
 }
 
 /**
  * The Racing viewport. It only reads snapshots; nothing here can change a
  * training result, so quality and effects can scale freely.
  */
-export function RacingCanvas({ track, population, ghosts, schema, children }: Props) {
+export function RacingCanvas({ track, population, ghosts, schema, children, onReady }: Props) {
   const tier = useRacingLab((s) => s.activeTier);
   const camera = useCameraMode();
   // While a watch-speed run is paused nothing moves (ghosts pause too), so only redraw on demand.
@@ -66,6 +69,7 @@ export function RacingCanvas({ track, population, ghosts, schema, children }: Pr
       <RacingSceneContext.Provider value={value}>
         <FrameDriver />
         <RacingWorld track={track} tier={tier} focus={target} editing={editing} />
+        {onReady && <WorldReady track={track} tier={tier} editing={editing} onChange={onReady} />}
         <PopulationCars castShadow={tier === 'high'} />
         <GhostCars />
         <ChampionCar />
