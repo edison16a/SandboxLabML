@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react';
 import { Sprout } from 'lucide-react';
 import { blueprintShape } from '@/engine/blueprints/shape';
 import { startingLinks } from '@/engine/neat/startShape';
+import { RACING_OUTPUTS } from '@/engine/racing/sensors/inputSchema';
+import { ModelDownloads } from '@/features/modelcard/ModelDownloads';
 import { BlueprintDialog } from '@/features/blueprints/BlueprintDialog';
 import { ModelCard } from '@/features/modelcard/ModelCard';
 import { forkRacingRun } from '@/storage/forkRun';
@@ -53,6 +55,16 @@ export function ModelTab() {
           Grow this brain
         </Button>
       </div>
+      <ModelDownloads
+        source={{
+          run,
+          genome: latest.genome,
+          generation: latest.generation,
+          fitness: latest.champion.fitness,
+          inputLabels: schema.map((s) => s.label),
+          outputLabels: RACING_OUTPUTS.map((o) => o.label),
+        }}
+      />
       <ModelCard runId={run.id} genome={latest.genome} records={records} reference={reference} blueprintName={run.blueprint.name} />
       {run.blueprint.env === 'racing' && (
         <BlueprintDialog

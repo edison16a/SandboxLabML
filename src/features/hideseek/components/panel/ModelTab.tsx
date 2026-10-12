@@ -2,12 +2,14 @@
 
 import { useMemo } from 'react';
 import { blueprintShape } from '@/engine/blueprints/shape';
+import { HIDESEEK_OUTPUTS } from '@/engine/hideseek/sensing/inputSchema';
 import { startingLinks } from '@/engine/neat/startShape';
 import type { HideSeekRecord } from '@/engine/training/hideseekRecords';
 import { hideSeekBlueprints } from '@/engine/training/hideseekRunConfig';
 import type { GenerationRecord } from '@/engine/training/records';
 import { inputGroups } from '@/features/modelcard/inputGroups';
 import { ModelCard } from '@/features/modelcard/ModelCard';
+import { ModelDownloads } from '@/features/modelcard/ModelDownloads';
 import { useTeamSchemas } from '../../hooks/useTeamSchema';
 import { useHideSeekLab } from '../../state/hideSeekStore';
 import type { Team } from '../../state/types';
@@ -65,7 +67,20 @@ export function ModelTab() {
       {!run || !latest || !blueprint ? (
         <div className="p-4 text-[13px] text-muted">Appears after the first generation.</div>
       ) : (
-        <ModelCard runId={run.id} genome={latest.genome} records={cards} reference={reference} blueprintName={blueprint.name} senses={senses} />
+        <>
+          <ModelDownloads
+            source={{
+              run,
+              team,
+              genome: latest.genome,
+              generation: latest.generation,
+              fitness: latest.champion.fitness,
+              inputLabels: schemas[team === 'hider' ? 0 : 1].map((s) => s.label),
+              outputLabels: HIDESEEK_OUTPUTS.map((o) => o.label),
+            }}
+          />
+          <ModelCard runId={run.id} genome={latest.genome} records={cards} reference={reference} blueprintName={blueprint.name} senses={senses} />
+        </>
       )}
     </div>
   );
