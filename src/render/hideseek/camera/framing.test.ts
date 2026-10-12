@@ -44,7 +44,7 @@ describe('camera framing', () => {
       for (const [x, z] of [[-h, -h], [h, -h], [-h, h], [h, h]]) {
         const p = project(shot, x, 0, z);
         expect(Math.abs(p.x)).toBeLessThan(1);
-        expect(p.y).toBeGreaterThan(-0.61);
+        expect(p.y).toBeGreaterThan(-0.86);
       }
     }
     // The room still fills most of the width.

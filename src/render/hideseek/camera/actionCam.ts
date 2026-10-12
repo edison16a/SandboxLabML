@@ -16,7 +16,7 @@ import { WallDodge, type RoomPoint } from './wallDodge';
  */
 export const ACTION_ELEVATION = (40 * Math.PI) / 180;
 /** Where the action may sit on screen: the full width, below the row of HUD chips along the top and above the hints and Sandbox card along the bottom. */
-const ACTION_FILL: ScreenWindow = { h: 0.97, up: 0.84, down: 0.6 };
+const ACTION_FILL: ScreenWindow = { h: 0.97, up: 0.84, down: 0.85 };
 /** Height the shot keeps in frame over the floor, m: a player standing on a crate. */
 const ACTION_HEIGHT = 2.2;
 /** The middle of a player's head over its feet, m: what must stay in sight. */

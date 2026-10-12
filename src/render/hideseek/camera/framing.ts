@@ -17,13 +17,13 @@ export const CLOSE_AZIMUTH = (18 * Math.PI) / 180;
 const TOP = Math.PI / 2 - 1e-3;
 
 /**
- * One room seen at an angle keeps its whole floor above the bottom row of
- * hints and the Sandbox card, so no agent hides under them. The top row
- * of HUD chips may sit over the far wall, which can take it.
+ * The overview keeps a margin of floor round one room, so the whole room
+ * reads as a box. The top row of HUD chips may sit over the far wall,
+ * which can take it.
  */
 const ROOM_FILL: ScreenWindow = { h: 0.94, up: 0.9, down: 0.6 };
-/** The close shot also fills the width. */
-export const CLOSE_FILL: ScreenWindow = { h: 0.99, up: 0.95, down: 0.6 };
+/** The close shot fills the width and nearly all the height: only small hints sit along the bottom, and the Sandbox card has its own cover (see hudCover). */
+export const CLOSE_FILL: ScreenWindow = { h: 0.99, up: 0.95, down: 0.85 };
 
 /** A camera `distance` m from (cx, cz) at `elevation`, `azimuth` rad round from the +z side toward +x. */
 export function orbitShot(cx: number, cz: number, distance: number, elevation: number, azimuth = 0, ty = 0): Shot {
