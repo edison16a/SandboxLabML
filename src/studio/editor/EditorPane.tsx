@@ -5,17 +5,18 @@ import { Lock } from 'lucide-react';
 import { cn } from '@/ui/cn';
 import { Button } from '@/ui/primitives/Button';
 import { duplicate } from '../state/scriptActions';
+import { Loading } from '@/ui/feedback/Spinner';
 import { useStudio } from '../state/studioStore';
 import { EditorToolbar } from './EditorToolbar';
 import { StatusLine } from './StatusLine';
 
-function Loading({ what }: { what: string }) {
-  return <div className="flex h-full items-center justify-center text-[13px] text-muted">Loading the {what}...</div>;
+function LoadingPane({ what }: { what: string }) {
+  return <Loading label={`Loading the ${what}`} className="h-full" />;
 }
 
 /** CodeMirror is the largest dependency on this route, so it only downloads when the code view first shows. */
-const CodeEditor = dynamic(() => import('../code/CodeEditor'), { ssr: false, loading: () => <Loading what="code editor" /> });
-const BlocksView = dynamic(() => import('../blocks/BlocksView'), { ssr: false, loading: () => <Loading what="blocks" /> });
+const CodeEditor = dynamic(() => import('../code/CodeEditor'), { ssr: false, loading: () => <LoadingPane what="code editor" /> });
+const BlocksView = dynamic(() => import('../blocks/BlocksView'), { ssr: false, loading: () => <LoadingPane what="blocks" /> });
 
 /** The center column: toolbar, one of the two views of the open script, and the status line. */
 export function EditorPane({ className }: { className?: string }) {
@@ -33,7 +34,7 @@ export function EditorPane({ className }: { className?: string }) {
           </Button>
         </div>
       )}
-      <div className="min-h-0 flex-1">{script ? mode === 'code' ? <CodeEditor /> : <BlocksView /> : <Loading what="script" />}</div>
+      <div className="min-h-0 flex-1">{script ? mode === 'code' ? <CodeEditor /> : <BlocksView /> : <LoadingPane what="script" />}</div>
       <StatusLine />
     </section>
   );

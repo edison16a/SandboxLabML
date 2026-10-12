@@ -5,18 +5,19 @@ import { BookOpen, CircleAlert, Gauge, GraduationCap, Play } from 'lucide-react'
 import { cn } from '@/ui/cn';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/primitives/Tabs';
 import { analyze } from '../doc/analyze';
+import { Loading } from '@/ui/feedback/Spinner';
 import { selectText, useStudio, type PanelTab } from '../state/studioStore';
 import { ProblemsTab } from './problems/ProblemsTab';
 import { ReferenceTab } from './reference/ReferenceTab';
 
-function Loading() {
-  return <div className="p-6 text-center text-[13px] text-muted">Loading...</div>;
+function LoadingTab() {
+  return <Loading label="Loading" className="p-6" />;
 }
 
 /** The heavier tabs load on first open: Test run brings uPlot and a worker, Learn and Bench bring their engines. */
-const TestRunTab = dynamic(() => import('./testrun/TestRunTab'), { ssr: false, loading: Loading });
-const LearnTab = dynamic(() => import('./learn/LearnTab'), { ssr: false, loading: Loading });
-const BenchTab = dynamic(() => import('./bench/BenchTab'), { ssr: false, loading: Loading });
+const TestRunTab = dynamic(() => import('./testrun/TestRunTab'), { ssr: false, loading: LoadingTab });
+const LearnTab = dynamic(() => import('./learn/LearnTab'), { ssr: false, loading: LoadingTab });
+const BenchTab = dynamic(() => import('./bench/BenchTab'), { ssr: false, loading: LoadingTab });
 
 function ProblemCount() {
   const text = useStudio(selectText);
