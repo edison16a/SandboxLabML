@@ -1,9 +1,11 @@
 'use client';
 
 import { useRef } from 'react';
-import { LoaderCircle, Pause, Play, RotateCcw } from 'lucide-react';
+import { Pause, Play, RotateCcw } from 'lucide-react';
 import type { EnvId } from '@/engine/env/types';
 import type { Lesson, LessonStep } from '@/engine/lessons/types';
+import { LoadingCover } from '@/ui/feedback/LoadingCover';
+import { Loading, Spinner } from '@/ui/feedback/Spinner';
 import { Button } from '@/ui/primitives/Button';
 import { analyze } from '../../../doc/analyze';
 import { usePlayback } from './usePlayback';
@@ -46,7 +48,7 @@ export function LessonPreview({ lesson, step, text }: Props) {
       <div className="flex items-center gap-2">
         <h4 className="text-[12px] font-semibold tracking-wide text-muted uppercase">Preview</h4>
         <span className="min-w-0 flex-1 truncate text-[11px] text-subtle" aria-live="polite">
-          {state.busy && <LoaderCircle className="mr-1 inline size-3 animate-spin align-[-2px]" />}
+          {state.busy && <Spinner className="mr-1 inline size-3 align-[-2px]" />}
           {status}
         </span>
         <Button size="icon-sm" variant="ghost" onClick={toggle} disabled={!state.preview} aria-label={playing ? 'Pause preview' : 'Play preview'} title={playing ? 'Pause' : 'Play'}>
@@ -58,11 +60,14 @@ export function LessonPreview({ lesson, step, text }: Props) {
       </div>
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md border border-border bg-bg">
         <canvas ref={canvas} className="absolute inset-0 h-full w-full" role="img" aria-label={LABEL[lesson.course]} />
-        {!state.preview && (
-          <p className="absolute inset-0 flex items-center justify-center p-4 text-center text-[12px] text-muted">
-            {state.message ?? (state.broken ? 'Fix the errors in the script to see it play.' : 'Simulating...')}
-          </p>
-        )}
+        {!state.preview &&
+          (state.message || state.broken ? (
+            <p className="absolute inset-0 flex items-center justify-center p-4 text-center text-[12px] text-muted">{state.message ?? 'Fix the errors in the script to see it play.'}</p>
+          ) : (
+            <Loading label="Simulating" className="absolute inset-0 text-[12px]" />
+          ))}
+        {/* An edit replays from the start; until then the old run stays up, blurred, so it is not taken for the new one. */}
+        <LoadingCover loading={state.busy && state.preview !== null} label="Updating" className="z-10" />
         <span ref={readout} className="tabular pointer-events-none absolute bottom-1.5 left-1.5 rounded bg-bg/80 px-1.5 py-0.5 font-mono text-[11px] text-muted empty:hidden" aria-hidden="true" />
       </div>
       <p className="text-[11px] text-subtle">
