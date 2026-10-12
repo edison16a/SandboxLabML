@@ -4,6 +4,7 @@ import { FlaskConical, Pause, Play, Plus, SkipForward } from 'lucide-react';
 import { Button } from '@/ui/primitives/Button';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import { Badge } from '@/ui/primitives/Badge';
+import { RunScriptBadge } from '@/features/scripts/RunScriptBadge';
 import { racingSession } from '../session/RacingSession';
 import { useRacingLab } from '../state/labStore';
 import { SpeedBar } from './SpeedBar';
@@ -65,6 +66,7 @@ export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
         </div>
         {status === 'error' && <Badge tone="danger">Stopped on an error</Badge>}
       </div>
+      <RunScriptBadge run={run} generation={gen} running={running} />
       <div className="ml-auto flex min-w-0 items-center gap-2">
         <RunSwitcher />
         <Tooltip content="Race your champions on any track">

@@ -10,7 +10,7 @@ import { Field } from '@/ui/primitives/Field';
 import { choiceFromPreset, choiceFromSource, presetsFor, type BlueprintOf, type ScriptChoice } from './scriptChoice';
 
 /** What the built-in option does in each lab, said in one line. */
-const BUILTIN: Record<EnvId, string> = {
+export const BUILTIN: Record<EnvId, string> = {
   racing: 'Checkpoints, laps and a little speed.',
   hideseek: 'Hiders score while unseen, seekers while they see.',
 };

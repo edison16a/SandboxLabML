@@ -1,6 +1,7 @@
 'use client';
 
 import { FlaskConical, Pause, Play, Plus, SkipForward } from 'lucide-react';
+import { RunScriptBadge } from '@/features/scripts/RunScriptBadge';
 import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
 import { Tooltip } from '@/ui/primitives/Tooltip';
@@ -56,6 +57,7 @@ export function HideSeekToolbar({ onNewRun }: { onNewRun: () => void }) {
         </div>
         {status === 'error' && <Badge tone="danger">Stopped on an error</Badge>}
       </div>
+      <RunScriptBadge run={run} generation={gen} running={running} />
       <div className="ml-auto flex min-w-0 items-center gap-2">
         {run && (
           <span className="hidden max-w-56 truncate text-[13px] text-muted @min-[72rem]:inline" title={run.name}>
