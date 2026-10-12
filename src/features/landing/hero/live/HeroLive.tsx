@@ -8,6 +8,7 @@ import { cn } from '@/ui/cn';
 import { heroTier } from '../heroMode';
 import type { HeroScene, SceneReady } from '../scenes';
 import { HeroPanels } from './HeroPanels';
+import { HeroLoading } from './HeroLoading';
 import { SceneBoundary } from './SceneBoundary';
 import { useArenaMatch } from './useArenaMatch';
 import { useShowcase } from './useShowcase';
@@ -53,6 +54,7 @@ export default function HeroLive({ active, hero, panel }: HeroLiveProps) {
   const live = shown.car || shown.arena;
   return (
     <>
+      <HeroLoading loading={!(shown.car && shown.arena)} />
       {/* The data attribute says which scenes are on screen, for the browser tests and scripts/capture-hero-poster.mjs. */}
       <div aria-hidden="true" data-hero-shown={[shown.car && 'car', shown.arena && 'arena'].filter(Boolean).join(' ')} className="absolute inset-0">
         {layout && (stageCar || stageArena) && (
