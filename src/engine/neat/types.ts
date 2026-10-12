@@ -47,7 +47,10 @@ export interface GenomeShape {
   inputCount: number;
   outputCount: number;
   activation: Activation;
-  /** direct: every input to every output; sparse: half of them; hidden: one small layer. */
+  /** direct: every input to every output; sparse: half of them; hidden: one or more small layers in between. */
   wiring: 'direct' | 'sparse' | 'hidden';
+  /** Neurons in each hidden layer, when wiring is hidden. */
   hiddenCount?: number;
+  /** How many hidden layers in a row, 1 to 3, when wiring is hidden. Missing means 1, as before layers could stack. */
+  hiddenLayers?: number;
 }

@@ -1,5 +1,6 @@
 import type { Rng } from '../core/rng';
 import type { InnovationTracker } from './innovation';
+import { hiddenLayersOf, hiddenWidthOf } from './startShape';
 import type { ConnectionGene, Genome, GenomeShape, NodeGene } from './types';
 
 /**
@@ -11,6 +12,7 @@ export interface GenomeTemplate {
   inputs: number[];
   outputs: number[];
   biasId: number;
+  /** Every hidden neuron, layer by layer: the first hiddenWidthOf(shape) ids are the first layer. */
   hidden: number[];
 }
 
@@ -18,8 +20,7 @@ export function createTemplate(shape: GenomeShape, tracker: InnovationTracker): 
   const inputs = Array.from({ length: shape.inputCount }, () => tracker.newNodeId());
   const biasId = tracker.newNodeId();
   const outputs = Array.from({ length: shape.outputCount }, () => tracker.newNodeId());
-  const hiddenCount = shape.wiring === 'hidden' ? Math.max(1, shape.hiddenCount ?? 4) : 0;
-  const hidden = Array.from({ length: hiddenCount }, () => tracker.newNodeId());
+  const hidden = Array.from({ length: hiddenLayersOf(shape) * hiddenWidthOf(shape) }, () => tracker.newNodeId());
   return { shape, inputs, outputs, biasId, hidden };
 }
 
@@ -47,12 +48,16 @@ export function createGenome(
     connections.push({ innovation: tracker.connection(from, to), from, to, weight: randomWeight(rng), enabled: true });
 
   const sources = [...inputs, biasId];
-  if (shape.wiring === 'hidden') {
-    for (const h of hidden) for (const s of sources) connect(s, h);
-    for (const o of outputs) {
-      for (const h of hidden) connect(h, o);
-      connect(biasId, o);
+  if (hidden.length > 0) {
+    // Each layer is fed by the whole layer before it (the inputs for the first) plus the bias.
+    const width = hiddenWidthOf(shape);
+    let prev = inputs;
+    for (let start = 0; start < hidden.length; start += width) {
+      const layer = hidden.slice(start, start + width);
+      for (const h of layer) for (const s of [...prev, biasId]) connect(s, h);
+      prev = layer;
     }
+    for (const o of outputs) for (const s of [...prev, biasId]) connect(s, o);
   } else {
     for (const o of outputs) {
       for (const s of sources) {
