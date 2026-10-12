@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { countGenome } from '@/engine/neat/genome';
 import { HIDESEEK_OUTPUTS } from '@/engine/hideseek/sensing/inputSchema';
+import { BrainStats } from '@/features/network/BrainStats';
 import { NetworkCanvas } from '@/features/network/NetworkCanvas';
 import { Slider } from '@/ui/primitives/Slider';
 import { Switch } from '@/ui/primitives/Switch';
@@ -36,17 +36,11 @@ export function NetworkTab() {
 
   if (!record) return <div className="p-4 text-[13px] text-muted">Appears after the first generation.</div>;
   const genome = agent === 0 ? record.hiderChampion : record.seekerChampion;
-  const counts = countGenome(genome);
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border px-4 py-3 text-[12px]">
         <TeamToggle value={agent} onChange={(v) => set({ inspectAgent: v })} />
-        <span className="text-muted">
-          <span className="font-mono text-fg">{counts.hidden}</span> hidden
-        </span>
-        <span className="text-muted">
-          <span className="font-mono text-fg">{counts.enabled}</span> links
-        </span>
+        <BrainStats genome={genome} />
         <label className="ml-auto flex items-center gap-2 text-muted">
           Disabled
           <Switch label="Show disabled links" checked={showDisabled} onChange={setShowDisabled} />

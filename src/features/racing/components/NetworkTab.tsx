@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pause, Play } from 'lucide-react';
-import { countGenome } from '@/engine/neat/genome';
 import { RACING_OUTPUTS } from '@/engine/racing/sensors/inputSchema';
 import { useRunSchema } from '../hooks/useRunSchema';
+import { BrainStats } from '@/features/network/BrainStats';
 import { NetworkCanvas } from '@/features/network/NetworkCanvas';
 import { Button } from '@/ui/primitives/Button';
 import { Slider } from '@/ui/primitives/Slider';
@@ -56,20 +56,11 @@ export function NetworkTab() {
   }, [ghost]);
 
   if (!record) return <div className="p-4 text-[13px] text-muted">Appears after the first generation.</div>;
-  const counts = countGenome(record.genome);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-4 border-b border-border px-4 py-3 text-[12px]">
-        <span className="text-muted">
-          <span className="font-mono text-fg">{counts.inputs + counts.outputs + counts.hidden + 1}</span> neurons
-        </span>
-        <span className="text-muted">
-          <span className="font-mono text-fg">{counts.hidden}</span> hidden
-        </span>
-        <span className="text-muted">
-          <span className="font-mono text-fg">{counts.enabled}</span> links
-        </span>
+        <BrainStats genome={record.genome} />
         <label className="ml-auto flex items-center gap-2 text-muted">
           Disabled
           <Switch label="Show disabled links" checked={showDisabled} onChange={setShowDisabled} />
