@@ -8,6 +8,7 @@ import { BOX_COUNT } from '@/engine/hideseek/physics';
 import { useHideSeekLab } from '@/features/hideseek/state/hideSeekStore';
 import { FramePacer } from '@/render/shared/FramePacer';
 import { useFrameLoop } from '@/render/shared/frameLoop';
+import { SceneReady } from '@/render/shared/SceneReady';
 import { StatsProbe } from '@/render/shared/StatsProbe';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
 import { CameraRig } from './camera/CameraRig';
@@ -31,6 +32,8 @@ interface Props {
   schemas: [InputSpec[], InputSpec[]];
   onMoveBox?: (index: number, x: number, z: number) => void;
   onToggleLock?: (index: number, locked: boolean) => void;
+  /** Told once the first arenas have drawn. */
+  onReady?: (ready: boolean) => void;
 }
 
 /**
@@ -38,7 +41,7 @@ interface Props {
  * change a training result. The grid is always cheap; the showcase arena,
  * its shadows and its post-processing mount only while an arena is focused.
  */
-export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLock }: Props) {
+export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLock, onReady }: Props) {
   const tier = useHideSeekLab((s) => s.activeTier);
   const showcase = useHideSeekLab((s) => s.mode === 'sandbox' || s.gridSize === 1 || s.focus !== null);
   const sandbox = useHideSeekLab((s) => s.mode === 'sandbox');
@@ -48,6 +51,7 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
   const animating = useHideSeekLab((s) => (s.status === 'running' && s.speed !== 'max') || s.replaying || (s.mode === 'sandbox' && s.sandbox.playing));
   const loop = useFrameLoop(animating ? 'live' : 'idle');
   const frame = useMemo(() => createHsFrame(), []);
+  const hasArenas = useCallback(() => frame.curr !== null, [frame]);
   const value = useMemo(() => ({ frame, getFeed, schemas, onMoveBox, onToggleLock }), [frame, getFeed, schemas, onMoveBox, onToggleLock]);
   const composer = showcase && effectsOn && (tier === 'high' || tier === 'ultra');
   const instances = useCallback(
@@ -96,6 +100,7 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
         <CameraRig />
         <FirstPersonLayers />
         {composer && <ShowcaseEffects tier={tier} photo={photo} />}
+        {onReady && <SceneReady isReady={hasArenas} onChange={onReady} />}
         <StatsProbe wholeFrame instances={instances} />
       </HsSceneContext.Provider>
     </Canvas>

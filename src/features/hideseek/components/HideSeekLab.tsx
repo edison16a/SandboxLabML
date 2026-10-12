@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { HIDE_SEEK_TOUR } from '@/features/onboarding/hideSeekTour';
 import { useTrainScriptParam } from '@/features/scripts/useTrainScriptParam';
 import { HideSeekCanvas } from '@/render/hideseek/HideSeekCanvas';
+import { LoadingCover } from '@/ui/feedback/LoadingCover';
 import { ResizeHandle } from '@/ui/split/ResizeHandle';
 import { Walkthrough } from '@/ui/walkthrough/Walkthrough';
 import { useCameraPreference } from '../hooks/useCameraPreference';
@@ -27,6 +28,8 @@ export function HideSeekLab() {
   const params = useSearchParams();
   const ready = useHideSeekBootstrap(params.get('run'));
   const [newRun, setNewRun] = useState(false);
+  // False until the first arenas have drawn.
+  const [sceneReady, setSceneReady] = useState(false);
   const openNewRun = useCallback(() => setNewRun(true), []);
   const pendingScript = useTrainScriptParam('hideseek', params, openNewRun);
   const viewport = useRef<HTMLDivElement>(null);
@@ -55,10 +58,9 @@ export function HideSeekLab() {
       <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col lg:min-w-[600px]">
         <div ref={viewport} className="@container relative min-h-0 flex-1 bg-bg" data-testid="hs-viewport" data-tour="viewport">
           {streams ? (
-            <HideSeekCanvas getFeed={getFeed} feeds={feeds} schemas={schemas} onMoveBox={onMoveBox} onToggleLock={onToggleLock} />
-          ) : (
-            <div className="flex h-full items-center justify-center text-[13px] text-muted">Starting...</div>
-          )}
+            <HideSeekCanvas getFeed={getFeed} feeds={feeds} schemas={schemas} onMoveBox={onMoveBox} onToggleLock={onToggleLock} onReady={setSceneReady} />
+          ) : null}
+          <LoadingCover loading={!streams || !sceneReady} label={streams ? 'Setting up the arenas' : 'Starting the lab'} />
           {streams && <ViewportHud viewport={viewport} />}
           <div ref={cards} className="pointer-events-auto absolute bottom-3 left-3 flex flex-col items-start gap-2">
             <InputsCard />
@@ -73,7 +75,7 @@ export function HideSeekLab() {
         <SidePanel />
       </aside>
       <NewRunDialog open={newRun} onOpenChange={setNewRun} initialScript={pendingScript} />
-      <Walkthrough tour={HIDE_SEEK_TOUR} ready={ready} />
+      <Walkthrough tour={HIDE_SEEK_TOUR} ready={ready && sceneReady} />
     </div>
   );
 }
