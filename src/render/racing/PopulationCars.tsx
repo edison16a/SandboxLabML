@@ -36,11 +36,13 @@ function carMaterial(tier: QualityTier): THREE.MeshStandardMaterial {
  * lighter build of the hero car. The paint takes the species color;
  * stopped cars turn graphite and sink slightly so the ones still driving
  * stand out. Every body pitches, rolls and slides on its own springs from
- * its own accelerations. A car whose body cuts into another one's, or that
- * sits at the lens, fades out until the two part (see PackView); chase
- * and trackside also clear the line of sight to the followed car. Fading
- * cars move to a small transparent pass whose opacity eases over time,
- * with a depth pass first so each pixel shows only their nearest surface.
+ * its own accelerations. A car whose body cuts into another one's turns
+ * into a ghost until the two part, and in the chase view every car but
+ * the followed one is a ghost (see PackView). Cars at the lens fade out,
+ * and chase and trackside also clear the line of sight to the followed
+ * car. See through cars draw in a transparent pass whose opacity eases
+ * over time, with a depth pass first so each pixel shows only their
+ * nearest surface.
  */
 export function PopulationCars({ castShadow }: { castShadow: boolean }) {
   const { population, frame } = useRacingScene();
@@ -76,7 +78,7 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
       epoch: -1,
       casters: new Int32Array(MAX_CARS),
       others: new Int32Array(MAX_CARS),
-      aim: { hidden: -1, clearFocus: false, hasFocus: false, cam: new THREE.Vector3(), focus: new THREE.Vector3(), yaw: 0 } as PackFocus,
+      aim: { hidden: -1, clearFocus: false, ghostRest: false, hasFocus: false, cam: new THREE.Vector3(), focus: new THREE.Vector3(), yaw: 0 } as PackFocus,
     }),
     [],
   );
@@ -118,11 +120,13 @@ export function PopulationCars({ castShadow }: { castShadow: boolean }) {
     const aim = tmp.aim;
     aim.hidden = frame.hiddenPopulation;
     aim.clearFocus = clearFocus;
+    // The chase view is about the followed car: the rest of the generation rides along as ghosts, all of it in view.
+    aim.ghostRest = camera === 'chase';
     aim.hasFocus = frame.focusIndex >= 0;
     aim.cam.copy(state.camera.position);
     aim.focus.copy(frame.focusPos);
     aim.yaw = frame.focusYaw;
-    pack.decide(n, poses, tmp.stopped, split.shown, aim);
+    pack.decide(n, poses, tmp.stopped, aim, restart);
     let casters = 0;
     let others = 0;
     for (let i = 0; i < n; i++) {
