@@ -7,6 +7,7 @@ import { stepSpring } from '@/render/shared/interpolate';
 import { useRacingScene } from '../sceneContext';
 import { FRAME_PRIORITY } from '../framePriority';
 import type { WorldData } from '../world/worldData';
+import { chaseAnchor, focusOwner, stepAnchor } from './chaseAnchor';
 import { pickStation, trackStations } from './stations';
 
 /** How big the car should stay in frame: the half height of view, m, at the car. */
@@ -19,18 +20,32 @@ const FRAMING = 6.5;
  * once the car has gone by. The aim leads the car a little and eases into
  * each change of direction, like a hand on a tripod. The ease works on
  * the aim's offset from the car, so at any playback speed the car stays
- * in frame instead of the long lens trailing behind it.
+ * in frame instead of the long lens trailing behind it. The aim follows
+ * the gliding anchor the chase camera uses, since a long lens magnifies
+ * every wobble of the car.
  */
 export function TracksideCam({ world, target }: { world: WorldData | null; target: React.RefObject<THREE.Vector3> }) {
   const { frame, track } = useRacingScene();
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const stations = useMemo(() => (world ? trackStations(world) : []), [world]);
-  const rig = useMemo(() => ({ station: -1, x: { value: 0, velocity: 0 }, y: { value: 0, velocity: 0 }, z: { value: 0, velocity: 0 }, look: new THREE.Vector3() }), []);
+  const rig = useMemo(
+    () => ({
+      station: -1,
+      anchor: chaseAnchor(),
+      focus: new THREE.Vector3(),
+      x: { value: 0, velocity: 0 },
+      y: { value: 0, velocity: 0 },
+      z: { value: 0, velocity: 0 },
+      look: new THREE.Vector3(),
+    }),
+    [],
+  );
 
   useFrame((_, rawDt) => {
     // Only a real stall is clamped, so the pan keeps up with the car even at a low frame rate.
     const dt = Math.min(rawDt, 1);
-    const focus = frame.focusPos;
+    stepAnchor(rig.anchor, frame.focusPos.x, frame.focusPos.z, frame.focusYaw, focusOwner(frame), dt);
+    const focus = rig.focus.set(rig.anchor.x, 0, rig.anchor.z);
     target.current?.copy(focus);
     if (!stations.length) return;
     // The car's own place on the road, found fresh each frame, so a jump never leaves the director on a stale camera.
@@ -47,9 +62,9 @@ export function TracksideCam({ world, target }: { world: WorldData | null; targe
     // Lead the car a little in the direction it travels, so it drives into the frame.
     const lead = frame.focusSpeed * 0.18;
     rig.look.set(
-      focus.x + stepSpring(rig.x, Math.cos(frame.focusYaw) * lead, 7, dt),
+      focus.x + stepSpring(rig.x, Math.cos(rig.anchor.heading) * lead, 7, dt),
       stepSpring(rig.y, 0.9, 7, dt),
-      focus.z + stepSpring(rig.z, -Math.sin(frame.focusYaw) * lead, 7, dt),
+      focus.z + stepSpring(rig.z, -Math.sin(rig.anchor.heading) * lead, 7, dt),
     );
     camera.lookAt(rig.look);
     const dist = camera.position.distanceTo(focus);
