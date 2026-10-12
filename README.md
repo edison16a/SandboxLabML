@@ -4,8 +4,9 @@
 
 <h1 align="center">SandboxLabML</h1>
 
-<p align="center">A live machine learning lab in your browser, where you watch neural networks learn to race and play hide and seek in 3D.
-https://sandboxlabs.vercel.app/
+<p align="center">
+  A live machine learning lab in your browser, where you watch neural networks learn to race and play hide and seek in 3D.<br />
+  <a href="https://sandboxlabs.vercel.app/">sandboxlabs.vercel.app</a>
 </p>
 
 <p align="center">
@@ -41,11 +42,13 @@ The first time you open a lab, a short walkthrough points at each part and expla
 
 ### Train cars to race
 
-A hundred hypercars learn to drive a circuit through sunlit hills, from nothing. The tires have a real grip limit, so braking and turning fight over the same grip and the cars have to discover braking points on their own. Ghosts of earlier champions drive beside the live generation. A speed trace and a brake map show the braking points move later as they learn. Watch from the chase camera, trackside, top down or a free camera you move yourself.
+A hundred hypercars learn to drive a circuit through sunlit hills, from nothing. The tires have a real grip limit, so braking and turning fight over the same grip and the cars have to discover braking points on their own. Ghosts of earlier champions drive beside the live generation. A speed trace and a brake map show the braking points move later as they learn.
+
+The chase camera follows the car in the lead and glides on its own springs, so it stays smooth even when a car twitches or the lead changes hands. The rest of the generation rides along as see through ghosts. You can also watch trackside, top down or from a free camera.
 
 ### Train hiders and seekers
 
-Two teams co-evolve in a physics arena. Agents grab crates, carry them and lock them for their team, and a lock only opens for the team that made it. Ramps let an agent run up and vault a wall, so a fort is only safe if the seekers cannot get a ramp to it. Watch all 50 matches of a round at once, then click one to follow it up close, from an action shot that tracks the players to a first person view of what each agent sees.
+Two teams co-evolve in a physics arena. Agents grab crates, carry them and lock them for their team, and a lock only opens for the team that made it. Ramps let an agent run up and vault a wall, so a fort is only safe if the seekers cannot get a ramp to it. Watch all 50 matches of a round at once, then click one to follow it up close. Vision cones show what each agent can see, and a first person camera looks through its eyes.
 
 ### Play with what you trained
 
@@ -53,11 +56,15 @@ Every trained model can leave training and go into the Sandbox. In Racing, pick 
 
 ### Write the training loop yourself
 
-Training is driven by a small, safe script language called SBL. Edit it as blocks or as code, since both views edit the same script. It comes with docs, autocorrect and a test run that plays one episode tick by tick. Thirteen guided lessons across both games teach it step by step beside a live preview.
+Training is driven by a small, safe script language called SBL. Edit it as blocks or as code, since both views edit the same script. It comes with docs, autocorrect and a test run that plays one episode tick by tick. Thirteen guided lessons across both games teach it step by step beside a live preview. The lab toolbar always names the script a run is training with.
+
+### Take your model with you
+
+The Model tab downloads the champion brain as a `.model.json` file: every neuron and link with its weight, the names of its inputs and outputs, and the order to evaluate them in. That is enough to run it in any language. The same tab downloads the whole run, which imports back into the app on the Runs page.
 
 ### Tune everything
 
-Population size, brain shape, sensors, sensor noise, rewards and training speed are all yours to set. Settings in the top right pick the frame rate (30, 60 or Max) and the quality (Low, Medium or High). Drag the divider between the 3D view and the panel to give either side more room.
+Population size, brain shape, sensors, sensor noise, rewards and training speed are all yours to set. A brain can start wired straight from inputs to outputs or through up to three hidden layers, and training adds neurons and layers as it needs them. The Network tab shows how many layers deep the champion has grown. Settings in the top right pick the frame rate (30, 60 or Max) and the quality (Low, Medium or High). Drag the divider between the 3D view and the panel to give either side more room.
 
 ## Why you can trust what you see
 
@@ -122,7 +129,7 @@ src/render/        React Three Fiber scenes and shared render helpers
 src/features/      Lab pages, Sandboxes, charts, network graph, model card, runs, landing
 src/studio/        Script Studio
 src/storage/       IndexedDB (Dexie): runs, generations, checkpoints, scripts, tracks, rooms
-src/ui/            Design system on Radix primitives, the walkthrough, logo and GitHub button
+src/ui/            Design system on Radix primitives, loading states, the walkthrough, logo and GitHub button
 content/lessons/   Lesson content
 public/references/ Benchmark reference results
 public/hero/       The landing page's trained car and its poster stills
