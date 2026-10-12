@@ -24,7 +24,9 @@ interface BlueprintBase {
   readonly: boolean;
   activation: Activation;
   wiring: GenomeShape['wiring'];
+  /** Neurons per hidden layer, and how many layers (1 to 3), when wiring is hidden. */
   hiddenCount?: number;
+  hiddenLayers?: number;
   /** Optional NEAT overrides, such as population size or mutation rates. */
   neat?: Partial<Pick<NeatConfig, 'populationSize' | 'targetSpecies' | 'crossoverRate'>> & {
     mutation?: Partial<NeatConfig['mutation']>;

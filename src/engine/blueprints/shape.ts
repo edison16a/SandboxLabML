@@ -1,4 +1,5 @@
 import { HIDESEEK_OUTPUT_COUNT, hideSeekInputCount } from '../hideseek/inputConfig';
+import { MAX_HIDDEN_LAYERS } from '../neat/startShape';
 import type { GenomeShape } from '../neat/types';
 import { builtInInputCount } from '../racing/sensors/inputSchema';
 import { MAX_INPUTS, MAX_OUTPUTS, type Blueprint } from './types';
@@ -20,6 +21,7 @@ export function blueprintShape(b: Blueprint, customSensors = 0): GenomeShape {
     activation: b.activation,
     wiring: b.wiring,
     hiddenCount: b.hiddenCount,
+    hiddenLayers: b.hiddenLayers,
   };
 }
 
@@ -44,6 +46,9 @@ export function validateBlueprint(b: Blueprint, customSensors = 0): BlueprintIss
   if (b.inputs.noise < 0 || b.inputs.noise > 0.1) issues.push({ field: 'noise', message: 'Noise must be between 0 and 10%.' });
   if (b.wiring === 'hidden' && (!b.hiddenCount || b.hiddenCount < 1 || b.hiddenCount > 32)) {
     issues.push({ field: 'hiddenCount', message: 'Hidden layer needs 1 to 32 neurons.' });
+  }
+  if (b.wiring === 'hidden' && b.hiddenLayers !== undefined && (b.hiddenLayers < 1 || b.hiddenLayers > MAX_HIDDEN_LAYERS)) {
+    issues.push({ field: 'hiddenLayers', message: `Use 1 to ${MAX_HIDDEN_LAYERS} hidden layers.` });
   }
   return issues;
 }

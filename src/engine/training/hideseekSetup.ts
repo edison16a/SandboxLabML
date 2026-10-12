@@ -30,6 +30,7 @@ export function hideSeekTrainerOptions(config: RunConfig, sensors: HideSeekSenso
     activation: bp.hider.activation,
     wiring: bp.hider.wiring,
     hiddenCount: bp.hider.hiddenCount,
+    hiddenLayers: bp.hider.hiddenLayers,
     hiderCustomSensors: sensors.hider,
     seekerCustomSensors: sensors.seeker,
     layouts: s.layouts,

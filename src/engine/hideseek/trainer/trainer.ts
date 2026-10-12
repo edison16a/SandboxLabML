@@ -30,6 +30,7 @@ function shapeFor(o: ResolvedTrainerOptions, inputs: HideSeekInputConfig, custom
     activation: o.activation,
     wiring: o.wiring,
     hiddenCount: o.hiddenCount,
+    hiddenLayers: o.hiddenLayers,
   };
 }
 

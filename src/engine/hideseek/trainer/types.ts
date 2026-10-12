@@ -68,6 +68,8 @@ export interface HideSeekTrainerOptions {
   activation?: Activation;
   wiring?: GenomeShape['wiring'];
   hiddenCount?: number;
+  /** Hidden layers when wiring is hidden, 1 to 3. */
+  hiddenLayers?: number;
   /** Script sensors per team, appended after the built-in inputs. */
   hiderCustomSensors?: number;
   seekerCustomSensors?: number;
@@ -109,8 +111,8 @@ export interface HideSeekTrainerOptions {
  * run plays the same rules. Directives update the rules between
  * generations, so a checkpoint holds the rules for the next generation.
  */
-export type ResolvedTrainerOptions = Required<Omit<HideSeekTrainerOptions, 'hiderNeat' | 'seekerNeat' | 'hiddenCount' | 'prepSeconds'>> &
-  Pick<HideSeekTrainerOptions, 'hiderNeat' | 'seekerNeat' | 'hiddenCount' | 'prepSeconds'>;
+export type ResolvedTrainerOptions = Required<Omit<HideSeekTrainerOptions, 'hiderNeat' | 'seekerNeat' | 'hiddenCount' | 'hiddenLayers' | 'prepSeconds'>> &
+  Pick<HideSeekTrainerOptions, 'hiderNeat' | 'seekerNeat' | 'hiddenCount' | 'hiddenLayers' | 'prepSeconds'>;
 
 /** A past champion kept as an opponent for later generations. */
 export interface HallOfFameEntry {
