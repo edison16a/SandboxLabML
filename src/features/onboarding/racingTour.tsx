@@ -20,7 +20,7 @@ export const RACING_TOUR: Tour = {
   pageOwnsEscape: () => lab().focus.kind !== 'champion',
   intro: {
     title: 'Welcome to the Racing lab',
-    body: 'These cars teach themselves to drive. See how they learn, then how a trained one drives.',
+    body: 'These cars teach themselves to drive. First how they learn, then how a trained one drives.',
     icon: <Car />,
     chapters: [
       { label: LEARN, icon: <Dna /> },
@@ -35,7 +35,7 @@ export const RACING_TOUR: Tour = {
       target: '[data-tour="train"]',
       prefer: ['top', 'right'],
       title: 'Every car has a brain',
-      body: 'Each car is driven by a small neural network. At first its links are random, so it drives badly.',
+      body: 'A small neural network drives each car. It starts random, so it drives badly.',
       action: {
         prompt: 'Press Train',
         shortcut: 'Space',
@@ -44,7 +44,7 @@ export const RACING_TOUR: Tour = {
         then: {
           target: '[data-tour="viewport"]',
           title: 'Fitness is the score',
-          body: 'Every car now drives on its own network. It scores fitness for how far it gets, plus a little for speed. A crash ends its run.',
+          body: 'Each car scores fitness for how far it gets, plus a little for speed. A crash ends its run.',
         },
       },
     },
@@ -57,9 +57,9 @@ export const RACING_TOUR: Tour = {
       prefer: ['top'],
       prepare: () => void keepRacingTraining(),
       title: 'The best become parents',
-      body: 'When every car is done, the best ones breed the next generation, and this counter goes up. Their children are copies or mixes of them, with small changes.',
+      body: 'When every car is done, the best ones breed the next generation. Their children are copies or mixes of them, with small changes.',
       terms: [
-        { term: 'Mutation', meaning: 'Small random changes. Link weights shift, and now and then a new link or neuron is added.' },
+        { term: 'Mutation', meaning: 'Small random changes. Weights shift, and sometimes a new link or neuron appears.' },
         { term: 'Crossover', meaning: 'A child that mixes the links of two parents.' },
       ],
     },
@@ -71,7 +71,7 @@ export const RACING_TOUR: Tour = {
       prefer: ['left'],
       prepare: () => lab().set({ panelTab: 'progress' }),
       title: 'Watch it improve',
-      body: 'Each generation adds a point. The top line is the best car, the lines below it the typical car. Both should climb.',
+      body: 'One point per generation. The top line is the best car, the lower lines the typical car. Both should climb.',
     },
     {
       id: 'species',
@@ -81,7 +81,7 @@ export const RACING_TOUR: Tour = {
       prefer: ['left'],
       prepare: () => lab().set({ panelTab: 'progress' }),
       title: 'Species protect new ideas',
-      body: 'Networks that look alike form a species, and each band here is one. A new idea first competes inside its own species, so it has time to pay off.',
+      body: 'Similar networks form a species, one band each. A new idea competes only inside its species at first, so it has time to pay off.',
     },
     {
       id: 'speed',
@@ -90,7 +90,7 @@ export const RACING_TOUR: Tour = {
       prefer: ['top'],
       prepare: () => void keepRacingTraining(),
       title: 'Train faster',
-      body: '1x to 4x let you watch every car. Turbo and Max train flat out on every core of your computer.',
+      body: '1x to 4x let you watch. Turbo and Max train flat out on every core.',
       action: {
         // No shortcut shown: its key is 4, which reads as the 4x button right beside Turbo.
         prompt: 'Pick Turbo',
@@ -98,7 +98,7 @@ export const RACING_TOUR: Tour = {
         doneLabel: 'Training flat out',
         then: {
           title: 'Learning in the background',
-          body: 'Generations now finish in seconds, out of sight. Turbo also replays the latest champion on the track. Next we drop back to 1x to watch one car drive.',
+          body: 'Generations now finish in seconds. Turbo replays the latest champion on the track. Next, back to 1x to watch one car.',
         },
       },
     },
@@ -109,7 +109,7 @@ export const RACING_TOUR: Tour = {
       prefer: ['bottom', 'left'],
       prepare: () => void watchRacingLive(),
       title: 'A network only sees numbers',
-      body: 'Running a trained network starts with its inputs. Press Inputs to draw what the followed car senses.',
+      body: 'A network starts from its inputs. Press Inputs to draw what the followed car senses.',
       action: {
         prompt: 'Press Inputs',
         shortcut: 'I',
@@ -118,7 +118,7 @@ export const RACING_TOUR: Tour = {
         then: {
           target: '[data-tour="viewport"]',
           title: 'What the car senses',
-          body: 'Each ray measures how far the road edge is in one direction. With the speed and the angle to the road, these numbers are all the network knows.',
+          body: 'Each ray measures the distance to the road edge. With speed and angle to the road, that is all the network knows.',
         },
       },
     },
@@ -129,7 +129,7 @@ export const RACING_TOUR: Tour = {
       prefer: ['left', 'bottom'],
       prepare: () => void watchRacingLive(),
       title: 'Look inside the champion',
-      body: 'The Network tab shows the champion network, the best driver of the latest finished generation.',
+      body: 'The Network tab shows the champion: the best driver of the last generation.',
       action: {
         prompt: 'Open the Network tab',
         done: () => lab().panelTab === 'network',
@@ -137,10 +137,10 @@ export const RACING_TOUR: Tour = {
         then: {
           target: '[data-tour="panel"]',
           title: 'This is the model running',
-          body: 'Every tick the inputs on the left flow through the links to steering and pedal on the right. Links light up as they carry the decision.',
+          body: 'Every tick, inputs on the left flow through the links to steering and pedal on the right. Busy links light up.',
           terms: [
-            { term: 'Weight', meaning: 'How strongly a link passes its signal on. Blue links pass it as it is, orange links flip it.' },
-            { term: 'Hidden neuron', meaning: 'A neuron between the inputs and outputs. Mutation adds them now and then, so networks grow as they learn.' },
+            { term: 'Weight', meaning: 'How strongly a link passes its signal. Blue keeps the sign, orange flips it.' },
+            { term: 'Hidden neuron', meaning: 'A neuron between inputs and outputs. Mutation adds them, so networks grow deeper as they learn.' },
           ],
         },
       },
@@ -151,7 +151,7 @@ export const RACING_TOUR: Tour = {
       target: '[data-tour="view"]',
       prefer: ['bottom', 'left'],
       title: 'Ghosts of past champions',
-      body: 'Overlay and Both replay champions of earlier generations as ghost cars. The gap between them is what training bought.',
+      body: 'Overlay and Both replay earlier champions as ghost cars. The gap between them is what training bought.',
     },
     {
       id: 'sandbox',
@@ -159,7 +159,7 @@ export const RACING_TOUR: Tour = {
       target: '[data-tour="sandbox"]',
       prefer: ['top'],
       title: 'Run them anywhere',
-      body: 'The Sandbox races trained champions on any track, even one you draw. Nothing learns there. The networks only drive.',
+      body: 'The Sandbox races your champions on any track, even one you draw. Nothing learns there.',
     },
     {
       id: 'studio',
@@ -167,7 +167,7 @@ export const RACING_TOUR: Tour = {
       target: '[data-tour="nav-studio"]',
       prefer: ['bottom'],
       title: 'Write the rules yourself',
-      body: 'In the Studio you write the training script: what earns fitness and when a run ends. The lessons take you through it. To see this tour again, use the ? button in the toolbar.',
+      body: 'In the Studio you write the training script: what earns fitness and when a run ends. The lessons show you how. Replay this tour from the ? button.',
       links: [{ label: 'Start the first lesson', href: '/studio?lesson=racing-01-drive-straight' }],
     },
   ],
