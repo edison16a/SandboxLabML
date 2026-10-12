@@ -27,7 +27,7 @@ export function RunScriptBadge({ run, generation, running }: Props) {
   const edited = info.editedAt !== null ? ` In force since generation ${info.editedAt + 1}.` : '';
   return (
     <Tooltip content={`${about}${edited}`}>
-      <div tabIndex={0} data-tour="script" className="hidden min-w-0 flex-col leading-tight outline-none @min-[40rem]:flex">
+      <div tabIndex={0} data-tour="script" className="hidden min-w-0 flex-col leading-tight outline-none @min-[60rem]:flex">
         <span className="flex items-center gap-1 text-[11px] text-muted">
           <FileCode2 className="size-3" />
           {running ? 'Running script' : 'Script'}
