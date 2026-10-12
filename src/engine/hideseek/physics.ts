@@ -88,6 +88,15 @@ export interface HideSeekPhysics {
     boxYawJitter: number;
   };
   solverIterations: number;
+  /**
+   * How far apart two bodies may be when the solver starts treating them as
+   * touching, m. An agent covers about 12 cm per tick, so at Rapier's 2 cm
+   * default it sank into a wall for a tick before the contact caught it,
+   * and pushing on looked like it was stuck in the wall.
+   */
+  contactPrediction: number;
+  /** Stiffness of contacts as a natural frequency, Hz. Stiffer contacts push overlaps apart within a tick or two. */
+  contactFrequency: number;
 }
 
 export const DEFAULT_HIDESEEK_PHYSICS: HideSeekPhysics = {
@@ -112,6 +121,8 @@ export const DEFAULT_HIDESEEK_PHYSICS: HideSeekPhysics = {
   rayHeight: 0.5,
   spawn: { boxJitter: 0.4, boxYawJitter: 0.3 },
   solverIterations: 4,
+  contactPrediction: 0.1,
+  contactFrequency: 120,
 };
 
 /** Overrides for `hideSeekPhysics`: any top-level value, or part of any group. */
@@ -138,11 +149,14 @@ export function hideSeekPhysics(overrides: HideSeekPhysicsOverrides = {}): HideS
 
 /**
  * Rules read back from storage, made whole: physics saved before ramps has
- * no ramp size and no climb group, so those take the defaults. Complete
- * rules come back as the same object.
+ * no ramp size and no climb group, and physics saved before the contact
+ * fix has no contact settings, so those take the defaults. Complete rules
+ * come back as the same object.
  */
 export function normalizeHideSeekPhysics(p: HideSeekPhysics): HideSeekPhysics {
-  return p.climb && p.box.ramp ? p : hideSeekPhysics(p);
+  const d = DEFAULT_HIDESEEK_PHYSICS;
+  if (p.climb && p.box.ramp && p.contactPrediction !== undefined && p.contactFrequency !== undefined) return p;
+  return hideSeekPhysics({ ...p, contactPrediction: p.contactPrediction ?? d.contactPrediction, contactFrequency: p.contactFrequency ?? d.contactFrequency });
 }
 
 /** Stable fingerprint of the rules. Stored genomes carry it so replays can refuse a mismatch. */

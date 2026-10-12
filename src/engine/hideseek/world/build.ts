@@ -38,6 +38,8 @@ export function buildRoom(R: Rapier, p: HideSeekPhysics, walls: Rect[], agentPos
   const world = new R.World({ x: 0, y: 0, z: 0 });
   world.timestep = p.dt;
   world.numSolverIterations = p.solverIterations;
+  world.integrationParameters.normalizedPredictionDistance = p.contactPrediction;
+  world.integrationParameters.contact_natural_frequency = p.contactFrequency;
   const wallHalfHeight = p.arena.wallHeight / 2;
   for (const w of walls) {
     const body = world.createRigidBody(R.RigidBodyDesc.fixed().setTranslation(w.x, wallHalfHeight, w.z));
