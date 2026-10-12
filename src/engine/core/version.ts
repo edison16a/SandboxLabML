@@ -9,9 +9,10 @@ export const ENGINE_VERSION = 1;
 /**
  * The same rule for Hide and Seek, kept apart so a change to one game never
  * blocks replays of the other. Version 2 added ramps, climbing and locks
- * for both teams, which changes every match.
+ * for both teams. Version 3 made contacts catch agents before they sink
+ * into walls. Both change every match.
  */
-export const HIDESEEK_ENGINE_VERSION = 2;
+export const HIDESEEK_ENGINE_VERSION = 3;
 
 /** The engine version a run of `env` is stamped with and checked against. */
 export function engineVersionOf(env: 'racing' | 'hideseek'): number {
