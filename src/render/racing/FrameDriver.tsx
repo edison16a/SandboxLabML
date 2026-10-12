@@ -1,48 +1,38 @@
 'use client';
 
 import { useFrame } from '@react-three/fiber';
+import { useMemo } from 'react';
 import { RACING_SNAPSHOT } from '@/engine/racing/env';
 import { useRacingLab } from '@/features/racing/state/labStore';
 import { blendField, blendPose, type Pose } from '@/render/shared/interpolate';
 import { FRAME_PRIORITY } from './framePriority';
+import { pickLeader } from './leader';
 import { updateFocusMotion } from './motion/focusMotion';
 import { useRacingScene } from './sceneContext';
 
 const STRIDE = RACING_SNAPSHOT.stride;
 const pose: Pose = { x: 0, y: 0, heading: 0 };
 
-/** Index of the car furthest along the road, preferring cars still driving. */
-function findLeader(buf: Float32Array, count: number): number {
-  let best = -1;
-  let bestP = -Infinity;
-  let bestAny = -1;
-  let bestAnyP = -Infinity;
-  for (let i = 0; i < count; i++) {
-    const p = buf[i * STRIDE + 7];
-    if (p > bestAnyP) {
-      bestAnyP = p;
-      bestAny = i;
-    }
-    if (buf[i * STRIDE + 6] === 0 && p > bestP) {
-      bestP = p;
-      best = i;
-    }
-  }
-  return best >= 0 ? best : bestAny;
-}
-
 /**
  * Runs first every frame (negative priority) and works out the leader and
  * the focus pose from the latest snapshots and the user's focus choice.
+ * The leader is sticky (see pickLeader), so the camera follows one car
+ * instead of hopping along the pack.
  */
 export function FrameDriver() {
   const { population, ghosts, frame, track } = useRacingScene();
+  const seen = useMemo(() => ({ epoch: -1 }), []);
   useFrame(() => {
     const { focus, view, mode, run } = useRacingLab.getState();
     // In the Sandbox the population stream holds the last training frame, so the camera only ever follows ghosts.
     const showPop = mode !== 'sandbox' && view !== 'overlay' && population?.curr && population.count > 0;
     const showGhosts = view !== 'population' && ghosts?.curr && ghosts.count > 0;
-    frame.leader = population?.curr ? findLeader(population.curr.buffer, population.count) : -1;
+    // A new episode puts a new generation on the grid: the old leader's index means nothing there.
+    if (population && population.epoch !== seen.epoch) {
+      seen.epoch = population.epoch;
+      frame.leader = -1;
+    }
+    frame.leader = population?.curr ? pickLeader(population.curr.buffer, population.count, frame.leader) : -1;
 
     let stream: typeof population = null;
     let index = -1;
