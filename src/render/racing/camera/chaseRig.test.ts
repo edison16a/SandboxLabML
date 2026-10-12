@@ -49,4 +49,37 @@ describe('the chase camera', () => {
     expect(Math.abs(slow)).toBeLessThan(4);
     expect(Math.abs(fast - slow)).toBeLessThan(1);
   });
+
+  it('stays smooth when the car wobbles, and glides when the lead passes to another car', () => {
+    const frame = createFrame();
+    const rig = chaseRig();
+    const camera = new THREE.PerspectiveCamera(50, 1.6, 0.5, 6000);
+    frame.focusSpeed = 25;
+    frame.focusIndex = 0;
+    frame.focusStream = 'population';
+    const dt = 1 / 60;
+    let shake = 0;
+    let fastest = 0;
+    let last = 0;
+    let lastStep = 0;
+    for (let k = 0; k < 600; k++) {
+      // A small heading and position flicker every frame, then a hand over to a car 3 m to the side halfway through.
+      const side = k >= 300 ? 3 : 0;
+      if (k === 300) frame.focusIndex = 1;
+      frame.focusPos.set(k * 25 * dt, 0, side + (k % 2 ? 0.08 : -0.08));
+      frame.focusYaw = k % 2 ? 0.03 : -0.03;
+      stepChase(rig, frame, camera, dt);
+      const step = camera.position.z - last;
+      // How much the sideways step changes from one frame to the next: zero for an even path.
+      if (k > 60 && k < 300) shake = Math.max(shake, Math.abs(step - lastStep));
+      if (k > 60) fastest = Math.max(fastest, Math.abs(step));
+      lastStep = step;
+      last = camera.position.z;
+    }
+    // A 16 cm flicker in the car moves the camera by a couple of millimeters at most. Bolted to the car, it moved 16 cm.
+    expect(shake).toBeLessThan(0.003);
+    // The hand over is a glide of a few centimeters a frame, never a cut, and it arrives.
+    expect(fastest).toBeLessThan(0.15);
+    expect(camera.position.z).toBeCloseTo(3, 1);
+  });
 });

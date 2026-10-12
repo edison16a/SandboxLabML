@@ -5,7 +5,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { MapControls } from '@react-three/drei';
 import { useEffect, useMemo, useRef } from 'react';
 import { useRacingLab, type CameraMode } from '@/features/racing/state/labStore';
-import { chaseRig, restoreFov, stepChase } from './camera/chaseRig';
+import { chaseRig, resetChase, restoreFov, stepChase } from './camera/chaseRig';
 import { keepAboveGround } from './camera/floor';
 import { OrbitCam } from './camera/OrbitCam';
 import { TracksideCam } from './camera/TracksideCam';
@@ -14,7 +14,7 @@ import { useRacingScene } from './sceneContext';
 import { useWorld } from './world/useWorld';
 
 /**
- * The cameras. Chase rides behind the focus car on springs with weight,
+ * The cameras. Chase rides behind its own anchor, which glides after the car,
  * orbit is a free camera that travels with it, trackside cuts between TV
  * style cameras round the circuit, top down frames the whole track for the
  * editor, and free is a pan and zoom map camera.
@@ -34,7 +34,7 @@ export function CameraRig({ mode, target }: { mode: CameraMode; target: React.Re
   const controls = useThree((s) => s.controls) as { target?: THREE.Vector3; update?: () => void } | null;
   const placed = useRef<{ key: string; controls: unknown } | null>(null);
   useEffect(() => {
-    chase.init = false;
+    resetChase(chase);
     if (mode !== 'trackside') restoreFov(camera);
     if (mode !== 'top' && mode !== 'free') return void (placed.current = null);
     // Dragging a track point moves the bounds on every update. Re-framing then would slide the map out from under the pointer.
