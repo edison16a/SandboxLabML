@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { downloadJson, exportRun } from '@/storage/exportImport';
+import { downloadJson, exportRun, runFileName } from '@/storage/exportImport';
 import { branchRun, duplicateRun, resetRun, rewindRun } from '@/storage/runActions';
 import { destroyRun, renameRun, restoreRun, trashRun } from '@/storage/runs';
 import type { RunRow } from '@/storage/db';
@@ -34,9 +34,7 @@ export function useRunActions(reload: () => Promise<void>) {
     rename: (run: RunRow, name: string) => guard(async () => { await renameRun(run.id, name); await done('Renamed'); })(),
     exportFile: (run: RunRow) =>
       guard(async () => {
-        const data = await exportRun(run.id);
-        const slug = run.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'run';
-        downloadJson(`${slug}.sandboxlab.json`, data);
+        downloadJson(runFileName(run.name), await exportRun(run.id));
       })(),
     branch: (run: RunRow, gen: number) =>
       guard(async () => {

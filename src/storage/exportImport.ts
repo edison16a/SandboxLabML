@@ -86,6 +86,11 @@ export async function importRun(text: string): Promise<RunConfig> {
   return config;
 }
 
+/** The file name a run exports to, such as oval-laps.sandboxlab.json. */
+export function runFileName(name: string): string {
+  return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'run'}.sandboxlab.json`;
+}
+
 /** Saves a run export through the browser's download flow. */
 export function downloadJson(name: string, data: unknown): void {
   const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
