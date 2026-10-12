@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Rng } from '../core/rng';
-import { countGenome, createGenome, createTemplate, InnovationTracker, Network, startingLinks, type Genome, type GenomeShape } from './index';
+import { countGenome, createGenome, createTemplate, hiddenDepth, InnovationTracker, Network, startingLinks, type Genome, type GenomeShape } from './index';
 
 /** Longest chain of enabled links from an input or the bias to any output, for tests about a brain's depth. */
 function depthOf(g: Genome): number {
@@ -57,5 +57,11 @@ describe('starting with hidden layers', () => {
     expect(startingLinks({ ...base, wiring: 'direct' })).toBe(12);
     expect(startingLinks({ ...base, wiring: 'sparse' })).toBe(7);
     expect(startingLinks({ ...base, wiring: 'hidden', hiddenCount: 4, hiddenLayers: 2 })).toBe(24 + 20 + 10);
+  });
+
+  it('reports how many hidden layers deep a brain is', () => {
+    expect(hiddenDepth(build({ ...base, wiring: 'direct' }))).toBe(0);
+    expect(hiddenDepth(build({ ...base, wiring: 'hidden', hiddenCount: 2 }))).toBe(1);
+    expect(hiddenDepth(build({ ...base, wiring: 'hidden', hiddenCount: 2, hiddenLayers: 3 }))).toBe(3);
   });
 });

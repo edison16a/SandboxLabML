@@ -12,3 +12,4 @@ export * from './population';
 export * from './serialize';
 export * from './metrics';
 export * from './startShape';
+export * from './depth';
