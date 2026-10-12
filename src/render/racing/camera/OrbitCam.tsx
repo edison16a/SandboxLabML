@@ -9,6 +9,7 @@ import { insideAt } from '../world/trackField';
 import type { WorldData } from '../world/worldData';
 import { useRacingScene } from '../sceneContext';
 import { FRAME_PRIORITY } from '../framePriority';
+import { chaseAnchor, focusOwner, stepAnchor } from './chaseAnchor';
 import { keepAboveGround } from './floor';
 import { clearFraction } from './orbitBlockers';
 
@@ -57,14 +58,17 @@ function useOrbitControls(camera: THREE.Camera): OrbitControls {
  * A free orbit round the followed car: drag to turn, right drag or two
  * fingers to pan, wheel or pinch to zoom, all damped the same at any frame
  * rate. The view rides and turns with the car, so the angle you chose
- * stays an angle on the car round the whole lap. It never sinks under the
- * hills, and slides in rather than look through the fence or a building.
+ * stays an angle on the car round the whole lap. It rides on the same
+ * gliding anchor as the chase camera, so a wobble in the car or a switch
+ * to another car never jolts it. It never sinks under the hills, and
+ * slides in rather than look through the fence or a building.
  */
 export function OrbitCam({ world, target }: { world: WorldData | null; target: React.RefObject<THREE.Vector3> }) {
   const { frame } = useRacingScene();
   const camera = useThree((s) => s.camera);
   const c = useOrbitControls(camera);
-  const last = useMemo(() => ({ pos: new THREE.Vector3(), offset: new THREE.Vector3(), yaw: 0, arm: 0, ready: false, dragging: false }), []);
+  const last = useMemo(() => ({ pos: new THREE.Vector3(), focus: new THREE.Vector3(), offset: new THREE.Vector3(), yaw: 0, arm: 0, ready: false, dragging: false }), []);
+  const anchor = useMemo(() => chaseAnchor(), []);
   useEffect(() => {
     const start = () => void (last.dragging = true);
     const end = () => void (last.dragging = false);
@@ -78,23 +82,24 @@ export function OrbitCam({ world, target }: { world: WorldData | null; target: R
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.25);
-    const focus = frame.focusPos;
-    const turn = angleDelta(last.yaw, frame.focusYaw);
-    last.yaw = frame.focusYaw;
+    const snapped = stepAnchor(anchor, frame.focusPos.x, frame.focusPos.z, frame.focusYaw, focusOwner(frame), dt);
+    const focus = last.focus.set(anchor.x, 0, anchor.z);
+    const turn = angleDelta(last.yaw, anchor.heading);
+    last.yaw = anchor.heading;
     if (!last.ready) {
       // Opening shot: a three quarter view from behind and above. It takes the infield side, where no
       // grandstand fence stands between the lens and the car.
-      let a = frame.focusYaw + Math.PI + 0.6;
+      let a = anchor.heading + Math.PI + 0.6;
       if (world && !insideAt(world.field, focus.x + Math.cos(a) * 14, focus.z - Math.sin(a) * 14)) a -= 1.2;
       c.target.copy(focus).setY(0.8);
       camera.position.set(focus.x + Math.cos(a) * 14, 5.5, focus.z - Math.sin(a) * 14);
       last.arm = camera.position.distanceTo(c.target);
       last.ready = true;
     } else {
-      // Carry the rig with the car: moved by however far it went (re-aimed if the focus jumped to another
-      // car), and turned with it unless the user is dragging, so the chosen angle stays an angle on the car.
+      // Carry the rig with the anchor: moved by however far it went (re-aimed if it jumped across the map),
+      // and turned with it unless the user is dragging, so the chosen angle stays an angle on the car.
       last.offset.copy(camera.position).sub(c.target);
-      if (last.pos.distanceToSquared(focus) > 60 * 60) c.target.copy(focus).setY(0.8);
+      if (snapped) c.target.copy(focus).setY(0.8);
       else c.target.add(focus).sub(last.pos);
       if (!last.dragging) last.offset.applyAxisAngle(UP, turn);
       // Back out to the distance the user chose, in case a building pulled the camera in last frame.
