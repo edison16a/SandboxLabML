@@ -25,14 +25,15 @@ This is the loop that makes machine learning click. You shape the goal and press
 
 ## Screenshots
 
-![Racing lab: the followed hypercar on a road through sunlit hills while the champion's network lights up live](assets/screenshots/racing-lab.png)
+![Racing lab: the chase camera behind the leading car while the champion's network lights up live](assets/screenshots/racing-lab.png)
 
 | | |
 | --- | --- |
-| ![Hide and Seek: the close action shot of a match in the Shelter room](assets/screenshots/hideseek-showcase.png) | ![Hide and Seek: 25 matches of one round at once, each marked hidden or seen](assets/screenshots/hideseek-grid.png) |
+| ![Hide and Seek: the close action shot in the Shelter room, with the seeker's vision cone](assets/screenshots/hideseek-showcase.png) | ![Hide and Seek: 25 matches of one round at once, each marked hidden or seen](assets/screenshots/hideseek-grid.png) |
 | ![Hide and Seek Sandbox: three hiders and three seekers in the Shelter room](assets/screenshots/hideseek-sandbox.png) | ![Racing Sandbox: eight champions racing the Oval](assets/screenshots/racing-sandbox.png) |
 | ![The home screen: a trained car and a live hide and seek match side by side, each with its brain](assets/screenshots/landing.png) | ![The first run walkthrough explaining the champion network as it drives](assets/screenshots/walkthrough.png) |
 | ![Racing lab, orbit view: tire smoke as a car slides through a corner](assets/screenshots/racing-orbit.png) | ![Script Studio, blocks view](assets/screenshots/studio-blocks.png) |
+| ![Racing Model tab: download the champion brain or the whole run, with the rest of the generation as ghosts at the start](assets/screenshots/racing-model.png) | ![Brain setup: start with up to three hidden layers](assets/screenshots/brain-setup.png) |
 
 ## What you can do
 
