@@ -5,22 +5,22 @@ import type { AgentPose } from '../frame/snapshotRead';
 export const MAX_ARENAS = 50;
 
 /**
- * The grid draws on layer 1. The main camera sees it; cameras that should
- * only see the focused room (first person views, contact shadows) do not.
+ * The grid draws on layer 1. The main camera sees it; the contact shadow
+ * pass, which should only see the focused room, does not.
  */
 export const GRID_LAYER = 1;
 
 /**
- * The city round the arenas draws on layer 2. The main and first person
- * cameras see it; the contact shadow pass under the room does not, so the
+ * The city round the arenas draws on layer 2. The main camera sees it; the
+ * contact shadow pass under the room does not, so the
  * city is not drawn once more for shadows it can never cast into the room.
  */
 export const BACKDROP_LAYER = 2;
 
 /**
  * The characters' see through silhouettes draw on layer 3. Only the main
- * camera sees them: a first person view must show what the agent really
- * sees, never a hider through a wall.
+ * camera sees them, and the first person views turn the layer off: they
+ * must show what the agent really sees, never a hider through a wall.
  */
 export const XRAY_LAYER = 3;
 

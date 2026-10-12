@@ -11,6 +11,7 @@ import { useFrameLoop } from '@/render/shared/frameLoop';
 import { StatsProbe } from '@/render/shared/StatsProbe';
 import type { ArenaFeed } from '@/workers/client/arenaFeed';
 import { CameraRig } from './camera/CameraRig';
+import { FirstPersonLayers } from './camera/FirstPersonLayers';
 import { FrameDriver } from './frame/FrameDriver';
 import { createHsFrame, HsSceneContext } from './frame/sceneContext';
 import { GridScene } from './grid/GridScene';
@@ -93,6 +94,7 @@ export function HideSeekCanvas({ getFeed, feeds, schemas, onMoveBox, onToggleLoc
         {sandbox && <SandboxArena tier={tier} aoPass={composer} />}
         <RaysOverlay />
         <CameraRig />
+        <FirstPersonLayers />
         {composer && <ShowcaseEffects tier={tier} photo={photo} />}
         <StatsProbe wholeFrame instances={instances} />
       </HsSceneContext.Provider>
