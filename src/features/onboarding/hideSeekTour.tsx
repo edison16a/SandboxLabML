@@ -16,7 +16,7 @@ export const HIDE_SEEK_TOUR: Tour = {
   pageOwnsEscape: () => lab().photoMode || (lab().mode === 'train' && lab().focus !== null && lab().gridSize > 1),
   intro: {
     title: 'Welcome to Hide and Seek',
-    body: 'Two teams learn against each other. Every trick one side finds pushes the other to find an answer.',
+    body: 'Two teams learn against each other. Every trick one side finds, the other has to answer.',
     icon: <Users />,
     chapters: [
       { label: LEARN, icon: <Dna /> },
@@ -31,7 +31,7 @@ export const HIDE_SEEK_TOUR: Tour = {
       target: '[data-tour="train"]',
       prefer: ['top', 'right'],
       title: 'Hiders against seekers',
-      body: 'Each team has its own small neural networks. Hiders score while no seeker can see them, and seekers score while they can.',
+      body: 'Each team has its own neural networks. Hiders score while unseen, seekers while they see a hider.',
       action: {
         prompt: 'Press Train',
         shortcut: 'Space',
@@ -40,7 +40,7 @@ export const HIDE_SEEK_TOUR: Tour = {
         then: {
           target: '[data-tour="viewport"]',
           title: '50 matches at once',
-          body: 'Each tile is an arena with one hider and one seeker. The hider gets a head start while the seeker waits, frozen and blind.',
+          body: 'Each tile is one hider against one seeker. The hider gets a head start while the seeker waits, frozen and blind.',
         },
       },
     },
@@ -50,7 +50,7 @@ export const HIDE_SEEK_TOUR: Tour = {
       target: '[data-tour="viewport"]',
       prepare: () => void keepHideSeekTraining(),
       title: 'An arms race',
-      body: 'Each arena border turns blue while its hider is winning and red while its seeker is. Both teams breed from their best, so when one pulls ahead the other answers a few generations later.',
+      body: 'A border turns blue while the hider wins and red while the seeker does. Both teams breed from their best, so when one pulls ahead, the other catches up a few generations later.',
     },
     {
       id: 'arenas',
@@ -58,7 +58,7 @@ export const HIDE_SEEK_TOUR: Tour = {
       // The whole viewport, so the arenas the step invites a click on sit in the hole and take it.
       target: '[data-tour="viewport"]',
       title: 'Fly in close',
-      body: 'The grid shows every match at once. Click any arena, or pick 1 at the top, to watch a single match up close.',
+      body: 'Click any arena, or pick 1 at the top, to watch one match up close.',
       action: {
         prompt: 'Click an arena or pick 1',
         done: () => lab().gridSize === 1 || lab().focus !== null,
@@ -66,8 +66,8 @@ export const HIDE_SEEK_TOUR: Tour = {
         then: {
           target: '[data-tour="viewport"]',
           title: 'Crates, ramps and locks',
-          body: 'Agents can grab and push crates and ramps. A seeker can push a ramp to a wall, run up it and jump over.',
-          terms: [{ term: 'Lock', meaning: 'A locked crate or ramp stays put. Only the team that locked it can free it, and the padlock color shows whose it is.' }],
+          body: 'Agents grab and push crates and ramps. A seeker can push a ramp to a wall, run up and jump over.',
+          terms: [{ term: 'Lock', meaning: 'A locked crate or ramp stays put. Only the team that locked it can free it. The padlock color shows whose it is.' }],
         },
       },
     },
@@ -96,7 +96,7 @@ export const HIDE_SEEK_TOUR: Tour = {
       target: '[data-tour="sandbox"]',
       prefer: ['top'],
       title: 'Set up your own match',
-      body: 'The Sandbox plays trained hiders and seekers in any room, even one you build. Nothing learns there.',
+      body: 'The Sandbox plays your trained teams in any room, even one you build. Nothing learns there.',
     },
     {
       id: 'studio',
@@ -104,7 +104,7 @@ export const HIDE_SEEK_TOUR: Tour = {
       target: '[data-tour="nav-studio"]',
       prefer: ['bottom'],
       title: 'Write the rules yourself',
-      body: 'In the Studio you decide what each team scores for. The lessons walk you through it. To see this tour again, use the ? button in the toolbar.',
+      body: 'In the Studio you decide what each team scores for. The lessons show you how. Replay this tour from the ? button.',
       links: [{ label: 'Start the first lesson', href: '/studio?lesson=hideseek-01-points-for-hiding' }],
     },
   ],
