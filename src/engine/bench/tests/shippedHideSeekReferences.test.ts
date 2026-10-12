@@ -24,16 +24,18 @@ describe('public/references/hideseek.json', () => {
   });
 
   /**
-   * Every preset must learn: its final score sits well above where its runs
+   * Every preset must learn: its final score sits above where its runs
    * started. The tiers used to be checked for rank order too, but with ramps
-   * in every room they end within about a point of each other at the nightly
-   * budget. See "What the references show" in docs/benchmark.md.
+   * in every room they end within about two points of each other. The gap
+   * was 8 points until engine version 3: since then Beginner's random first
+   * pairs already score about 40, and it ends near 45. See "What the
+   * references show" in docs/benchmark.md.
    */
   it('shows every preset learning', async () => {
     const refs = await readReferences('hideseek');
     for (const tier of ['beginner', 'intermediate', 'advanced']) {
       const start = refs?.references.find((r) => r.tier === tier)?.curve[0].median ?? NaN;
-      expect(final(refs, tier)).toBeGreaterThan(start + 8);
+      expect(final(refs, tier)).toBeGreaterThan(start + 4);
     }
   });
 
