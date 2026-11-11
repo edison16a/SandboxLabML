@@ -8,14 +8,15 @@ import * as THREE from 'three';
  */
 const STREET_SKY = /* glsl */ `
 float streetSky( const in vec3 r ) {
-  return mix( 0.42, 1.0, smoothstep( 0.04, 0.62, r.y ) );
+  return mix( 0.4, 0.82, smoothstep( 0.04, 0.62, r.y ) );
 }
 `;
 
 /**
  * Dims a material's environment reflections where they would point into
  * the street canyon, so glossy paint and glass keep their color under an
- * open sky map. The sky overhead still reflects in full.
+ * open sky map. The sky overhead reflects most strongly, a little below
+ * full, so bright clouds stay calm on a curved hood.
  */
 export function withStreetReflections<T extends THREE.MeshStandardMaterial>(material: T): T {
   const before = material.onBeforeCompile.bind(material);
