@@ -47,7 +47,36 @@ Overlay generations and round replays work by re-simulating genomes, so results 
 * Every random choice goes through a seeded `Rng` (sfc32). Episode seeds are mixed from the run seed, generation and genome id or match index.
 * Cars and matches never share state, so a champion replayed alone matches its training run tick for tick. A unit test checks this.
 * Weights are rounded to float32 when mutated, so the compact binary genome format (16 bytes per connection, 8 per neuron) round-trips exactly.
-* The physics config is frozen per run and hashed, and every run stores its engine version: `ENGINE_VERSION` for Racing, `HIDESEEK_ENGINE_VERSION` for Hide and Seek. They are separate, so a change to one game never blocks replays of the other. A mismatch shows "cannot replay" instead of a wrong path.
+* The physics config is frozen per run and hashed, and every run stores its env's engine version: the module's `engineVersion` (`ENGINE_VERSION` for Racing) or `HIDESEEK_ENGINE_VERSION` for Hide and Seek. They are separate, so a change to one game never blocks replays of the other. A mismatch shows "cannot replay" instead of a wrong path.
+
+## Adding an environment
+
+Racing, Driving and Navigation share one shape: a population of independent agents in one shared world. Every agent has its own brain, agents never touch each other, and a generation runs every brain once. One pipeline trains, replays, stores, benchmarks and teaches every env of that shape. Hide and Seek trains two teams in many arenas and keeps its own path.
+
+An env plugs in with its own modules and one entry per layer:
+
+| Layer | What the env provides | The one entry |
+| --- | --- | --- |
+| Engine | An `EpisodeEnvModule` (`src/engine/env/episode.ts`) and an env class that implements `EpisodeEnv` | Add the id to `EnvId` in `src/engine/env/types.ts` and the module to the map in `src/engine/env/registry.ts` |
+| Scripts | A registry slice (`src/engine/script/registry/<env>/`) and its preset scripts | A row in `SCRIPT_ENV_TABLE` (`src/engine/script/envs.ts`) |
+| Lessons | Lesson JSON under `content/lessons/<env>/` and the module's `lessons` hooks | The imports in `src/engine/lessons/catalog.ts` |
+| Shell | A route under `app/lab/` and the lab component | A row in `LABS` (`src/features/shell/labs.ts`) |
+
+Everything else finds the env through those entries: the trainer, the sim and replay workers, run storage and export, the Runs page, the benchmark, the Studio's checker, palette, reference, test run and lessons.
+
+**The env class** is stepped in lockstep at the module's `tickHz`. `reset(brains, seeds, slots)` starts an episode, `step()` advances every running agent, `done` says when all stopped and `results()` gives one result per agent with at least `fitness`, `time` and `stopReason`. `writeSnapshot` writes `snapshot.stride` floats per agent, and `writeWorld` writes `worldFloats` floats of state that is not per agent (lights, traffic, movers) right after them in the same frame. `leaderIndex`, `lastObservation`, `writeOutputs` and `writeRays` feed the camera and the inputs overlay. Steps, snapshots and world writes allocate nothing.
+
+**The module** describes the env to the pipeline:
+
+* Brains: `blueprints` (preset brains, simplest first), `inputCount`, `inputSchema` (labels and scales, script sensors last), `outputs`, `validateInputs` and `physicsHash`.
+* Content: what the population trains on now, such as a track, a city and level, or a course level. `initialContent` reads the run, `nextContent` moves it on after each generation from the script's requests (`directives.env`, written by the env's registry operators) or the env's own curriculum, and `contentHash` names it on every record. Content is plain data and lives in checkpoints.
+* Episodes: `createSetup` turns the run, the content and the generation into a plain setup a worker can rebuild (it carries `scriptSource`), and `createEnv(setup, host, seed)` builds the episode. `host.createController` returns the script's controller, or null for a run without a script, when the env uses its built in reward.
+* Records: `championFields` gives the champion's numbers (newer envs return `{ metrics }`), `generationMetrics` gives stats over the whole population, and `metrics` declares both with labels, units and formats, so the champion table, lesson checks and generation blocks (`ctx.metrics`) read them without knowing the env.
+* Optional hooks: `bench` (held out content, a score from 0 to 100 and radar axes), `telemetry` (distance, speed and brake per tick for the speed strip) and `lessons` (what a test run measures, the lesson brain and settings, and a fixed test brain).
+
+Each env has its own `engineVersion`, so changing one env never blocks replays or references of another. A run of an env keeps its options under `settings` (`envSettings` reads them), and `createEpisodeRunConfig` builds a new run from the module. Runs of an env a build does not have stay stored but are left out of every list.
+
+**The lab** wraps its page in `LabProvider` with its env, module, a store that extends `LabState`, an `EpisodeSession` and its last run key. The shared toolbar, run switcher, side panel and its tabs, inputs card, viewport controls, new run dialog bones (`NewRunShell`) and the bootstrap, schema, inspect, shortcut and quality hooks then work as they do for Racing. The lab adds its viewport, HUD and anything only it has, and a session subclass adds its own store fields through the session's hooks. A test only toy env (`src/engine/env/tests/toyEnv.ts`) runs the whole pipeline and is a small example of the contract.
 
 ## Racing
 
