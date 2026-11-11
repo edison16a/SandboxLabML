@@ -1,6 +1,6 @@
 import type { MetricSpec } from '../../env/metrics';
 import type { ChampionRecord } from '../../training/records';
-import { drivingLevel } from '../levels';
+import { drivingLevel, MAX_LEVEL } from '../levels';
 import type { DrivingContent } from './content';
 import type { DrivingRunResult } from './results';
 
@@ -13,7 +13,8 @@ const percent = (v: number) => (Number.isFinite(v) ? `${Math.round(v * 100)}%` :
  * (the curriculum, arrivals and safety), so they skip the generic picker.
  */
 export const DRIVING_METRICS: readonly MetricSpec[] = [
-  { key: 'level', label: 'Level', unit: '', source: 'generation', better: 'higher', chart: false, summary: true, format: (v) => (Number.isFinite(v) ? drivingLevel(v).name : '-') },
+  // A run card shows this as its headline, in a narrow column: "Level 2 of 5" fits where the level's name would not.
+  { key: 'level', label: 'Level', unit: '', source: 'generation', better: 'higher', chart: false, summary: true, format: (v) => (Number.isFinite(v) ? `${drivingLevel(v).id} of ${MAX_LEVEL}` : '-') },
   { key: 'arrived', label: 'Arrived', unit: '%', source: 'generation', better: 'higher', chart: false, format: percent },
   { key: 'safe', label: 'Safe arrivals', unit: '%', source: 'generation', better: 'higher', chart: false, format: percent },
   { key: 'eliteSafe', label: 'Top fifth safe', unit: '%', source: 'generation', better: 'higher', chart: false, format: percent },

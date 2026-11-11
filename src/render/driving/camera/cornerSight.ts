@@ -20,7 +20,11 @@ const SAMPLES = [0, 7.5, 15, 22.5, 30];
  * as bad as a fully blocked one.
  */
 const TOO_CLOSE = 2.4;
-/** How far the camera steps out along the cross street to clear a pole beside it, m. */
+/**
+ * How far the camera steps on along the far sidewalk, away from the
+ * junction, to clear a pole beside it, m. Stepping along the street keeps
+ * the view down the approach clear of the buildings on the corner.
+ */
 const CLEAR_STEP = 3.2;
 
 /** A camera spot on a corner, in sim meters, and its height. */
@@ -108,6 +112,6 @@ export function pickCornerSpot(city: City, node: number, dir: number, turn: numb
   const lx = -fy * bestSide;
   const ly = fx * bestSide;
   const raised = { x: best!.x + lx * DODGE, y: best!.y + ly * DODGE, height: RAISED_HEIGHT };
-  // Further out along the cross street when a pole still stands at the lens.
-  return crowded(city, raised) ? { x: best!.x + lx * CLEAR_STEP, y: best!.y + ly * CLEAR_STEP, height: RAISED_HEIGHT } : raised;
+  // On along the far sidewalk when a pole still stands at the lens.
+  return crowded(city, raised) ? { x: best!.x + fx * CLEAR_STEP, y: best!.y + fy * CLEAR_STEP, height: RAISED_HEIGHT } : raised;
 }
