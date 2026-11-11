@@ -17,7 +17,7 @@ test.describe('Navigation walkthrough', () => {
     await expect(card).toBeFocused();
     await card.getByRole('button', { name: 'Start the tour' }).click();
     await expect(title('Every runner has a brain')).toBeVisible();
-    await expect(card).toContainText('1 / 9');
+    await expect(card).toContainText('1 / 10');
 
     // The step waits for the real Train button, then explains what it set going.
     await expect(card).toContainText('Press Train');
