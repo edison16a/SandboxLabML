@@ -4,6 +4,7 @@ import type { DrivingLevel } from '../levels';
 import { Pedestrians } from '../peds/pedestrians';
 import { axisOf, lightState, walkState } from '../signals/plan';
 import type { TrafficContext } from '../traffic/rules';
+import { markThreats } from '../traffic/threats';
 import { Traffic, type KeepClear } from '../traffic/traffic';
 import { createWorldState, type WorldState } from './state';
 
@@ -21,6 +22,8 @@ export class CityWorld {
   private rng = new Rng(0);
   private keep: KeepClear | null = null;
   private readonly ctx: TrafficContext;
+  /** Crossings a car is about to drive over, for people deciding whether to step out. */
+  private readonly threat: Uint8Array;
 
   constructor(
     readonly city: City,
@@ -29,6 +32,7 @@ export class CityWorld {
     this.state = createWorldState(city.signals.length);
     this.peds = new Pedestrians(city);
     this.traffic = new Traffic(city);
+    this.threat = new Uint8Array(city.crosswalks.length);
     this.ctx = { time: 0, signalsOn: level.signals, signalOffsets: city.signalOffsets, busy: this.peds.busy, jayX: this.peds.jayX, jayY: this.peds.jayY, jayCount: 0 };
   }
 
@@ -40,16 +44,19 @@ export class CityWorld {
     this.state.signalsOn = this.level.signals;
     this.peds.reset(this.level.pedestrians, this.level, this.rng);
     this.traffic.reset(this.level.traffic, this.rng, keep);
+    this.ctx.time = 0;
+    markThreats(this.traffic.fleet, this.ctx, this.threat);
     this.writeState();
   }
 
   step(dt: number): void {
     const time = this.state.time;
-    this.peds.step(dt, time, this.level.signals, this.level, this.rng);
+    this.peds.step(dt, time, this.level.signals, this.level, this.rng, this.threat, this.state);
     const ctx = this.ctx;
     ctx.time = time;
     ctx.jayCount = this.peds.jayCount;
     this.traffic.step(dt, ctx, this.rng, this.keep);
+    markThreats(this.traffic.fleet, ctx, this.threat);
     this.state.time = time + dt;
     this.writeState();
   }

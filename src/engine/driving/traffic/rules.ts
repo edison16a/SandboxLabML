@@ -14,6 +14,8 @@ const FIRM_BRAKE = 6;
 const TURN_BRAKE = 1.6;
 /** How far before a line a car comes to rest, m. */
 const STOP_MARGIN = 0.8;
+/** People crossing mid block this far to either side of a car's path make it wait: the whole street and its sidewalks, m. */
+const JAY_SIDE = 7.5;
 
 /** Reused result of the lead search. */
 const lead: Lead = { gap: Infinity, dv: 0 };
@@ -101,7 +103,8 @@ export function trafficAccel(f: Fleet, i: number, ctx: TrafficContext): number {
     const ry = ctx.jayY[k] - f.py[i];
     const fwd = rx * Math.cos(f.ph[i]) + ry * Math.sin(f.ph[i]);
     const side = -rx * Math.sin(f.ph[i]) + ry * Math.cos(f.ph[i]);
-    if (fwd > half && fwd < 35 && Math.abs(side) < 2.6) stop = Math.min(stop, standing(fwd - half, 1.8));
+    // Anyone crossing this street ahead counts, from the moment they leave the sidewalk, and so does someone level with the front half.
+    if (fwd > 0 && fwd < 35 && Math.abs(side) < JAY_SIDE) stop = Math.min(stop, standing(Math.max(0, fwd - half), 1.8));
   }
   if (v0 < f.v0[i]) a = Math.min(a, idm(v, v0, gap, dv));
   if (stop < Infinity) a = Math.min(a, idm(v, v0, stop, v));

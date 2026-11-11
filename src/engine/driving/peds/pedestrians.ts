@@ -15,9 +15,10 @@ const DRIFT = 0.5;
 
 /**
  * Walks the city's people. They follow the sidewalks, wait at the curb for
- * the walk signal and cross on it; at rush hour a few go on the flashing
- * hand or cross mid block. They never react to the learners, which keeps
- * one shared city fair for the whole population.
+ * the walk signal and cross on it once no turning car is coming; at rush
+ * hour a few go on the flashing hand or cross mid block when the street is
+ * clear. They see traffic but never the learners, which keeps one shared
+ * city fair for the whole population.
  */
 export class Pedestrians {
   readonly crowd = new Crowd();
@@ -115,7 +116,12 @@ export class Pedestrians {
     c.mode[i] = PED_WALK;
   }
 
-  step(dt: number, time: number, signalsOn: boolean, level: DrivingLevel, rng: Rng): void {
+  /**
+   * One tick. `threat` marks crossings a car is about to drive over and
+   * `world` holds last tick's traffic: people look both ways and only step
+   * out when no car is coming.
+   */
+  step(dt: number, time: number, signalsOn: boolean, level: DrivingLevel, rng: Rng, threat: Uint8Array, world: WorldState): void {
     const c = this.crowd;
     const city = this.city;
     this.busy.fill(0);
@@ -140,13 +146,13 @@ export class Pedestrians {
             this.waitSpot(i, c.crossing[i], c.end[i]);
           } else if (k >= 0) c.cooldown[i] = 3;
         }
-        if (level.jaywalk > 0 && c.mode[i] === PED_WALK && rng.chance((level.jaywalk / 60) * dt) && jaywalkTarget(city, c, i, this.proj)) c.mode[i] = PED_JAYWALK;
+        if (level.jaywalk > 0 && c.mode[i] === PED_WALK && rng.chance((level.jaywalk / 60) * dt) && jaywalkTarget(city, c, i, this.proj, world)) c.mode[i] = PED_JAYWALK;
       } else if (mode === PED_WAIT) {
         const k = city.crosswalks[c.crossing[i]];
         const walk = walkState(time, city.signalOffsets[city.nodes[k.node].signal], k.walkAxis, signalsOn);
         const arrived = this.walkTo(i, dt, 1);
         if (arrived) c.heading[i] = Math.atan2(k.y - c.y[i], k.x - c.x[i]);
-        if (arrived && (walk === WALK_GO || (walk === WALK_FLASHING && c.late[i]))) {
+        if (arrived && (walk === WALK_GO || (walk === WALK_FLASHING && c.late[i])) && !threat[k.id]) {
           this.busy[k.id] = 1;
           const other = 1 - c.end[i];
           this.waitSpot(i, k.id, other);
