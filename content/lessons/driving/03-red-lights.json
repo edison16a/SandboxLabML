@@ -9,7 +9,7 @@
     {
       "id": "switch-the-lights-on",
       "title": "Switch the lights on",
-      "body": "So far the streets were empty and the lights were off. The `each generation` block at the bottom runs once between generations and can change what the next one drives.\n\nCall `useLevel(level: 2)` there. Level 2 is the first with traffic lights. The test drive stays on empty streets, so you can still compare scores.",
+      "body": "So far the streets were empty and the lights were off. The `each generation` block at the bottom runs once between generations and can change what the next one drives.\n\nCall `useLevel(level: 2)` there. Level 2 is the first with traffic lights. The preview and the test drive follow the level your script asks for, so watch the test driver wait at a red light.",
       "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Red lights\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Switch the traffic lights on here.\n}\n",
       "highlight": {
         "lines": [
@@ -94,7 +94,7 @@
     {
       "id": "pay-for-waiting",
       "title": "Make waiting pay",
-      "body": "Waiting at a red earns nothing, while driving on earns progress. Until a brain has learned that running reds ends its trip, waiting looks like the worse choice.\n\nA tiny reward for standing at a red light close to its line makes braking pay at once. `light.red` is true while the next light is red, and `light.distance` is how far its stop line is.",
+      "body": "Waiting at a red earns nothing, while driving on earns progress. Until a brain has learned that running reds ends its trip, waiting looks like the worse choice.\n\nA tiny reward for standing at a red light close to its line makes braking pay at once. `light.red` is true while the next light is red, and `light.distance` is how far its stop line is. The test driver waits at a red on this trip, so its score should pass 18.",
       "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Red lights\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Add a reward for waiting at a red light here.\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Level 2 adds traffic lights to the empty streets.\n  useLevel(level: 2)\n}\n",
       "highlight": {
         "lines": [
@@ -102,17 +102,11 @@
         ]
       },
       "check": {
-        "kind": "astContains",
-        "anyOf": [
-          {
-            "stmt": "reward",
-            "scope": "tick",
-            "uses": [
-              "light.red"
-            ]
-          }
-        ],
-        "message": "Add a reward inside each tick that uses light.red."
+        "kind": "testRun",
+        "metric": "totalReward",
+        "op": ">",
+        "value": 18,
+        "message": "The test drive should score more than 18 points while it waits at the red light."
       },
       "hints": [
         "Combine three conditions with and: the light is red, it is close, and the SUV has stopped.",

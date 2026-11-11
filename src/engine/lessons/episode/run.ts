@@ -50,7 +50,7 @@ export function lessonRunConfig(p: PreparedWithBrain): RunConfig {
     seed: LESSON_SEED,
     blueprint: p.blueprint,
     populationSize: LESSON_POPULATION,
-    settings: lessonsOf(p.env).settings(),
+    settings: lessonsOf(p.env).settings(p.script),
     script: { source: p.source, hash: p.script.sourceHash, customSensors: p.script.sensors.length },
   });
 }

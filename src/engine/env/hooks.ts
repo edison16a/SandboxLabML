@@ -6,6 +6,7 @@
 import type { BenchOptions, BenchResult } from '../bench/types';
 import type { Genome, GenomeShape } from '../neat/types';
 import type { RunConfig } from '../training/runConfig';
+import type { ScriptHost } from '../training/scriptHost';
 import type { EpisodeEnv, EpisodeResult } from './episode';
 import type { InputSpec } from './types';
 
@@ -61,8 +62,13 @@ export interface EpisodeLessonsInfo {
 export interface EpisodeLessons<R extends EpisodeResult> extends EpisodeLessonsInfo {
   /** The env numbers of one finished test episode, keyed like testRunMetrics. */
   measure(result: R): Record<string, number>;
-  /** Run settings for lesson checks. Short episodes keep a check to a few seconds. */
-  settings(): Readonly<Record<string, unknown>>;
+  /**
+   * Run settings for lesson checks. Short episodes keep a check to a few
+   * seconds. The lesson script comes along, so an env can start a test
+   * where the script's generation block points (Driving drives the level a
+   * script's useLevel asks for, so a lesson about red lights shows some).
+   */
+  settings(script?: Pick<ScriptHost, 'runGeneration'>): Readonly<Record<string, unknown>>;
   /** The fixed hand set brain of every test run, so a test means the same thing for every brain shape. */
   testBrain(shape: GenomeShape, schema: readonly InputSpec[]): Genome;
   /**

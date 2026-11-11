@@ -41,7 +41,7 @@ export function initialDrivingContent(config: RunConfig): DrivingContent {
  * operators), read loosely: anything of the wrong type is ignored, as if
  * the operator had not run.
  */
-interface DrivingRequests {
+export interface DrivingRequests {
   city?: string;
   level?: number;
   trips?: number;
@@ -49,7 +49,7 @@ interface DrivingRequests {
   autoLevel?: number;
 }
 
-function requestsOf(env: Record<string, unknown> | undefined): DrivingRequests {
+export function requestsOf(env: Record<string, unknown> | undefined): DrivingRequests {
   const r: DrivingRequests = {};
   if (!env) return r;
   if (typeof env.city === 'string' && isCityId(env.city)) r.city = env.city;
