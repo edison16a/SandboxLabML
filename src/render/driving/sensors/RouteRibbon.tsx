@@ -51,10 +51,11 @@ void main() {
 }`;
 
 /**
- * The plan: a soft band with a bright core, fading in just ahead of the
- * car and out toward the horizon, with pulses flowing forward along it at
- * a steady pace so the direction of travel reads at a glance. Past the
- * destination nothing is drawn.
+ * The plan: a soft glowing band the width of the car, with chevrons
+ * flowing forward inside it at a steady pace, so the way ahead and the
+ * direction of travel read at a glance, turn included. It fades in just
+ * ahead of the car and out toward the horizon. Past the destination
+ * nothing is drawn.
  */
 const fragment = /* glsl */ `
 uniform vec3 uColor;
@@ -70,10 +71,11 @@ void main() {
   float fadeIn = smoothstep(1.5, 9.0, ahead);
   float fadeOut = 1.0 - smoothstep(${AHEAD * 0.55}, ${AHEAD.toFixed(1)}, ahead);
   float edge = 1.0 - abs(vAcross);
-  // A soft wide glow, a brighter rim along each edge and a fine core line down the middle.
-  float band = smoothstep(0.0, 0.7, edge) * 0.26 + smoothstep(0.08, 0.0, abs(edge - 0.16)) * 0.42 + smoothstep(0.93, 0.99, edge) * 0.7;
-  float pulse = 0.7 + 0.3 * smoothstep(0.55, 1.0, fract((vAlong - uTime * 9.0) / 7.0));
-  float a = band * pulse * fadeIn * fadeOut * uOpacity;
+  float fill = smoothstep(0.0, 0.5, edge) * 0.52;
+  // Chevrons: a stripe whose ends trail behind its middle, so it points forward, sliding along at 6 m/s.
+  float f = fract((vAlong + abs(vAcross) * 2.2 - uTime * 6.0) / 4.6);
+  float chevron = smoothstep(0.0, 0.04, f) * (1.0 - smoothstep(0.17, 0.23, f)) * smoothstep(0.06, 0.3, edge);
+  float a = (fill + chevron * 0.62) * fadeIn * fadeOut * uOpacity;
   gl_FragColor = vec4(uColor * a, a);
 }`;
 
