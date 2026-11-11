@@ -7,13 +7,12 @@ import { useEffect, useMemo, useRef } from 'react';
 import { HAZE } from '@/render/hideseek/scene/haze';
 import { NAV_COLORS } from '../palette';
 import type { NavQualityTier } from '../types';
+import { KEY, snapShadowTarget } from './shadowSnap';
 
-/** Key light direction: high and from the front left, as in Hide and Seek, so walls and crates throw readable shadows. */
-const KEY = new THREE.Vector3(-0.55, 1, 0.42).normalize();
 /** Smallest and largest half size of the shadow box, m. It grows with the view so a close shot gets crisp shadows and an overview gets all of them. */
 const SHADOW_MIN = 9;
 const SHADOW_MAX = 30;
-/** The box size snaps to steps this big, m, and its center to whole texels, so shadows never crawl as the camera moves. */
+/** The box size snaps to steps this big, m, and its center to whole texels of the map, so shadows never crawl as the camera moves. */
 const SIZE_STEP = 3;
 
 /**
@@ -54,12 +53,9 @@ export function NavLighting({ tier, shadows }: { tier: NavQualityTier; shadows: 
       cam.right = cam.top = half;
       cam.updateProjectionMatrix();
     }
-    const texel = (2 * half) / mapSize;
-    const x = Math.round(ax / texel) * texel;
-    const z = Math.round(az / texel) * texel;
-    target.position.set(x, 0, z);
+    const t = snapShadowTarget(ax, az, (2 * half) / mapSize, target.position);
     target.updateMatrixWorld();
-    l.position.set(x + KEY.x * 40, KEY.y * 40, z + KEY.z * 40);
+    l.position.set(t.x + KEY.x * 40, t.y + KEY.y * 40, t.z + KEY.z * 40);
   });
 
   return (
