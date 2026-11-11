@@ -59,8 +59,8 @@ test.describe('Navigation lab', () => {
     await page.keyboard.press('i');
     await expect(page.getByText('Followed runner')).toBeVisible();
     await expect.poll(async () => (await stats(page))?.instances.rays ?? 0, { timeout: 90_000 }).toBeGreaterThan(0);
-    // The readout is the runner's real inputs, streamed from the worker: a number, not a dash.
-    await expect(page.getByText('Followed runner').locator('..')).toContainText(/\d m\/s/, { timeout: 90_000 });
+    // The readout is the runner's real inputs, streamed from the worker: a number, not a dash. New runs start on the Starter brain.
+    await expect(page.getByText('Followed runner').locator('..')).toContainText(/Finish distance\s*\d+\.\d+ m/, { timeout: 90_000 });
     await page.keyboard.press(' ');
     await expect(page.getByRole('button', { name: 'Train' })).toBeVisible();
   });
