@@ -51,15 +51,18 @@ export function sectionAt(x: number): Section {
   const [bz, by] = beltAt(x);
   const v = by - deckY(x);
   // The shoulder: the side arrives upright, the shelf leaves leaning in, a little flatter on the front fender.
-  // Round the nose's corner the crease softens and turns over further, so it flows into the hood's edge.
+  // Round the nose's corner the shelf flattens until it runs level into the fender peak, which has come down
+  // to the shoulder's height by the face, and the crease softens a little. The face's top outline then rises
+  // from the valley, runs level over the lamp and turns down into the side over one small radius.
   const up = deg(-3);
-  const shelf = deg(58 + 8 * onHood(x) + 40 * turn);
-  const r = SHOULDER_R * (1 + (x > 0 ? pull.side / ROUND.nose.plan : 0));
+  const shelf = deg(58 + 8 * onHood(x) + 26 * turn);
+  const r = SHOULDER_R * (1 + (x > 0 ? 0.4 * (pull.side / ROUND.nose.plan) : 0));
   const t = r * Math.tan((shelf - up) / 2);
   // Along the cabin the shelf ends under the glass; on the hood it crests flat at the fender peak, and the tail's deck flattens too.
   const crest = deg(72 + 18 * onHood(x) + 8 * smooth((-x - 2.0) / 0.3));
-  // On the hood the peak is a soft crease, so a line of light runs along each fender from the A pillar to the lamp.
-  const crease = deg(12) * smooth((x - 0.9) / 0.45);
+  // On the hood the peak is a soft crease, so a line of light runs along each fender from the A pillar to the
+  // lamp. Over the lamp it melts into a round crest, so the hood's leading edge has no notch where it meets.
+  const crease = deg(12) * smooth((x - 0.9) / 0.45) * (1 - smooth((x - NOSE + ROUND.nose.plan) / 0.3));
   // The valley falls from the peak to a floor on the centerline like half a cosine wave: flat at both ends, one U, no ridge.
   const fall = Math.atan((Math.PI / 2) * Math.sin(0.45 * Math.PI) * (v / Math.max(bz, 0.2)));
   const keys: Key[] = [
