@@ -93,6 +93,22 @@ describe('what the Navigation viewport shows', () => {
     expect(feeds.getGhosts()).toBe(feeds.ghosts);
   });
 
+  it('shows the whole course while idle, and lines the next generation up between watched ones', () => {
+    const state = lab();
+    const { population, ghosts, feeds } = setup(state);
+    expect(feeds.getFeed()?.leaderless).toBe(true);
+    ghosts.start(3);
+    ghosts.frame(NAV_RUNNING);
+    Object.assign(state, { status: 'running', speed: '2x' });
+    population.start(20);
+    const between = feeds.getFeed();
+    expect(between).not.toBe(feeds.population);
+    expect(between?.count).toBe(20);
+    expect(between?.leaderless).toBe(false);
+    population.frame(NAV_RUNNING);
+    expect(feeds.getFeed()).toBe(feeds.population);
+  });
+
   it('shows ghosts only in the overlay view, and the bare room when there are none yet', () => {
     const state = lab({ view: 'overlay', status: 'running', speed: '1x' });
     const { population, ghosts, feeds } = setup(state);

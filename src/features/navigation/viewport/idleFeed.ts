@@ -1,6 +1,7 @@
 import { mixSeed } from '@/engine/core/rng';
 import type { Course } from '@/engine/navigation/course/build';
 import { formationSlots } from '@/engine/navigation/course/formation';
+import { startSlotSeed } from '@/engine/training/episodeTrainer';
 import { NavigationEnv } from '@/engine/navigation/env';
 import { builtinNavigationController } from '@/engine/navigation/builtinReward';
 import { IDLE_BRAIN } from '@/engine/navigation/navigator/navigator';
@@ -14,8 +15,9 @@ import type { RunConfig } from '@/engine/training/runConfig';
 import type { NavFeed } from '@/render/navigation/types';
 
 /**
- * What the viewport shows before anything streams: the course the next
- * generation runs, with the population lined up on its start grid. It is
+ * What the viewport shows before anything streams, and in the moment
+ * between two watched generations: the course the next generation runs,
+ * with the population lined up on its start grid. It is
  * built once per run and content, on the main thread, from the same
  * course code the workers run, so the first live frame lands on the very
  * room already on screen.
@@ -31,6 +33,8 @@ export class IdleFeed implements NavFeed {
   timeScale = 1;
   inputs: NavigationInputConfig | null = null;
   follow: number | null = null;
+  /** Set while nothing trains: the view then shows the whole course rather than one runner. */
+  leaderless = false;
   level = 0;
   /** What the feed was last built from, compared field by field so a frame with nothing new builds no key. */
   private builtRun: RunConfig | null = null;
@@ -62,7 +66,8 @@ export class IdleFeed implements NavFeed {
     env.reset(
       Array.from({ length: count }, () => IDLE_BRAIN),
       Array.from({ length: count }, (_, i) => mixSeed(run.seed, content.generation, i)),
-      formationSlots(count, mixSeed(run.seed, content.generation)),
+      // The slots training hands out this generation, so the first live frame finds everyone where they stood.
+      formationSlots(count, startSlotSeed(run.seed, content.generation)),
     );
     this.curr = new Float32Array(Math.max(1, count) * NAVIGATION_SNAPSHOT.stride);
     env.snapshot(this.curr);

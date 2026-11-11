@@ -45,9 +45,12 @@ export class LabFeeds {
     if (!s.run || s.run.env !== 'navigation') return null;
     this.sync(s);
     if (this.showsPopulation(s)) return this.population;
-    if (this.showsGhosts(s)) return null;
+    // Between two watched generations the next one lines up, so the view never flicks over to the ghosts.
+    const between = s.mode === 'train' && s.view !== 'overlay' && s.status === 'running' && isWatchSpeed(s.speed);
+    if (!between && this.showsGhosts(s)) return null;
     // Nothing streams: the room the next generation runs, with the population on the grid unless only ghosts are wanted.
     this.idle.sync(s.run, s.content, s.view !== 'overlay');
+    this.idle.leaderless = s.status !== 'running';
     return this.idle;
   };
 

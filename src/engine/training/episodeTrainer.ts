@@ -25,6 +25,11 @@ const SCRIPT_RNG_SALT = 0x5c;
 /** Mixed into the seed of each generation's start slots. */
 const SLOT_SALT = 0x51a7;
 
+/** The seed of a generation's start slots (see EpisodeEnvModule.startSlots), so a lab can line agents up as training will. */
+export function startSlotSeed(runSeed: number, generation: number): number {
+  return mixSeed(runSeed, generation, SLOT_SALT);
+}
+
 /**
  * Seed of the script controller for a training episode of `generation`.
  * Workers, lessons and tests all use it, so an episode run anywhere draws
@@ -102,7 +107,7 @@ export class EpisodeTrainer<Setup extends EpisodeSetup = EpisodeSetup, Content =
    * every worker and every replay agrees.
    */
   slots(): number[] | undefined {
-    return this.module.startSlots?.(this.genomes.length, mixSeed(this.config.seed, this.generation, SLOT_SALT));
+    return this.module.startSlots?.(this.genomes.length, startSlotSeed(this.config.seed, this.generation));
   }
 
   /**

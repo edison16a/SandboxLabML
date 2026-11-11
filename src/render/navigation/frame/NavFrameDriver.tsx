@@ -58,7 +58,8 @@ export function NavFrameDriver({ onFollow }: { onFollow?: (ghost: boolean, index
     blendMovers(feed.prevWorld, feed.world, frame.alpha, frame.movers);
     const before = frame.leader;
     const pinned = feed.follow;
-    frame.leader = pinned !== null && pinned !== undefined && pinned >= 0 && pinned < frame.count ? pinned : picker.pick(frame.curr, frame.count, frame.time, frame.epoch);
+    if (feed.leaderless) frame.leader = -1;
+    else frame.leader = pinned !== null && pinned !== undefined && pinned >= 0 && pinned < frame.count ? pinned : picker.pick(frame.curr, frame.count, frame.time, frame.epoch);
     if (frame.leader !== before) frame.leaderVersion++;
     if (frame.leader >= 0 && frame.curr) blendAgent(frame.prev, frame.curr, frame.leader, frame.alpha, frame.leaderPose);
     layGhosts(frame, usePop ? ghosts : feed, usePop ? -1 : frame.leader);

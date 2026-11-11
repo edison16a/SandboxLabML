@@ -42,6 +42,8 @@ export interface NavFeed {
   inputs: NavigationInputConfig | null;
   /** An agent the view must follow (one the user picked), or null to follow the best. */
   follow?: number | null;
+  /** A still scene with nobody to follow, such as the lab before it trains: the view shows the whole course. */
+  leaderless?: boolean;
   /** Per agent tags: for a ghost replay, the generation each ghost comes from. */
   tags?: Int32Array;
   /**
