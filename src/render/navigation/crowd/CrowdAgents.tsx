@@ -145,7 +145,8 @@ export function CrowdAgents() {
     <group>
       <instancedMesh ref={solid} args={[a.geometry, solidMat, MAX_AGENTS]} frustumCulled={false} castShadow receiveShadow />
       {/* After the champion's own passes, so a ghost in front of it only tints it. */}
-      <instancedMesh ref={fading} args={[b.geometry, fadeMat, MAX_AGENTS]} frustumCulled={false} renderOrder={5} castShadow receiveShadow customDepthMaterial={fadeShadow} />
+      {/* It casts its thinning shadow but takes none: a hashed shadow falling on its own see-through body speckles it. */}
+      <instancedMesh ref={fading} args={[b.geometry, fadeMat, MAX_AGENTS]} frustumCulled={false} renderOrder={5} castShadow customDepthMaterial={fadeShadow} />
     </group>
   );
 }
