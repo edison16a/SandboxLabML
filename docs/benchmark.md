@@ -184,11 +184,11 @@ Every trip is timed against the autopilot, the hand written driver that knows th
 
 Each trip gets three numbers between 0 and 1.
 
-Completion is the share of the trip covered, 1 on arrival.
+Completion is the share of the trip covered: 1 on arrival, and at most 0.9 without one. Driving straight through the destination covers the whole route, but it is not arriving, so only arriving earns the last tenth.
 
 Safety is that share again, times how cleanly it was driven: 0 for a crash, a person hit or leaving the road, half off for each red light run, a fifth off for each stop line overrun, and less for the share of the time spent speeding, on the wrong side or out of the lane. Scaling by the share covered means a brain that parks at the start is not called safe.
 
-Efficiency is the autopilot's time over the brain's on an arrival. A trip that does not arrive scores its mean pace against the autopilot's, times the share covered.
+Efficiency is the autopilot's time over the brain's, times how clean the drive was, and only on an arrival. A trip that does not arrive has no pace to score. A brain that beats the autopilot by running a red light loses half its pace credit with half its safety, so cutting rules never pays.
 
 The radar averages the three over all sixteen trips. The fourth axis, generalization, is the score of the weaker city, so a brain that copes with one street layout and not the other scores low there. The score is a weighted sum of the radar:
 

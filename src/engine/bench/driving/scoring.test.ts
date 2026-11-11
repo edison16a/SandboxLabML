@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DrivingResult } from '../../driving/results';
 import type { DrivingExamCourse } from './exam';
-import { DRIVING_WEIGHTS, drivingComposite, scoreTrip, tripsScore } from './scoring';
+import { DRIVING_WEIGHTS, drivingComposite, scoreTrip, SHORT_OF_ARRIVAL, tripsScore } from './scoring';
 
 const course = { par: { time: 40, length: 200 } } as DrivingExamCourse;
 
@@ -38,11 +38,26 @@ describe('Driving scoring', () => {
     expect(Object.values(DRIVING_WEIGHTS).reduce((a, b) => a + b, 0)).toBeCloseTo(1, 9);
   });
 
-  it('never calls a crash safe, and halves the covered share it drove', () => {
+  it('never calls a crash safe, and gives it no pace', () => {
     const s = scoreTrip(result({ arrived: false, crashed: true, stopReason: 'crash', distance: 100, time: 20 }), course);
     expect(s.completion).toBeCloseTo(0.5);
     expect(s.safety).toBe(0);
-    expect(s.efficiency).toBeCloseTo(0.5);
+    expect(s.efficiency).toBe(0);
+  });
+
+  it('scores driving through the destination clearly below arriving', () => {
+    const through = scoreTrip(result({ arrived: false, safe: false, stopReason: 'lost', distance: 212, time: 30 }), course);
+    expect(through.completion).toBe(SHORT_OF_ARRIVAL);
+    expect(through.efficiency).toBe(0);
+    expect(tripsScore(through)).toBeLessThan(tripsScore(scoreTrip(result({}), course)) - 20);
+  });
+
+  it('gives no pace credit for beating the autopilot through a red light', () => {
+    const fast = scoreTrip(result({ redLightRuns: 1, safe: false, time: 30 }), course);
+    expect(fast.efficiency).toBeCloseTo(0.5);
+    expect(tripsScore(fast)).toBeLessThan(tripsScore(scoreTrip(result({}), course)) - 20);
+    // Running two reds leaves nothing clean, so nothing for pace either.
+    expect(scoreTrip(result({ redLightRuns: 2, safe: false, time: 30 }), course).efficiency).toBe(0);
   });
 
   it('does not call a parked SUV safe', () => {

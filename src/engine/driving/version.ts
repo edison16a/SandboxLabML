@@ -12,4 +12,4 @@ export const DRIVING_ENGINE_VERSION = 1;
  * scoring change. Scores only compare within one version, and the
  * reference file stores the version it was built for.
  */
-export const DRIVING_BENCHMARK_VERSION = 1;
+export const DRIVING_BENCHMARK_VERSION = 2;
