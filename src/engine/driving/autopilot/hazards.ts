@@ -1,10 +1,10 @@
-import { DIR_X, DIR_Y, ROAD_HALF, STOP_LINE } from '../city/dimensions';
+import { DIR_X, DIR_Y, STOP_LINE } from '../city/dimensions';
 import { isOnRoad } from '../city/surface';
 import type { City } from '../city/types';
 import { projection } from '../geometry/path';
 import type { Route } from '../route/route';
-import { WALK_GO } from '../signals/plan';
-import { PED_WAIT, type WorldState } from '../world/state';
+import { crossingBusy } from '../sensors/crossings';
+import type { WorldState } from '../world/state';
 
 const proj = projection();
 
@@ -56,25 +56,6 @@ export function hazardAhead(city: City, route: Route, world: WorldState, progres
     if (stop > -0.5 && stop < best) best = Math.max(stop, 0);
   }
   return best;
-}
-
-/** Someone is on a crossing, or standing at its curb with the walk signal on. */
-function crossingBusy(city: City, world: WorldState, id: number): boolean {
-  const k = city.crosswalks[id];
-  const signal = city.nodes[k.node].signal;
-  const walking = world.walks[signal * 2 + k.walkAxis] === WALK_GO;
-  const ax = DIR_X[k.arm];
-  const ay = DIR_Y[k.arm];
-  for (let i = 0; i < world.pedCount; i++) {
-    const dx = world.pedX[i] - k.x;
-    const dy = world.pedY[i] - k.y;
-    const along = dx * ax + dy * ay;
-    const across = Math.abs(-dx * ay + dy * ax);
-    if (Math.abs(along) > 2.2) continue;
-    if (across < ROAD_HALF + 0.3) return true;
-    if (walking && world.pedState[i] === PED_WAIT && across < ROAD_HALF + 1.5) return true;
-  }
-  return false;
 }
 
 /**

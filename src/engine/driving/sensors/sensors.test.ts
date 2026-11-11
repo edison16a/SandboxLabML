@@ -13,6 +13,9 @@ import { HIT_CAR, HIT_NONE, HIT_PED, Lidar } from './lidar';
 import { Nearby } from './nearby';
 import { writeObservation } from './observe';
 import { perceive } from './perception';
+import { ROAD_HALF, WALK_LINE } from '../city/dimensions';
+import { WALK_DONT, WALK_GO } from '../signals/plan';
+import { PED_WAIT, PED_WALK, type WorldState } from '../world/state';
 
 const city = buildCity(BUILT_IN_CITIES[0]);
 const spec = pickRoute(city, 4);
@@ -100,5 +103,51 @@ describe('perception', () => {
     expect(out.gap).toBeCloseTo(15 - SUV_SIZE.length / 2 - 2.3, 0);
     expect(out.relSpeed).toBeCloseTo(-3, 1);
     expect(out.light).toBeGreaterThanOrEqual(-1);
+  });
+
+  /** Senses from the start of the route with one person in the world at (x, y). */
+  function sensePerson(x: number, y: number, state = PED_WALK, prep?: (w: WorldState) => void, at = route.startS) {
+    const l = createLearner(0, route, 0);
+    const c = route.path.sample(at, pathPoint());
+    l.car.x = c.x;
+    l.car.y = c.y;
+    l.car.heading = Math.atan2(c.ty, c.tx);
+    l.progress = at;
+    l.routeIndex = c.index;
+    const w = createWorldState(city.signals.length);
+    w.pedCount = 1;
+    w.pedX[0] = x;
+    w.pedY[0] = y;
+    w.pedState[0] = state;
+    prep?.(w);
+    const pose = { x: l.car.x, y: l.car.y, heading: l.car.heading, speed: 8, progress: l.progress, index: l.routeIndex, half: SUV_SIZE.length / 2 };
+    return perceive(city, route, w, new Nearby().gather(w, l.car.x, l.car.y), pose, l.sense);
+  }
+
+  it('ignores people on the sidewalk and sees one stepping into the lane', () => {
+    const p = route.path.sample(route.startS + 14, pathPoint());
+    // Just past the curb, on the near sidewalk: no hazard.
+    expect(sensePerson(p.x + p.ty * 2.3, p.y - p.tx * 2.3).ped).toBe(-1);
+    const out = sensePerson(p.x + p.ty * 1.2, p.y - p.tx * 1.2);
+    expect(out.ped).toBe(0);
+    expect(out.pedDistance).toBeCloseTo(14 - SUV_SIZE.length / 2, 0);
+    expect(out.pedLateral).toBeCloseTo(-1.2, 1);
+  });
+
+  it('sees someone about to step onto a crossing the route drives over, but not one who must wait', () => {
+    const c = route.crossings[0];
+    const at = c.s0 - 16;
+    const k = city.crosswalks[c.crosswalk];
+    const signal = city.nodes[k.node].signal;
+    // Standing half a meter back from the curb at one end of the crossing.
+    const t = (ROAD_HALF + 0.55) / WALK_LINE;
+    const x = k.x + (k.ax - k.x) * t;
+    const y = k.y + (k.ay - k.y) * t;
+    const walk = (state: number) => (w: WorldState) => (w.walks[signal * 2 + k.walkAxis] = state);
+    expect(sensePerson(x, y, PED_WAIT, walk(WALK_GO), at).ped).toBe(0);
+    expect(sensePerson(x, y, PED_WAIT, walk(WALK_DONT), at).ped).toBe(-1);
+    // Out on the crossing, the far half included.
+    const far = sensePerson(k.x + (k.bx - k.x) * 0.5, k.y + (k.by - k.y) * 0.5, PED_WALK, undefined, at);
+    expect(far.ped).toBe(0);
   });
 });

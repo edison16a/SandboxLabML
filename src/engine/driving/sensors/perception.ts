@@ -1,15 +1,18 @@
+import { isOnRoad } from '../city/surface';
 import type { City } from '../city/types';
 import { projection, type Path } from '../geometry/path';
 import type { Route } from '../route/route';
 import { LIGHT_FLASHING, lightState } from '../signals/plan';
 import type { WorldState } from '../world/state';
+import { crossingPerson, NOT_AT_CROSSING } from './crossings';
 import type { Nearby } from './nearby';
 import { CAR_CORRIDOR, GAP_RANGE, PED_CORRIDOR, PED_RANGE, STOP_RANGE } from './inputConfig';
 
 /**
  * What a driver knows about the road ahead beyond its lidar: the signal it
- * is heading for, the car in front in its lane and the nearest person in or
- * near its path. Learners, the autopilot and the 3D overlay all fill this
+ * is heading for, the car in front in its lane and the nearest person in
+ * its path. People on the sidewalk do not count, only those in the road in
+ * front of the car or on (or stepping onto) a crossing it will drive over. Learners, the autopilot and the 3D overlay all fill this
  * the same way.
  */
 export interface Perception {
@@ -55,6 +58,17 @@ function onRoute(path: Path, pose: RoutePose, px: number, py: number, ahead: num
   const hint = path.indexAt(pose.progress + ahead, pose.index);
   path.project(px, py, hint, 10, proj);
   return proj.distance < 8;
+}
+
+/** True when person i is on, or about to step onto, a crossing the route passes over ahead of the front bumper. */
+function atRouteCrossing(city: City, route: Route, world: WorldState, i: number, front: number): boolean {
+  const list = route.crossings;
+  for (let k = 0; k < list.length; k++) {
+    const c = list[k];
+    if (c.s1 < front - 0.5 || c.s0 > front + PED_RANGE) continue;
+    if (crossingPerson(city, world, c.crosswalk, i) !== NOT_AT_CROSSING) return true;
+  }
+  return false;
 }
 
 /** Fills `out` for a driver at `pose` on `route`, from the cars and people in `near`. Allocation free. */
@@ -112,10 +126,14 @@ export function perceive(city: City, route: Route, world: WorldState, near: Near
     if (d2 > pedReach || dx * ch + dy * sh < 0) continue;
     if (!onRoute(path, pose, world.pedX[i], world.pedY[i], Math.sqrt(d2))) continue;
     const ds = proj.s - front;
-    if (ds <= -0.5 || Math.abs(proj.lateral) > PED_CORRIDOR || ds >= out.pedDistance) continue;
+    if (ds <= -0.5 || ds >= out.pedDistance) continue;
+    const lateral = proj.lateral;
+    // People on the sidewalk are no hazard. Someone in the road counts when in the car's path, or on a crossing it will drive over.
+    const inPath = Math.abs(lateral) <= PED_CORRIDOR && isOnRoad(city, world.pedX[i], world.pedY[i]);
+    if (!inPath && !atRouteCrossing(city, route, world, i, front)) continue;
     out.ped = i;
     out.pedDistance = Math.max(ds, 0);
-    out.pedLateral = proj.lateral;
+    out.pedLateral = lateral;
   }
   return out;
 }

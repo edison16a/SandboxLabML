@@ -22,7 +22,7 @@ export interface DrivingInputConfig {
   light: boolean;
   /** The nearest car ahead in the lane: gap and relative speed. */
   carAhead: boolean;
-  /** The nearest person in or near the path: distance and sideways offset. */
+  /** The nearest person in the path, or on a crossing it will drive over: distance and sideways offset. */
   pedestrian: boolean;
   /** Own speed and the speed limit. */
   speed: boolean;
@@ -46,8 +46,8 @@ export const PED_RANGE = 40;
 /** Relative speed and sideways offset that read as full scale. */
 export const REL_SPEED_SCALE = 15;
 export const PED_LATERAL_SCALE = 5;
-/** People this far either side of the path count as in or near it, m. */
-export const PED_CORRIDOR = 4.5;
+/** People in the road this far either side of the path count as in it, m: half a lane, half the car and a margin. */
+export const PED_CORRIDOR = 2.8;
 /** Cars this far either side of the path count as in the lane, m. */
 export const CAR_CORRIDOR = 2;
 
