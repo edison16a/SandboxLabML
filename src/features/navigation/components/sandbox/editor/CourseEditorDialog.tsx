@@ -103,7 +103,7 @@ export function CourseEditorDialog({ course, saved, onSave, onDelete, onClose }:
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()} onEscapeKeyDown={onEscapeKeyDown} onInteractOutside={onInteractOutside} title="Course editor" footer={footer} className="max-w-[1080px]">
       <div className="flex flex-col gap-3" onKeyDown={onKeyDown}>
-        <EditorHeader draft={draft} />
+        <EditorHeader draft={draft} opened={course.length} />
         <ToolRow tool={tool} onTool={setTool} />
         <CourseBoard ref={board} draft={draft} input={input} tool={tool} options={options} />
         <p role="status" className={`flex min-h-[1.4em] items-start gap-1.5 text-[12px] leading-[1.3] ${notice ? 'text-warn' : 'text-fg/80'}`}>

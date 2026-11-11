@@ -11,8 +11,22 @@ import { Segmented } from '@/ui/primitives/Segmented';
 import { EDITOR_TOOLS, TURN_KEY, type EditorTool, type PlaceOptions } from './editorTools';
 import type { CourseDraft } from './useCourseDraft';
 
-/** The name, the room length, undo and clear, above the board. */
-export function EditorHeader({ draft }: { draft: CourseDraft }) {
+/** The lengths offered: the editor's own, plus the course's own when it is another (a copy of a named course can be 28, 38 or 46 m). */
+function lengthChoices(...own: number[]): number[] {
+  return [...new Set([...SANDBOX_LENGTHS, ...own])].sort((a, b) => a - b);
+}
+
+/** A shorter room drops what no longer fits. Undo brings it back, and the hint line says so. */
+function resize(draft: CourseDraft, length: number): void {
+  const next = setLength(draft.spec, length);
+  const dropped = draft.spec.obstacles.length - next.obstacles.length;
+  draft.apply(next);
+  if (dropped === 1) draft.flash('1 piece did not fit and was removed. Undo brings it back.');
+  else if (dropped > 1) draft.flash(`${dropped} pieces did not fit and were removed. Undo brings them back.`);
+}
+
+/** The name, the room length, undo and clear, above the board. `opened` is the length the course came in with, which stays on offer. */
+export function EditorHeader({ draft, opened }: { draft: CourseDraft; opened: number }) {
   const spec = draft.spec;
   return (
     <div className="flex flex-wrap items-end gap-3">
@@ -24,8 +38,8 @@ export function EditorHeader({ draft }: { draft: CourseDraft }) {
           label="Room length"
           size="sm"
           value={String(spec.length)}
-          onChange={(v) => draft.apply(setLength(spec, Number(v)))}
-          options={SANDBOX_LENGTHS.map((l) => ({ value: String(l), label: `${l} m` }))}
+          onChange={(v) => resize(draft, Number(v))}
+          options={lengthChoices(opened, spec.length).map((l) => ({ value: String(l), label: `${l} m` }))}
         />
       </Field>
       <div className="flex gap-2">
