@@ -4,7 +4,7 @@ import type { RacingRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { TrackSpec } from '@/engine/racing/track/types';
 import type { GhostTelemetry } from '@/workers/replay/ghostPlayer';
-import { labDefaults, openedLabState, withRecords, type LabState } from '@/features/lab/state/labState';
+import { labDefaults, openedLabState, type LabState } from '@/features/lab/state/labState';
 import type { FieldEntry } from '../session/field';
 
 export { followsGhost, viewportHeld, type Focus, type PanelTab, type QualityTier, type ViewMode } from '@/features/lab/state/labState';
@@ -69,11 +69,9 @@ export interface RacingLabState extends LabState {
   selectedHandle: number | null;
 
   set: (patch: Partial<RacingLabState>) => void;
-  /** Appends finished generations, oldest first, in one update. */
-  addRecords: (batch: RacingRecord[]) => void;
 }
 
-export const useRacingLab = create<RacingLabState>((set, get) => ({
+export const useRacingLab = create<RacingLabState>((set) => ({
   ...labDefaults('chase'),
   camera: 'chase',
   records: [],
@@ -92,8 +90,4 @@ export const useRacingLab = create<RacingLabState>((set, get) => ({
   selectedHandle: null,
 
   set: (patch) => set(patch),
-  addRecords: (batch) => {
-    const next = withRecords(get().records, batch);
-    if (next) set(next);
-  },
 }));
