@@ -2,6 +2,7 @@ import { astContainsCheck } from './checks/astContains';
 import { compilesCheck } from './checks/compiles';
 import { metricAboveCheck } from './checks/metricAbove';
 import { testRunCheck } from './checks/testRun';
+import { episodeMetricCheck, episodeTestRunCheck } from './episode/checks';
 import { prepareScript } from './prepare';
 import type { CheckOutcome, LessonCheck } from './types';
 
@@ -39,10 +40,12 @@ export async function evaluateCheck(check: LessonCheck, source: string, opts: Ev
         return astContainsCheck(check, p);
       case 'testRun':
         if (p.env === 'racing') return testRunCheck(check, p);
-        return await (await hideSeekChecks()).hideSeekTestRunCheck(check, p, opts.signal);
+        if (p.env === 'hideseek') return await (await hideSeekChecks()).hideSeekTestRunCheck(check, p, opts.signal);
+        return episodeTestRunCheck(check, p);
       case 'metricAbove':
         if (p.env === 'racing') return await metricAboveCheck(check, p, opts);
-        return await (await hideSeekChecks()).hideSeekMetricCheck(check, p, opts);
+        if (p.env === 'hideseek') return await (await hideSeekChecks()).hideSeekMetricCheck(check, p, opts);
+        return await episodeMetricCheck(check, p, opts);
       default:
         return { passed: false, message: 'This step has a check this version of the app does not know.' };
     }

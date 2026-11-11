@@ -4,7 +4,7 @@ import { findScriptPreset } from '../../script/presets';
 import { HIDESEEK_BEGINNER } from '../../script/presets/hideseekBeginner';
 import { testDrive } from '../checks/testRun';
 import { playTestMatch } from '../hideseek/testMatch';
-import { prepareScript, type PreparedScript } from '../prepare';
+import { prepareScript, type PreparedHideSeek, type PreparedRacing, type PreparedScript } from '../prepare';
 import { recordPreview } from '../preview/record';
 import type { LessonPreview } from '../preview/types';
 
@@ -25,7 +25,7 @@ async function preview(source: string): Promise<LessonPreview> {
 describe('lesson preview', () => {
   it('records the test drive a check runs, tick by tick', async () => {
     const p = await preview(racing);
-    const check = testDrive(prepared(racing) as Extract<PreparedScript, { env: 'racing' }>);
+    const check = testDrive(prepared(racing) as PreparedRacing);
     if (p.kind !== 'racing') throw new Error('Expected a drive');
     expect(p.ticks).toBe(check.ticks);
     expect(p.poses).toHaveLength(p.ticks * 3);
@@ -38,7 +38,7 @@ describe('lesson preview', () => {
 
   it('records the test match a check plays, one snapshot per tick', async () => {
     const p = await preview(HIDESEEK_BEGINNER);
-    const check = await playTestMatch(prepared(HIDESEEK_BEGINNER) as Extract<PreparedScript, { env: 'hideseek' }>);
+    const check = await playTestMatch(prepared(HIDESEEK_BEGINNER) as PreparedHideSeek);
     if (p.kind !== 'hideseek') throw new Error('Expected a match');
     expect(p.layout).toBe('open');
     expect(p.ticks).toBe(900);

@@ -24,6 +24,15 @@ type StoredState<Content> = Omit<EpisodeTrainerState<Content>, 'content'> & { co
 const SCRIPT_RNG_SALT = 0x5c;
 
 /**
+ * Seed of the script controller for a training episode of `generation`.
+ * Workers, lessons and tests all use it, so an episode run anywhere draws
+ * the same numbers. Script rand() in a tick then mixes in each agent's seed.
+ */
+export function trainingControllerSeed(generation: number): number {
+  return mixSeed(generation, 0x51);
+}
+
+/**
  * Single population training without any threads, for any episode env. It
  * hands out the genomes to evaluate, takes the results back, runs the
  * script's generation block, breeds the next generation and moves the

@@ -19,6 +19,7 @@ export async function recordPreview(source: string): Promise<PreviewResult> {
       if (!p.blueprint) return { ok: false, message: 'The preview needs a racing brain, such as brain racing-starter.' };
       return { ok: true, preview: recordTestDrive(p) };
     }
+    if (p.env !== 'hideseek') return { ok: false, message: 'This lab has no lesson preview yet.' };
     if (!p.blueprint) return { ok: false, message: 'The preview needs a Hide and Seek brain, such as brain hideseek-starter.' };
     return { ok: true, preview: await (await matchRecorder()).recordTestMatch(p) };
   } catch (err) {

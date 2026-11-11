@@ -1,15 +1,12 @@
-import { mixSeed } from '@/engine/core/rng';
 import type { EpisodeEnv, EpisodeResult, EpisodeSetup } from '@/engine/env/episode';
 import { requireEpisodeModule } from '@/engine/env/registry';
 import { Network } from '@/engine/neat/network';
 import type { Genome } from '@/engine/neat/types';
+import { trainingControllerSeed } from '@/engine/training/episodeTrainer';
 import { hostFor, type ScriptHost } from '@/engine/training/scriptHost';
 import { Pacer } from '../shared/pacer';
 import type { StreamSender } from '../shared/streamPort';
 import { writeFrame } from './frame';
-
-/** Salt of the controller seed for training episodes. Ghost replays use their own. */
-export const TRAINING_CONTROLLER_SALT = 0x51;
 
 export interface LiveEpisodeRequest {
   env: string;
@@ -40,7 +37,7 @@ export class EpisodeSim {
   }
 
   private create(env: string, setup: EpisodeSetup, genomes: Genome[], seeds: number[], generation: number): EpisodeEnv {
-    const episode = requireEpisodeModule(env).createEnv(setup, this.hostFor(setup.scriptSource), mixSeed(generation, TRAINING_CONTROLLER_SALT));
+    const episode = requireEpisodeModule(env).createEnv(setup, this.hostFor(setup.scriptSource), trainingControllerSeed(generation));
     episode.reset(
       genomes.map((g) => new Network(g)),
       seeds,

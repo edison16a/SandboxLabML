@@ -42,15 +42,17 @@ function round(v: number): string {
   return String(Math.round(v * 100) / 100);
 }
 
-/** A measured metric in plain words. */
-export function formatMetric(metric: string, value: number): string {
-  return (FORMATS[metric] ?? round)(value);
+type Formats = Readonly<Record<string, (v: number) => string>>;
+
+/** A measured metric in plain words. An env's own wording (its lesson formats) comes first. */
+export function formatMetric(metric: string, value: number, formats?: Formats): string {
+  return (formats?.[metric] ?? FORMATS[metric] ?? round)(value);
 }
 
 /** The outcome for a metric comparison, with the measured value spelled out either way. */
-export function metricOutcome(metric: string, measured: number, op: CompareOp, target: number, message: string, what: string): CheckOutcome {
+export function metricOutcome(metric: string, measured: number, op: CompareOp, target: number, message: string, what: string, formats?: Formats): CheckOutcome {
   const passed = compare(measured, op, target);
-  const value = formatMetric(metric, measured);
+  const value = formatMetric(metric, measured, formats);
   return passed
     ? { passed, measured, message: `Passed. ${what}: ${value}.` }
     : { passed, measured, message: `${message} ${what}: ${value}.` };

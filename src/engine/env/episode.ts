@@ -11,7 +11,7 @@
  */
 import type { Blueprint, BlueprintIssue } from '../blueprints/types';
 import type { Network } from '../neat/network';
-import type { Genome } from '../neat/types';
+import type { Genome, GenomeShape } from '../neat/types';
 import type { BenchOptions, BenchResult } from '../bench/types';
 import type { GenerationDirectives, ScriptHost } from '../training/scriptHost';
 import type { ChampionRecord } from '../training/records';
@@ -152,6 +152,7 @@ export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Con
 
   bench?: EpisodeBench;
   telemetry?: GhostTrace<R>;
+  lessons?: EpisodeLessons<R>;
 }
 
 /**
@@ -163,6 +164,30 @@ export interface GhostTrace<R extends EpisodeResult> {
   sample(env: EpisodeEnv<R>, i: number, out: Float64Array): void;
   /** Where the agent's run ended in a crash, in world x and y, or null. */
   crash(result: R): { x: number; y: number } | null;
+}
+
+/**
+ * What Studio lessons can check on an env. Optional: an env without it
+ * has no lessons yet. A test run is one headless episode of the script
+ * with a fixed brain; a training check trains a small population briefly
+ * and measures bestFitness, species and every key of the module's
+ * `metrics`, at the best any generation reached.
+ */
+export interface EpisodeLessons<R extends EpisodeResult> {
+  /** How a check names one test episode, such as "a test drive". */
+  testRunName: string;
+  /** What a test run measures besides totalReward, ticks and inputs. */
+  testRunMetrics: readonly string[];
+  /** The env numbers of one finished test episode, keyed like testRunMetrics. */
+  measure(result: R): Record<string, number>;
+  /** Brain a lesson script trains when it names none. */
+  brain: string;
+  /** Run settings for lesson checks. Short episodes keep a check to a few seconds. */
+  settings(): Readonly<Record<string, unknown>>;
+  /** The fixed hand set brain of every test run, so a test means the same thing for every brain shape. */
+  testBrain(shape: GenomeShape, schema: readonly InputSpec[]): Genome;
+  /** Wording of a measured value in a check outcome, such as (v) => `${v} m`. */
+  formats?: Readonly<Record<string, (value: number) => string>>;
 }
 
 /** Any registered module, with its type parameters erased for generic code. */
