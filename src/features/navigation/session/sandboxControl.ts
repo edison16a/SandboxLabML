@@ -97,12 +97,15 @@ export class SandboxControl {
     }
   }
 
+  /** Deletes a drawn course, with an Undo that stores it again. If it was in play, level 1 takes its place. */
   async deleteCourse(id: string): Promise<void> {
     try {
       await deleteCourse(id);
       const s = store().sandbox;
+      const gone = s.saved.find((c) => c.id === id);
       store().setSandbox({ saved: s.saved.filter((c) => c.id !== id) });
       if (s.course.kind === 'saved' && s.course.id === id) this.configure({ course: { kind: 'level', level: 1, seed: SANDBOX_SEED } });
+      if (gone) toast.withAction(`Deleted ${gone.name}`, { label: 'Undo', onClick: () => void this.saveCourse(gone) });
     } catch (err) {
       toast.error('Could not delete the course', err instanceof Error ? err.message : String(err));
     }
