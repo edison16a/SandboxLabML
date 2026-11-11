@@ -47,6 +47,12 @@ export interface LabState {
   mode: 'train' | 'sandbox';
   /** Lesion test: input index mapped to the value it is forced to. Sandbox only. */
   lesions: Record<number, number>;
+  /**
+   * The stream the followed agent is in, for a lab whose viewport decides
+   * that itself (Driving follows past champions while Turbo trains). Left
+   * out, followsGhost works it out from the focus and the mode.
+   */
+  inspectStream?: 'population' | 'ghosts';
 }
 
 /** A lab store as the shared code sees it. A lab's own store is a superset, so it can stand in. */
@@ -112,9 +118,10 @@ export function withRecords<R extends GenerationRecord>(records: R[], batch: R[]
 /**
  * True when the followed agent is a ghost: the user clicked one, or the lab
  * is in the Sandbox, where only ghosts move and the population stream sits
- * frozen on its last training frame.
+ * frozen on its last training frame. A lab that sets inspectStream decides.
  */
-export function followsGhost(s: { focus: Focus; mode: 'train' | 'sandbox' }): boolean {
+export function followsGhost(s: { focus: Focus; mode: 'train' | 'sandbox'; inspectStream?: 'population' | 'ghosts' }): boolean {
+  if (s.inspectStream) return s.inspectStream === 'ghosts';
   return s.focus.kind === 'ghost' || s.mode === 'sandbox';
 }
 
