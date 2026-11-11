@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { racingModule } from '../../racing/module';
+import { racingInfo } from '../../racing/info';
 import type { GenerationRecord } from '../../training/records';
-import { bestMetric, metricValue, type MetricSpec } from '../metrics';
+import { bestMetric, chartedMetrics, metricValue, type MetricSpec } from '../metrics';
 
 const record = (champion: Record<string, unknown>, metrics?: Record<string, number>) => ({ champion: { genomeId: 1, fitness: 2, stopReason: null, ...champion }, metrics }) as unknown as GenerationRecord;
 
@@ -10,7 +10,7 @@ const time: MetricSpec = { key: 'time', label: 'Time', unit: 's', source: 'champ
 
 describe('env metrics', () => {
   it('reads Racing fields off the champion and treats a lap time of 0 as none', () => {
-    const [distance, lap] = racingModule.metrics;
+    const [distance, lap] = racingInfo.metrics;
     const r = record({ distance: 412.4, bestLapTime: 0 });
     expect(metricValue(r, distance)).toBe(412.4);
     expect(metricValue(r, lap)).toBeNaN();
@@ -30,5 +30,12 @@ describe('env metrics', () => {
     expect(bestMetric(history, time)).toBe(11);
     expect(bestMetric(history, share)).toBe(0.7);
     expect(bestMetric([], share)).toBeNaN();
+  });
+
+  it('charts every generation metric and the champion metrics that ask for it', () => {
+    const speed: MetricSpec = { ...time, key: 'speed', chart: true };
+    expect(chartedMetrics([share, time, speed]).map((m) => m.key)).toEqual(['arrived', 'speed']);
+    // Racing shows its numbers in the champion table only, so its Progress tab keeps its look.
+    expect(chartedMetrics(racingInfo.metrics)).toEqual([]);
   });
 });

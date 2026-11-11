@@ -16,8 +16,18 @@ export interface MetricSpec {
   better: 'higher' | 'lower';
   /** A value that means "none yet", like Racing's lap time of 0 before any lap. It reads as NaN. */
   missing?: number;
-  /** Formats a value for the champion table, e.g. "412 m". NaN means there is none. */
+  /** Formats a value for the champion table and chart ticks, e.g. "412 m". NaN means there is none. */
   format(value: number): string;
+  /**
+   * Also chart a champion metric in the Progress tab. Generation metrics
+   * always chart, since the champion table does not show them.
+   */
+  chart?: boolean;
+}
+
+/** The metrics the Progress tab charts: every generation metric, and champion metrics that ask for it. */
+export function chartedMetrics(specs: readonly MetricSpec[]): MetricSpec[] {
+  return specs.filter((m) => m.source === 'generation' || m.chart === true);
 }
 
 /**

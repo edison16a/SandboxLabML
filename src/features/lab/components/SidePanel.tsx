@@ -11,13 +11,16 @@ import { ProgressTab } from './ProgressTab';
 
 interface Props {
   /** Replaces a tab's content, for a lab that shows more than the shared one. */
+  progress?: React.ReactNode;
+  /** A lab's own panels inside the shared Progress tab, under the env's metrics. */
+  progressExtra?: React.ReactNode;
   network?: React.ReactNode;
   inputs?: React.ReactNode;
   model?: React.ReactNode;
 }
 
 /** Right hand panel: progress charts, the network, live inputs and the model card. */
-export function SidePanel({ network, inputs, model }: Props) {
+export function SidePanel({ progress, progressExtra, network, inputs, model }: Props) {
   const tab = useLab((s) => s.panelTab);
   const set = useLabSet();
   return (
@@ -41,7 +44,7 @@ export function SidePanel({ network, inputs, model }: Props) {
         </TabsTrigger>
       </TabsList>
       <TabsContent value="progress" className="overflow-y-auto">
-        <ProgressTab />
+        {progress ?? <ProgressTab extra={progressExtra} />}
       </TabsContent>
       <TabsContent value="network" className="flex flex-col overflow-hidden">
         {network ?? <NetworkTab />}

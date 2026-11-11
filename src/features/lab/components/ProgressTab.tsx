@@ -6,25 +6,16 @@ import { SpeciesChart } from '@/features/charts/SpeciesChart';
 import { BenchmarkChart } from '@/features/charts/BenchmarkChart';
 import { Stat } from '@/ui/primitives/Panel';
 import { useLab, useLabContext } from '../LabContext';
-
-function Section({ title, children, hint, tour }: { title: string; children: React.ReactNode; hint?: string; tour?: string }) {
-  return (
-    <section data-tour={tour} className="flex flex-col gap-2">
-      <div className="flex items-baseline justify-between">
-        <h3 className="text-[12px] font-semibold tracking-wide text-muted uppercase">{title}</h3>
-        {hint && <span className="text-[11px] text-subtle">{hint}</span>}
-      </div>
-      {children}
-    </section>
-  );
-}
+import { MetricsSection } from './MetricsSection';
+import { Section } from './Section';
 
 /**
- * Fitness curve, the benchmark, species bands and the latest champions.
- * The champion table shows the env's champion metrics (Racing: distance
- * and best lap) between fitness and how the run ended.
+ * Fitness curve, the env's metrics, the benchmark, species bands and the
+ * latest champions. The champion table shows the env's champion metrics
+ * (Racing: distance and best lap) between fitness and how the run ended.
+ * `extra` is a lab's own panels, placed under the metrics.
  */
-export function ProgressTab() {
+export function ProgressTab({ extra }: { extra?: React.ReactNode }) {
   const { env, module } = useLabContext();
   const records = useLab((s) => s.records);
   const last = records[records.length - 1];
@@ -48,6 +39,8 @@ export function ProgressTab() {
       <Section title="Fitness" hint="best, median, mean" tour="fitness">
         <FitnessChart records={records} />
       </Section>
+      <MetricsSection records={records} />
+      {extra}
       {module.bench && (
         <Section title="Benchmark" hint={module.bench.hint}>
           <BenchmarkChart env={env} records={records} />
