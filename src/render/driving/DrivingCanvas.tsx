@@ -12,6 +12,7 @@ import { SceneReady } from '@/render/shared/SceneReady';
 import { useFrameLoop, type LoopActivity } from '@/render/shared/frameLoop';
 import { CameraRig } from './camera/CameraRig';
 import { CityScene } from './CityScene';
+import { DrivingProbe } from './frame/DrivingProbe';
 import { FocusReporter } from './frame/FocusReporter';
 import { FrameDriver } from './frame/FrameDriver';
 import { createFrame, DrivingSceneContext, type DrivingView } from './frame/sceneContext';
@@ -77,6 +78,7 @@ export function DrivingCanvas({ city, route, car, inputs, population, world, tie
         {children}
         <CityEffects tier={tier} />
         {onReady && <SceneReady isReady={always} onChange={ready} />}
+        <DrivingProbe ghosts={ghosts} />
       </DrivingSceneContext.Provider>
     </Canvas>
   );
