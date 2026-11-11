@@ -13,7 +13,8 @@ const steps = uPlot.paths.stepped?.({ align: 1 });
 
 /**
  * Each generation's value of one env metric, with the best so far as a
- * step line, so a curriculum level or an arrival share reads at a glance.
+ * dashed step line, so a curriculum level or an arrival share reads at a
+ * glance.
  * Generations without a value leave a gap. Ticks use the metric's own
  * format, so a share reads as a percent and a time as seconds.
  */
@@ -24,10 +25,11 @@ export function MetricChart({ records, spec, height = 150 }: { records: Generati
       cursor: { drag: { x: true, y: false }, points: { size: 6 } },
       scales: { x: { time: false } },
       axes: [generationAxis(), { ...axis(spec.unit ? `${spec.label} (${spec.unit})` : spec.label, 3), values: (_u, splits) => splits.map((v) => spec.format(v)) }],
+      // The best so far is drawn first and dashed, so where it equals this generation's value the value stays on top.
       series: [
         {},
-        { label: spec.label, stroke: LINE, width: 1.5, points: { show: false } },
-        { label: 'Best so far', stroke: BEST, width: 2, paths: steps },
+        { label: 'Best so far', stroke: BEST, width: 1.5, dash: [4, 4], paths: steps, points: { show: false } },
+        { label: spec.label, stroke: LINE, width: 2, fill: `${LINE}14`, points: { show: false } },
       ],
     }),
     [spec],
@@ -40,7 +42,7 @@ export function MetricChart({ records, spec, height = 150 }: { records: Generati
       if (Number.isFinite(v) && (!Number.isFinite(top) || (spec.better === 'higher' ? v > top : v < top))) top = v;
       best.push(Number.isFinite(top) ? top : null);
     }
-    return [records.map((r) => r.generation + 1), values.map((v) => (Number.isFinite(v) ? v : null)), best];
+    return [records.map((r) => r.generation + 1), best, values.map((v) => (Number.isFinite(v) ? v : null))];
   }, [records, spec]);
   return (
     <div style={{ height }}>
