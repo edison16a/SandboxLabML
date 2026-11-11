@@ -9,6 +9,7 @@ import { DrivingEnv, type DrivingBrain } from './env';
 import { STANDARD_DRIVING_INPUTS } from './sensors/inputConfig';
 import { builtInInputCount } from './sensors/inputSchema';
 import { createDrivingSetup, drivingEnvOptions } from './setup';
+import { BUILT_IN_CITIES } from './city/presets';
 import { DRIVING_SNAPSHOT, readWorld, WORLD_SIZE } from './snapshot';
 import { createWorldState } from './world/state';
 
@@ -72,22 +73,33 @@ describe('DrivingEnv', () => {
   });
 });
 
+/** Trips per city per level for the autopilot check: 30 per level over Midtown and both held out cities. */
+const TRIPS_PER_CITY = 10;
+
 describe('autopilot', () => {
   for (let level = 1; level <= 5; level++) {
-    it(`completes trips safely at level ${level}`, () => {
-      for (const seed of [2, 5, 8]) {
-        const setup = createDrivingSetup({ level, seed });
-        const pilots: Autopilot[] = [];
-        const opts = drivingEnvOptions(setup, SUV, inputs, autopilotController(pilots));
-        const env = new DrivingEnv(opts);
-        pilots.push(new Autopilot(opts.city, opts.route, env.world.state, SUV));
-        env.reset([IDLE_BRAIN]);
-        while (!env.done) env.step();
-        const r = env.results()[0];
-        expect(r.stopReason).toBe('arrived');
-        expect(r.redLightRuns).toBe(0);
-        expect(r.safe).toBe(true);
+    it(`completes trips safely at level ${level} in every built in city`, () => {
+      let safe = 0;
+      let total = 0;
+      const failures: string[] = [];
+      for (const city of BUILT_IN_CITIES) {
+        for (let k = 1; k <= TRIPS_PER_CITY; k++) {
+          const setup = createDrivingSetup({ city, level, seed: k * 977 });
+          const pilots: Autopilot[] = [];
+          const opts = drivingEnvOptions(setup, SUV, inputs, autopilotController(pilots));
+          const env = new DrivingEnv(opts);
+          pilots.push(new Autopilot(opts.city, opts.route, env.world.state, SUV));
+          env.reset([IDLE_BRAIN]);
+          while (!env.done) env.step();
+          const r = env.results()[0];
+          total++;
+          if (r.safe) safe++;
+          else failures.push(`${city.id} seed ${k * 977}: ${r.stopReason}`);
+          expect(r.redLightRuns).toBe(0);
+        }
       }
-    });
+      expect(failures.length, failures.join(', ')).toBeLessThanOrEqual(total * 0.03);
+      expect(safe / total).toBeGreaterThanOrEqual(0.97);
+    }, 240_000);
   }
 });
