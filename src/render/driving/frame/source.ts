@@ -18,5 +18,11 @@ export interface FrameSource {
   count: number;
   tags: Int32Array;
   epoch: number;
+  /**
+   * Floats before the world block in each buffer. A worker stream carries
+   * the agents first and the world after them; the preview's own world
+   * source holds the world alone and leaves this out.
+   */
+  worldOffset?: number;
   alpha(now?: number): number;
 }

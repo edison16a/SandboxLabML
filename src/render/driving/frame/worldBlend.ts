@@ -19,6 +19,8 @@ export class WorldBlend {
   readonly out: WorldState;
   private aTick = -1;
   private bTick = -1;
+  /** A new episode can start on the tick the last one was read at, so the epoch guards the cache too. */
+  private epoch = -1;
   ready = false;
 
   constructor(signals: number) {
@@ -32,15 +34,17 @@ export class WorldBlend {
       this.ready = false;
       return null;
     }
-    if (src.curr.tick !== this.bTick) {
-      readWorld(src.curr.buffer, this.b);
+    const offset = src.worldOffset ?? 0;
+    if (src.curr.tick !== this.bTick || src.epoch !== this.epoch) {
+      readWorld(src.curr.buffer, this.b, offset);
       this.bTick = src.curr.tick;
     }
     const prev = src.prev;
-    if (prev && prev.tick !== this.aTick) {
-      readWorld(prev.buffer, this.a);
+    if (prev && (prev.tick !== this.aTick || src.epoch !== this.epoch)) {
+      readWorld(prev.buffer, this.a, offset);
       this.aTick = prev.tick;
     }
+    this.epoch = src.epoch;
     blend(prev ? this.a : this.b, this.b, src.alpha(), this.out);
     this.ready = true;
     return this.out;
