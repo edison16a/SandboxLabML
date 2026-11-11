@@ -36,6 +36,8 @@ export interface GenerationRow {
   genome: Uint8Array;
   trackHash: string;
   replaySeed: number;
+  /** The champion's start slot, for envs that hand out slots. */
+  replaySlot?: number;
   simSeconds: number;
   wallMs: number;
   markers?: string[];

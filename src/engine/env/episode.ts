@@ -83,6 +83,12 @@ export interface EpisodeEnv<R extends EpisodeResult = EpisodeResult> {
   writeOutputs(i: number, out: Float32Array): void;
   /** Agent i's rays as fractions of their range, `raysPerAgent` floats from `offset`. */
   writeRays?(i: number, out: Float32Array, offset: number): void;
+  /**
+   * Plain data about what this episode runs on (Navigation: the course on
+   * screen), sent once with the stream's start message so the viewport
+   * draws exactly the scene the agents are in. Left out, nothing is sent.
+   */
+  scene?(): unknown;
 }
 
 /**
@@ -180,6 +186,14 @@ export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Con
   createSetup(input: SetupInput<Content>): Setup;
   /** Builds an episode. The script controller comes from `host`; null means the env's built in reward. */
   createEnv(setup: Setup, host: ScriptHost, seed: number): EpisodeEnv<R>;
+  /**
+   * Start slots for a generation of `count` agents, one each, in an order
+   * seeded by `seed` (mixed from the run seed and the generation). Left
+   * out, training passes no slots. With it, the trainer hands agent i
+   * slot i of this list in every worker, and the champion's record keeps
+   * its slot (replaySlot) so a replay starts on the same spot.
+   */
+  startSlots?(count: number, seed: number): number[];
 
   championFields(result: R): ChampionFields<C>;
   /** Stats over the whole generation, keyed like `metrics` with source 'generation'. */

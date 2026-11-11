@@ -90,18 +90,20 @@ export class EpisodeCoordinator {
     const setup = t.setup();
     const genomes = t.genomes;
     const seeds = t.seeds();
+    const slots = t.slots();
     const generation = t.generation;
     let results: EpisodeResult[];
     if (isWatchSpeed(this.speed)) {
       this.emit({ type: 'live-start', generation, speed: WATCH_SPEEDS[this.speed] });
       const tags = genomes.map((g) => g.speciesId);
-      results = await this.sims[0].runLive({ env, setup, genomes, seeds, generation, speed: WATCH_SPEEDS[this.speed], tags });
+      results = await this.sims[0].runLive({ env, setup, genomes, seeds, slots, generation, speed: WATCH_SPEEDS[this.speed], tags });
     } else {
       const chunk = Math.ceil(genomes.length / this.sims.length);
       const parts = await Promise.all(
         this.sims.map((sim, i) => {
           const slice = genomes.slice(i * chunk, (i + 1) * chunk);
-          return slice.length ? sim.evaluate(env, setup, slice, seeds.slice(i * chunk, (i + 1) * chunk), generation) : [];
+          // Slots are sliced like the seeds, so an agent's spot never depends on which worker ran it.
+          return slice.length ? sim.evaluate(env, setup, slice, seeds.slice(i * chunk, (i + 1) * chunk), generation, slots?.slice(i * chunk, (i + 1) * chunk)) : [];
         }),
       );
       results = parts.flat();
