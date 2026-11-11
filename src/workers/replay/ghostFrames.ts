@@ -11,8 +11,10 @@ export interface GhostGroup {
 /**
  * Writes ghost frames: several envs (one per script version) merged into
  * one stream in ghost order, then the world block. Ghosts share one world
- * (lights, traffic and movers follow only the setup and the tick), so the
- * first env's world stands for all of them.
+ * (lights, traffic and movers follow only the setup and the tick), so any
+ * env's world stands for all of them at its tick. The player stops
+ * stepping an env once its ghosts are done, so the world comes from the
+ * env furthest along, whose tick is the frame's tick.
  */
 export class GhostFrames {
   private stride = 0;
@@ -38,14 +40,23 @@ export class GhostFrames {
     if (!buffer) return;
     const stride = this.stride;
     let tick = 0;
+    let lead: EpisodeEnv | null = null;
     for (const { env, order } of groups) {
       if (this.scratch.length < env.agentCount * stride) this.scratch = new Float32Array(env.agentCount * stride);
       const tmp = this.scratch;
       env.writeSnapshot(tmp, 0);
-      order.forEach((ghostIndex, k) => buffer.set(tmp.subarray(k * stride, (k + 1) * stride), ghostIndex * stride));
-      tick = Math.max(tick, env.tick);
+      // A plain copy, since a subarray view per ghost would allocate every frame.
+      for (let k = 0; k < order.length; k++) {
+        const from = k * stride;
+        const to = order[k] * stride;
+        for (let f = 0; f < stride; f++) buffer[to + f] = tmp[from + f];
+      }
+      if (!lead || env.tick > tick) {
+        lead = env;
+        tick = env.tick;
+      }
     }
-    if (this.world > 0) groups[0]?.env.writeWorld?.(buffer, this.count * stride);
+    if (this.world > 0) lead?.writeWorld?.(buffer, this.count * stride);
     this.stream.send({ kind: 'frame', stream: 'ghosts', generation: 0, tick, count: this.count, buffer, inspect: this.inspected(groups) });
   }
 
