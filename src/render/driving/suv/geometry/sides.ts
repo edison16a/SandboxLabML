@@ -1,10 +1,8 @@
 import * as THREE from 'three';
 import { onBody } from './body';
-import { CABIN, onCabin } from './cabin';
 import { bothSides, gridGeometry, type Vec3 } from './grid';
 import type { Detail, PartBin } from './parts';
 import { beltAt } from './profile';
-import { warp } from './warp';
 
 /** A thin strip along the body at a band and share, from x0 to x1, `width` tall in band share. */
 function bodyStrip(band: number, t0: number, t1: number, x0: number, x1: number, lift: number, steps: number): THREE.BufferGeometry {
@@ -25,17 +23,32 @@ function shutLine(x: number): THREE.BufferGeometry {
 }
 
 /**
- * A door mirror on its arm at the base of the A pillar: a painted cap, a
- * dark arm and the glass. Built on the left and mirrored.
+ * A door mirror: a wedge shaped painted housing, rounded at the front and
+ * cut flat at the back where the glass sits, tapering in toward a slim
+ * gloss black stalk on the door. Built on the left and mirrored.
  */
 function mirrorParts(detail: Detail): { cap: THREE.BufferGeometry; arm: THREE.BufferGeometry; glass: THREE.BufferGeometry } {
-  const x = 0.86;
+  const x = 0.84;
   const [bz, by] = beltAt(x);
-  const base = warp([x, by + 0.03, bz + 0.02]);
-  const s = detail.fine ? 12 : 6;
-  const cap = new THREE.SphereGeometry(1, s, Math.max(4, s / 2)).scale(0.11, 0.075, 0.13).translate(base[0] - 0.02, base[1] + 0.07, base[2] + 0.17);
-  const arm = new THREE.BoxGeometry(0.1, 0.035, 0.12).translate(base[0], base[1] + 0.035, base[2] + 0.06);
-  const glass = new THREE.CircleGeometry(1, s).scale(0.055, 0.06, 1).rotateY(-Math.PI / 2).translate(base[0] - 0.105, base[1] + 0.07, base[2] + 0.17);
+  const s = detail.fine ? 18 : 8;
+  const cap = new THREE.SphereGeometry(1, s, Math.max(5, Math.round(s * 0.6)));
+  const p = cap.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    let px = p.getX(i);
+    const py = p.getY(i);
+    const pz = p.getZ(i);
+    // Flat back for the glass, a sharp lower edge, and a housing that narrows toward the car into a wedge.
+    if (px < -0.3) px = -0.3;
+    const out = pz * 0.5 + 0.5;
+    const taper = 0.55 + 0.45 * out;
+    p.setXYZ(i, px * (0.06 + 0.035 * out), (py < 0 ? py * 0.6 : py) * 0.06 * taper, pz * 0.13);
+  }
+  cap.computeVertexNormals();
+  const center: Vec3 = [x - 0.05, by + 0.105, bz + 0.2];
+  cap.rotateZ(-0.06).translate(...center);
+  const arm = new THREE.BoxGeometry(0.075, 0.022, 0.13).rotateX(-0.35).translate(x - 0.02, by + 0.05, bz + 0.075);
+  const back = center[0] - 0.3 * 0.085 - 0.002;
+  const glass = new THREE.CircleGeometry(1, s).scale(0.1, 0.048, 1).rotateY(-Math.PI / 2).translate(back, center[1], center[2] + 0.005);
   return { cap: bothSides(cap), arm: bothSides(arm), glass: bothSides(glass) };
 }
 
@@ -46,14 +59,9 @@ function mirrorParts(detail: Detail): { cap: THREE.BufferGeometry; arm: THREE.Bu
  */
 export function addSides(bin: PartBin, detail: Detail): void {
   const steps = detail.fine ? 40 : 12;
-  // The window line: a gloss black strip where the glass meets the paint.
-  const rows: Vec3[][] = [];
-  for (let i = 0; i <= steps; i++) {
-    const x = CABIN.glassRear + ((CABIN.front - 0.04 - CABIN.glassRear) * i) / steps;
-    rows.push([onCabin(x, 0, 0, 0.004), onCabin(x, 0, 0.035, 0.004)]);
-  }
-  bin.add('trim', bothSides(gridGeometry(rows)));
-  bin.add('metal', bodyStrip(0, 0.52, 0.6, -0.9, 0.98, 0.006, steps));
+  // A gloss black blade along the lower doors between the arches, topped with a bright insert: it lightens the tall body side.
+  bin.add('trim', bodyStrip(1, 0, 0.26, -0.93, 1.0, 0.003, steps));
+  bin.add('metal', bodyStrip(1, 0.26, 0.3, -0.93, 1.0, 0.004, steps));
   if (!detail.fine) {
     const m = mirrorParts(detail);
     bin.add('paint', m.cap);

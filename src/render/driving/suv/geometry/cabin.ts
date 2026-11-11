@@ -12,8 +12,8 @@ import { warp } from './warp';
 export const CABIN = { rear: -2.3, front: 1.06, roofFront: 0.32, glassRear: -2.12, roofRear: -1.0 };
 
 const edgeZ = profile([[-2.3, 0.52], [-2.1, 0.57], [-1.7, 0.625], [-1.0, 0.668], [-0.2, 0.68], [0.3, 0.69], [0.7, 0.765], [1.06, 0.855]]);
-const edgeY = profile([[-2.3, 1.155], [-2.1, 1.24], [-1.7, 1.4], [-1.05, 1.592], [-0.35, 1.666], [0.25, 1.642], [0.7, 1.37], [1.06, 1.06]]);
-const centerY = profile([[-2.3, 1.17], [-2.1, 1.258], [-1.7, 1.426], [-1.05, 1.625], [-0.35, 1.7], [0.25, 1.676], [0.7, 1.392], [1.06, 1.076]]);
+const edgeY = profile([[-2.3, 1.185], [-2.1, 1.262], [-1.7, 1.41], [-1.05, 1.592], [-0.35, 1.652], [0.25, 1.632], [0.7, 1.39], [1.06, 1.09]]);
+const centerY = profile([[-2.3, 1.2], [-2.1, 1.28], [-1.7, 1.436], [-1.05, 1.622], [-0.35, 1.684], [0.25, 1.664], [0.7, 1.41], [1.06, 1.106]]);
 /** The narrow body colored rail between the side glass and the roof, m. */
 const RAIL = { out: 0.028, down: 0.05 };
 
@@ -36,14 +36,20 @@ interface Range {
   to: number;
   side: Slot;
   top: Slot;
+  /** Share of the roof band, from its outer edge, kept in paint beside the glass: the pillars either side of a window. */
+  pillar?: number;
 }
 
-/** Glass and paint change at crisp seams: the C pillar and tail are paint, the rest of the glasshouse glass, roof included. */
+/**
+ * The cabin's sides and roof are paint; the windshield and the rear window
+ * are glass, changing at crisp seams. The side windows, the pillars' black
+ * trim and the sunroof are laid over the paint (see windows.ts).
+ */
 const RANGES: Range[] = [
   { from: CABIN.rear, to: CABIN.glassRear, side: 'paint', top: 'paint' },
-  { from: CABIN.glassRear, to: CABIN.roofRear, side: 'glass', top: 'glass' },
-  { from: CABIN.roofRear, to: CABIN.roofFront, side: 'glass', top: 'glass' },
-  { from: CABIN.roofFront, to: CABIN.front, side: 'glass', top: 'glass' },
+  { from: CABIN.glassRear, to: CABIN.roofRear, side: 'paint', top: 'glass', pillar: 0.34 },
+  { from: CABIN.roofRear, to: CABIN.roofFront, side: 'paint', top: 'paint' },
+  { from: CABIN.roofFront, to: CABIN.front, side: 'paint', top: 'glass', pillar: 0.12 },
 ];
 
 export function addCabin(bin: PartBin, detail: Detail): void {
@@ -56,7 +62,12 @@ export function addCabin(bin: PartBin, detail: Detail): void {
       const steps = band === 2 ? detail.cabin[1] : detail.cabin[0];
       const rows = xs.map((x) => cabinBand(x, band, steps).map(([z, y]) => warp([x, y, z])));
       const slot = band === 0 ? r.side : band === 1 ? 'paint' : r.top;
-      bin.add(slot, bothSides(gridGeometry(rows)));
+      // A window in the roof band keeps a painted pillar along its outer edge: the C pillar's sail, the A pillar.
+      const k = band === 2 && r.pillar ? Math.round(steps * r.pillar) : 0;
+      if (k > 0 && k < steps) {
+        bin.add('paint', bothSides(gridGeometry(rows.map((row) => row.slice(0, k + 1)))));
+        bin.add(slot, bothSides(gridGeometry(rows.map((row) => row.slice(k)))));
+      } else bin.add(slot, bothSides(gridGeometry(rows)));
     }
   }
   // Close the tail end of the cabin where the roof steps down to the deck.

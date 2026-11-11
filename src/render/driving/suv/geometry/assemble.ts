@@ -7,6 +7,7 @@ import { addFront, addRear } from './ends';
 import { merge, mirrorZ } from './grid';
 import { DETAIL, PartBin, type Detail, type Slot } from './parts';
 import { addSides } from './sides';
+import { addRoofRails, addSunroof, addWindows } from './windows';
 import { buildWheel, caliper } from './wheels';
 
 /**
@@ -22,6 +23,9 @@ export function buildBody(detail: Detail): Map<Slot, THREE.BufferGeometry> {
   addFront(bin, detail);
   addRear(bin, detail);
   addSides(bin, detail);
+  addWindows(bin, detail);
+  addRoofRails(bin, detail);
+  addSunroof(bin, detail);
   return bin.build();
 }
 
