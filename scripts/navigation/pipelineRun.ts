@@ -1,4 +1,6 @@
 import type { Remote } from 'comlink';
+// Plugs the script compiler in, as every worker does, so runs with a script train here too.
+import '../../src/workers/shared/loadScripts';
 import { findPresetBlueprint } from '../../src/engine/blueprints/presets';
 import { loadEpisodeModule } from '../../src/engine/env/registry';
 import type { NavigationBlueprint } from '../../src/engine/navigation/pipeline/blueprints';
@@ -21,6 +23,8 @@ export interface PipelineRunOptions {
   settings?: Partial<NavigationSettings>;
   /** NEAT overrides on top of the blueprint's, for tuning experiments. */
   neat?: NavigationBlueprint['neat'];
+  /** Changes to the blueprint itself, such as hidden layers. */
+  brain?: Partial<Pick<NavigationBlueprint, 'wiring' | 'hiddenCount' | 'hiddenLayers' | 'activation'>>;
   /** A training script, or none for the built in reward. */
   script?: { source: string; hash: string; customSensors: number };
   onGeneration?: (r: GenerationRecord) => void;
@@ -53,7 +57,7 @@ export async function trainThroughPipeline(opts: PipelineRunOptions): Promise<Ge
     env: 'navigation',
     name: 'pipeline',
     seed: opts.seed,
-    blueprint: opts.neat ? { ...blueprint, neat: { ...blueprint.neat, ...opts.neat, mutation: { ...blueprint.neat?.mutation, ...opts.neat.mutation } } } : blueprint,
+    blueprint: { ...blueprint, ...opts.brain, ...(opts.neat && { neat: { ...blueprint.neat, ...opts.neat, mutation: { ...blueprint.neat?.mutation, ...opts.neat.mutation } } }) },
     populationSize: opts.population ?? 100,
     settings: { ...navigationSettings(opts.settings) },
     script: opts.script,
