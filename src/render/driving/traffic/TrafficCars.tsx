@@ -57,8 +57,8 @@ function overlapsFocus(world: WorldState, i: number, x: number, y: number, headi
  * for every wheel. Paint is picked per car and stays with it; brake lights,
  * indicators and rolling wheels come from the world snapshot. Traffic
  * cannot see the learners, so a car that rolls into the followed SUV
- * (waiting at a light, say) melts to a ghost while the two overlap rather
- * than cut through it.
+ * (waiting at a light, say) melts to a ghost, wheels and all, while the
+ * two overlap rather than cut through it.
  */
 export function TrafficCars() {
   const { frame, tier } = useDrivingScene();
@@ -67,6 +67,7 @@ export function TrafficCars() {
   const solid = useRef<Array<THREE.InstancedMesh | null>>([]);
   const fading = useRef<Array<THREE.InstancedMesh | null>>([]);
   const wheels = useRef<THREE.InstancedMesh>(null);
+  const fadingWheels = useRef<THREE.InstancedMesh>(null);
   const built = useDisposable(() => {
     const count = d === 'high' ? 40 : d === 'medium' ? 28 : 18;
     const steps = d === 'low' ? 1 : 2;
@@ -78,13 +79,17 @@ export function TrafficCars() {
       return { geometry, fadeGeometry, opacity: attachOpacity(fadeGeometry, MAX_TRAFFIC) };
     });
     const wheel = trafficWheelGeometry(WHEEL_BUILT, d === 'low' ? 10 : 16);
+    // Fading cars keep their wheels: a second wheel mesh that fades with them.
+    const fadeWheel = wheel.clone();
+    const wheelOpacity = attachOpacity(fadeWheel, MAX_TRAFFIC * 4);
     const body = createTrafficMaterial(time);
     const ghost = withInstanceOpacity(createTrafficMaterial(time));
     const wheelMat = withCarSurface(new THREE.MeshStandardMaterial({ vertexColors: true }));
-    const all = [...bodies.flatMap((b) => [b.geometry, b.fadeGeometry]), wheel, body, ghost, wheelMat];
-    return { bodies, wheel, body, ghost, wheelMat, dispose: () => all.forEach((x) => x.dispose()) };
+    const ghostWheelMat = withInstanceOpacity(withCarSurface(new THREE.MeshStandardMaterial({ vertexColors: true })));
+    const all = [...bodies.flatMap((b) => [b.geometry, b.fadeGeometry]), wheel, fadeWheel, body, ghost, wheelMat, ghostWheelMat];
+    return { bodies, wheel, fadeWheel, wheelOpacity, body, ghost, wheelMat, ghostWheelMat, dispose: () => all.forEach((x) => x.dispose()) };
   }, [d, time]);
-  useCarReflections([built.body, built.ghost, built.wheelMat]);
+  useCarReflections([built.body, built.ghost, built.wheelMat, built.ghostWheelMat]);
   const motion = useMemo(() => new TrafficMotion(), []);
   const split = useMemo(() => new FadeSplit(MAX_TRAFFIC), []);
   const tmp = useMemo(() => ({ m: new THREE.Matrix4(), c: new THREE.Color(), counts: new Int32Array(CAR_KINDS), fades: new Int32Array(CAR_KINDS) }), []);
@@ -92,13 +97,15 @@ export function TrafficCars() {
   useFrame((_, dt) => {
     const world = frame.world;
     const w = wheels.current;
+    const fw = fadingWheels.current;
     time.value += Math.min(dt, 0.1);
-    if (!world || !w) return;
+    if (!world || !w || !fw) return;
     motion.update(world, Math.min(dt, 0.1));
     tmp.counts.fill(0);
     tmp.fades.fill(0);
     split.begin(Math.min(dt, 1));
     let wheelCount = 0;
+    let fadeWheelCount = 0;
     for (let i = 0; i < world.carCount; i++) {
       const k = world.carKind[i];
       const near = frame.focus >= 0 && overlapsFocus(world, i, frame.pos.x, -frame.pos.z, frame.yaw);
@@ -116,6 +123,10 @@ export function TrafficCars() {
       (geo.attributes.aFlags as THREE.InstancedBufferAttribute).setX(slot, world.carFlags[i]);
       if (!isSolid) built.bodies[k].opacity.setX(slot, opacity);
       if (isSolid) wheelCount = placeWheels(motion, i, world, tmp.m, w, wheelCount);
+      else {
+        for (let k4 = 0; k4 < 4; k4++) built.wheelOpacity.setX(fadeWheelCount + k4, opacity);
+        fadeWheelCount = placeWheels(motion, i, world, tmp.m, fw, fadeWheelCount);
+      }
     }
     for (let k = 0; k < CAR_KINDS; k++) {
       finish(solid.current[k], tmp.counts[k]);
@@ -124,6 +135,9 @@ export function TrafficCars() {
     }
     w.count = wheelCount;
     w.instanceMatrix.needsUpdate = true;
+    fw.count = fadeWheelCount;
+    fw.instanceMatrix.needsUpdate = true;
+    built.wheelOpacity.needsUpdate = true;
   });
 
   const shadows = tier !== 'low';
@@ -136,6 +150,7 @@ export function TrafficCars() {
         </group>
       ))}
       <instancedMesh ref={wheels} args={[built.wheel, built.wheelMat, MAX_TRAFFIC * 4]} castShadow={shadows} receiveShadow frustumCulled={false} />
+      <instancedMesh ref={fadingWheels} args={[built.fadeWheel, built.ghostWheelMat, MAX_TRAFFIC * 4]} frustumCulled={false} renderOrder={2} />
     </group>
   );
 }
