@@ -1,6 +1,9 @@
-import { faceTop } from './body';
+import { faceEdge, faceTop, onCap } from './body';
+import { bothSides, gridGeometry, type Vec3 } from './grid';
 import type { Detail, PartBin } from './parts';
 import { at, capPanel, capSpan } from './panels';
+import { NOSE, sillY } from './profile';
+import { facing, recess, rounded } from './recess';
 import type { Pt } from './section';
 
 /** The headlight's span across the face, inner to outer end, m. */
@@ -38,42 +41,55 @@ function addHeadlights(bin: PartBin, detail: Detail): void {
   }
 }
 
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+/** How far each intake's lip stands proud of the face, and the width of its bezel, m. */
+const INTAKE = { depth: 0.038, bezel: 0.022, margin: 0.02 };
 
-/** A side intake's outline, inset by `k` m: a trapezoid whose inner edge leans out and whose top falls toward the corner. */
-function sideIntake(k: number): { lo: (u: number) => Pt; hi: (u: number) => Pt } {
-  return {
-    lo: (u) => [lerp(0.43 + k, 0.64 - k, u), 0.432 + k],
-    hi: (u) => [lerp(0.52 + k * 0.6, 0.66 - k, u), lerp(0.745 - k, 0.708 - k, u)],
-  };
+/** The center intake: low and wide, narrowing a little toward its top. Counterclockwise in (z, y). */
+const CENTER: Pt[] = [[-0.3, 0.4], [0.3, 0.4], [0.25, 0.55], [-0.25, 0.55]];
+
+/** The left side intake, taller and leaning out at the top, its outer edge kept inside the face's own edge. */
+function sideIntake(): Pt[] {
+  const out = (y: number) => faceEdge(1, y) - INTAKE.margin - INTAKE.bezel;
+  return [[0.42, 0.4], [out(0.4), 0.4], [out(0.665), 0.665], [0.51, 0.7]];
 }
 
 /**
  * The lower face: no tall grille, just a low wide center intake and two
- * large side intakes framed in gloss black, a clean painted nose above
- * them, and a gloss black lip under everything.
+ * large side intakes, each set deep behind a gloss black bezel, with a
+ * clean painted nose above them.
  */
 function addIntakes(bin: PartBin, detail: Detail): void {
-  const c = detail.fine ? 8 : detail.brakes ? 4 : 2;
-  const center = (k: number) => (y: number) => 0.38 - k - (y - 0.432) * 0.3;
-  bin.add('trim', capPanel(1, (y) => -center(0)(y), center(0), 0.432, 0.6, 0.004, c * 2, 2, false));
-  bin.add('grille', capPanel(1, (y) => -center(0.016)(y), center(0.016), 0.448, 0.584, 0.007, c * 2, 2, false));
-  const frame = sideIntake(0);
-  const mesh = sideIntake(0.016);
-  bin.add('trim', capSpan(1, frame.lo, frame.hi, 0.004, c, 3));
-  bin.add('grille', capSpan(1, mesh.lo, mesh.hi, 0.007, c, 3));
-  // One gloss blade across each side intake, at its middle.
-  const mid = (v: number) => (u: number): Pt => {
-    const a = mesh.lo(u);
-    const b = mesh.hi(u);
-    return [lerp(a[0], b[0], v), lerp(a[1], b[1], v)];
-  };
-  bin.add('trim', capSpan(1, mid(0.47), mid(0.55), 0.014, c, 1));
-  bin.add('trim', capPanel(1, at(-0.6), at(0.6), 0.42, 0.437, 0.016, c * 3, 1, false));
+  const corner = detail.fine ? 4 : detail.brakes ? 2 : 1;
+  const rings = detail.fine ? 4 : 2;
+  const center = recess(1, rounded(CENTER, 0.03, corner), INTAKE.depth, INTAKE.bezel, rings);
+  const side = recess(1, rounded(sideIntake(), 0.03, corner), INTAKE.depth, INTAKE.bezel, rings);
+  bin.add('trim', center.bezel, bothSides(side.bezel));
+  bin.add('grille', center.mesh, bothSides(side.mesh));
+}
+
+/**
+ * A gloss black lip under the face, carrying the black rocker round the
+ * front. It is a real blade with a top, a front and an underside, and its
+ * underside sits on the face's lowest edge so nothing hangs below it.
+ * It tapers back into the face at both ends.
+ */
+function addLip(bin: PartBin, detail: Detail): void {
+  const y0 = sillY(NOSE);
+  const y1 = y0 + 0.05;
+  const half = faceEdge(1, y0 + 0.02) - 0.012;
+  const n = detail.fine ? 24 : detail.brakes ? 10 : 6;
+  const rows: Vec3[][] = [];
+  for (let i = 0; i <= n; i++) {
+    const z = -half + (2 * half * i) / n;
+    const k = 1 - (z / half) ** 6;
+    rows.push(([[y1, 0.002], [y1 - 0.012, 0.004 + 0.014 * k], [y0 + 0.006, 0.004 + 0.022 * k], [y0, 0.002 + 0.012 * k]] as const).map(([y, lift]) => onCap(1, z, y, lift)));
+  }
+  bin.add('trim', facing(gridGeometry(rows), [1, 0, 0]));
 }
 
 /** The whole nose: lamps on top, intakes below, all laid on the warped face. */
 export function addFront(bin: PartBin, detail: Detail): void {
   addHeadlights(bin, detail);
   addIntakes(bin, detail);
+  addLip(bin, detail);
 }

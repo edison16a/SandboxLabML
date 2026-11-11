@@ -115,6 +115,28 @@ export function faceTop(end: 1 | -1, z: number): number {
   return top[0][1];
 }
 
+const edges = new Map<number, Pt[]>();
+
+/**
+ * Half width of the nose (+1) or tail (-1) face at height y, up to the
+ * shoulder: where it curls round into the side. Intakes and lamps keep a
+ * margin inside it, so nothing hangs past the body.
+ */
+export function faceEdge(end: 1 | -1, y: number): number {
+  let edge = edges.get(end);
+  if (!edge) {
+    const k = sectionAt(end > 0 ? NOSE : TAIL).keys;
+    edge = [...span(k[0], k[1], 16, TENSION[0]), ...span(k[1], k[2], 16).slice(1), ...span(k[2], k[3], 24, TENSION[2]).slice(1)];
+    edges.set(end, edge);
+  }
+  for (let i = 0; i < edge.length - 1; i++) {
+    const [z0, y0] = edge[i];
+    const [z1, y1] = edge[i + 1];
+    if (y >= y0 && y <= y1) return z0 + ((z1 - z0) * (y - y0)) / (y1 - y0 || 1);
+  }
+  return y < edge[0][1] ? edge[0][0] : edge[edge.length - 1][0];
+}
+
 /** A point on the nose (+1) or tail (-1) face at (z, y), lifted off it by `lift` m. */
 export function onCap(end: 1 | -1, z: number, y: number, lift = 0.004): Vec3 {
   return warp([(end > 0 ? NOSE : TAIL) + end * lift, y, z]);
