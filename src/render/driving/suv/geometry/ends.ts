@@ -18,7 +18,7 @@ export const TAIL = -2.3;
  */
 export const ROUND = {
   nose: { plan: 0.35, peak: 0.16, roll: 0.04, rollLen: 0.04 },
-  tail: { plan: 0.25, peak: 0.12, roll: 0.018, rollLen: 0.025 },
+  tail: { plan: 0.25, peak: 0.15, roll: 0.018, rollLen: 0.025 },
 };
 
 export interface EndPull {

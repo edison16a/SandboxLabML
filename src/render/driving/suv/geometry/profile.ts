@@ -46,8 +46,8 @@ export function sectionAt(x: number): Section {
   const w = shoulderZ(x) - pull.side;
   // How far round the nose corner the section is, 0 to 1: the shoulder turns over more and more toward the face.
   const turn = x > 0 ? (pull.side / ROUND.nose.plan) ** 1.5 : 0;
-  // At the nose the shoulder keeps its height and rolls over into the face's top edge; only the hood drops.
-  const ys = shoulderY(x) - (x > 0 ? 0 : pull.drop);
+  // At both ends the shoulder keeps its height: it rolls over into the nose face and runs into the tail lamps; only the top drops.
+  const ys = shoulderY(x);
   const [bz, by] = beltAt(x);
   const v = by - deckY(x);
   // The shoulder: the side arrives upright, the shelf leaves leaning in, a little flatter on the front fender.

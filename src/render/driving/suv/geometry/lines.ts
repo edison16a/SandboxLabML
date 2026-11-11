@@ -10,13 +10,13 @@ import { profile, smooth } from './curve';
 export const shoulderZ = profile([[-2.3, 0.966], [-2.1, 0.986], [-1.8, 0.998], [-1.42, 1.0], [-1.05, 0.986], [-0.75, 0.962], [-0.4, 0.947], [0.3, 0.945], [0.9, 0.953], [1.48, 0.965], [1.9, 0.962], [2.4, 0.955]]);
 
 /** Height of the shoulder crease: from the top of the headlight, level along the doors, rising over the rear haunch. */
-export const shoulderY = profile([[-2.3, 1.075], [-1.9, 1.062], [-1.42, 1.045], [-1.0, 1.018], [-0.4, 1.002], [0.6, 0.998], [1.2, 0.99], [1.7, 0.974], [2.1, 0.956], [2.4, 0.946]]);
+export const shoulderY = profile([[-2.3, 1.05], [-1.9, 1.05], [-1.42, 1.046], [-1.0, 1.018], [-0.4, 1.002], [0.6, 0.998], [1.2, 0.99], [1.7, 0.974], [2.1, 0.956], [2.4, 0.946]]);
 
 /** The belt, where the side glass sits on the body: 1.08 at the A pillar's foot, rising gently toward the tail. */
 const beltLine = profile([[-2.3, 1.172], [-2.0, 1.152], [-1.7, 1.14], [-1.0, 1.12], [-0.45, 1.1], [0.3, 1.088], [0.85, 1.08], [1.3, 1.078]]);
 
 /** How far the belt sits in from the shoulder: the tumblehome shelf, widest over the rear haunch. */
-const beltInset = profile([[-2.3, 0.17], [-1.9, 0.152], [-1.42, 0.14], [-0.9, 0.122], [-0.4, 0.106], [0.4, 0.105], [0.9, 0.112], [1.3, 0.112]]);
+const beltInset = profile([[-2.3, 0.14], [-1.9, 0.14], [-1.42, 0.138], [-0.9, 0.122], [-0.4, 0.106], [0.4, 0.105], [0.9, 0.112], [1.3, 0.112]]);
 
 /**
  * The hood's centerline: one parabola, level at the windshield's foot and

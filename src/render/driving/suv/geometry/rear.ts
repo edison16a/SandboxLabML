@@ -17,7 +17,7 @@ export const BAND = { half: 0.83, lo: 0.993, hi: 1.046 };
 /** The light band's lower and upper edge at s. */
 export function tailBand(s: number): { lo: number; hi: number } {
   const k = smooth((Math.abs(s) - 0.52) / 0.3);
-  return { lo: BAND.lo - 0.012 * k, hi: BAND.hi - 0.022 * k };
+  return { lo: BAND.lo - 0.006 * k, hi: BAND.hi - 0.012 * k };
 }
 
 /** A point in the band at s, a share `v` of its height up from its lower edge. */
