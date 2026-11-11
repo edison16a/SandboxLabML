@@ -4,34 +4,48 @@ import type { Detail, PartBin } from './parts';
 import { at, capDisc, capPanel, capSpan } from './panels';
 import type { Pt } from './section';
 
-/** Half width of the tail's light band, m: it runs almost corner to corner. */
-const BAND = 0.765;
+/** The tail's light band: its half width, and how far its two edges sit under the face's top edge, m. */
+const BAND = { half: 0.755, hi: 0.055, lo: 0.115 };
 
-/** A point along the tail's top corner, `u` from the band's inner end at 0.48 to its outer end, `down` m under the top edge. */
-function cornerEdge(u: number, down: number): Pt {
-  const z = 0.48 + (BAND - 0.48) * u;
-  return [z, faceTop(-1, z) - down];
+/**
+ * The light band's lower and upper edge at z, both measured down from
+ * the face's top edge, so the band keeps its height as it follows the
+ * deck across and the shoulder down into each corner. Every lamp inside
+ * it is placed at a share of this height, so none can leave the band.
+ */
+export function tailBand(z: number): { lo: number; hi: number } {
+  const top = faceTop(-1, z);
+  return { lo: top - BAND.lo, hi: top - BAND.hi };
+}
+
+/** A point in the band at z, a share `v` of its height up from its lower edge. */
+function inBand(z: number, v: number): Pt {
+  const { lo, hi } = tailBand(z);
+  return [z, lo + (hi - lo) * v];
+}
+
+/** A strip in the band from z0 to z1 between shares v0 and v1, lifted off the face. */
+function bandStrip(z0: number, z1: number, v0: number, v1: number, lift: number, cols: number, mirror = true) {
+  const z = (u: number) => z0 + (z1 - z0) * u;
+  return capSpan(-1, (u) => inBand(z(u), v0), (u) => inBand(z(u), v1), lift, cols, 1, mirror);
 }
 
 /**
  * The lights: a gloss black band across the top of the tailgate carrying
- * a slim full width light bar, which thickens into a lamp at each corner
- * where the band follows the tail's rounded shoulder.
+ * a slim full width light bar, which grows into a lamp at each corner
+ * where the band follows the tail's rounded shoulder down.
  */
 function addLights(bin: PartBin, detail: Detail): void {
-  const c = detail.fine ? 10 : detail.brakes ? 4 : 3;
-  const y0 = faceTop(-1, 0.48) - 0.112;
-  bin.add('trim', capPanel(-1, at(-0.48), at(0.48), y0, y0 + 0.05, 0.004, c * 2, 1, false));
-  bin.add('trim', capSpan(-1, (u) => [0.48 + (BAND - 0.48) * u, y0 + 0.012 * u], (u) => cornerEdge(u, 0.062), 0.004, c, 1));
-  // The bar parts in the middle for the app's own mark, lit like the bar.
-  bin.add('tail', capPanel(-1, at(0.036), at(0.48), y0 + 0.02, y0 + 0.031, 0.007, c, 1));
-  if (detail.brakes) addEmblem(bin, y0 + 0.025, detail.fine ? 14 : 8);
-  // The corner lamp: the bar carries on and a taller lens sits above it toward the corner.
-  bin.add('tail', capSpan(-1, (u) => [0.48 + (BAND - 0.02 - 0.48) * u, y0 + 0.02 + 0.006 * u], (u) => [0.48 + (BAND - 0.02 - 0.48) * u, y0 + 0.031 + 0.012 * u], 0.007, c, 1));
-  bin.add('glass', capSpan(-1, (u) => [0.6 + (BAND - 0.035 - 0.6) * u, y0 + 0.046 + 0.01 * u], (u) => cornerEdge(0.43 + 0.5 * u, 0.072), 0.006, c, 1));
-  bin.add('tail', capSpan(-1, (u) => [0.62 + (BAND - 0.055 - 0.62) * u, y0 + 0.052 + 0.01 * u], (u) => [0.62 + (BAND - 0.055 - 0.62) * u, y0 + 0.059 + 0.012 * u], 0.009, c, 1));
+  const c = detail.fine ? 14 : detail.brakes ? 6 : 4;
+  bin.add('trim', bandStrip(-BAND.half, BAND.half, 0, 1, 0.004, c * 3, false));
+  // The corner lamp: a smoked lens filling most of the band toward each corner.
+  bin.add('glass', bandStrip(0.5, BAND.half - 0.012, 0.12, 0.88, 0.006, c));
+  // The bar parts in the middle for the app's own mark, lit like the bar, and runs out over the lens.
+  bin.add('tail', bandStrip(0.036, BAND.half - 0.016, 0.36, 0.54, 0.008, c * 2));
+  bin.add('tail', bandStrip(0.54, BAND.half - 0.03, 0.66, 0.76, 0.008, c));
+  if (detail.brakes) addEmblem(bin, inBand(0, 0.45)[1], detail.fine ? 14 : 8);
   // Slim reflectors at the bumper corners, just over the diffuser.
-  bin.add('tail', capPanel(-1, at(0.64), at(0.76), 0.662, 0.673, 0.005, 2, 1));
+  bin.add('tail', capPanel(-1, at(0.64), at(0.74), 0.662, 0.673, 0.005, 2, 1));
 }
 
 /**
