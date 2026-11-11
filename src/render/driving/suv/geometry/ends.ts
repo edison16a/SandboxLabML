@@ -48,12 +48,12 @@ export function addRear(bin: PartBin, detail: Detail): void {
   bin.add('tail', capPanel(-1, at(0.54), at(0.77), 1.03, 1.08, 0.008, c, 1));
   bin.add('tail', capPanel(-1, at(0.56), at(0.75), 0.99, 1.005, 0.008, c, 1));
   bin.add('tail', capPanel(-1, at(0.64), at(0.76), 0.63, 0.65, 0.005, 2, 1));
-  // A gloss black diffuser with fins, under a bright strip.
+  // A gloss black diffuser with satin fins, under a bright strip.
   bin.add('trim', capPanel(-1, at(-0.72), at(0.72), 0.43, 0.565, 0.004, c * 2, 2, false));
   bin.add('metal', capPanel(-1, at(-0.62), at(0.62), 0.57, 0.577, 0.006, c * 2, 1, false));
   for (const z of [-0.18, -0.06, 0.06, 0.18]) {
-    const p = onCap(-1, z, 0.475, 0.018);
-    bin.add('trim', new THREE.BoxGeometry(0.04, 0.09, 0.014).translate(p[0], p[1], p[2]));
+    const p = onCap(-1, z, 0.47, 0.012);
+    bin.add('clad', new THREE.BoxGeometry(0.026, 0.07, 0.01).translate(p[0], p[1], p[2]));
   }
   // A ducktail lip along the top of the tail, the coupe's sign off.
   const lip: Vec3[][] = [];
