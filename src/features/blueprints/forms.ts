@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import type { Blueprint } from '@/engine/blueprints/types';
 import type { EnvId } from '@/engine/env/types';
 import { HideSeekBlueprintForm } from './HideSeekBlueprintForm';
+import { NavigationBlueprintForm } from './NavigationBlueprintForm';
 import { RacingBlueprintForm } from './RacingBlueprintForm';
 
 /** A blueprint form edits a draft of its env's blueprint. The dialog only hands it blueprints of that env. */
@@ -17,4 +18,6 @@ export type BlueprintFormComponent = ComponentType<{ value: Blueprint; onChange:
 export const BLUEPRINT_FORMS: Partial<Record<EnvId, BlueprintFormComponent>> = {
   racing: RacingBlueprintForm as BlueprintFormComponent,
   hideseek: HideSeekBlueprintForm as BlueprintFormComponent,
+  // The dialog only hands a form blueprints of its env, whose inputs are that env's own config.
+  navigation: NavigationBlueprintForm as unknown as BlueprintFormComponent,
 };

@@ -1,4 +1,4 @@
-import { Car, Users, type LucideIcon } from 'lucide-react';
+import { Car, Flag, Users, type LucideIcon } from 'lucide-react';
 import type { EnvId } from '@/engine/env/types';
 import type { BadgeTone } from '@/ui/primitives/Badge';
 
@@ -20,6 +20,7 @@ export interface LabInfo {
 export const LABS: readonly LabInfo[] = [
   { env: 'racing', path: '/lab/racing', label: 'Racing', icon: Car, tone: 'accent' },
   { env: 'hideseek', path: '/lab/hide-seek', label: 'Hide and Seek', icon: Users, tone: 'orange' },
+  { env: 'navigation', path: '/lab/navigation', label: 'Navigation', icon: Flag, tone: 'accent' },
 ];
 
 export function labOf(env: EnvId): LabInfo | undefined {
