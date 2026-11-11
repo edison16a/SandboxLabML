@@ -83,7 +83,7 @@ export function NavCharacter({ read, detail, shadows, blob }: NavCharacterProps)
     rig.poser.apply(pose);
     mats.apply(pose, st.lift, clock.elapsedTime);
     if (st.grey > 0) mats.body.color.lerp(GREY, st.grey);
-    if (st.flash > 0) mats.body.color.lerp(FLASH, st.flash * 0.7);
+    if (st.flash > 0) mats.body.color.lerp(FLASH, st.flash * 0.55);
     if (shadow.current) {
       shadow.current.visible = blob && Math.abs(st.tip) < 0.3;
       shadow.current.position.y = -st.lift;

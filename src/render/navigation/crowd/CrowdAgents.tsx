@@ -12,6 +12,7 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { POSE_PRIORITY, useNavScene } from '../frame/sceneContext';
 import { blendAgent, STRIDE } from '../frame/snapshotRead';
 import { NAV_COLORS } from '../palette';
+import { hidesChampion } from './clearance';
 import { crowdFadeMaterial, crowdSolidMaterial, instanceFloats } from './crowdMaterials';
 import { createStopPose, stopPose } from './stopPose';
 
@@ -20,7 +21,7 @@ export const MAX_AGENTS = 320;
 const BODY = new THREE.Color(NAV_COLORS.runner).lerp(new THREE.Color(NAV_COLORS.crowdGrey), 0.3);
 const GREY = new THREE.Color(NAV_COLORS.dormant);
 const FLASH = new THREE.Color(NAV_COLORS.senseSpikes);
-/** Crowd members closer than this to the champion fade back, m, so the one the view follows never hides in the pack. */
+/** Crowd members closer than this to the champion, or in front of it toward the camera (see hidesChampion), fade back, m, so the one the view follows never hides in the pack. */
 const CLEAR_RADIUS = 0.85;
 const CLEAR_RADIUS_ENDED = 1.6;
 /** How far they fade, and how fast they fade out and back in, 1/s. */
@@ -70,7 +71,7 @@ export function CrowdAgents() {
     [],
   );
 
-  useFrame(({ clock }, dt) => {
+  useFrame(({ clock, camera }, dt) => {
     const ms = solid.current;
     const mf = fading.current;
     if (!ms || !mf) return;
@@ -87,6 +88,13 @@ export function CrowdAgents() {
     const count = Math.min(frame.count, MAX_AGENTS);
     // Once the champion's run is over the pack clears a wider space, so its fall or its hop is seen whole.
     const clearRadius = frame.leader >= 0 && curr[frame.leader * STRIDE + SNAP_STATUS] !== NAV_RUNNING ? CLEAR_RADIUS_ENDED : CLEAR_RADIUS;
+    const lp = frame.leaderPose;
+    // The camera's direction over the floor from the champion, for the strip kept clear in front of it.
+    let dx = camera.position.x - lp.x;
+    let dz = camera.position.z - lp.z;
+    const dl = Math.hypot(dx, dz);
+    dx = dl > 1e-3 ? dx / dl : 0;
+    dz = dl > 1e-3 ? dz / dl : 1;
     for (let i = 0; i < count; i++) {
       if (i === frame.leader) continue;
       const o = i * STRIDE;
@@ -94,8 +102,7 @@ export function CrowdAgents() {
       const st = t.stop;
       blendAgent(frame.prev, curr, i, frame.alpha, t.pose);
       // Eased per agent on wall time, so one walking past the champion melts away and back instead of popping.
-      const lp = frame.leaderPose;
-      const near = frame.leader >= 0 && Math.hypot(t.pose.x - lp.x, t.pose.z - lp.z) < clearRadius;
+      const near = frame.leader >= 0 && hidesChampion(t.pose.x, t.pose.z, lp.x, lp.z, dx, dz, clearRadius);
       const goal = near ? CLEAR_ALPHA : 1;
       t.clear[i] += (goal - t.clear[i]) * Math.min(1, (goal < t.clear[i] ? CLEAR_OUT : CLEAR_IN) * Math.min(dt, 0.1));
       const alpha = st.alpha * t.clear[i];
@@ -109,7 +116,7 @@ export function CrowdAgents() {
       t.p.set(t.pose.x, bob + st.lift, t.pose.z);
       t.s.set(st.spread, st.squash, st.spread);
       t.m.compose(t.p, t.q, t.s);
-      t.c.copy(BODY).lerp(GREY, st.grey).lerp(FLASH, st.flash * 0.7);
+      t.c.copy(BODY).lerp(GREY, st.grey).lerp(FLASH, st.flash * 0.55);
       const amp = st.tip !== 0 || st.squash < 1 || st.airborne ? 0 : Math.min(0.6, speed * 0.22);
       if (alpha >= 0.99) {
         ms.setMatrixAt(ns, t.m);
