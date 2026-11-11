@@ -7,14 +7,16 @@ import { warp } from './warp';
 
 /**
  * Bands joined into one smooth grid each: the gloss black rocker, the
- * dished lower door, and everything from the sculpt line up over the
- * shoulder and across the hood. Grids only split at creases and color
- * changes, so the shoulder shades as one clean roll.
+ * dished lower door, the side up to the shoulder, and the shoulder roll
+ * over the top. The side and the shoulder meet where the surface stands
+ * vertical, so the seam never shows, and the arch cuts in the side never
+ * disturb the shading of the roll above them.
  */
 const PANELS: Array<{ bands: number[]; slot: Slot }> = [
   { bands: [0], slot: 'trim' },
   { bands: [1], slot: 'paint' },
-  { bands: [2, 3, 4, 5], slot: 'paint' },
+  { bands: [2], slot: 'paint' },
+  { bands: [3, 4, 5], slot: 'paint' },
 ];
 const FINE = 24;
 

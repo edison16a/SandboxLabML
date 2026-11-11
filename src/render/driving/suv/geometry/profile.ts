@@ -98,7 +98,12 @@ export function archFloor(x: number): number {
 /** Stations where sections are taken: even spacing plus dense stations over each arch so its curve stays round. */
 export function stations(count: number, archSteps: number): number[] {
   const xs: number[] = [];
-  for (let i = 0; i <= count; i++) xs.push(TAIL + ((NOSE - TAIL) * i) / count);
+  // Over an arch only its own stations are used: mixing two spacings there streaks the reflections.
+  const overArch = (x: number) => AXLES.some((a) => Math.abs(x - a) < ARCH.radius + 0.01);
+  for (let i = 0; i <= count; i++) {
+    const x = TAIL + ((NOSE - TAIL) * i) / count;
+    if (!overArch(x)) xs.push(x);
+  }
   for (const axle of AXLES) {
     for (let i = 0; i <= archSteps; i++) {
       // Spaced by angle round the arch, so the steep ends get as many points as the crown.

@@ -23,33 +23,50 @@ function shutLine(x: number): THREE.BufferGeometry {
 }
 
 /**
- * A door mirror: a wedge shaped painted housing, rounded at the front and
- * cut flat at the back where the glass sits, on a slim gloss black arm
- * from the door just under the window graphic. Built on the left and
- * mirrored.
+ * A slim wing from `root` on the door to `tip` under the mirror: an oval
+ * section that narrows along its length, so the arm reads as a shaped
+ * stalk rather than a stick.
+ */
+function stalk(root: Vec3, tip: Vec3, n: number): THREE.BufferGeometry {
+  const rows: Vec3[][] = [];
+  for (let i = 0; i <= n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    rows.push([[root, 0.1, 0.026], [tip, 0.06, 0.016]].map(([b, chord, thick]) => {
+      const [bx, by, bz] = b as Vec3;
+      return [bx + (Math.cos(a) * (chord as number)) / 2, by + (Math.sin(a) * (thick as number)) / 2, bz] as Vec3;
+    }));
+  }
+  return gridGeometry(rows);
+}
+
+/**
+ * A door mirror: a wedge shaped painted housing, rounded at the front,
+ * flat underneath and cut flat at the back where the glass sits, on a
+ * gloss black stalk from the door just under the window graphic. Built
+ * on the left and mirrored.
  */
 function mirrorParts(detail: Detail): { cap: THREE.BufferGeometry; arm: THREE.BufferGeometry; glass: THREE.BufferGeometry } {
   const x = 0.8;
   const [bz, by] = beltAt(x);
-  const s = detail.fine ? 20 : detail.brakes ? 8 : 6;
+  const s = detail.fine ? 22 : detail.brakes ? 8 : 6;
   const cap = new THREE.SphereGeometry(1, s, Math.max(5, Math.round(s * 0.6)));
   const p = cap.attributes.position;
   for (let i = 0; i < p.count; i++) {
     let px = p.getX(i);
-    const py = p.getY(i);
+    let py = p.getY(i);
     const pz = p.getZ(i);
-    // Flat back for the glass, a crisp lower edge, and a housing that narrows toward the car.
-    if (px < -0.25) px = -0.25;
+    // Flat back for the glass and a flat underside; the housing grows deeper toward its outer end.
+    if (px < -0.2) px = -0.2;
+    if (py < -0.55) py = -0.55;
     const out = pz * 0.5 + 0.5;
-    const taper = 0.6 + 0.4 * out;
-    p.setXYZ(i, px * (0.055 + 0.03 * out), (py < 0 ? py * 0.7 : py) * 0.052 * taper, pz * 0.115);
+    p.setXYZ(i, px * (0.05 + 0.03 * out), py * (0.04 + 0.016 * out), pz * 0.112);
   }
   cap.computeVertexNormals();
-  const center: Vec3 = [x - 0.04, by + 0.085, bz + 0.17];
+  const center: Vec3 = [x - 0.03, by + 0.07, bz + 0.17];
   cap.rotateZ(-0.05).translate(...center);
-  const arm = new THREE.BoxGeometry(0.07, 0.018, 0.1).rotateX(-0.3).translate(x - 0.02, by + 0.045, bz + 0.06);
-  const back = center[0] - 0.25 * 0.07 - 0.002;
-  const glass = new THREE.CircleGeometry(1, s).scale(0.09, 0.04, 1).rotateY(-Math.PI / 2).translate(back, center[1], center[2] + 0.005);
+  const arm = stalk([x - 0.01, by + 0.012, bz - 0.01], [center[0] + 0.005, center[1] - 0.02, center[2] - 0.07], detail.fine ? 12 : 6);
+  const back = center[0] - 0.2 * 0.07 - 0.002;
+  const glass = new THREE.CircleGeometry(1, s).scale(0.085, 0.034, 1).rotateY(-Math.PI / 2).translate(back, center[1] + 0.004, center[2] + 0.008);
   return { cap: bothSides(cap), arm: bothSides(arm), glass: bothSides(glass) };
 }
 
