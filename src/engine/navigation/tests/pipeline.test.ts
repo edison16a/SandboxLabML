@@ -10,6 +10,7 @@ import { NAVIGATION_BLUEPRINTS } from '../pipeline/blueprints';
 import { NAV_DIRECTIVE, nextNavigationContent, RANDOM_COURSE, type NavigationContent } from '../pipeline/content';
 import type { NavigationRunResult } from '../pipeline/runResult';
 import { navigationSettings } from '../pipeline/settings';
+import type { NavigationSetup } from '../pipeline/setup';
 import { NAVIGATION_SNAPSHOT } from '../snapshot';
 
 function run(populationSize = 24, settings = navigationSettings()) {
@@ -17,7 +18,7 @@ function run(populationSize = 24, settings = navigationSettings()) {
 }
 
 /** Runs one generation the way the coordinator does: the population in `parts` slices, seeds and slots sliced alike. */
-function evaluate(t: EpisodeTrainer, parts: number): NavigationRunResult[] {
+function evaluate(t: EpisodeTrainer<NavigationSetup, NavigationContent, NavigationRunResult>, parts: number): NavigationRunResult[] {
   const setup = t.setup();
   const seeds = t.seeds();
   const slots = t.slots();
