@@ -43,13 +43,15 @@ export function deckY(x: number): number {
 export function sectionAt(x: number): Section {
   const pull = endPull(x);
   const w = shoulderZ(x) - pull.side;
-  const ys = shoulderY(x) - pull.drop;
+  // At the nose the shoulder keeps its height and rolls over into the face's top edge; the hood alone drops.
+  const roll = x > 0 ? pull.drop / ROUND.nose.roll : 0;
+  const ys = shoulderY(x) - (x > 0 ? 0 : pull.drop);
   const [bz, by] = beltAt(x);
   const v = by - deckY(x);
   // The shoulder: the side arrives upright, the shelf leaves leaning in, a little flatter on the front fender.
-  // Round the nose's corner the crease softens, so it fades into the face's top edge instead of stopping dead.
+  // Round the nose's corner the crease softens and turns over further, so it flows into the hood's edge.
   const up = deg(-3);
-  const shelf = deg(58 + 8 * onHood(x));
+  const shelf = deg(58 + 8 * onHood(x) + 40 * roll);
   const r = SHOULDER_R * (1 + (x > 0 ? pull.side / ROUND.nose.plan : 0));
   const t = r * Math.tan((shelf - up) / 2);
   // Along the cabin the shelf ends under the glass; on the hood it crests flat at the fender peak, and the tail's deck flattens too.
