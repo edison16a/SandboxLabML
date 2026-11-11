@@ -31,7 +31,7 @@ function shutLine(x: number): THREE.BufferGeometry {
 function mirrorParts(detail: Detail): { cap: THREE.BufferGeometry; arm: THREE.BufferGeometry; glass: THREE.BufferGeometry } {
   const x = 0.8;
   const [bz, by] = beltAt(x);
-  const s = detail.fine ? 20 : 8;
+  const s = detail.fine ? 20 : detail.brakes ? 8 : 6;
   const cap = new THREE.SphereGeometry(1, s, Math.max(5, Math.round(s * 0.6)));
   const p = cap.attributes.position;
   for (let i = 0; i < p.count; i++) {

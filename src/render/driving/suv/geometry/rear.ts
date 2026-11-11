@@ -19,7 +19,7 @@ function cornerEdge(u: number, down: number): Pt {
  * where the band follows the tail's rounded shoulder.
  */
 function addLights(bin: PartBin, detail: Detail): void {
-  const c = detail.fine ? 10 : 4;
+  const c = detail.fine ? 10 : detail.brakes ? 4 : 3;
   const y0 = faceTop(-1, 0.48) - 0.112;
   bin.add('trim', capPanel(-1, at(-0.48), at(0.48), y0, y0 + 0.05, 0.004, c * 2, 1, false));
   bin.add('trim', capSpan(-1, (u) => [0.48 + (BAND - 0.48) * u, y0 + 0.012 * u], (u) => cornerEdge(u, 0.062), 0.004, c, 1));
@@ -34,7 +34,7 @@ function addLights(bin: PartBin, detail: Detail): void {
 
 /** A lip spoiler along the top of the tail, where the roofline ends: it kicks up and back. */
 function addSpoiler(bin: PartBin, detail: Detail): void {
-  const n = detail.fine ? 24 : 8;
+  const n = detail.fine ? 24 : detail.brakes ? 8 : 6;
   const rows: Vec3[][] = [];
   for (let i = 0; i <= n; i++) {
     const z = -0.66 + (1.32 * i) / n;
@@ -51,13 +51,13 @@ function addSpoiler(bin: PartBin, detail: Detail): void {
  * each side.
  */
 function addDiffuser(bin: PartBin, detail: Detail): void {
-  const c = detail.fine ? 10 : 4;
+  const c = detail.fine ? 10 : detail.brakes ? 4 : 2;
   bin.add('trim', capPanel(-1, (y) => -(0.77 - (0.615 - y) * 0.2), (y) => 0.77 - (0.615 - y) * 0.2, 0.455, 0.615, 0.004, c * 2, 2, false));
   bin.add('metal', capPanel(-1, at(-0.72), at(0.72), 0.618, 0.623, 0.006, c * 2, 1, false));
   if (detail.fine) {
     for (const z of [-0.2, -0.1, 0, 0.1, 0.2]) bin.add('clad', capPanel(-1, at(z - 0.006), at(z + 0.006), 0.46, 0.58, 0.014, 1, 1, false));
   }
-  const seg = detail.fine ? 22 : 10;
+  const seg = detail.fine ? 22 : detail.brakes ? 10 : 6;
   for (const z of [0.4, 0.555]) {
     bin.add('metal', capDisc(-1, z, 0.522, 0.064, 0.009, seg, true, 0.52));
     bin.add('liner', capDisc(-1, z, 0.522, 0.052, 0.011, seg, true, 0.46));

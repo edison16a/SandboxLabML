@@ -112,9 +112,15 @@ export function buildWheel(detail: Detail): Map<Slot, THREE.BufferGeometry> {
   const bin = new PartBin();
   const b = barrel(detail);
   bin.add('tire', tire(detail));
-  const sp = spokes(detail);
-  bin.add('rim', b.barrel, sp.sides);
-  bin.add('face', sp.faces);
+  bin.add('rim', b.barrel);
+  if (detail.wheel >= 12) {
+    const sp = spokes(detail);
+    bin.add('rim', sp.sides);
+    bin.add('face', sp.faces);
+  } else {
+    // The lightest population wheel: a dished face, since spokes would not show on a far ghost.
+    bin.add('face', lathe([[[WHEEL.rim - 0.012, HALF - 0.012], [0.07, HALF - 0.045]]], detail.wheel));
+  }
   if (detail.brakes) {
     bin.add('face', b.lip);
     const d = brakeDisc(detail);

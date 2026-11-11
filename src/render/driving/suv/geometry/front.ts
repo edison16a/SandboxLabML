@@ -22,7 +22,7 @@ const depth = (u: number) => 0.05 + 0.04 * u ** 1.3;
  * the lower edge and the four dot daytime light signature at the corner.
  */
 function addHeadlights(bin: PartBin, detail: Detail): void {
-  const c = detail.fine ? 16 : 6;
+  const c = detail.fine ? 16 : detail.brakes ? 6 : 4;
   const top = 0.012;
   bin.add('trim', capSpan(1, (u) => lampEdge(u, top + depth(u) + 0.008), (u) => lampEdge(u, top - 0.006), 0.004, c, 1));
   bin.add('glass', capSpan(1, (u) => lampEdge(u, top + depth(u)), (u) => lampEdge(u, top), 0.007, c, 1));
@@ -54,7 +54,7 @@ function sideIntake(k: number): { lo: (u: number) => Pt; hi: (u: number) => Pt }
  * them, and a gloss black lip under everything.
  */
 function addIntakes(bin: PartBin, detail: Detail): void {
-  const c = detail.fine ? 8 : 4;
+  const c = detail.fine ? 8 : detail.brakes ? 4 : 2;
   const center = (k: number) => (y: number) => 0.45 - k - (y - 0.432) * 0.32;
   bin.add('trim', capPanel(1, (y) => -center(0)(y), center(0), 0.432, 0.58, 0.004, c * 2, 2, false));
   bin.add('grille', capPanel(1, (y) => -center(0.016)(y), center(0.016), 0.448, 0.564, 0.007, c * 2, 2, false));

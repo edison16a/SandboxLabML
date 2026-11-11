@@ -93,7 +93,7 @@ function endCap(x: number, detail: Detail, facing: 1 | -1): THREE.BufferGeometry
   const half = outline(x, detail);
   const ring = [...half, ...half.slice(0, -1).reverse().map(([z, y]) => [-z, y] as Pt), half[0]];
   const cy = (half[0][1] + half[half.length - 1][1]) / 2;
-  const n = detail.fine ? 6 : 3;
+  const n = detail.fine ? 12 : detail.brakes ? 6 : 3;
   const rows = ring.map(([z, y]) => Array.from({ length: n + 1 }, (_, i) => warp([x, cy + ((y - cy) * i) / n, (z * i) / n])));
   const g = gridGeometry(rows);
   const nx = g.attributes.normal.getX(rows[0].length * Math.floor(rows.length / 2) + n);

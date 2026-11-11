@@ -34,7 +34,7 @@ function underSkin(x: number, z: number, y: number): number {
  * tires, so the wheels fill them as on a performance SUV.
  */
 export function addArches(bin: PartBin, detail: Detail): void {
-  const n = Math.max(10, Math.round(detail.archSteps * 1.6));
+  const n = Math.max(6, Math.round(detail.archSteps * 1.6));
   for (const axle of AXLES) {
     const xs = Array.from({ length: n + 1 }, (_, i) => axle - Math.cos((Math.PI * i) / n) * (ARCH.radius - 0.001));
     const cuts = xs.map((x) => archCut(x) ?? ([0.95, archFloor(x)] as [number, number]));

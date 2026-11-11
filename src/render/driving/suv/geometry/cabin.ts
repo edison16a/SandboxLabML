@@ -56,7 +56,9 @@ export function cabinBand(x: number, band: number, steps: number): Pt[] {
   const end = x > 0 ? CABIN.front : CABIN.rear;
   const base = toCenter([edgeZ(end), edgeY(end)], centerY(end), steps);
   const top = bodyTop(end, steps);
-  return roof.map(([z, y], i) => [z + (top[i][0] - base[i][0]) * f, y + (top[i][1] - base[i][1]) * f]);
+  // The windshield's foot tucks a little under the hood, so the two meet in a clean line at any detail.
+  const tuck = x > 0 ? 0.012 * (1 - smooth((CABIN.front - x) / 0.12)) : 0;
+  return roof.map(([z, y], i) => [z + (top[i][0] - base[i][0]) * f, y + (top[i][1] - base[i][1]) * f - tuck * Math.min(1, i / 2)]);
 }
 
 interface Range {
