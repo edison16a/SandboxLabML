@@ -10,32 +10,43 @@ export interface CrateSize {
   height: number;
 }
 
-const built = new Map<string, BracedBoxParts>();
-
-/** The braced crate meshes for a size, built once and shared by every crate that size. */
-export function crateParts(s: CrateSize): BracedBoxParts {
-  const key = `${s.length}:${s.width}:${s.height}`;
-  let parts = built.get(key);
-  if (!parts) {
-    parts = bracedBox(s);
-    built.set(key, parts);
-  }
-  return parts;
-}
-
-/** Every crate placed and merged: one mesh of panels and one of braces, so a field of crates costs two draw calls. */
+/**
+ * Every crate placed and merged: one mesh of panels and one of braces, so a
+ * field of crates costs two draw calls. Each size is built once for the
+ * merge and freed with it; nothing is kept between courses, so a long run
+ * through many courses holds only the course on screen.
+ */
 export function mergedCrates(crates: ReadonlyArray<CrateSize & { x: number; z: number }>): BracedBoxParts | null {
   if (crates.length === 0) return null;
+  const sizes = new Map<string, BracedBoxParts>();
   const panels: THREE.BufferGeometry[] = [];
   const braces: THREE.BufferGeometry[] = [];
   for (const c of crates) {
-    const parts = crateParts(c);
+    const key = `${c.length}:${c.width}:${c.height}`;
+    let parts = sizes.get(key);
+    if (!parts) sizes.set(key, (parts = bracedBox(c)));
     panels.push(parts.panels.clone().translate(c.x, 0, c.z));
     braces.push(parts.braces.clone().translate(c.x, 0, c.z));
   }
   const out = { panels: mergeGeometries(panels) as THREE.BufferGeometry, braces: mergeGeometries(braces) as THREE.BufferGeometry };
   [...panels, ...braces].forEach((g) => g.dispose());
+  sizes.forEach((p) => {
+    p.panels.dispose();
+    p.braces.dispose();
+  });
   return out;
+}
+
+/** One crate's meshes of a size, standing at the origin, with a dispose for when its owner unmounts. */
+export function crateMesh(s: CrateSize): BracedBoxParts & { dispose: () => void } {
+  const parts = bracedBox(s);
+  return {
+    ...parts,
+    dispose: () => {
+      parts.panels.dispose();
+      parts.braces.dispose();
+    },
+  };
 }
 
 /** Lacquered panels in a crate color and the light frame, as in Hide and Seek. `full` adds the clear coat. */

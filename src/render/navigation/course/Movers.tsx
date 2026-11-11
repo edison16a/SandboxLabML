@@ -9,7 +9,7 @@ import type { MoverSpec } from '@/engine/navigation/course/types';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { POSE_PRIORITY, useNavScene } from '../frame/sceneContext';
 import { NAV_COLORS } from '../palette';
-import { crateMaterials, crateParts } from './crateMeshes';
+import { crateMaterials, crateMesh } from './crateMeshes';
 import { moverGuideMaterial } from './moverGuide';
 
 /** Whether a mover slides along x (else along z). */
@@ -36,7 +36,7 @@ export function Movers({ course, full, shadows }: { course: Course; full: boolea
 
 function Mover({ index, mover, panel, brace, shadows }: { index: number; mover: MoverSpec; panel: THREE.Material; brace: THREE.Material; shadows: boolean }) {
   const { frame } = useNavScene();
-  const parts = crateParts({ length: mover.hx * 2, width: mover.hz * 2, height: mover.height });
+  const parts = useDisposable(() => crateMesh({ length: mover.hx * 2, width: mover.hz * 2, height: mover.height }), [mover.hx, mover.hz, mover.height]);
   const crate = useRef<THREE.Group>(null);
   const x = alongX(mover);
   const sweep = useMemo(() => moverSweep(mover), [mover]);
