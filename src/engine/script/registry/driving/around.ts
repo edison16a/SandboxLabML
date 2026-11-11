@@ -59,6 +59,19 @@ export const DRIVING_AROUND_ENTRIES: RegistryEntry[] = [
     },
     () => (v) => learner(v).sense.lightDistance,
   ),
+  numSensor(
+    {
+      name: 'light.waited',
+      unit: 's',
+      range: [0, 60],
+      summary: 'Seconds the SUV has stood still at this red light.',
+      description: 'It counts while the SUV stands within 30 m of a red light, and starts again at the next stop line. One red lasts 22 s, so a reward for waiting that stops at 25 s pays for stopping, not for sitting through every cycle.',
+      example: 'reward +0.005 when light.red and car.speed < 1 m/s and light.waited < 25 s',
+      explain: 'how long the SUV has waited at this red light',
+      label: 'waited at the light',
+    },
+    () => (v) => learner(v).redWait,
+  ),
   boolSensor(
     {
       name: 'carAhead.seen',

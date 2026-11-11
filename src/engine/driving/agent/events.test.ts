@@ -37,6 +37,25 @@ describe('rules', () => {
     expect(axisOf(city.elements[route.elements[0]].dir)).toBe(st.axis);
   });
 
+  it('times a stand at a red light, once per stop line', () => {
+    const st = route.stops[0];
+    const offset = city.signalOffsets[st.signal];
+    let t = 0;
+    while (lightState(t, offset, st.axis) !== LIGHT_RED) t += 0.5;
+    const l = learnerAt(st.s - SUV_SIZE.length / 2 - 3, 0, 0);
+    for (let k = 0; k < 30; k++) check(l, world(t));
+    expect(l.redWait).toBeCloseTo(30 * SIM_DT);
+    // Rolling, or past the line, it stops counting and starts again for the next light.
+    l.car.speed = 5;
+    check(l, world(t));
+    expect(l.redWait).toBeCloseTo(30 * SIM_DT);
+    const past = learnerAt(st.s + 20, 0, 0);
+    past.redWait = 4;
+    past.waitStop = 0;
+    check(past, world(t));
+    expect(past.redWait).toBeLessThan(4);
+  });
+
   it('arrives only when stopped in the destination zone', () => {
     expect(check(learnerAt(route.destS, 0, 0.3), world()).arrived).toBe(true);
     expect(check(learnerAt(route.destS, 0, 6), world()).arrived).toBe(false);

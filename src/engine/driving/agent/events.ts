@@ -16,6 +16,10 @@ const LANE_SLACK = 1.05;
 const HARD_BRAKE = 5.5;
 /** Speeding starts this far over the limit, m/s. */
 const SPEED_SLACK = 0.5;
+/** A light this close explains standing still, m. */
+const WAIT_REACH = 30;
+/** Below this speed the car counts as standing at a red, m/s. */
+const STILL = 1;
 /** How strict a level is about the curb and about stopping at the destination (see DrivingLevel). */
 export interface ArrivalRules {
   lenientCurb: boolean;
@@ -84,7 +88,12 @@ export function detectEvents(l: DrivingLearner, city: City, route: Route, world:
 
   // Standing still is fine behind a red light, a car or a person; anything else is a stall.
   const s = l.sense;
-  l.waiting = ((light === LIGHT_RED || light === LIGHT_YELLOW) && s.lightDistance < 30) || s.gap < 12 || s.pedDistance < 15;
+  l.waiting = ((light === LIGHT_RED || light === LIGHT_YELLOW) && s.lightDistance < WAIT_REACH) || s.gap < 12 || s.pedDistance < 15;
+  if (st !== l.waitStop) {
+    l.waitStop = st;
+    l.redWait = 0;
+  }
+  if (light === LIGHT_RED && s.lightDistance < WAIT_REACH && car.speed < STILL) l.redWait += dt;
   if (l.progressGain > 0) l.noProgress = 0;
   else if (!l.waiting) l.noProgress += dt;
 }

@@ -21,8 +21,6 @@ each tick {
   reward +0.1 * route.gain * (1 - min(1, car.speed / 8 m/s)) when route.remaining < 30 m
   // The big prize.
   reward +10 when car.arrived
-  // Standing at a red light pays a little, so braking for one pays at once.
-  reward +0.005 when light.red and light.distance < 25 m and car.speed < 1 m/s
 
   // Breaking a rule costs points. Hurting someone costs the most.
   reward -2 when rules.ranRedLight

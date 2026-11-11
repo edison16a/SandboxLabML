@@ -15,11 +15,10 @@ brain driving-standard
 each tick {
   drive(steer: brain.steer, pedal: brain.pedal)
 
-  // The built-in rewards: progress, a slow approach, arriving and waiting at red.
+  // The built-in rewards: progress, a slow approach and arriving.
   reward +0.02 * route.gain
   reward +0.1 * route.gain * (1 - min(1, car.speed / 8 m/s)) when route.remaining < 30 m
   reward +10 when car.arrived
-  reward +0.005 when light.red and light.distance < 25 m and car.speed < 1 m/s
 
   // The built-in costs for breaking a rule.
   reward -2 when rules.ranRedLight

@@ -20,8 +20,6 @@ const USED_BY: Readonly<Record<string, readonly PresetTier[]>> = {
   autoLevel: ['beginner'],
   'car.speed': UPPER,
   'route.remaining': UPPER,
-  'light.red': UPPER,
-  'light.distance': UPPER,
   'rules.ranRedLight': UPPER,
   'rules.overranStopLine': UPPER,
   'rules.speeding': UPPER,

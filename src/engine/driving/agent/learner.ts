@@ -90,6 +90,14 @@ export interface DrivingLearner {
   noProgress: number;
   /** True while stopped for a good reason: a red light, a car or a person ahead. */
   waiting: boolean;
+  /**
+   * Seconds stood still close to a red light, at the stop line ahead. It
+   * starts again at each new stop line, so a reward for waiting can pay
+   * for one red and not for every cycle a brain chooses to sit through.
+   */
+  redWait: number;
+  /** The stop line redWait counts for (an index into route.stops), or -1. */
+  waitStop: number;
   /** Light seen when the front crossed the next stop line, for the red light check at the box. */
   lineLight: number;
   lineStop: number;
@@ -156,6 +164,8 @@ export function createLearner(index: number, route: Route, rays: number, seed = 
     curbTime: 0,
     noProgress: 0,
     waiting: false,
+    redWait: 0,
+    waitStop: -1,
     lineLight: -1,
     lineStop: -1,
     crashX: 0,
