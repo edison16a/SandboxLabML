@@ -9,7 +9,7 @@ import { parseDrivingModels } from './models';
 
 /**
  * The shipped Driving reference file. A version bump makes this fail, which
- * is the reminder to regenerate it with npm run refs -- --env driving.
+ * is the reminder to regenerate it (docs/benchmark.md says how).
  */
 describe('public/references/driving.json', () => {
   it('matches the current engine and benchmark', async () => {
