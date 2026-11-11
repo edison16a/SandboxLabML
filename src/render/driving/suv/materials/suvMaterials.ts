@@ -5,6 +5,7 @@ import { flakeNormalMap } from '../../textures/flakes';
 import { HONEYCOMB_ASPECT, honeycombColor, honeycombNormal } from '../../textures/grille';
 import { wheelBlurMap } from '../../textures/wheelBlur';
 import type { Slot } from '../geometry/parts';
+import { withStreetReflections } from './streetReflections';
 
 export interface SuvMaterials {
   slots: Record<Slot, THREE.Material>;
@@ -48,7 +49,7 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
   const keep = <T extends THREE.Texture>(t: T) => (textures.push(t), t);
   // A satin base with little metal keeps the color deep on the hood and roof at any angle; the sharp clear coat
   // on top carries the reflections, so the paint reads glossy without a milky sheen. The flake is only a hint.
-  const paint = new THREE.MeshPhysicalMaterial({ color: PARKED_PAINT, metalness: 0.12, roughness: 0.34, clearcoat: 0.8, clearcoatRoughness: 0.05 });
+  const paint = new THREE.MeshPhysicalMaterial({ color: PARKED_PAINT, metalness: 0.12, roughness: 0.34, clearcoat: 0.85, clearcoatRoughness: 0.07 });
   if (d !== 'low') {
     paint.normalMap = keep(repeat(flakeNormalMap(high ? 512 : 256), high ? 14 : 8));
     paint.normalScale.set(0.08, 0.08);
@@ -75,6 +76,8 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
     caliper: new THREE.MeshPhysicalMaterial({ color: '#b01c14', roughness: 0.3, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.06 }),
   };
   for (const [slot, k] of Object.entries(REFLECT)) (slots[slot as Slot] as THREE.MeshStandardMaterial).envMapIntensity = k;
+  // The glossy surfaces see the street's buildings low down, not open sky, so they keep their color.
+  for (const slot of ['paint', 'glass', 'trim'] as const) withStreetReflections(slots[slot] as THREE.MeshPhysicalMaterial);
   return {
     slots,
     paint,
