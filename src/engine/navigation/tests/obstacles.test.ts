@@ -108,6 +108,22 @@ describe('movers', () => {
   });
 });
 
+describe('the start pad', () => {
+  it('never traps an agent that starts inside a crate', () => {
+    const course = room([{ kind: 'block', x: -12.4, z: 0, hx: 0.6, hz: 1.6, height: 1 }]);
+    const env = new NavigationEnv({ course, params, inputs: STANDARD_NAVIGATION_INPUTS, controller: hold(1) });
+    env.reset([idle, idle, idle], [1, 2, 3]);
+    for (const a of env.agents) expect(deepestOverlap(a.x, a.z, R, course.solidData, course.solids.length)).toBeLessThanOrEqual(1e-6);
+    const start = env.agents.map((a) => [a.x, a.z]);
+    for (let t = 0; t < 30; t++) {
+      env.step();
+      for (const a of env.agents) expect(deepestOverlap(a.x, a.z, R, course.solidData, course.solids.length)).toBeLessThanOrEqual(1e-6);
+    }
+    const moved = env.agents.reduce((sum, a, i) => sum + Math.hypot(a.x - start[i][0], a.z - start[i][1]), 0);
+    expect(moved).toBeGreaterThan(0.5);
+  });
+});
+
 describe('ends of a run', () => {
   it('finishes once the line is crossed', () => {
     const course = room([]);

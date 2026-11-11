@@ -4,6 +4,7 @@ import { createNavAgent, NAV_RUNNING, stopAgent, type NavAgent } from './agent';
 import type { Course } from './course/build';
 import { moverPosition } from './course/movers';
 import { driveAgent, onSpikes, shoveAgent } from './kinematics/body';
+import { pushOut } from './kinematics/collide';
 import type { CollisionWorld } from './kinematics/slide';
 import type { NavigationParams } from './params';
 import { leaderOf, updateNearby, updateProgress } from './progress';
@@ -94,6 +95,8 @@ export class NavigationEnv {
     const { course, params, inputs } = this.opts;
     this.brains = brains;
     this.agents = brains.map((_, i) => createNavAgent(i, course, params, inputs.rays.count, seeds[i] ?? i, this.maxTime));
+    // A course that puts something on the start pad must not trap anyone inside it from the first tick.
+    for (const a of this.agents) pushOut(a, params.agent.radius, course.solidData, course.solids.length, 8);
     this.obs = brains.map(() => new Float64Array(this.inputCount));
     this.actions = brains.map(() => new Float64Array(2));
     this.noise = brains.map((_, i) => (inputs.noise > 0 ? new Rng(seeds[i] ?? i) : null));
