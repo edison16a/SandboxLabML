@@ -37,7 +37,7 @@ export function crowdSkill(seed: number): NavigatorSkill {
   const clumsy = r.chance(0.3);
   return {
     pace: r.range(0.62, 1),
-    wobble: clumsy ? r.range(0.25, 0.7) : r.range(0, 0.18),
+    wobble: clumsy ? r.range(0.3, 0.75) : r.range(0.05, 0.3),
     shortcut: clumsy ? r.range(0.25, 0.8) : r.range(0, 0.12),
     careful: !r.chance(0.18),
     swayRate: r.range(0.6, 1.6),
