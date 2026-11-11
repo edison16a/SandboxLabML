@@ -36,12 +36,14 @@ export function validateBlueprint(b: Blueprint, customSensors = 0): BlueprintIss
   if (inputs < 1) issues.push({ field: 'inputs', message: 'A brain needs at least one input.' });
   if (inputs > MAX_INPUTS) issues.push({ field: 'inputs', message: `At most ${MAX_INPUTS} inputs, this has ${inputs}.` });
   if (blueprintOutputCount(b) > MAX_OUTPUTS) issues.push({ field: 'outputs', message: `At most ${MAX_OUTPUTS} outputs.` });
+  // Every env shares the noise level, so it is checked here, whatever the env checks on top.
+  const noise = (b.inputs as { noise?: unknown }).noise;
+  if (typeof noise !== 'number' || !(noise >= 0 && noise <= 0.1)) issues.push({ field: 'noise', message: 'Noise must be between 0 and 10%.' });
   if (b.env === 'racing' || b.env === 'hideseek') {
     if (b.inputs.rays.count < 1 || b.inputs.rays.count > 33) {
       issues.push({ field: 'rays', message: 'Use between 1 and 33 rays.' });
     }
     if (b.inputs.rays.range <= 0) issues.push({ field: 'rays', message: 'Ray range must be positive.' });
-    if (b.inputs.noise < 0 || b.inputs.noise > 0.1) issues.push({ field: 'noise', message: 'Noise must be between 0 and 10%.' });
   } else {
     const plugin: EpisodeBlueprint = b;
     issues.push(...(requireEpisodeInfo(plugin.env).validateInputs?.(plugin.inputs) ?? []));
