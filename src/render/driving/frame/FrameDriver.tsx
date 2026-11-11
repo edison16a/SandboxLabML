@@ -33,6 +33,14 @@ export function FrameDriver() {
     if (!population || !curr || population.count === 0) {
       frame.focus = -1;
       frame.sense.valid = false;
+      // Nobody driving yet: stand at the start of the route, so the cameras frame where the first trip begins.
+      if (route) {
+        const p = route.path;
+        const i = p.indexAt(route.startS);
+        simToWorld(p.x[i], p.y[i], frame.pos);
+        frame.yaw = Math.atan2(p.ty[i], p.tx[i]);
+        frame.speed = 0;
+      }
       return;
     }
     if (population.epoch !== seen.epoch) {
