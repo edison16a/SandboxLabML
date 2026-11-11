@@ -6,7 +6,6 @@ import { racingModule } from '@/engine/racing/module';
 import { buildTrack } from '@/engine/racing/track/buildTrack';
 import { TelemetryStrip } from '@/features/charts/TelemetryStrip';
 import { InputsCard } from '@/features/lab/components/InputsCard';
-import { ModelTab } from '@/features/lab/components/ModelTab';
 import { SidePanel } from '@/features/lab/components/SidePanel';
 import { useInspectSubscription } from '@/features/lab/hooks/useInspectSubscription';
 import { useLabTier } from '@/features/lab/hooks/useLabTier';
@@ -25,7 +24,6 @@ import { useLabShortcuts } from '../hooks/useLabShortcuts';
 import { defaultRacingRun, LAST_RUN_KEY } from '../hooks/useRunBootstrap';
 import { racingSession } from '../session/RacingSession';
 import { useRacingLab } from '../state/labStore';
-import { GrowBrain } from './GrowBrain';
 import { LabToolbar } from './LabToolbar';
 import { NewRunDialog } from './NewRunDialog';
 import { SandboxPanel } from './SandboxPanel';
@@ -103,7 +101,7 @@ function RacingLabBody() {
       {/* The props mirror the panel's classes below. 380 px keeps every tab visible, and with the viewport's 600 px it fits a 1024 px (lg) window. */}
       <ResizeHandle id="racing" cssVar="--panel-w" pane="after" defaultSize={400} min={380} max={900} label="Resize the side panel" />
       <aside data-tour="panel" className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[var(--panel-w,400px)] lg:min-w-[380px] lg:shrink lg:border-t-0 lg:border-l">
-        <SidePanel model={<ModelTab header={<GrowBrain />} />} />
+        <SidePanel />
       </aside>
       <NewRunDialog open={newRun} onOpenChange={setNewRun} initialScript={pendingScript} />
       <Walkthrough tour={RACING_TOUR} ready={ready && sceneReady} />

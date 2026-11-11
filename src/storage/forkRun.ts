@@ -1,29 +1,32 @@
-import type { RacingBlueprint } from '@/engine/blueprints/types';
-import { physicsHash } from '@/engine/racing/car/params';
-import { racingInputSchema, type CustomSensorSpec } from '@/engine/racing/sensors/inputSchema';
-import { forkGenome } from '@/engine/training/branch';
+import type { Blueprint } from '@/engine/blueprints/types';
+import { requireEpisodeInfo, isEpisodeEnv } from '@/engine/env/registry';
+import type { CustomSensorSpec } from '@/engine/env/types';
 import { InnovationTracker } from '@/engine/neat/innovation';
-import type { RacingTrainerState } from '@/engine/training/racingTrainer';
+import { forkGenome } from '@/engine/training/branch';
+import type { EpisodeTrainerState } from '@/engine/training/episodeTrainer';
 import { newRunId, type RunConfig } from '@/engine/training/runConfig';
 import { latestCheckpoint, saveCheckpoint } from './checkpoints';
 import { createRun, getRun } from './runs';
 
 /**
- * Grows a trained racing brain: a new run whose population is the original's
- * latest checkpoint with every genome re-mapped onto the new blueprint's
- * inputs. Inputs that stay keep their links, new inputs start unconnected,
- * removed inputs disappear. The original run is not touched.
+ * Grows a trained brain of any registry env: a new run whose population is
+ * the original's latest checkpoint with every genome re-mapped onto the new
+ * blueprint's inputs. Inputs are matched by their schema keys, so inputs
+ * that stay keep their links, new inputs start unconnected and removed
+ * inputs disappear. The original run is not touched.
  */
-export async function forkRacingRun(runId: string, blueprint: RacingBlueprint, custom: CustomSensorSpec[] = []): Promise<RunConfig> {
+export async function forkRun(runId: string, blueprint: Blueprint, custom: CustomSensorSpec[] = []): Promise<RunConfig> {
   const run = await getRun(runId);
   const cp = await latestCheckpoint(runId);
-  if (!run?.config.racing) throw new Error('Only racing runs can be grown here.');
+  if (!run || !isEpisodeEnv(run.config.env)) throw new Error('Only runs of a single population lab can be grown here.');
   if (!cp) throw new Error('Train until the first checkpoint (or pause once) before growing the brain.');
   const old = run.config;
-  if (old.blueprint.env !== 'racing') throw new Error('Blueprint mismatch.');
-  const oldKeys = racingInputSchema(old.blueprint.inputs, old.racing!.car, custom).map((s) => s.key);
-  const newKeys = racingInputSchema(blueprint.inputs, old.racing!.car, custom).map((s) => s.key);
-  const state = structuredClone(cp.state) as RacingTrainerState;
+  if (blueprint.env !== old.env) throw new Error(`${blueprint.name} is a ${blueprint.env} brain, not a ${old.env} one.`);
+  const info = requireEpisodeInfo(old.env);
+  const grown: RunConfig = { ...structuredClone(old), blueprint };
+  const oldKeys = info.inputSchema(old, custom).map((s) => s.key);
+  const newKeys = info.inputSchema(grown, custom).map((s) => s.key);
+  const state = structuredClone(cp.state) as EpisodeTrainerState;
   const tracker = InnovationTracker.fromState(state.population.tracker);
   const remap = <T extends Parameters<typeof forkGenome>[0]>(g: T) => forkGenome(g, oldKeys, newKeys, tracker);
   state.population.genomes = state.population.genomes.map(remap);
@@ -34,12 +37,11 @@ export async function forkRacingRun(runId: string, blueprint: RacingBlueprint, c
   state.population.tracker = tracker.toState();
 
   const config: RunConfig = {
-    ...structuredClone(old),
+    ...grown,
     id: newRunId(),
     name: `${old.name} (grown)`,
     createdAt: Date.now(),
-    blueprint,
-    physicsHash: physicsHash(old.racing!.car, { inputs: blueprint.inputs }),
+    physicsHash: info.physicsHash(grown),
     parent: { runId, generation: cp.generation },
   };
   await createRun(config);

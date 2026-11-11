@@ -104,9 +104,9 @@ describe('branch and reset', () => {
 
 describe('grow a brain', () => {
   it('forks a trained run onto a bigger blueprint and keeps training', async () => {
-    const { forkRacingRun } = await import('./forkRun');
+    const { forkRun } = await import('./forkRun');
     const { config } = await trainedRun(2);
-    const grown = await forkRacingRun(config.id, RACING_BLUEPRINTS[3]);
+    const grown = await forkRun(config.id, RACING_BLUEPRINTS[3]);
     const cp = await latestCheckpoint(grown.id);
     const t = new RacingTrainer(grown, cp!.state as never);
     expect(t.genomes[0].inputs).toHaveLength(15);

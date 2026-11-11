@@ -9,6 +9,8 @@ const PACE = 3;
 export interface ToySetup extends EpisodeSetup {
   goal: number;
   maxTime: number;
+  /** Senses its own pace from the last tick, a third input. */
+  paced: boolean;
 }
 
 export interface ToyResult extends EpisodeResult {
@@ -23,6 +25,8 @@ export interface ToyWalker {
   best: number;
   /** Ground gained beyond the best so far by the latest step, m. */
   gain: number;
+  /** The action it walked at last tick, from -1 to 1. */
+  pace: number;
   goal: number;
   seed: number;
   out: Float64Array;
@@ -57,11 +61,15 @@ export class ToyEnv implements EpisodeEnv<ToyResult> {
   private walkers: ToyWalker[] = [];
   private brains: Network[] = [];
   private readonly io = makeTickIO(1, 1);
+  /** Inputs before the script's sensors. */
+  private readonly builtIn: number;
 
   constructor(
     private readonly setup: ToySetup,
     private readonly controller: AgentController<ToyWalker>,
-  ) {}
+  ) {
+    this.builtIn = setup.paced ? 3 : 2;
+  }
 
   /** Where the walkers are headed, m. The preview hook reads it. */
   get goal(): number {
@@ -78,8 +86,8 @@ export class ToyEnv implements EpisodeEnv<ToyResult> {
 
   reset(brains: Network[], seeds: number[] = [], slots: number[] = []): void {
     this.brains = brains;
-    const inputs = 2 + this.controller.customSensorCount;
-    this.walkers = brains.map((_, i) => ({ x: -(slots[i] ?? 0), best: 0, gain: 0, goal: this.setup.goal, seed: seeds[i] ?? 0, out: new Float64Array(1), obs: new Float64Array(inputs), running: true, time: 0, fitness: 0, stop: null }));
+    const inputs = this.builtIn + this.controller.customSensorCount;
+    this.walkers = brains.map((_, i) => ({ x: -(slots[i] ?? 0), best: 0, gain: 0, pace: 0, goal: this.setup.goal, seed: seeds[i] ?? 0, out: new Float64Array(1), obs: new Float64Array(inputs), running: true, time: 0, fitness: 0, stop: null }));
     this.tick = 0;
   }
 
@@ -90,14 +98,16 @@ export class ToyEnv implements EpisodeEnv<ToyResult> {
       if (!w.running) continue;
       w.obs[0] = (w.goal - w.x) / w.goal;
       w.obs[1] = 1;
-      if (this.controller.customSensorCount > 0) this.controller.sensors(w, w.obs, 2);
+      if (this.setup.paced) w.obs[2] = w.pace;
+      if (this.controller.customSensorCount > 0) this.controller.sensors(w, w.obs, this.builtIn);
       this.brains[i].activate(w.obs, w.out);
       io.brain[0] = w.out[0];
       io.action[0] = 0;
       io.reward = 0;
       io.stop = null;
       this.controller.tick(w, io);
-      w.x += io.action[0] * PACE * TOY_DT;
+      w.pace = io.action[0];
+      w.x += w.pace * PACE * TOY_DT;
       w.gain = Math.max(0, w.x - w.best);
       w.best += w.gain;
       w.fitness += io.reward;

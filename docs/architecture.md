@@ -61,6 +61,7 @@ An env plugs in with its own modules and one entry per layer:
 | Scripts | A registry slice (`src/engine/script/registry/<env>/`) and its preset scripts | A row in `SCRIPT_ENV_TABLE` (`src/engine/script/envs.ts`) |
 | Lessons | Lesson JSON under `content/lessons/<env>/` and the module's `lessons` hooks | The imports in `src/engine/lessons/catalog.ts`, and optionally a preview drawer row in `src/studio/panels/learn/preview/episode/drawers.ts` |
 | Shell | A route under `app/lab/` and the lab component | A row in `LABS` (`src/features/shell/labs.ts`) |
+| Brains | A sensor form that composes `BrainStartFields` | A row in `BLUEPRINT_FORMS` (`src/features/blueprints/forms.ts`) |
 
 Everything else finds the env through those entries: the trainer, the sim and replay workers, run storage and export, the Runs page, the benchmark, the Studio's checker, palette, reference, test run and lessons.
 
@@ -76,7 +77,7 @@ Everything else finds the env through those entries: the trainer, the sim and re
 
 Each env has its own `engineVersion`, so changing one env never blocks replays or references of another. A run of an env keeps its options under `settings` (`envSettings` reads them), and `createEpisodeRunConfig` builds a new run from the module. Runs of an env a build does not have stay stored but are left out of every list.
 
-**The lab** wraps its page in `LabProvider` with its env, module, a store that extends `LabState`, an `EpisodeSession` and its last run key. The shared toolbar, run switcher, side panel and its tabs, inputs card, viewport controls, new run dialog bones (`NewRunShell`) and the bootstrap, schema, inspect, shortcut and quality hooks then work as they do for Racing. The lab adds its viewport, HUD and anything only it has, and a session subclass adds its own store fields through the session's hooks. Ghosts of one scene share one content: by default the live one, so old champions race the new agents on the same course. A lab that wants a champion's own episode overrides `ghostContent` and returns what that record kept. A test only toy env (`src/engine/env/tests/toyEnv.ts`) runs the whole pipeline and is a small example of the contract.
+**The lab** wraps its page in `LabProvider` with its env, module, a store that extends `LabState`, an `EpisodeSession` and its last run key. The shared toolbar, run switcher, side panel and its tabs, inputs card, viewport controls, new run dialog bones (`NewRunShell`) and the bootstrap, schema, inspect, shortcut and quality hooks then work as they do for Racing. The Model tab's "Grow this brain" opens the env's blueprint form and forks the latest checkpoint onto the new inputs by their schema keys (`forkRun`), so it works in every lab. The lab adds its viewport, HUD and anything only it has, and a session subclass adds its own store fields through the session's hooks. Ghosts of one scene share one content: by default the live one, so old champions race the new agents on the same course. A lab that wants a champion's own episode overrides `ghostContent` and returns what that record kept. A test only toy env (`src/engine/env/tests/toyEnv.ts`) runs the whole pipeline and is a small example of the contract.
 
 ## Racing
 

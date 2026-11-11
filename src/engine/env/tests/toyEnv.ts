@@ -21,6 +21,9 @@ export type { ToyResult, ToySetup } from './toyWalk';
 export const TOY_ENV = 'toy' as EnvId;
 const GOAL = 10;
 
+/** The toy's one optional sensor: the pace it walked last tick, which "Grow this brain" can add. */
+const paced = (inputs: unknown) => (inputs as { pace?: boolean }).pace === true;
+
 export const TOY_BLUEPRINT = {
   id: 'toy-basic',
   name: 'Toy',
@@ -47,10 +50,12 @@ export const toyModule: EpisodeEnvModule<ToySetup, { level: number }, ToyResult,
     { key: 'best', label: 'Best', unit: 'm', source: 'champion', better: 'higher', format: (v) => `${v.toFixed(1)} m` },
   ],
   blueprints: [TOY_BLUEPRINT],
-  inputCount: () => 2,
-  inputSchema: () => [
+  inputCount: (inputs) => 2 + (paced(inputs) ? 1 : 0),
+  inputSchema: (config, custom = []) => [
     { index: 0, key: 'goal', label: 'Goal', group: 'scalar', unit: 'm', scale: GOAL, offset: 0 },
     { index: 1, key: 'one', label: 'One', group: 'scalar', unit: '', scale: 1, offset: 0 },
+    ...(paced(config.blueprint.inputs) ? [{ index: 2, key: 'pace', label: 'Pace', group: 'scalar' as const, unit: '', scale: 1, offset: 0 }] : []),
+    ...custom.map((c, i) => ({ index: 2 + (paced(config.blueprint.inputs) ? 1 : 0) + i, key: `custom:${c.key}`, label: c.label, group: 'custom' as const, unit: c.unit, scale: c.max - c.min, offset: c.min })),
   ],
   physicsHash: (config) => hashObject({ toy: 1, inputs: config.blueprint.inputs }),
   initialContent: () => ({ level: 1 }),
@@ -62,7 +67,7 @@ export const toyModule: EpisodeEnvModule<ToySetup, { level: number }, ToyResult,
   },
   contentHash: (c) => `level-${c.level}`,
   contentOnRecords: true,
-  createSetup: ({ config, content, scriptSource }) => ({ goal: GOAL * content.level, maxTime: envSettings<{ maxTime: number }>(config).maxTime, scriptSource }),
+  createSetup: ({ config, content, scriptSource }) => ({ goal: GOAL * content.level, maxTime: envSettings<{ maxTime: number }>(config).maxTime, paced: paced(config.blueprint.inputs), scriptSource }),
   createEnv: (setup, host, seed) => new ToyEnv(setup, host.createController<ToyWalker>({ seed, extra: { goal: setup.goal } }) ?? toyBuiltin),
   championFields: (r) => ({ metrics: { best: r.fitness } }),
   bench: {

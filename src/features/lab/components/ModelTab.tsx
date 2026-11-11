@@ -6,14 +6,15 @@ import { startingLinks } from '@/engine/neat/startShape';
 import { ModelDownloads } from '@/features/modelcard/ModelDownloads';
 import { ModelCard } from '@/features/modelcard/ModelCard';
 import { useRunSchema } from '../hooks/useRunSchema';
+import { GrowBrain } from './GrowBrain';
 import { useLab, useLabContext } from '../LabContext';
 
 /**
- * Model card for the latest champion of the open run, with its downloads.
- * `header` sits above them, for lab actions on the brain such as Racing's
- * "grow this brain".
+ * Model card for the latest champion of the open run, with its downloads,
+ * under "Grow this brain". `header` sits above them too, for a lab's own
+ * actions on the brain; `grow={false}` leaves growing out.
  */
-export function ModelTab({ header }: { header?: React.ReactNode }) {
+export function ModelTab({ header, grow = true }: { header?: React.ReactNode; grow?: boolean }) {
   const { module } = useLabContext();
   const run = useLab((s) => s.run);
   const records = useLab((s) => s.records);
@@ -29,6 +30,7 @@ export function ModelTab({ header }: { header?: React.ReactNode }) {
 
   return (
     <div className="flex flex-col">
+      {grow && <GrowBrain />}
       {header}
       <ModelDownloads
         source={{
