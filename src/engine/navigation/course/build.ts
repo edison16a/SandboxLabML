@@ -127,6 +127,15 @@ export function buildCourse(spec: CourseSpec, params: NavigationParams = DEFAULT
   };
 }
 
+/**
+ * Share of the course's walk covered with `d` m left, measured from the
+ * start line: below 0 behind it, so even on the grid the agent nearest the
+ * line leads. `fallback` serves a course with no path.
+ */
+export function courseShare(course: Course, d: number, fallback: number): number {
+  return Number.isFinite(course.startDistance) ? Math.max(-1, Math.min(1, 1 - d / course.startDistance)) : fallback;
+}
+
 /** Whether an agent can walk from the start line to the finish with clearance to spare (movers aside: they are timed, not walked round). */
 export function isSolvable(course: Course): boolean {
   return Number.isFinite(course.startDistance) && course.startDistance < course.spec.length * 3;

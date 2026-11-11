@@ -107,6 +107,10 @@ describe('start formation', () => {
     expect(back.startDistance).toBeGreaterThan(front.startDistance + 2.5);
     expect(back.timeLimit - front.timeLimit).toBeCloseTo((back.startDistance - front.startDistance) / (params.agent.maxSpeed / 2), 6);
     expect(front.startDistance).toBeGreaterThan(course.startDistance);
+    // On the grid the course yardstick runs below 0, so the view starts on the front row.
+    expect(back.courseProgress).toBeLessThan(front.courseProgress);
+    expect(front.courseProgress).toBeLessThan(0);
+    expect(env.agents[env.leaderIndex()].x).toBeCloseTo(course.formation.frontX, 0);
   });
 
   it('keeps every course clear of the start zone', () => {

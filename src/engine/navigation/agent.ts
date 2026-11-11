@@ -1,5 +1,5 @@
 import { Rng } from '../core/rng';
-import type { Course } from './course/build';
+import { courseShare, type Course } from './course/build';
 import { sampleDistance } from './course/fieldSample';
 import { formationSpot, seedSlot } from './course/formation';
 import { pushOut } from './kinematics/collide';
@@ -56,7 +56,7 @@ export interface NavAgent {
   /** Share of its own walk covered now, and at its best, 0 to 1. Rewards pay on it, so a spot at the back of the grid costs nothing. */
   progress: number;
   bestProgress: number;
-  /** Share of the course's walk covered, measured from the start line and the same for everyone: how the view and the leader compare agents. 0 behind the line. */
+  /** Share of the course's walk covered, measured from the start line and the same for everyone: how the view and the leader compare agents. Below 0 behind the line. */
   courseProgress: number;
   /** How much bestProgress grew in the latest tick. The built in reward pays for it. */
   progressGain: number;
@@ -130,7 +130,7 @@ export function createNavAgent(index: number, course: Course, params: Navigation
     startDistance,
     progress: 0,
     bestProgress: 0,
-    courseProgress: 0,
+    courseProgress: courseShare(course, startDistance, 0),
     progressGain: 0,
     distanceLeft: startDistance,
     time: 0,

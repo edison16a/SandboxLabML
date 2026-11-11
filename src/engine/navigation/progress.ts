@@ -1,6 +1,6 @@
 import { clamp } from '../core/math';
 import { NAV_FINISHED, NAV_RUNNING, NEAR_CAP, type NavAgent } from './agent';
-import type { Course } from './course/build';
+import { courseShare, type Course } from './course/build';
 import { rectDistance } from './course/field';
 import { sampleDistance } from './course/fieldSample';
 
@@ -17,7 +17,7 @@ export function updateProgress(a: NavAgent, course: Course, mark: number, dt: nu
   const d = a.finishedNow ? 0 : Math.min(sampleDistance(course.field, a.x, a.z), a.startDistance * 2);
   a.distanceLeft = d;
   a.progress = clamp(1 - d / a.startDistance, 0, 1);
-  a.courseProgress = Number.isFinite(course.startDistance) ? clamp(1 - d / course.startDistance, 0, 1) : a.progress;
+  a.courseProgress = courseShare(course, d, a.progress);
   a.progressGain = Math.max(0, a.progress - a.bestProgress);
   if (a.progressGain > 0) a.bestProgress = a.progress;
   if (a.progress > mark + PROGRESS_STEP / a.startDistance) {
@@ -39,7 +39,7 @@ export function leaderOf(agents: readonly NavAgent[], maxTime: number): number {
   let bestScore = -Infinity;
   for (let i = 0; i < agents.length; i++) {
     const a = agents[i];
-    const score = a.status === NAV_FINISHED ? 2 + (1 - a.finishTime / maxTime) : a.status === NAV_RUNNING ? a.courseProgress : a.bestProgress - 1;
+    const score = a.status === NAV_FINISHED ? 2 + (1 - a.finishTime / maxTime) : a.status === NAV_RUNNING ? a.courseProgress : a.bestProgress - 2;
     if (score > bestScore) {
       bestScore = score;
       best = i;
