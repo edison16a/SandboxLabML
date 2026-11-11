@@ -52,7 +52,7 @@ export const drivingInfo = {
     version: DRIVING_BENCHMARK_VERSION,
     axes: DRIVING_RADAR_AXES,
     hint: 'unseen cities, 0 to 100',
-    about: 'Every 5 generations, the champion drives sixteen trips in two cities it never trained in.',
+    about: 'Now and then the latest champion drives sixteen trips in two cities it never trained in.',
     // Loaded on first use: the exam brings the autopilot and the script compiler, which training without a script never needs.
     run: async (config, genome, opts) => (await import('../bench/driving/runner')).benchmarkDriving(config, genome, opts),
   },

@@ -201,6 +201,8 @@ The radar averages the three over all sixteen trips. The fourth axis, generaliza
 
 The result also lists, per level, the share of trips that arrived and arrived safely, and the score per 100 parameters.
 
+In the lab the exam runs in the background on every fifth generation's champion, one exam at a time. The exam takes longer than five generations of training under Max, so while one runs only the newest champion waits for it, and the ones in between are never scored. The Benchmark chart breaks its line across those gaps.
+
 ## Versions and references
 
 Scores only compare within one `DRIVING_BENCHMARK_VERSION` (in `src/engine/driving/version.ts`). Changing a trip, a seed or anything in `src/engine/bench/driving/scoring.ts` must bump it. A change to the simulation bumps `DRIVING_ENGINE_VERSION` instead. Both are stored in every result and in the reference file.
