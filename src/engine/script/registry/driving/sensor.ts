@@ -20,6 +20,8 @@ export interface DrivingSensorDocs {
   scope?: Scope;
   progress?: boolean;
   notInSensor?: boolean;
+  /** Relative cost of one read, for the per tick cost estimate. Plain field reads leave it at 1. */
+  cost?: number;
 }
 
 function base(d: DrivingSensorDocs) {

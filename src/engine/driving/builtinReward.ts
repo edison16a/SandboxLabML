@@ -29,15 +29,15 @@ export const WAIT_PAY = 0.005;
  *
  *   drive(steer: brain.steer, pedal: brain.pedal)
  *   reward +0.02 * route.gain
- *   reward +0.1 * route.gain * (1 - car.speed / 8 m/s) when route.remaining < 30 m
+ *   reward +0.1 * route.gain * (1 - min(1, car.speed / 8 m/s)) when route.remaining < 30 m
  *   reward +10 when car.arrived
- *   reward +0.005 when light.state is red and light.distance < 25 m and car.speed < 1 m/s
+ *   reward +0.005 when light.red and light.distance < 25 m and car.speed < 1 m/s
  *   reward -2 when rules.ranRedLight
  *   reward -0.3 when rules.overranStopLine
  *   reward -0.005 when rules.speeding
  *   reward -0.01 when rules.wrongWay
  *   reward -0.002 when rules.laneDeparture
- *   reward -0.01 when car.overCurb (only lenient levels let a car carry on)
+ *   reward -0.01 when car.overCurb
  *   reward -2 when car.crashed
  *   reward -4 when car.hitPedestrian
  *   stop "redlight" when rules.ranRedLight
