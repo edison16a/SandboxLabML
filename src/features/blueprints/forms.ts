@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import type { Blueprint } from '@/engine/blueprints/types';
 import type { EnvId } from '@/engine/env/types';
+import { DrivingBlueprintForm } from './DrivingBlueprintForm';
 import { HideSeekBlueprintForm } from './HideSeekBlueprintForm';
 import { RacingBlueprintForm } from './RacingBlueprintForm';
 
@@ -17,4 +18,6 @@ export type BlueprintFormComponent = ComponentType<{ value: Blueprint; onChange:
 export const BLUEPRINT_FORMS: Partial<Record<EnvId, BlueprintFormComponent>> = {
   racing: RacingBlueprintForm as BlueprintFormComponent,
   hideseek: HideSeekBlueprintForm as BlueprintFormComponent,
+  // Driving's sensor groups are its own type; the dialog only hands this form Driving blueprints.
+  driving: DrivingBlueprintForm as unknown as BlueprintFormComponent,
 };
