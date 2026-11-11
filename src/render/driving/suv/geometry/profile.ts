@@ -103,7 +103,7 @@ export function archFloor(x: number): number {
  * spacing blends into the even run instead of jumping from millimeters
  * to centimeters, which would show as a line in the reflections.
  */
-const ARCH_EXIT = [0.0005, 0.004, 0.011, 0.022, 0.038];
+const ARCH_EXIT = [0.0005, 0.009, 0.03];
 
 /**
  * Stations where sections are taken: even spacing, plus dense stations

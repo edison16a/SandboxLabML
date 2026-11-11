@@ -87,7 +87,7 @@ export function addBody(bin: PartBin, detail: Detail): void {
   });
   const cut = detail.fine || detail.brakes ? intakeCut() : undefined;
   bin.add('paint', endFace(1, NOSE, outline(NOSE, detail), detail, cut));
-  bin.add('paint', endFace(-1, TAIL, outline(TAIL, detail), detail, cut && plateCut(), LEDGE_ROWS));
+  bin.add('paint', endFace(-1, TAIL, outline(TAIL, detail), detail, cut && plateCut(), cut && LEDGE_ROWS));
 }
 
 /** The section at x from sill to centerline with `counts` steps per band, as the panels draw it. */

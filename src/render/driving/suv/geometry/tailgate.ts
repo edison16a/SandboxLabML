@@ -67,8 +67,8 @@ export function addTailgate(bin: PartBin, detail: Detail): void {
     bin.add('trim', capFill(-1, outline, 0.003, 1));
     return;
   }
-  const step = detail.fine ? 0.02 : 0.04;
-  const pocket = recess(-1, outline, { width: 0.009, lip: 0.0012, back: PLATE.depth }, detail.fine ? 3 : 1, step, 0.08);
+  const step = detail.fine ? 0.03 : 0.05;
+  const pocket = recess(-1, outline, { width: 0.009, lip: 0.0012, back: PLATE.depth }, detail.fine ? 2 : 1, step, 0.1);
   bin.add('paint', pocket.bezel, pocket.throat);
   bin.add('trim', pocket.mesh);
 }

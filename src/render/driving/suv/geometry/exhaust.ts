@@ -20,10 +20,10 @@ function pipe(segments: number, full: boolean): { metal: THREE.BufferGeometry; t
   const { r, out, wall, deep } = PIPES;
   const lip: Array<[number, number]> = full
     ? [[r, -0.045], [r, out - 0.005], [r - 0.0012, out - 0.0006], [r - wall * 0.5, out], [r - wall + 0.0006, out - 0.001], [r - wall, out - 0.004]]
-    : [[r, -0.045], [r, out], [r - wall, out]];
+    : [[r, -0.045], [r, out]];
   const lathe = (pts: Array<[number, number]>) => new THREE.LatheGeometry(pts.map(([a, b]) => new THREE.Vector2(a, b)), segments);
   const inner = r - wall;
-  const end = new THREE.CircleGeometry(inner, segments).rotateX(-Math.PI / 2).translate(0, full ? -deep : out - 0.008, 0);
+  const end = new THREE.CircleGeometry(full ? inner : r, segments).rotateX(-Math.PI / 2).translate(0, full ? -deep : out - 0.004, 0);
   const throat = full ? merge([lathe([[inner, out - 0.004], [inner, -deep]]), end]) : end;
   return { metal: lathe(lip), throat };
 }
@@ -46,7 +46,7 @@ function placed(g: THREE.BufferGeometry, z: number): THREE.BufferGeometry {
 /** The four tailpipes, each a short polished tube set in the diffuser with a dark throat. */
 export function addPipes(bin: PartBin, detail: Detail): void {
   const full = detail.fine || detail.brakes;
-  const segments = detail.fine ? 24 : detail.brakes ? 14 : 7;
+  const segments = detail.fine ? 18 : detail.brakes ? 12 : 6;
   for (const z of PIPES.at) {
     const { metal, throat } = pipe(segments, full);
     bin.add('metal', bothSides(placed(metal, z)));

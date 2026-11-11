@@ -40,8 +40,8 @@ function edgeAt(z: number, deck: number): number {
  * at the top of the tail face, which leaves a shadow line beneath it.
  */
 export function addSpoiler(bin: PartBin, detail: Detail): void {
-  const n = detail.fine ? 40 : detail.brakes ? 16 : 8;
-  const up = detail.fine ? 5 : detail.brakes ? 3 : 1;
+  const n = detail.fine ? 28 : detail.brakes ? 14 : 6;
+  const up = detail.fine ? 4 : detail.brakes ? 3 : 1;
   // Where the deck would run on, just before it rolls down into the tail face.
   const on = LIP.edge + 0.027;
   const rows: Vec3[][] = [];

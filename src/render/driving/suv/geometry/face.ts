@@ -134,7 +134,7 @@ export function endFace(end: 1 | -1, x: number, outline: Pt[], detail: Detail, c
   });
   // The upper patch crosses the fold under the hood's edge, so it gets extra rows: each step of the
   // outline is split, which keeps every body vertex on the edge and adds points only along its segments.
-  const upRight = split(half.slice(sh, sh + b3 + 1), detail.fine ? 3 : detail.brakes ? 2 : 1);
+  const upRight = split(half.slice(sh, sh + b3 + 1), detail.brakes ? 2 : 1);
   const upper = coons(rows[sh], top, spacedLike(upRight, ym, yt), upRight);
   const from = cut ? half.findIndex(([, y]) => Math.abs(y - cut.y0) < 1e-5) : -1;
   const to = cut ? half.findIndex(([, y]) => Math.abs(y - cut.y1) < 1e-5) : -1;
