@@ -11,11 +11,13 @@ export type DrivingRadar = {
 /**
  * The Driving radar axes in drawing order, clockwise from the top. They
  * sit in a file of their own so the env's light info can name them
- * without pulling in the exam.
+ * without pulling in the exam. Generalization is the weaker city's score,
+ * so its label says that in two short words: the radar centers each
+ * label on its spoke, and a long one on the left spoke runs off the card.
  */
 export const DRIVING_RADAR_AXES: ReadonlyArray<RadarAxis<keyof DrivingRadar>> = [
   { key: 'completion', label: 'Completion' },
   { key: 'safety', label: 'Safety' },
   { key: 'efficiency', label: 'Efficiency' },
-  { key: 'generalization', label: 'Generalization' },
+  { key: 'generalization', label: 'Both cities' },
 ];

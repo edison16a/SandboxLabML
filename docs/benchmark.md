@@ -190,7 +190,7 @@ Safety is that share again, times how cleanly it was driven: 0 for a crash, a pe
 
 Efficiency is the autopilot's time over the brain's, times how clean the drive was, and only on an arrival. A trip that does not arrive has no pace to score. A brain that beats the autopilot by running a red light loses half its pace credit with half its safety, so cutting rules never pays.
 
-The radar averages the three over all sixteen trips. The fourth axis, generalization, is the score of the weaker city, so a brain that copes with one street layout and not the other scores low there. The score is a weighted sum of the radar:
+The radar averages the three over all sixteen trips. The fourth axis, generalization (Both cities on the radar), is the score of the weaker city, so a brain that copes with one street layout and not the other scores low there. The score is a weighted sum of the radar:
 
 | Part | Weight |
 | --- | --- |
