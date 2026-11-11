@@ -9,7 +9,7 @@ export const STATUS_STOPPED = 2;
 export const STATUS_ARRIVED = 3;
 
 /** Why an episode ended for a learner, as a number for the snapshot. */
-export const REASONS = ['', 'crash', 'pedestrian', 'offroad', 'arrived', 'time', 'stuck', 'lost'] as const;
+export const REASONS = ['', 'crash', 'pedestrian', 'offroad', 'arrived', 'time', 'stuck', 'lost', 'redlight'] as const;
 export type StopReason = (typeof REASONS)[number] | string;
 
 export function reasonCode(reason: string | null): number {

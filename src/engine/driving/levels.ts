@@ -41,7 +41,7 @@ const FIRST_TRIPS: RouteOptions = { minLength: 120, maxLength: 260, minTurns: 0,
 
 export const DRIVING_LEVELS: readonly DrivingLevel[] = [
   { id: 1, name: 'Empty streets', signals: false, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0, route: FIRST_TRIPS, stopWait: 15, lenientCurb: true, arriveSpeed: 8 },
-  { id: 2, name: 'Traffic lights', signals: true, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0, route: FIRST_TRIPS, stopWait: 15, lenientCurb: true, arriveSpeed: 4 },
+  { id: 2, name: 'Traffic lights', signals: true, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0, route: FIRST_TRIPS, stopWait: 15, lenientCurb: true, arriveSpeed: 8 },
   { id: 3, name: 'Pedestrians', signals: true, pedestrians: 60, traffic: 0, jaywalk: 0, lateCross: 0, route: DEFAULT_ROUTE, stopWait: 18, lenientCurb: false, arriveSpeed: STOPPED },
   { id: 4, name: 'Traffic', signals: true, pedestrians: 76, traffic: 28, jaywalk: 0, lateCross: 0.1, route: DEFAULT_ROUTE, stopWait: 26, lenientCurb: false, arriveSpeed: STOPPED },
   { id: 5, name: 'Rush hour', signals: true, pedestrians: 120, traffic: 44, jaywalk: 0.5, lateCross: 0.3, route: DEFAULT_ROUTE, stopWait: 30, lenientCurb: false, arriveSpeed: STOPPED },
