@@ -38,7 +38,7 @@ function rockerY(x: number): number {
 
 /** How deep the hood's valley sits below the fender peaks; negative domes the short rear deck instead. */
 function valley(x: number): number {
-  return 0.04 * smooth((x - 0.3) / 0.4) - 0.03 * smooth((-x - 2.2) / 0.15);
+  return 0.04 * smooth((x - 0.3) / 0.4) + 0.028 * smooth((x - 1.7) / 0.7) - 0.03 * smooth((-x - 2.2) / 0.15);
 }
 
 export interface Section {
@@ -65,8 +65,8 @@ export function sectionAt(x: number): Section {
   const crest = deg(72 + 18 * smooth((x - 0.85) / 0.3) + 8 * smooth((-x - 2.3) / 0.12));
   const keys: Key[] = [
     key(w - 0.085, sillY(x), deg(-75)),
-    key(w - 0.04, rockerY(x), deg(-22), deg(-8 + 7 * c)),
-    key(w - 0.012, creaseY(x), deg(-8 - 10 * c), deg(-6)),
+    key(w - 0.045, rockerY(x), deg(-22), deg(-8 + 9 * c)),
+    key(w - 0.012, creaseY(x), deg(-8 - 16 * c), deg(-5)),
     key(w, shoulderY(x), deg(1)),
     key(bz, by, crest),
     key(bz * 0.36, by - v, deg(90)),

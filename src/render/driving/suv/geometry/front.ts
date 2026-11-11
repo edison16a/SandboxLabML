@@ -13,7 +13,7 @@ function lampEdge(u: number, down: number): Pt {
 }
 
 /** The lamp's height at u: slim inboard, deep enough at the corner to hold the light signature. */
-const depth = (u: number) => 0.05 + 0.04 * u ** 1.3;
+const depth = (u: number) => 0.058 + 0.05 * u ** 1.3;
 
 /**
  * The headlights: slim units at the top corners of the face, following
@@ -43,8 +43,8 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 /** A side intake's outline, inset by `k` m: a trapezoid whose inner edge leans out and whose top falls toward the corner. */
 function sideIntake(k: number): { lo: (u: number) => Pt; hi: (u: number) => Pt } {
   return {
-    lo: (u) => [lerp(0.5 + k, 0.79 - k, u), 0.432 + k],
-    hi: (u) => [lerp(0.55 + k * 0.6, 0.79 - k, u), lerp(0.665 - k, 0.622 - k, u)],
+    lo: (u) => [lerp(0.505 + k, 0.805 - k, u), 0.432 + k],
+    hi: (u) => [lerp(0.6 + k * 0.6, 0.805 - k, u), lerp(0.745 - k, 0.708 - k, u)],
   };
 }
 
@@ -55,9 +55,9 @@ function sideIntake(k: number): { lo: (u: number) => Pt; hi: (u: number) => Pt }
  */
 function addIntakes(bin: PartBin, detail: Detail): void {
   const c = detail.fine ? 8 : detail.brakes ? 4 : 2;
-  const center = (k: number) => (y: number) => 0.45 - k - (y - 0.432) * 0.32;
-  bin.add('trim', capPanel(1, (y) => -center(0)(y), center(0), 0.432, 0.58, 0.004, c * 2, 2, false));
-  bin.add('grille', capPanel(1, (y) => -center(0.016)(y), center(0.016), 0.448, 0.564, 0.007, c * 2, 2, false));
+  const center = (k: number) => (y: number) => 0.44 - k - (y - 0.432) * 0.3;
+  bin.add('trim', capPanel(1, (y) => -center(0)(y), center(0), 0.432, 0.6, 0.004, c * 2, 2, false));
+  bin.add('grille', capPanel(1, (y) => -center(0.016)(y), center(0.016), 0.448, 0.584, 0.007, c * 2, 2, false));
   const frame = sideIntake(0);
   const mesh = sideIntake(0.016);
   bin.add('trim', capSpan(1, frame.lo, frame.hi, 0.004, c, 3));

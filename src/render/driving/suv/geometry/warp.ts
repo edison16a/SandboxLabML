@@ -22,6 +22,6 @@ export function warp(p: Vec3): Vec3 {
     // The hood's front edge rolls down into the face instead of meeting it at a hard edge.
     dy -= smooth((x - 2.22) / 0.23) ** 2 * 0.022 * clamp01((y - 0.76) / 0.26);
   }
-  if (x < -2.05) dx += smooth((-x - 2.05) / 0.4) * (0.035 * clamp01((y - 0.62) / 0.5) + corner * 0.85 + 0.05 * clamp01((0.52 - y) / 0.15));
+  if (x < -2.05) dx += smooth((-x - 2.05) / 0.4) * (0.035 * clamp01((y - 0.62) / 0.5) + corner * 0.6 + 0.05 * clamp01((0.52 - y) / 0.15));
   return [x + dx, y + dy, z];
 }

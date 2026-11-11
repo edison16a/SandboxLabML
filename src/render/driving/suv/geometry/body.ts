@@ -1,4 +1,4 @@
-import type * as THREE from 'three';
+import * as THREE from 'three';
 import { bothSides, gridGeometry, type Vec3 } from './grid';
 import type { Detail, PartBin, Slot } from './parts';
 import { ARCHED_BANDS, archFloor, NOSE, sectionAt, stations, TAIL } from './profile';
@@ -85,19 +85,43 @@ export function outline(x: number, detail: Detail): Pt[] {
 }
 
 /**
- * The face closing the nose or the tail, a fan of rows from a center point
- * out to the last section's outline, so the warp bends it exactly like
- * the lamps and intakes that sit on it.
+ * The face closing the nose or the tail: rings shrinking from the last
+ * section's outline to one shared center point, so the warp bends it
+ * exactly like the lamps and intakes that sit on it. The center is a
+ * single vertex, so the face shades smoothly right through it.
  */
 function endCap(x: number, detail: Detail, facing: 1 | -1): THREE.BufferGeometry {
   const half = outline(x, detail);
-  const ring = [...half, ...half.slice(0, -1).reverse().map(([z, y]) => [-z, y] as Pt), half[0]];
+  const ring = [...half, ...half.slice(0, -1).reverse().map(([z, y]) => [-z, y] as Pt)];
   const cy = (half[0][1] + half[half.length - 1][1]) / 2;
   const n = detail.fine ? 12 : detail.brakes ? 6 : 3;
-  const rows = ring.map(([z, y]) => Array.from({ length: n + 1 }, (_, i) => warp([x, cy + ((y - cy) * i) / n, (z * i) / n])));
-  const g = gridGeometry(rows);
-  const nx = g.attributes.normal.getX(rows[0].length * Math.floor(rows.length / 2) + n);
-  return nx * facing < 0 ? gridGeometry(rows.reverse()) : g;
+  const m = ring.length;
+  const pos: number[] = [];
+  const uv: number[] = [];
+  const put = (z: number, y: number) => {
+    pos.push(...warp([x, y, z]));
+    // Flat UVs in meters across the face, so paint flake keeps its scale.
+    uv.push(z, y);
+  };
+  put(0, cy);
+  for (let k = 1; k <= n; k++) for (const [z, y] of ring) put((z * k) / n, cy + ((y - cy) * k) / n);
+  const v = (k: number, i: number) => 1 + (k - 1) * m + (i % m);
+  const index: number[] = [];
+  for (let i = 0; i < m; i++) {
+    index.push(0, v(1, i), v(1, i + 1));
+    for (let k = 2; k <= n; k++) index.push(v(k - 1, i), v(k, i), v(k, i + 1), v(k - 1, i), v(k, i + 1), v(k - 1, i + 1));
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(index);
+  g.computeVertexNormals();
+  if (g.attributes.normal.getX(0) * facing < 0) {
+    for (let t = 0; t < index.length; t += 3) [index[t + 1], index[t + 2]] = [index[t + 2], index[t + 1]];
+    g.setIndex(index);
+    g.computeVertexNormals();
+  }
+  return g;
 }
 
 const tops = new Map<number, Pt[]>();
