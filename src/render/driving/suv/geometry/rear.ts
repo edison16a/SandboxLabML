@@ -1,10 +1,10 @@
-import { faceEdge, faceTop, onCap } from './cap';
+import { faceEdge } from './cap';
 import { smooth } from './curve';
-import { gridGeometry, type Vec3 } from './grid';
 import { at, capDisc, capPanel, capSpan } from './panels';
 import type { Detail, PartBin } from './parts';
 import { sillY, TAIL } from './profile';
 import type { Pt } from './section';
+import { addSpoiler } from './spoiler';
 import { addTailgate } from './tailgate';
 
 /**
@@ -66,32 +66,6 @@ function addEmblem(bin: PartBin, cy: number, seg: number): void {
     bin.add('tail', capSpan(-1, (u) => p(u, -1), (u) => p(u, 1), 0.008, 2, 1, false));
   }
   atoms.forEach(([z, y], i) => bin.add('tail', capDisc(-1, z, y, i === 1 ? 0.0085 : 0.0072, 0.009, seg, false)));
-}
-
-/**
- * A lip spoiler along the top of the tail, where the roofline ends. Its
- * top grows out of the roof, kicks up a little and ends in a thin, crisp
- * trailing edge 3 cm out; its underside tucks back into the tailgate.
- * Both ends taper away.
- */
-function addSpoiler(bin: PartBin, detail: Detail): void {
-  const n = detail.fine ? 28 : detail.brakes ? 10 : 6;
-  const half = 0.6;
-  const rows: Vec3[][] = [];
-  for (let i = 0; i <= n; i++) {
-    const z = -half + (2 * half * i) / n;
-    const top = faceTop(-1, z);
-    const k = 1 - (z / half) ** 8;
-    const edge = 0.004 + 0.03 * k;
-    rows.push([
-      onCap(-1, z, top - 0.03, 0.001),
-      onCap(-1, z, top - 0.008 * k, edge * 0.8),
-      onCap(-1, z, top + 0.001 + 0.006 * k, edge),
-      onCap(-1, z, top + 0.006 + 0.008 * k, edge),
-      onCap(-1, z, top + 0.012, -0.035),
-    ]);
-  }
-  bin.add('paint', gridGeometry(rows));
 }
 
 /**

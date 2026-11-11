@@ -35,7 +35,7 @@ export function hoodY(x: number): number {
  */
 export function valleyDepth(x: number): number {
   const hood = 0.04 + 0.02 * smooth((x - 0.9) / 1.1);
-  const dome = -0.048 * smooth((-x - 0.5) / 1.8);
+  const dome = -0.034 * smooth((-x - 0.5) / 1.8);
   const w = smooth((x - 0.2) / 0.5);
   return hood * w + dome * (1 - w);
 }
