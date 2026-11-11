@@ -152,6 +152,13 @@ export const toyModule: EpisodeEnvModule<ToySetup, { level: number }, ToyResult,
   createSetup: ({ config, content, scriptSource }) => ({ goal: GOAL * content.level, maxTime: envSettings<{ maxTime: number }>(config).maxTime, scriptSource }),
   createEnv: (setup) => new ToyEnv(setup),
   championFields: (r) => ({ metrics: { best: r.fitness } }),
+  bench: {
+    version: 1,
+    axes: [{ key: 'reach', label: 'Reach' }],
+    hint: 'a longer line, 0 to 100',
+    about: 'Never runs in the tests.',
+    run: async () => null,
+  },
   generationMetrics: (results) => ({ reachedShare: results.filter((r) => r.reached).length / results.length }),
   telemetry: {
     sample: (env, i, out) => {

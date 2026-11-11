@@ -1,36 +1,23 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Sprout } from 'lucide-react';
-import { blueprintShape } from '@/engine/blueprints/shape';
-import { startingLinks } from '@/engine/neat/startShape';
-import { RACING_OUTPUTS } from '@/engine/racing/sensors/inputSchema';
-import { ModelDownloads } from '@/features/modelcard/ModelDownloads';
 import { BlueprintDialog } from '@/features/blueprints/BlueprintDialog';
-import { ModelCard } from '@/features/modelcard/ModelCard';
+import { useRunSchema } from '@/features/lab/hooks/useRunSchema';
 import { forkRacingRun } from '@/storage/forkRun';
 import { setSetting } from '@/storage/settings';
 import { Button } from '@/ui/primitives/Button';
 import { toast } from '@/ui/toast/toastStore';
 import { LAST_RUN_KEY } from '../hooks/useRunBootstrap';
-import { useRunSchema } from '../hooks/useRunSchema';
 import { racingSession } from '../session/RacingSession';
 import { useRacingLab } from '../state/labStore';
 
-/** Model card for the latest champion of the open run, plus "grow this brain". */
-export function ModelTab() {
+/** "Grow this brain": a new run from the latest checkpoint with more sensors, keeping what the brain learned. */
+export function GrowBrain() {
   const run = useRacingLab((s) => s.run);
-  const records = useRacingLab((s) => s.records);
   const schema = useRunSchema();
   const [growing, setGrowing] = useState(false);
-  const latest = records[records.length - 1];
-  const reference = useMemo(() => {
-    if (!run) return 0;
-    const shape = blueprintShape(run.blueprint, run.customSensors);
-    // Sparse wiring is measured against the full direct wiring, the brain it can grow into.
-    return startingLinks(shape.wiring === 'sparse' ? { ...shape, wiring: 'direct' } : shape);
-  }, [run]);
-  if (!run || !latest) return <div className="p-4 text-[13px] text-muted">Appears after the first generation.</div>;
+  if (!run) return null;
 
   const grow = async (blueprint: Parameters<typeof forkRacingRun>[1]) => {
     const session = racingSession();
@@ -47,7 +34,7 @@ export function ModelTab() {
   };
 
   return (
-    <div className="flex flex-col">
+    <>
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
         <p className="text-[12px] text-muted">Add sensors, keep what it learned.</p>
         <Button size="sm" variant="outline" onClick={() => setGrowing(true)} disabled={run.blueprint.env !== 'racing'}>
@@ -55,17 +42,6 @@ export function ModelTab() {
           Grow this brain
         </Button>
       </div>
-      <ModelDownloads
-        source={{
-          run,
-          genome: latest.genome,
-          generation: latest.generation,
-          fitness: latest.champion.fitness,
-          inputLabels: schema.map((s) => s.label),
-          outputLabels: RACING_OUTPUTS.map((o) => o.label),
-        }}
-      />
-      <ModelCard runId={run.id} genome={latest.genome} records={records} reference={reference} blueprintName={run.blueprint.name} />
       {run.blueprint.env === 'racing' && (
         <BlueprintDialog
           open={growing}
@@ -77,6 +53,6 @@ export function ModelTab() {
           onSave={(b) => grow(b)}
         />
       )}
-    </div>
+    </>
   );
 }

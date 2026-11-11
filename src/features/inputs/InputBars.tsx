@@ -7,7 +7,7 @@ import { isSignedInput } from './signedInputs';
 
 interface Props {
   schema: InputSpec[];
-  outputs: OutputSpec[];
+  outputs: readonly OutputSpec[];
   /** Latest observation and action of the inspected agent. */
   read: () => { obs: Float32Array; out: Float32Array } | null;
   hovered: number | null;

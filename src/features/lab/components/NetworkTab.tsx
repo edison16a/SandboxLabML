@@ -2,58 +2,59 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pause, Play } from 'lucide-react';
-import { RACING_OUTPUTS } from '@/engine/racing/sensors/inputSchema';
-import { useRunSchema } from '../hooks/useRunSchema';
 import { BrainStats } from '@/features/network/BrainStats';
 import { NetworkCanvas } from '@/features/network/NetworkCanvas';
 import { Button } from '@/ui/primitives/Button';
 import { Slider } from '@/ui/primitives/Slider';
 import { Switch } from '@/ui/primitives/Switch';
-import { racingSession } from '../session/RacingSession';
-import { followsGhost, useRacingLab } from '../state/labStore';
+import { useRunSchema } from '../hooks/useRunSchema';
+import { useLab, useLabContext, useLabSet } from '../LabContext';
+import { followsGhost } from '../state/labState';
 
 /**
  * The champion's brain. The slider scrubs through generations so you can
- * watch the network grow; with a car followed, its live sensor readings run
- * through the network and light up the links that carry the decision.
+ * watch the network grow; with an agent followed, its live sensor readings
+ * run through the network and light up the links that carry the decision.
  */
 export function NetworkTab() {
-  const records = useRacingLab((s) => s.records);
-  const focus = useRacingLab((s) => s.focus);
-  const ghost = useRacingLab(followsGhost);
-  const pinned = useRacingLab((s) => s.networkGeneration);
-  const hoveredInput = useRacingLab((s) => s.hoveredInput);
-  const set = useRacingLab((s) => s.set);
+  const { api, module, session } = useLabContext();
+  const records = useLab((s) => s.records);
+  const focus = useLab((s) => s.focus);
+  const ghost = useLab(followsGhost);
+  const pinned = useLab((s) => s.networkGeneration);
+  const hoveredInput = useLab((s) => s.hoveredInput);
+  const set = useLabSet();
   const [showDisabled, setShowDisabled] = useState(false);
-  const lesions = useRacingLab((s) => s.lesions);
+  const lesions = useLab((s) => s.lesions);
   const lesioned = useMemo(() => new Set(Object.keys(lesions).map(Number)), [lesions]);
   const [playing, setPlaying] = useState(false);
 
-  // In the Sandbox the camera follows the car on pole, a copy of the last champion in the stream.
-  const poleGen = useRacingLab((s) => (s.mode === 'sandbox' ? s.ghostGenerations[s.ghostGenerations.length - 1] : undefined));
+  // In the Sandbox the camera follows the copy on pole, the last champion in the stream.
+  const poleGen = useLab((s) => (s.mode === 'sandbox' ? s.ghostGenerations[s.ghostGenerations.length - 1] : undefined));
   const followGen = focus.kind === 'ghost' ? focus.generation : (poleGen ?? records.length - 1);
   const gen = pinned ?? followGen;
   const record = records.find((r) => r.generation === gen) ?? records[records.length - 1];
   const schema = useRunSchema();
   const labels = useMemo(() => schema.map((s) => s.label), [schema]);
+  const outputLabels = useMemo(() => module.outputs.map((o) => o.label), [module]);
 
   useEffect(() => {
     if (!playing) return;
     const id = setInterval(() => {
-      const s = useRacingLab.getState();
+      const s = api.getState();
       const next = (s.networkGeneration ?? -1) + 1;
       if (next >= s.records.length) setPlaying(false);
-      else s.set({ networkGeneration: next });
+      else api.setState({ networkGeneration: next });
     }, 350);
     return () => clearInterval(id);
-  }, [playing]);
+  }, [api, playing]);
 
   const live = useCallback(() => {
-    const streams = racingSession().streams;
+    const streams = session.streams;
     if (!streams) return null;
     const stream = ghost ? streams.ghosts : streams.population;
     return stream.inspect?.obs ?? null;
-  }, [ghost]);
+  }, [session, ghost]);
 
   if (!record) return <div className="p-4 text-[13px] text-muted">Appears after the first generation.</div>;
 
@@ -70,7 +71,7 @@ export function NetworkTab() {
         <NetworkCanvas
           genome={record.genome}
           inputLabels={labels}
-          outputLabels={RACING_OUTPUTS.map((o) => o.label)}
+          outputLabels={outputLabels}
           liveObservation={live}
           hoveredInput={hoveredInput}
           onHoverInput={(i) => set({ hoveredInput: i })}

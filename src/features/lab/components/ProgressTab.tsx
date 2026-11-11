@@ -1,10 +1,11 @@
 'use client';
 
+import { metricValue } from '@/engine/env/metrics';
 import { FitnessChart } from '@/features/charts/FitnessChart';
 import { SpeciesChart } from '@/features/charts/SpeciesChart';
 import { BenchmarkChart } from '@/features/charts/BenchmarkChart';
 import { Stat } from '@/ui/primitives/Panel';
-import { useRacingLab } from '../state/labStore';
+import { useLab, useLabContext } from '../LabContext';
 
 function Section({ title, children, hint, tour }: { title: string; children: React.ReactNode; hint?: string; tour?: string }) {
   return (
@@ -18,11 +19,17 @@ function Section({ title, children, hint, tour }: { title: string; children: Rea
   );
 }
 
-/** Fitness curve, species bands and the latest champions. */
+/**
+ * Fitness curve, the benchmark, species bands and the latest champions.
+ * The champion table shows the env's champion metrics (Racing: distance
+ * and best lap) between fitness and how the run ended.
+ */
 export function ProgressTab() {
-  const records = useRacingLab((s) => s.records);
+  const { env, module } = useLabContext();
+  const records = useLab((s) => s.records);
   const last = records[records.length - 1];
   const recent = records.slice(-8).reverse();
+  const columns = module.metrics.filter((m) => m.source === 'champion');
   if (!last) {
     // The walkthrough's fitness step frames this placeholder until the chart exists.
     return (
@@ -41,9 +48,11 @@ export function ProgressTab() {
       <Section title="Fitness" hint="best, median, mean" tour="fitness">
         <FitnessChart records={records} />
       </Section>
-      <Section title="Benchmark" hint="unseen tracks, 0 to 100">
-        <BenchmarkChart records={records} />
-      </Section>
+      {module.bench && (
+        <Section title="Benchmark" hint={module.bench.hint}>
+          <BenchmarkChart env={env} records={records} />
+        </Section>
+      )}
       <Section title="Species" hint="share of the population" tour="species">
         <SpeciesChart records={records} />
       </Section>
@@ -53,8 +62,11 @@ export function ProgressTab() {
             <tr>
               <th className="py-1 font-medium">Gen</th>
               <th className="py-1 font-medium">Fitness</th>
-              <th className="py-1 font-medium">Distance</th>
-              <th className="py-1 font-medium">Best lap</th>
+              {columns.map((m) => (
+                <th key={m.key} className="py-1 font-medium">
+                  {m.label}
+                </th>
+              ))}
               <th className="py-1 font-medium">Ended</th>
             </tr>
           </thead>
@@ -63,8 +75,11 @@ export function ProgressTab() {
               <tr key={r.generation} className="border-t border-border">
                 <td className="py-1.5">{r.generation + 1}</td>
                 <td className="py-1.5">{r.champion.fitness.toFixed(1)}</td>
-                <td className="py-1.5">{Math.round(r.champion.distance)} m</td>
-                <td className="py-1.5">{r.champion.bestLapTime > 0 ? `${r.champion.bestLapTime.toFixed(2)} s` : '-'}</td>
+                {columns.map((m) => (
+                  <td key={m.key} className="py-1.5">
+                    {m.format(metricValue(r, m))}
+                  </td>
+                ))}
                 <td className="py-1.5 font-sans text-muted">{r.champion.stopReason ?? '-'}</td>
               </tr>
             ))}
@@ -77,7 +92,7 @@ export function ProgressTab() {
 
 /** The one placeholder the tab shows until the first generation is done. */
 function Empty() {
-  const running = useRacingLab((s) => s.status === 'running');
+  const running = useLab((s) => s.status === 'running');
   return (
     <div className="flex h-24 items-center justify-center rounded-md border border-dashed border-border text-[12px] text-subtle">
       {running ? 'First generation running' : 'Press Train to start'}

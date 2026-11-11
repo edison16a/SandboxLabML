@@ -103,6 +103,8 @@ export interface EpisodeBench {
   axes: ReadonlyArray<{ key: string; label: string }>;
   /** Shown beside the benchmark chart, e.g. "unseen tracks, 0 to 100". */
   hint: string;
+  /** What the chart says before the first score lands, in one sentence. */
+  about: string;
   run(config: RunConfig, genome: Genome, opts?: BenchOptions): Promise<BenchResult | null>;
 }
 

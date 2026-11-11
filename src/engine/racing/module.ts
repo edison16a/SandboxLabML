@@ -78,6 +78,7 @@ export const racingModule: EpisodeEnvModule<RacingSetup, TrackSpec, RacingResult
     version: BENCHMARK_VERSION,
     axes: RACING_RADAR_AXES,
     hint: 'unseen tracks, 0 to 100',
+    about: 'Every 5 generations, the champion drives tracks it never trained on.',
     // Loaded on first use: the exam pulls in the script compiler, which training without a script never needs.
     run: async (config, genome, opts) => (await import('../bench/runner')).benchmarkRacing(config, genome, opts),
   },

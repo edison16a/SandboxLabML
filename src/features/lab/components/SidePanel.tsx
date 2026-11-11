@@ -2,13 +2,24 @@
 
 import { Activity, Boxes, Network, ScanEye } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/primitives/Tabs';
-import { useRacingLab, type PanelTab } from '../state/labStore';
+import { useLab, useLabSet } from '../LabContext';
+import type { PanelTab } from '../state/labState';
+import { InputsTab } from './InputsTab';
+import { ModelTab } from './ModelTab';
+import { NetworkTab } from './NetworkTab';
 import { ProgressTab } from './ProgressTab';
 
-/** Right-hand panel: progress charts, the network, live inputs and the model card. */
-export function SidePanel({ network, inputs, model }: { network: React.ReactNode; inputs: React.ReactNode; model: React.ReactNode }) {
-  const tab = useRacingLab((s) => s.panelTab);
-  const set = useRacingLab((s) => s.set);
+interface Props {
+  /** Replaces a tab's content, for a lab that shows more than the shared one. */
+  network?: React.ReactNode;
+  inputs?: React.ReactNode;
+  model?: React.ReactNode;
+}
+
+/** Right hand panel: progress charts, the network, live inputs and the model card. */
+export function SidePanel({ network, inputs, model }: Props) {
+  const tab = useLab((s) => s.panelTab);
+  const set = useLabSet();
   return (
     <Tabs value={tab} onValueChange={(v) => set({ panelTab: v as PanelTab })} className="flex h-full min-h-0 flex-col">
       <TabsList>
@@ -33,13 +44,13 @@ export function SidePanel({ network, inputs, model }: { network: React.ReactNode
         <ProgressTab />
       </TabsContent>
       <TabsContent value="network" className="flex flex-col overflow-hidden">
-        {network}
+        {network ?? <NetworkTab />}
       </TabsContent>
       <TabsContent value="inputs" className="overflow-y-auto">
-        {inputs}
+        {inputs ?? <InputsTab />}
       </TabsContent>
       <TabsContent value="model" className="overflow-y-auto">
-        {model}
+        {model ?? <ModelTab />}
       </TabsContent>
     </Tabs>
   );

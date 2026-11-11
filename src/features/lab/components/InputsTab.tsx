@@ -1,38 +1,38 @@
 'use client';
 
 import { useCallback } from 'react';
-import { RACING_OUTPUTS } from '@/engine/racing/sensors/inputSchema';
-import { useRunSchema } from '../hooks/useRunSchema';
 import { InputBars } from '@/features/inputs/InputBars';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Switch } from '@/ui/primitives/Switch';
-import { racingSession } from '../session/RacingSession';
-import { followsGhost, useRacingLab } from '../state/labStore';
+import { useRunSchema } from '../hooks/useRunSchema';
+import { useLab, useLabContext, useLabSet } from '../LabContext';
+import { followsGhost } from '../state/labState';
 
-/** Everything the followed car senses right now, plus overlay settings. */
+/** Everything the followed agent senses right now, plus overlay settings. */
 export function InputsTab() {
-  const run = useRacingLab((s) => s.run);
-  const overlay = useRacingLab((s) => s.inputsOverlay);
-  const scope = useRacingLab((s) => s.inputsScope);
-  const hovered = useRacingLab((s) => s.hoveredInput);
-  const set = useRacingLab((s) => s.set);
-  const mode = useRacingLab((s) => s.mode);
-  const lesions = useRacingLab((s) => s.lesions);
+  const { module, session, agentNoun } = useLabContext();
+  const run = useLab((s) => s.run);
+  const overlay = useLab((s) => s.inputsOverlay);
+  const scope = useLab((s) => s.inputsScope);
+  const hovered = useLab((s) => s.hoveredInput);
+  const set = useLabSet();
+  const mode = useLab((s) => s.mode);
+  const lesions = useLab((s) => s.lesions);
   const lesioned = new Set(Object.keys(lesions).map(Number));
   const toggleLesion = (i: number) => {
     const next = { ...lesions };
     if (i in next) delete next[i];
     else next[i] = 0;
     set({ lesions: next });
-    racingSession().sandboxChanged();
+    session.sandboxChanged();
   };
   const schema = useRunSchema();
-  const ghost = useRacingLab(followsGhost);
+  const ghost = useLab(followsGhost);
   const read = useCallback(() => {
-    const streams = racingSession().streams;
+    const streams = session.streams;
     const stream = ghost ? streams?.ghosts : streams?.population;
     return stream?.inspect ?? null;
-  }, [ghost]);
+  }, [session, ghost]);
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -49,8 +49,8 @@ export function InputsTab() {
             value={scope}
             onChange={(v) => set({ inputsScope: v })}
             options={[
-              { value: 'selected', label: 'Followed car' },
-              { value: 'all', label: 'All cars' },
+              { value: 'selected', label: `Followed ${agentNoun}` },
+              { value: 'all', label: `All ${agentNoun}s` },
             ]}
           />
         </div>
@@ -65,7 +65,7 @@ export function InputsTab() {
       </p>
       <InputBars
         schema={schema}
-        outputs={RACING_OUTPUTS}
+        outputs={module.outputs}
         read={read}
         hovered={hovered}
         onHover={(i) => set({ hoveredInput: i })}

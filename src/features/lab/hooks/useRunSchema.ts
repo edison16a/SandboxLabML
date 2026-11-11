@@ -2,10 +2,9 @@
 
 import { useMemo } from 'react';
 import type { InputSpec } from '@/engine/env/types';
-import { racingInputSchema } from '@/engine/racing/sensors/inputSchema';
 import { compileScript } from '@/engine/script';
 import { scriptAt } from '@/engine/training/runConfig';
-import { useRacingLab } from '../state/labStore';
+import { useLab, useLabContext } from '../LabContext';
 
 /**
  * The input schema of the open run, including the script's own sensors, so
@@ -13,12 +12,13 @@ import { useRacingLab } from '../state/labStore';
  * brain actually receives.
  */
 export function useRunSchema(): InputSpec[] {
-  const run = useRacingLab((s) => s.run);
-  const gen = useRacingLab((s) => s.liveGeneration);
+  const { module } = useLabContext();
+  const run = useLab((s) => s.run);
+  const gen = useLab((s) => s.liveGeneration);
   const source = run ? (scriptAt(run, gen)?.source ?? null) : null;
   return useMemo(() => {
-    if (!run || run.blueprint.env !== 'racing' || !run.racing) return [];
+    if (!run || run.env !== module.id || run.blueprint.env !== module.id) return [];
     const custom = source ? (compileScript(source).script?.sensors ?? []) : [];
-    return racingInputSchema(run.blueprint.inputs, run.racing.car, custom);
-  }, [run, source]);
+    return module.inputSchema(run, custom);
+  }, [module, run, source]);
 }
