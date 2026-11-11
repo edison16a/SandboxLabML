@@ -6,8 +6,9 @@ import type { RunConfig } from '@/engine/training/runConfig';
 import { EpisodeSession } from '@/features/lab/session/EpisodeSession';
 import type { WorkerPool } from '@/workers/client/workerPool';
 import { isWatchSpeed, WATCH_SPEEDS } from '@/workers/shared/protocol';
-import { openedNavigationState, useNavigationLab, type NavigationLabState } from '../state/labStore';
+import { openedNavigationState, openedSandbox, useNavigationLab, type NavigationLabState } from '../state/labStore';
 import { GhostPacing } from './ghostPacing';
+import { SandboxControl } from './sandboxControl';
 
 /**
  * The Navigation lab's session: the shared episode session plus the
@@ -19,6 +20,8 @@ import { GhostPacing } from './ghostPacing';
 export class NavigationSession extends EpisodeSession<NavigationLabState> {
   private readonly pacing = new GhostPacing(() => void super.refreshGhosts(true));
   private listening = false;
+  /** The Sandbox, once the workers are up. */
+  sandbox: SandboxControl | null = null;
 
   constructor() {
     super('navigation', useNavigationLab);
@@ -33,8 +36,26 @@ export class NavigationSession extends EpisodeSession<NavigationLabState> {
     if (!this.listening) {
       this.listening = true;
       pool.ghosts.on(this.pacing.listen);
+      this.sandbox = new SandboxControl(pool, () => this.pause());
     }
     return pool;
+  }
+
+  /** Opens the Sandbox, starting the workers first if the lab has not yet. */
+  async enterSandbox(): Promise<void> {
+    await this.init();
+    await this.sandbox?.enter();
+  }
+
+  override async exitSandbox(): Promise<void> {
+    this.store.setSandbox({ inputs: null, paused: false });
+    this.set({ viewSchema: null });
+    await super.exitSandbox();
+  }
+
+  /** A lesion or an edit changed the scene, so the Sandbox plays it again. */
+  override sandboxChanged(): void {
+    this.sandbox?.schedule();
   }
 
   protected override beforeLoad(): void {
@@ -43,7 +64,7 @@ export class NavigationSession extends EpisodeSession<NavigationLabState> {
   }
 
   protected override openedState(config: RunConfig, history: GenerationRecord[], generation: number): Partial<NavigationLabState> {
-    return openedNavigationState(config, history, generation, this.store.mode);
+    return { ...openedNavigationState(config, history, generation, this.store.mode), sandbox: openedSandbox(this.store.sandbox), viewSchema: null };
   }
 
   protected override onContent(content: unknown): void {

@@ -5,6 +5,7 @@ import type { RunConfig } from '@/engine/training/runConfig';
 import { NAVIGATION_ENGINE_VERSION } from '@/engine/navigation/params';
 import { labDefaults, openedLabState, type LabState } from '@/features/lab/state/labState';
 import type { NavCamera } from '@/render/navigation/types';
+import { SANDBOX_DEFAULTS, type NavSandbox } from './sandboxState';
 
 /**
  * UI state for the Navigation lab: the shared lab fields, plus what the
@@ -17,8 +18,11 @@ export interface NavigationLabState extends LabState {
   content: NavigationContent | null;
   /** The runner the viewport follows, in its own feed (see viewFollowsGhost), or -1. */
   followed: number;
+  /** The Sandbox setup. It outlives a run switch, except for the field, which belongs to one run. */
+  sandbox: NavSandbox;
 
   set: (patch: Partial<NavigationLabState>) => void;
+  setSandbox: (patch: Partial<NavSandbox>) => void;
 }
 
 /**
@@ -30,12 +34,19 @@ export function openedNavigationState(run: RunConfig, records: GenerationRecord[
   return { ...openedLabState(run, records, generation, NAVIGATION_ENGINE_VERSION, leaving), followed: -1, viewFollowsGhost: false };
 }
 
+/** The Sandbox after a run switch: its course and model picks stay, its champions and paused state do not. */
+export function openedSandbox(s: NavSandbox): NavSandbox {
+  return { ...s, field: [], paused: false };
+}
+
 export const useNavigationLab = create<NavigationLabState>((set) => ({
   ...labDefaults('follow'),
   camera: 'follow',
   content: null,
   followed: -1,
   viewFollowsGhost: false,
+  sandbox: SANDBOX_DEFAULTS,
 
   set: (patch) => set(patch),
+  setSandbox: (patch) => set((s) => ({ sandbox: { ...s.sandbox, ...patch } })),
 }));

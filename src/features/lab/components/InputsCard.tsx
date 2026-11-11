@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 import { InputBars } from '@/features/inputs/InputBars';
-import { useRunSchema } from '../hooks/useRunSchema';
+import { useViewSchema } from '../hooks/useRunSchema';
 import { useLab, useLabContext, useLabSet } from '../LabContext';
 import { followsGhost } from '../state/labState';
 
@@ -13,7 +13,7 @@ export function InputsCard() {
   const hovered = useLab((s) => s.hoveredInput);
   const ghost = useLab(followsGhost);
   const set = useLabSet();
-  const schema = useRunSchema();
+  const schema = useViewSchema();
   const read = useCallback(() => {
     const streams = session.streams;
     return (ghost ? streams?.ghosts : streams?.population)?.inspect ?? null;

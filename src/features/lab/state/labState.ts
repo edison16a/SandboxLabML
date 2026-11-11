@@ -1,4 +1,5 @@
 import type { StoreApi } from 'zustand';
+import type { InputSpec } from '@/engine/env/types';
 import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { TrainingStatus } from '@/workers/coordinator/events';
@@ -53,6 +54,12 @@ export interface LabState {
    * stream. Left out, only a clicked ghost or the Sandbox does that.
    */
   viewFollowsGhost?: boolean;
+  /**
+   * The inputs of the brains on screen, set by a lab whose Sandbox plays a
+   * brain that is not the run's (Navigation's shipped models), so the
+   * inputs panels label what that brain reads. Left out, they use the run's.
+   */
+  viewSchema?: InputSpec[] | null;
 }
 
 /** A lab store as the shared code sees it. A lab's own store is a superset, so it can stand in. */

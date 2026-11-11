@@ -22,3 +22,10 @@ export function useRunSchema(): InputSpec[] {
     return module.inputSchema(run, custom);
   }, [module, run, source]);
 }
+
+/** The inputs of the brain on screen: the lab's viewSchema while it sets one (a Sandbox model), else the run's. */
+export function useViewSchema(): InputSpec[] {
+  const run = useRunSchema();
+  const own = useLab((s) => s.viewSchema);
+  return own ?? run;
+}

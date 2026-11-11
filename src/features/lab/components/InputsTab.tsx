@@ -4,7 +4,7 @@ import { useCallback } from 'react';
 import { InputBars } from '@/features/inputs/InputBars';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Switch } from '@/ui/primitives/Switch';
-import { useRunSchema } from '../hooks/useRunSchema';
+import { useViewSchema } from '../hooks/useRunSchema';
 import { useLab, useLabContext, useLabSet } from '../LabContext';
 import { followsGhost } from '../state/labState';
 
@@ -30,7 +30,7 @@ export function InputsTab({ allScope = true }: { allScope?: boolean }) {
     set({ lesions: next });
     session.sandboxChanged();
   };
-  const schema = useRunSchema();
+  const schema = useViewSchema();
   const ghost = useLab(followsGhost);
   const read = useCallback(() => {
     const streams = session.streams;
