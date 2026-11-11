@@ -46,7 +46,7 @@ function stableDate(path: string, next: DrivingReferences): DrivingReferences {
  * the scores at each checkpoint, and ships each tier's typical final
  * champion as a model the Sandbox can drive.
  *
- * Options: --seeds 6, --first-seed 1, --generations 120, --every 10,
+ * Options: --seeds 6, --first-seed 1, --generations 200, --every 10,
  * --population 100, --tiers beginner,intermediate,advanced, --out file,
  * --dump file (every run's checkpoints and champions as JSON, to study).
  * A smoke run: --seeds 1 --generations 4 --every 2 --population 20.
@@ -54,7 +54,7 @@ function stableDate(path: string, next: DrivingReferences): DrivingReferences {
 export async function generateDriving(args: Args, pool: JobPool): Promise<void> {
   const seeds = numberArg(args, 'seeds', 6);
   const firstSeed = numberArg(args, 'first-seed', 1);
-  const generations = numberArg(args, 'generations', 120);
+  const generations = numberArg(args, 'generations', 200);
   const every = numberArg(args, 'every', 10);
   const population = numberArg(args, 'population', 100);
   const out = args.out ?? 'public/references/driving.json';
