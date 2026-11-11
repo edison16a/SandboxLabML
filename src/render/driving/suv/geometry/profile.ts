@@ -38,7 +38,7 @@ function rockerY(x: number): number {
 
 /** How deep the hood's valley sits below the fender peaks; negative domes the short rear deck instead. */
 function valley(x: number): number {
-  return 0.04 * smooth((x - 0.3) / 0.4) + 0.028 * smooth((x - 1.7) / 0.7) - 0.03 * smooth((-x - 2.2) / 0.15);
+  return 0.04 * smooth((x - 0.3) / 0.4) + 0.045 * smooth((x - 1.6) / 0.85) - 0.03 * smooth((-x - 2.2) / 0.15);
 }
 
 export interface Section {
