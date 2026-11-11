@@ -33,6 +33,8 @@ export interface DrivingReferenceResult {
   /** The curriculum level each checkpoint generation drove. */
   levels: number[];
   champion: { generation: number; score: number; genome: string; blueprint: string; inputs: unknown };
+  /** Every benchmarked champion, for a closer look with --dump. The last one is `champion`. */
+  checkpoints: Array<{ generation: number; level: number; score: number; genome: string }>;
   seconds: number;
 }
 
@@ -73,6 +75,7 @@ export async function trainDrivingReference(job: DrivingReferenceJob): Promise<D
   const scores: number[] = [];
   const levels: number[] = [];
   let champion: DrivingReferenceResult['champion'] | null = null;
+  const kept: DrivingReferenceResult['checkpoints'] = [];
   while (trainer.generation <= job.generations) {
     const level = trainer.content.level;
     const env = drivingModule.createEnv(trainer.setup(), trainer.host(), trainingControllerSeed(trainer.generation));
@@ -88,7 +91,8 @@ export async function trainDrivingReference(job: DrivingReferenceJob): Promise<D
     levels.push(level);
     const blueprint = config.blueprint as EpisodeBlueprint;
     champion = { generation: record.generation, score, genome: bytesToBase64(encodeGenome(record.genome)), blueprint: blueprint.id, inputs: blueprint.inputs };
+    kept.push({ generation: record.generation, level, score, genome: champion.genome });
   }
   if (!champion) throw new Error('A reference run benchmarked no generation.');
-  return { job, scores, levels, champion, seconds: (performance.now() - started) / 1000 };
+  return { job, scores, levels, champion, checkpoints: kept, seconds: (performance.now() - started) / 1000 };
 }

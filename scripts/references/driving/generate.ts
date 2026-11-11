@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { DrivingReferenceModel } from '../../../src/engine/bench/driving/models';
 import { REFERENCE_TIERS, summarizeCurve } from '../../../src/engine/bench/references';
 import type { BenchReferences, ReferenceTier } from '../../../src/engine/bench/types';
@@ -47,7 +47,8 @@ function stableDate(path: string, next: DrivingReferences): DrivingReferences {
  * champion as a model the Sandbox can drive.
  *
  * Options: --seeds 6, --first-seed 1, --generations 120, --every 10,
- * --population 100, --tiers beginner,intermediate,advanced, --out file.
+ * --population 100, --tiers beginner,intermediate,advanced, --out file,
+ * --dump file (every run's checkpoints and champions as JSON, to study).
  * A smoke run: --seeds 1 --generations 4 --every 2 --population 20.
  */
 export async function generateDriving(args: Args, pool: JobPool): Promise<void> {
@@ -79,6 +80,7 @@ export async function generateDriving(args: Args, pool: JobPool): Promise<void> 
     models: tiers.map((tier) => modelOf(tier, byTier(tier))),
   };
   writeReferences(out, stableDate(out, file));
+  if (args.dump) writeFileSync(args.dump, JSON.stringify(results));
   for (const r of references) console.log(`${r.tier}: final median ${r.finalScore}`);
   console.log(`Wrote ${out} in ${((performance.now() - started) / 1000).toFixed(0)} s.`);
 }
