@@ -1,6 +1,7 @@
 import { loadTestEpisode, lessonsOf } from '@/engine/lessons/episode/run';
 import { prepareScript, type PreparedEpisode } from '@/engine/lessons/prepare';
 import { requireEpisodeInfo } from '@/engine/env/registry';
+import type { EpisodePreview } from '@/engine/lessons/preview/types';
 
 /** Per tick columns of an episode test, as typed arrays so the worker hands them over without copying. */
 export interface EpisodeTickLog {
@@ -11,7 +12,18 @@ export interface EpisodeTickLog {
 }
 
 export type EpisodeTestResult =
-  | { ok: true; ticks: number; log: EpisodeTickLog; stopReason: string; totalReward: number; metrics: Array<{ label: string; value: string }>; blueprint: string; tickHz: number }
+  | {
+      ok: true;
+      ticks: number;
+      log: EpisodeTickLog;
+      stopReason: string;
+      totalReward: number;
+      metrics: Array<{ label: string; value: string }>;
+      blueprint: string;
+      tickHz: number;
+      /** The same episode recorded for a top view, when the worker could record it. */
+      preview?: EpisodePreview;
+    }
   | { ok: false; message: string };
 
 /**
@@ -45,7 +57,9 @@ export async function runEpisodeTest(source: string): Promise<EpisodeTestResult>
   const result = env.results()[0];
   const stopReason = result.stopReason ?? 'time';
   const measured = lessons.measure(result);
-  const metrics = lessons.testRunMetrics.map((key) => ({ label: key, value: (lessons.formats?.[key] ?? ((v: number) => String(Math.round(v * 100) / 100)))(measured[key] ?? NaN) }));
+  // A metric the env also records reads with its chart label, such as Progress; others keep their key.
+  const label = (key: string) => envModule.metrics.find((m) => m.key === key)?.label ?? key;
+  const metrics = lessons.testRunMetrics.map((key) => ({ label: label(key), value: (lessons.formats?.[key] ?? ((v: number) => String(Math.round(v * 100) / 100)))(measured[key] ?? NaN) }));
   return {
     ok: true,
     ticks: time.length,

@@ -10,6 +10,7 @@ import { runEpisodeInWorker } from '../testRunClient';
 import { TickTable, type TickColumn } from '../TickTable';
 import { useTestJob } from '../useTestJob';
 import type { EpisodeTestResult, EpisodeTickLog } from './run';
+import { TestRunPreview } from './TestRunPreview';
 
 type Ok = Extract<EpisodeTestResult, { ok: true }>;
 
@@ -47,6 +48,11 @@ export function EpisodeTestRun({ text, analysis }: { text: string; analysis: Ana
               <Stat key={m.label} label={m.label} value={m.value} />
             ))}
           </div>
+          {result.preview && (
+            <ResultSection title="Top view" hint={`Stopped: ${result.stopReason}`}>
+              <TestRunPreview preview={result.preview} />
+            </ResultSection>
+          )}
           <ResultSection title="Reward" hint={`${(result.ticks / result.tickHz).toFixed(1)} s with ${result.blueprint}`}>
             <RewardChart log={result.log} />
           </ResultSection>

@@ -12,7 +12,7 @@ const seconds = (v: number) => (v > 0 ? `${v.toFixed(1)} s` : 'no finish');
  */
 export const NAVIGATION_LESSONS_INFO = {
   testRunName: 'a test run',
-  testRunMetrics: ['progress', 'finished', 'died', 'finishTime'],
+  testRunMetrics: ['progress', 'finishTime', 'finished', 'died'],
   brain: 'navigation-starter',
   formats: {
     progress: percent,

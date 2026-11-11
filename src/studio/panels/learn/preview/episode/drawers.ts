@@ -2,6 +2,7 @@ import type { EnvId } from '@/engine/env/types';
 import type { EpisodePreview } from '@/engine/lessons/preview/types';
 import { frameAt, secondsAt } from '../playback';
 import { drawEpisode } from './drawEpisode';
+import { drawNavigation } from './drawNavigation';
 
 /** How the Studio draws the lesson preview of one env added through the registry. */
 export interface PreviewDrawer {
@@ -22,7 +23,13 @@ export interface PreviewDrawer {
  * spikes) from the preview hook's `scene`. The shared drawing helpers in
  * drawEpisode.ts and pose.ts are there to build on.
  */
-const DRAWERS: Partial<Record<EnvId, PreviewDrawer>> = {};
+const DRAWERS: Partial<Record<EnvId, PreviewDrawer>> = {
+  navigation: {
+    draw: drawNavigation,
+    caption: 'The run a check plays, with a fixed test brain that follows the path hint.',
+    label: 'Top view of the test run: the course, the runner, its trail and its rays',
+  },
+};
 
 const GENERIC: Required<Omit<PreviewDrawer, 'draw'>> = {
   readout: episodeReadout,
