@@ -1,18 +1,16 @@
 import * as THREE from 'three';
-import { DIR_X, DIR_Y, PROPERTY } from '@/engine/driving/city/dimensions';
 import type { City } from '@/engine/driving/city/types';
 import type { Route } from '@/engine/driving/route/route';
 import { stepSpring, type Spring } from '@/render/shared/interpolate';
 import type { DrivingFrame } from '../frame/sceneContext';
-
-/** Camera height on its corner, m: a person on a step ladder, not a drone. */
-const HEIGHT = 3.4;
+import { pickCornerSpot } from './cornerSight';
 
 /**
  * A fixed street corner camera at the next intersection on the route, the
  * TV shot of a car arriving, waiting at the light and turning. It stands on
- * the far corner, on the side the car turns away from, so the whole
- * maneuver plays out in front of it. It only pans to keep the car framed;
+ * a far corner, the side the car turns away from when that view is clear,
+ * so the whole maneuver plays out in front of it, about head height on a
+ * step ladder. It only pans to keep the car framed;
  * once the car is through it cuts to the next corner.
  */
 export interface CornerCam {
@@ -43,16 +41,9 @@ export function stepCorner(c: CornerCam, frame: DrivingFrame, city: City, route:
   if (cut) {
     c.node = t.node;
     c.epoch = frame.epoch;
-    const e = city.elements[t.element];
-    const n = city.nodes[t.node];
-    // Across the junction from the approach, on the outside of the turn (straight on: the right hand corner).
-    const fx = DIR_X[e.dir];
-    const fy = DIR_Y[e.dir];
-    const side = t.turn === 1 ? 1 : -1;
-    const lx = -fy * side;
-    const ly = fx * side;
-    const d = PROPERTY - 1.2;
-    camera.position.set(n.x + fx * d + lx * d, HEIGHT, -(n.y + fy * d + ly * d));
+    // Across the junction from the approach, on whichever far corner sees the approach clearly (see pickCornerSpot).
+    const spot = pickCornerSpot(city, t.node, city.elements[t.element].dir, t.turn);
+    camera.position.set(spot.x, spot.height, -spot.y);
   }
   const tx = frame.pos.x;
   const tz = frame.pos.z;
