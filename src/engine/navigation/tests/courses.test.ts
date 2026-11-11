@@ -7,7 +7,8 @@ import { MOVER_SPEED_LIMIT, moverSweep, moverTopSpeed } from '../course/movers';
 import { NAMED_COURSES } from '../course/presets';
 import { MIN_STUB } from '../course/sections';
 import { MAX_MOVERS, type CourseSpec, type MoverSpec, type Rect } from '../course/types';
-import { generationCourses, nextLevel } from '../curriculum';
+import { advanceCurriculum, eliteFinishShare, generationCourses, startCurriculum } from '../curriculum';
+import { TOP_LEVEL } from '../course/levels';
 import { navigationWorldSize, WORLD_HEADER } from '../snapshot';
 import { params } from './helpers';
 
@@ -118,11 +119,30 @@ describe('named courses', () => {
 });
 
 describe('curriculum', () => {
-  it('moves up once enough finish and never past the top', () => {
-    expect(nextLevel(0, 0.59)).toBe(0);
-    expect(nextLevel(0, 0.6)).toBe(1);
-    expect(nextLevel(6, 1)).toBe(6);
+  it('scores the best fifth of the population on the courses they finished', () => {
+    const fitness = Array.from({ length: 10 }, (_, i) => i);
+    // The two fittest (9 and 8) finished 2 and 1 of 2 courses; the rest do not count.
+    const finished = [2, 2, 2, 2, 2, 2, 2, 2, 1, 2];
+    expect(eliteFinishShare(fitness, finished, 2)).toBeCloseTo(0.75, 9);
+    expect(eliteFinishShare([], [], 2)).toBe(0);
   });
+
+  it('moves up after the minimum generations once the elite share holds, and never past the top', () => {
+    let s = startCurriculum(0);
+    s = advanceCurriculum(s, 1);
+    s = advanceCurriculum(s, 1);
+    expect(s.level).toBe(0);
+    s = advanceCurriculum(s, 1);
+    expect(s).toEqual({ level: 1, generations: 0, recent: [] });
+    // One lucky generation is not enough: the last two are averaged.
+    s = advanceCurriculum(advanceCurriculum(advanceCurriculum(s, 0.2), 0.3), 1);
+    expect(s.level).toBe(1);
+    s = advanceCurriculum(s, 0.9);
+    expect(s.level).toBe(2);
+    expect(advanceCurriculum({ level: TOP_LEVEL, generations: 9, recent: [1] }, 1).level).toBe(TOP_LEVEL);
+    expect(advanceCurriculum({ level: 0, generations: 5, recent: [0.6] }, 0.6, 0.5).level).toBe(1);
+  });
+
   it('gives every generation its own courses', () => {
     const a = generationCourses(3, 7, 1);
     const b = generationCourses(3, 7, 2);
