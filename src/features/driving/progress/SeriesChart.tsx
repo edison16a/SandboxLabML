@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import uPlot from 'uplot';
 import { axis, generationAxis, UPlotChart } from '@/features/charts/UPlotChart';
+import { trailingMean } from './smooth';
 
 /** One line of a chart: its values per generation (null leaves a gap) and how it is drawn. */
 export interface Series {
@@ -32,6 +33,12 @@ interface Props {
   marks?: number[];
   /** A faint dashed level line, such as the share that moves the curriculum up. */
   bar?: number;
+  /**
+   * Draw each line as the mean of the last this many generations, over its
+   * raw values in a faint thin line. A new route every generation makes the
+   * raw shares jump about; the mean shows the trend.
+   */
+  smooth?: number;
   height?: number;
 }
 
@@ -45,8 +52,8 @@ const steppedPaths = uPlot.paths.stepped?.({ align: 1 });
  * dashed verticals can mark events (a level change), and a dashed
  * horizontal a threshold, so a newcomer sees why a line jumps.
  */
-export function SeriesChart({ x, series, yLabel, format, range, ticks, marks = [], bar, height = 150 }: Props) {
-  const shape = series.map((s) => `${s.label}${s.color}${s.dash ?? ''}${s.stepped ? 's' : ''}`).join('|');
+export function SeriesChart({ x, series, yLabel, format, range, ticks, marks = [], bar, smooth, height = 150 }: Props) {
+  const shape = series.map((s) => `${s.label}${s.color}${s.dash ?? ''}${s.stepped ? 's' : ''}`).join('|') + (smooth ?? '');
   const markKey = marks.join(',');
   const tickKey = ticks?.join(',');
   const lo = range?.[0];
@@ -59,15 +66,18 @@ export function SeriesChart({ x, series, yLabel, format, range, ticks, marks = [
       axes: [generationAxis(), { ...axis(yLabel, 3), values: (_u, splits) => splits.map(format), ...(ticks && { splits: () => ticks }) }],
       series: [
         {},
-        ...series.map((s) => ({
-          label: s.label,
-          stroke: s.color,
-          width: s.width ?? 1.75,
-          dash: s.dash,
-          fill: s.fill ? `${s.color}14` : undefined,
-          points: { show: false },
-          paths: s.stepped ? steppedPaths : undefined,
-        })),
+        ...series.flatMap((s) => [
+          ...(smooth ? [{ label: `${s.label} each generation`, stroke: `${s.color}44`, width: 1, points: { show: false } }] : []),
+          {
+            label: s.label,
+            stroke: s.color,
+            width: s.width ?? 1.75,
+            dash: s.dash,
+            fill: s.fill ? `${s.color}14` : undefined,
+            points: { show: false },
+            paths: s.stepped ? steppedPaths : undefined,
+          },
+        ]),
       ],
       hooks: {
         draw: [
@@ -101,7 +111,7 @@ export function SeriesChart({ x, series, yLabel, format, range, ticks, marks = [
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [shape, yLabel, markKey, bar, lo, hi, tickKey],
   );
-  const data = useMemo<uPlot.AlignedData>(() => [x, ...series.map((s) => s.values)], [x, series]);
+  const data = useMemo<uPlot.AlignedData>(() => [x, ...series.flatMap((s) => (smooth ? [s.values, trailingMean(s.values, smooth)] : [s.values]))], [x, series, smooth]);
   return (
     <div className="flex flex-col gap-1.5">
       <div style={{ height }}>

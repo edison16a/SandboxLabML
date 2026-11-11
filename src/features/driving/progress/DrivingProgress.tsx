@@ -11,6 +11,8 @@ import { SeriesChart, type Series } from './SeriesChart';
 
 const share = (v: number) => `${Math.round(v * 100)}%`;
 const LEVEL_TICKS = DRIVING_LEVELS.map((l) => l.id);
+/** Generations each arrival and safety line averages over; the raw values stay faint behind it. */
+const SMOOTH = 5;
 const COLORS = { level: '#4c9aff', arrived: '#4c9aff', safe: '#3dd68c', elite: '#ff9f43', crash: '#ff5f5f', people: '#ff6fb8', offRoad: '#f5c451', red: '#ff8a5c' };
 
 /** One metric of every record, NaN and missing as gaps. */
@@ -81,15 +83,15 @@ export function DrivingProgress() {
   return (
     <>
       <Section title="Curriculum" hint={auto ? `level ${now}, ${drivingLevel(now).name}` : `fixed at level ${now}`} tour="curriculum">
-        <SeriesChart x={x} series={[{ label: 'Level', color: COLORS.level, values: levels, stepped: true, fill: true, width: 2 }]} yLabel="Level" format={String} range={[0.5, 5.5]} ticks={LEVEL_TICKS} height={110} />
+        <SeriesChart x={x} series={[{ label: 'Level', color: COLORS.level, values: levels, stepped: true, fill: true, width: 2 }]} yLabel="Level" format={String} range={[0.5, 5.5]} ticks={LEVEL_TICKS} height={140} />
         <LevelSteps now={now} best={best} />
       </Section>
-      <Section title="Arrivals" hint="share of trips per generation">
-        <SeriesChart x={x} series={arrivals} yLabel="Trips" format={share} range={[0, 1]} marks={marks} bar={auto?.bar} />
+      <Section title="Arrivals" hint={`share of trips, mean of ${SMOOTH} generations`}>
+        <SeriesChart x={x} series={arrivals} yLabel="Trips" format={share} range={[0, 1]} marks={marks} bar={auto?.bar} smooth={SMOOTH} />
         {auto && <p className="text-[11px] text-subtle">The level moves up once the best fifth arrives safely on {share(auto.bar)} of its trips, over a few generations.</p>}
       </Section>
-      <Section title="Safety" hint="share of trips that ended this way">
-        <SeriesChart x={x} series={safety} yLabel="Trips" format={share} range={[0, 1]} marks={marks} />
+      <Section title="Safety" hint={`how trips ended, mean of ${SMOOTH} generations`}>
+        <SeriesChart x={x} series={safety} yLabel="Trips" format={share} range={[0, 1]} marks={marks} smooth={SMOOTH} />
       </Section>
     </>
   );
