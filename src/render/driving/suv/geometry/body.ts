@@ -5,8 +5,8 @@ import type { Detail, PartBin, Slot } from './parts';
 import { ARCHED_BANDS, archFloor, NOSE, sectionAt, stations, TAIL } from './profile';
 import { warp } from './warp';
 
-/** Slot of each band, sill to centerline: the dark cladding, then paint all the way over. */
-const BAND_SLOTS: Slot[] = ['clad', 'paint', 'paint', 'paint', 'paint', 'paint'];
+/** Slot of each band, sill to centerline: a slim gloss black rocker, then paint all the way over. */
+const BAND_SLOTS: Slot[] = ['trim', 'paint', 'paint', 'paint', 'paint', 'paint'];
 const FINE = 48;
 
 /** Where the side skin meets the arch line at x, as (z, y), or null between the wheels. */

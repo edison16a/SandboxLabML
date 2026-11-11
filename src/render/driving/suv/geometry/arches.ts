@@ -29,28 +29,26 @@ function underSkin(x: number, z: number, y: number): number {
 }
 
 /**
- * Wheel wells and the dark plastic flares round them: a flare rolled over
- * the arch edge and standing a little proud of the paint (the SUV's
- * signature), a liner over the tire, an inner wall and floor plates. The
- * flares go in the cladding slot with the sills, so the lower body reads
- * as one dark band.
+ * Wheel wells: a painted lip rolled over each arch edge, a liner over the
+ * tire, an inner wall and floor plates. The arches sit close round the
+ * tires, so the wheels fill them as on a performance SUV.
  */
 export function addArches(bin: PartBin, detail: Detail): void {
   const n = Math.max(10, Math.round(detail.archSteps * 1.6));
   for (const axle of AXLES) {
     const xs = Array.from({ length: n + 1 }, (_, i) => axle - Math.cos((Math.PI * i) / n) * (ARCH.radius - 0.001));
     const cuts = xs.map((x) => archCut(x) ?? ([0.95, archFloor(x)] as [number, number]));
-    // The flare: from under the arch edge, out and over, back onto the paint a hand's width above.
-    const flare = xs.map((x, i) => {
+    // The lip: the paint rolls over the arch edge and stands a few millimeters proud, so the arch reads as a crisp ring.
+    const lip = xs.map((x, i) => {
       const [z, y] = cuts[i];
       const dx = x - axle;
       const r = Math.hypot(dx, y - ARCH.centerY) || 1;
       const ux = dx / r;
       const uy = (y - ARCH.centerY) / r;
       const pt = (out: number, lift: number): Vec3 => warp([x + ux * out, y + uy * out, z + lift]);
-      return [pt(-0.02, -0.03), pt(0, 0.026), pt(0.04, 0.036), pt(0.085, 0.02), pt(0.105, 0.0)];
+      return [pt(-0.014, -0.028), pt(-0.004, 0.006), pt(0.01, 0.014), pt(0.028, 0.008), pt(0.045, 0.0)];
     });
-    bin.add('clad', bothSides(gridGeometry(flare)));
+    bin.add('paint', bothSides(gridGeometry(lip)));
     const liner = xs.map((x, i) => {
       const [z, y] = cuts[i];
       const mid = Math.min(Math.max(sectionAt(x).keys[4][0] - 0.02, WELL_Z + 0.01), z - 0.05);
