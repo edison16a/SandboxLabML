@@ -32,9 +32,11 @@ function useLive(feeds: LabFeeds | null): Live {
       const s = useNavigationLab.getState();
       const level = feeds.level(s);
       // Read from the stream itself: it holds its latest buffer until the next frame, which the renderer's copy may not.
-      const stream = feeds.population.stream;
+      // In the Sandbox the runners on screen are the replay's.
+      const sandbox = s.mode === 'sandbox';
+      const stream = sandbox ? feeds.ghosts.stream : feeds.population.stream;
       const buf = stream.curr?.buffer;
-      if (!feeds.showsPopulation(s) || !buf) return setLive((l) => (l.watching || l.level !== level ? { ...NONE, level } : l));
+      if (!(sandbox ? feeds.ghosts.hasFrame : feeds.showsPopulation(s)) || !buf) return setLive((l) => (l.watching || l.level !== level ? { ...NONE, level } : l));
       const next: Live = { watching: true, level, running: 0, finished: 0, died: 0, total: stream.count, best: 0 };
       for (let i = 0; i < stream.count; i++) {
         const status = buf[i * STRIDE + SNAP_STATUS];
@@ -60,11 +62,12 @@ const percent = (v: number | undefined) => (v === undefined || !Number.isFinite(
 export function LiveStats({ feeds }: { feeds: LabFeeds | null }) {
   const live = useLive(feeds);
   const gen = useNavigationLab((s) => s.liveGeneration);
+  const sandbox = useNavigationLab((s) => s.mode === 'sandbox');
   const last = useNavigationLab((s) => s.records[s.records.length - 1]);
   const level = NAV_LEVELS[live.level] ?? NAV_LEVELS[0];
   return (
     <div className="pointer-events-none flex flex-wrap gap-1.5">
-      <HudChip label="Generation" value={gen + 1} tour="hud-generation" />
+      {!sandbox && <HudChip label="Generation" value={gen + 1} tour="hud-generation" />}
       {/* Keyed on the level, so a level up pops the chip in afresh. */}
       <div key={level.level} className="animate-pop-in">
         <HudChip label="Level" value={level.level} note={level.name} tour="hud-level" />

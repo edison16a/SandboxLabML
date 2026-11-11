@@ -44,6 +44,8 @@ export class LabFeeds {
     const s = this.state();
     if (!s.run || s.run.env !== 'navigation') return null;
     this.sync(s);
+    // In the Sandbox the replayed runners are the field on screen, drawn like a population with its champion, not as ghosts.
+    if (s.mode === 'sandbox' && this.ghosts.hasFrame) return this.ghosts;
     if (this.showsPopulation(s)) return this.population;
     // Between two watched generations the next one lines up, so the view never flicks over to the ghosts.
     const between = s.mode === 'train' && s.view !== 'overlay' && s.status === 'running' && isWatchSpeed(s.speed);
@@ -56,7 +58,7 @@ export class LabFeeds {
 
   readonly getGhosts = (): NavFeed | null => {
     const s = this.state();
-    return s.run && this.showsGhosts(s) ? this.ghosts : null;
+    return s.run && s.mode === 'train' && this.showsGhosts(s) ? this.ghosts : null;
   };
 
   /** The level on screen: the streamed course's while one streams, else the content's. */
@@ -90,8 +92,9 @@ export class LabFeeds {
     syncFeed(this.population, settings.params, inputs, scale);
     // A shipped model in the Sandbox has inputs of its own, which the sensor drawing must read.
     syncFeed(this.ghosts, settings.params, (s.mode === 'sandbox' && s.sandbox.inputs) || inputs, scale);
-    this.ghosts.follow = s.focus.kind === 'ghost' && this.ghosts.tags ? indexOrNull(this.ghosts.tags.indexOf(s.focus.generation)) : null;
-    this.population.follow = s.focus.kind === 'car' ? s.focus.index : null;
+    const car = s.focus.kind === 'car' ? s.focus.index : null;
+    this.ghosts.follow = s.mode === 'sandbox' ? car : s.focus.kind === 'ghost' && this.ghosts.tags ? indexOrNull(this.ghosts.tags.indexOf(s.focus.generation)) : null;
+    this.population.follow = car;
   }
 }
 

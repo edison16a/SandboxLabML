@@ -84,7 +84,7 @@ function ModelPicker() {
       </div>
       <div className="flex items-center justify-between pt-1 text-[12px] text-white/70">
         <span>Copies</span>
-        <CopiesStepper label="the model" value={copies} max={MAX_RUNNERS} onChange={(n) => control()?.configure({ modelCopies: n })} />
+        <CopiesStepper label={`${TIER_LABEL[tier]} model`} value={copies} max={MAX_RUNNERS} onChange={(n) => control()?.configure({ modelCopies: n })} />
       </div>
       <p className="text-[11px] leading-snug text-white/50">Champions of the reference runs, scored on courses they never trained on.</p>
     </div>

@@ -61,7 +61,7 @@ export function BoardLines({ spec, preview }: { spec: CourseSpec; preview?: { li
       {Array.from({ length: cells }, (_, k) =>
         [0, 1].map((col) => <rect key={`${k}-${col}`} x={finish - 0.5 + col * 0.5} y={-hw + k * 0.5} width={0.5} height={Math.min(0.5, spec.width - k * 0.5)} fill={(k + col) % 2 === 0 ? BOARD.checkerLight : BOARD.checkerDark} />),
       )}
-      <text x={finish + 0.4} y={-hw + 0.9} fontSize={0.6} fontWeight={600} fill={BOARD.checkerLight} opacity={0.85}>
+      <text x={finish - 0.8} y={-hw + 0.9} fontSize={0.6} fontWeight={600} fill={BOARD.checkerLight} opacity={0.85} textAnchor="end">
         Finish
       </text>
     </g>
