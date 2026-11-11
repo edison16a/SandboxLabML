@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { buildCourse, isSolvable } from '@/engine/navigation/course/build';
 import type { EditResult } from '@/engine/navigation/course/edit';
 import type { CourseSpec } from '@/engine/navigation/course/types';
+import { noWayThrough } from '@/engine/navigation/navigator/wayThrough';
 
 /** Undo steps kept. Courses are small, so this costs next to nothing. */
 const UNDO_LIMIT = 100;
@@ -14,8 +14,9 @@ const NOTICE_MS = 2600;
  * The course being edited, with undo. Every edit replaces the whole spec
  * (the rules in course/edit return new specs), so undo is a stack of
  * earlier specs. A refused edit leaves the course alone and shows its
- * reason for a moment. `solvable` says whether a runner can still get
- * from the start to the finish, which Save needs.
+ * reason for a moment. `noWay` says why a runner could not get from the
+ * start to the finish (walls close the room, or movers never open a gap),
+ * or null when one can, which Save needs.
  */
 export function useCourseDraft(initial: CourseSpec) {
   const [state, setState] = useState({ spec: initial, past: [] as CourseSpec[] });
@@ -44,10 +45,12 @@ export function useCourseDraft(initial: CourseSpec) {
   /** Renaming is not an undo step: it would make undo walk back one letter at a time. */
   const rename = useCallback((name: string) => setState((s) => ({ ...s, spec: { ...s.spec, name } })), []);
 
-  // Building the distance field takes a few milliseconds, so it runs once per change, never per frame.
-  const solvable = useMemo(() => isSolvable(buildCourse(state.spec)), [state.spec]);
+  // The check builds the course and, with movers, walks the scripted navigator through it: tens of
+  // milliseconds, so it runs once per edit of the room, never per frame and never as the name is typed.
+  const { obstacles, length, width, start, finish } = state.spec;
+  const noWay = useMemo(() => noWayThrough({ id: 'draft', name: '', level: 0, obstacles, length, width, start, finish }), [obstacles, length, width, start, finish]);
 
-  return { spec: state.spec, canUndo: state.past.length > 0, apply, edit, undo, rename, flash, notice, solvable };
+  return { spec: state.spec, canUndo: state.past.length > 0, apply, edit, undo, rename, flash, notice, noWay, solvable: noWay === null };
 }
 
 export type CourseDraft = ReturnType<typeof useCourseDraft>;

@@ -13,7 +13,11 @@ import { useCourseDraft } from './useCourseDraft';
 
 /** Shown after the first Escape or a click outside over unsaved changes. Either way, the next Escape closes. */
 const UNSAVED = 'This course has unsaved changes. Save it, or press Escape to close without saving.';
-const BLOCKED = 'There is no way from the start to the finish. Open a gap so runners can get through.';
+/** Why Save is off, by what closes the way. */
+const NO_WAY = {
+  blocked: 'There is no way from the start to the finish. Open a gap so runners can get through.',
+  movers: 'There is no way from the start to the finish: the movers never leave a gap. Give them more room.',
+} as const;
 
 interface Props {
   /** The course to edit; the dialog is open while this is set. */
@@ -45,7 +49,7 @@ export function CourseEditorDialog({ course, saved, onSave, onDelete, onClose }:
   const board = useRef<SVGSVGElement>(null);
   const info = EDITOR_TOOLS.find((t) => t.id === tool)!;
   const leaving = leavingFrom === draft.spec;
-  const notice = leaving ? UNSAVED : (draft.notice ?? (draft.solvable ? null : BLOCKED));
+  const notice = leaving ? UNSAVED : (draft.notice ?? (draft.noWay ? NO_WAY[draft.noWay] : null));
   const changed = () => JSON.stringify(draft.spec) !== JSON.stringify(course);
 
   /** Escape first drops a piece in progress. Over unsaved changes it warns once and closes on the second press. A click outside only warns. */
