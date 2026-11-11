@@ -164,8 +164,10 @@ describe('what the Navigation viewport shows', () => {
       ghosts.frame(NAV_RUNNING);
       expect(feeds.getFeed()).toBe(feeds.ghosts);
       expect(feeds.counted(state)?.count).toBe(2);
-      // The loop restarts: the runners stand on their spots for the moment before its first frame.
+      // The loop restarts: the runners stand on their spots for the moment before its first frame,
+      // and the HUD counts them even before the viewport draws again.
       ghosts.start(2, course);
+      expect(feeds.counted(state)?.count).toBe(2);
       expect(feeds.getFeed()?.count).toBe(2);
       expect(feeds.getFeed()?.course?.spec).toEqual(course);
     });

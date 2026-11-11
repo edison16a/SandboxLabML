@@ -98,8 +98,12 @@ export class LabFeeds {
    * already be handed back).
    */
   counted(s: NavigationLabState): { buffer: Float32Array; count: number } | null {
+    if (!s.run || s.run.env !== 'navigation') return null;
+    // The HUD ticks on its own clock, so it catches the feeds up first rather than trust what the last drawn frame saw.
+    this.sync(s);
     if (s.mode === 'sandbox') {
       if (this.sandboxReplays(s)) return this.frameOf(this.ghosts);
+      this.lineup.syncLineup(s.sandbox.lineup);
       return this.lineup.curr && this.lineup.count > 0 ? { buffer: this.lineup.curr, count: this.lineup.count } : null;
     }
     return this.showsPopulation(s) ? this.frameOf(this.population) : null;
