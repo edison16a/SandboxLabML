@@ -1,10 +1,9 @@
 import { faceEdge, onCap } from './cap';
 import type { FaceCut } from './face';
 import { bothSides, gridGeometry, type Vec3 } from './grid';
-import { capPanel } from './panels';
 import type { Detail, PartBin } from './parts';
 import { NOSE, sectionAt, sillY } from './profile';
-import { facing, recess, rounded } from './recess';
+import { capFill, facing, offset, recess, ringGeometry, rounded } from './recess';
 import type { Pt } from './section';
 
 /**
@@ -35,16 +34,28 @@ export function intakeCut(): FaceCut {
 
 /**
  * A side intake, outboard of the central one: 0.16 m wide and 0.26 m
- * tall, leaning out a little at the top, wrapped onto the corner by the
- * face's unrolled coordinates. Counterclockwise in (s, y).
+ * tall, its sides leaning in toward the top like the central intake's,
+ * so the three openings read as one trapezoid mouth. It wraps onto the
+ * corner by the face's unrolled coordinates. Counterclockwise in (s, y).
  */
-const SIDE: Pt[] = [[0.585, 0.385], [0.735, 0.385], [0.765, 0.645], [0.615, 0.645]];
+const SIDE: Pt[] = [[0.585, 0.385], [0.745, 0.385], [0.69, 0.645], [0.53, 0.645]];
+
+/** The side intake's fin line at height y: down the middle of the opening, leaning with it. */
+const finAt = (y: number) => 0.665 - ((y - 0.385) / 0.26) * 0.055;
+
+/**
+ * Across the frame the bumper raises round each side intake, as (out
+ * from the opening, lift off the face) in m: the paint swells up over
+ * 5 cm to a crisp edge 9 mm proud, then turns down into the opening.
+ */
+const FRAME: Array<[number, number]> = [[0.055, 0.0004], [0.034, 0.0045], [0.018, 0.0086], [0.008, 0.009], [0.004, 0.0072]];
 
 /**
  * The lower face. The central intake is open: its gloss black bezel
- * lips round a hole in the paint and its mesh sits 4.5 cm back. The side
- * intakes sit in the bumper's curl behind slimmer bezels, each split by
- * one thin upright fin. Lighter cars draw the openings flat.
+ * lips round a hole in the paint and its mesh sits 4.5 cm back. Each side
+ * intake sits in a raised body colored frame, so the bumper is sculpted
+ * round it; gloss black walls drop from the frame's edge to the mesh and
+ * one body colored fin splits it. Lighter cars draw the openings flat.
  */
 export function addIntakes(bin: PartBin, detail: Detail): void {
   const corner = detail.fine ? 5 : detail.brakes ? 3 : 1;
@@ -61,15 +72,18 @@ export function addIntakes(bin: PartBin, detail: Detail): void {
   if (open) bin.add('liner', center.throat);
   else center.throat.dispose();
   bin.add('grille', center.mesh);
-  const side = recess(1, rounded(SIDE, 0.03, corner), { width: 0.016, lip: 0.01, back: -0.003 }, rings, step);
-  side.throat.dispose();
-  if (detail.brakes) bin.add('trim', bothSides(side.bezel));
-  else side.bezel.dispose();
-  bin.add('grille', bothSides(side.mesh));
+  const side = rounded(SIDE, 0.03, corner);
+  bin.add('grille', bothSides(capFill(1, offset(side, -0.004), 0.0012, rings, step)));
+  if (!open) return;
+  const mid = onCap(1, 0.64, 0.515, 0);
+  const inward = (p: Vec3): Vec3 => [mid[0] - p[0], mid[1] - p[1], mid[2] - p[2]];
+  // The frame is a soft swell, so it can take longer steps than the opening's own edge.
+  bin.add('paint', bothSides(facing(ringGeometry(1, side, FRAME, Math.max(step, 0.032)), [1, 0, 0])));
+  bin.add('trim', bothSides(facing(ringGeometry(1, side, [[0.004, 0.0072], [-0.004, 0.0012]], Math.max(step, 0.032)), inward)));
   if (!detail.fine) return;
-  // One thin upright fin across each side intake, leaning with it.
-  const mid = (y: number) => 0.675 + ((y - 0.385) / 0.26) * 0.03;
-  bin.add('trim', capPanel(1, (y) => mid(y) - 0.005, (y) => mid(y) + 0.005, 0.395, 0.635, 0.012, 1, 6));
+  // The fin: a slim body colored bar with walls, standing up to the frame's height.
+  const fin = rounded([[finAt(0.39) - 0.006, 0.39], [finAt(0.39) + 0.006, 0.39], [finAt(0.64) + 0.006, 0.64], [finAt(0.64) - 0.006, 0.64]], 0.004, 2);
+  bin.add('paint', bothSides(facing(ringGeometry(1, fin, [[0.0, 0.0012], [-0.002, 0.0078], [-0.0045, 0.0086], [-0.0058, 0.0086]], 0.03), [1, 0, 0])));
 }
 
 /**

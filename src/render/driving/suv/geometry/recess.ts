@@ -110,12 +110,7 @@ export interface Recess {
 export function recess(end: 1 | -1, corners: Pt[], shape: RecessShape, rings: number, step = 0.015, meshStep = step): Recess {
   const { width, lip, back } = shape;
   const outline = densify(corners, step);
-  const ring = [...outline, outline[0]];
-  const loopsOf = (across: Array<[number, number]>) => across.map(([d, lift]) => ({ pts: offset(outline, d), lift }));
-  const build = (across: Array<[number, number]>) => {
-    const loops = loopsOf(across);
-    return gridGeometry(ring.map((_, i) => loops.map(({ pts, lift }) => onCap(end, ...pts[i % pts.length], lift))));
-  };
+  const build = (across: Array<[number, number]>) => ringGeometry(end, corners, across, step);
   const bezel = facing(build([[width, 0.002], [width * 0.55, lip * 0.75], [width * 0.18, lip], [0, lip * 0.8], [-0.003, 0.002]]), [end, 0, 0]);
   const deep = -Math.max(back, -0.002);
   const throat = build([[-0.003, 0.002], [-0.004, deep * 0.4], [-0.005, deep]]);
@@ -124,6 +119,18 @@ export function recess(end: 1 | -1, corners: Pt[], shape: RecessShape, rings: nu
   // The throat's walls face into the opening.
   facing(throat, (p) => [centre[0] - p[0], centre[1] - p[1], centre[2] - p[2]]);
   return { bezel, throat, mesh: capFill(end, offset(corners, -0.005), deep + 0.001, rings, meshStep) };
+}
+
+/**
+ * A band round a closed outline on the nose or tail: each entry of
+ * `across` is a loop, the outline moved out by d m and lifted off the
+ * face by lift m, and the band runs through the loops in order. Bezels,
+ * throats and raised frames are all such bands.
+ */
+export function ringGeometry(end: 1 | -1, corners: Pt[], across: Array<[number, number]>, step: number): THREE.BufferGeometry {
+  const outline = densify(corners, step);
+  const loops = across.map(([d, lift]) => ({ pts: offset(outline, d), lift }));
+  return gridGeometry([...outline, outline[0]].map((_, i) => loops.map(({ pts, lift }) => onCap(end, ...pts[i % pts.length], lift))));
 }
 
 /**
