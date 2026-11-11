@@ -12,6 +12,9 @@ const expected: Record<string, number> = {
   'hideseek-starter': 17,
   'hideseek-standard': 61,
   'hideseek-advanced': 69,
+  'navigation-starter': 11,
+  'navigation-standard': 42,
+  'navigation-advanced': 53,
 };
 
 describe('preset blueprints', () => {

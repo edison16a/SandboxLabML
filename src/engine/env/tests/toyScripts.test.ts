@@ -40,7 +40,7 @@ describe('scripts of an env added through the registry', () => {
     expect(snippetsFor('stop', 'tick', TOY_ENV)[0].template).toBe('stop "${1:done}" when ${2:condition}');
     expect(snippetsFor('wal', 'tick', TOY_ENV).map((s) => s.label)).toEqual(['walk']);
     const bad = parse('script "x" for 3 v1\n').diagnostics.map((d) => d.message);
-    expect(bad).toContain('Expected the environment name, racing or hideseek or toy.');
+    expect(bad).toContain('Expected the environment name, racing or hideseek or navigation or toy.');
     // The missing header fix names the env the Studio offers first.
     expect(parse('brain toy-basic\n').diagnostics[0].fixes?.[0]).toMatchObject({ title: 'Add a script line', edits: [{ insert: `script "My script" for ${DEFAULT_SCRIPT_ENV} v1\n` }] });
   });
