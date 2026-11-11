@@ -3,14 +3,16 @@ import type { DrivingLearner } from '../agent/learner';
 import type { CarParams } from '../car/params';
 import { SUV_SIZE } from '../car/params';
 import type { City } from '../city/types';
-import type { Route } from '../route/route';
-import { LIGHT_RED, LIGHT_YELLOW } from '../signals/plan';
+import type { Route, RouteTurn } from '../route/route';
+import { ALL_RED, LIGHT_FLASHING, LIGHT_GREEN, LIGHT_RED, LIGHT_YELLOW, lightRemaining, lightState } from '../signals/plan';
 import type { WorldState } from '../world/state';
-import { crossTrafficInBox, hazardAhead, oncomingTraffic } from './hazards';
+import { hazardAhead, oncomingTraffic } from './hazards';
+import { crossTraffic, exitBlocked, exitCrossingQuiet, oncomingLeftTurn } from './junction';
 
-/** Comfortable deceleration the autopilot plans with, m/s^2, and the firmest it uses for a yellow. */
+/** Comfortable deceleration the autopilot plans with, m/s^2, the most it uses to stop for a yellow, and the firmest stop it makes at a line. */
 const PLAN_BRAKE = 2.6;
 const YELLOW_BRAKE = 4;
+const FIRM_BRAKE = 7;
 /** Sideways acceleration it accepts in a turn, m/s^2. */
 const TURN_GRIP = 2.2;
 /** How far before a stop line its front comes to rest, m. */
@@ -31,11 +33,18 @@ export const CALM_STYLE: AutopilotStyle = { pace: 0.94, delay: 0 };
  * pure pursuit steering along the route, and a speed target that is the
  * lowest of the speed limit, the curve ahead, a stop at a red or yellow
  * line, the car ahead, people in the road or on a crossing it is about to
- * cross, oncoming traffic before a left turn, and the destination. It
- * proves every level is drivable, is the benchmark's yardstick, and drives
- * the preview. Evolved brains never see it.
+ * cross, a junction it may not enter yet, and the destination. Traffic
+ * cannot see the SUV, so it drives defensively: it lets oncoming left
+ * turners go first and never enters a junction it cannot leave. It proves
+ * every level is drivable, is the benchmark's yardstick, and drives the
+ * preview. It keeps a little state, so use one per learner. Evolved brains
+ * never see it.
  */
 export class Autopilot {
+  /** The stop line (index into route.stops) it has decided to stop at, or -1. */
+  private held = -1;
+  private lastTime = 0;
+
   constructor(
     readonly city: City,
     readonly route: Route,
@@ -68,6 +77,59 @@ export class Autopilot {
   }
 
   /**
+   * Where the front must stop for the next stop line, or Infinity to drive
+   * on: a red light, a yellow it chose to stop for, or a junction it may not
+   * enter yet. Once it decides to stop at a line it keeps to that decision
+   * until the light turns green, even if its nose creeps a little past.
+   */
+  private lineStop(l: DrivingLearner): number {
+    if (l.time < this.lastTime) this.held = -1;
+    this.lastTime = l.time;
+    const { route, city, world } = this;
+    const s = l.sense;
+    const v = l.car.speed;
+    const front = l.progress + SUV_SIZE.length / 2;
+    if (this.held >= 0) {
+      const st = route.stops[this.held];
+      const light = world.signalsOn ? lightState(world.time, city.signalOffsets[st.signal], st.axis) : LIGHT_FLASHING;
+      if (light === LIGHT_GREEN || light === LIGHT_FLASHING || front > st.s + 3) this.held = -1;
+      else return st.s - front - LINE_GAP;
+    }
+    if (s.stop < 0) return Infinity;
+    const st = route.stops[s.stop];
+    const lineAhead = s.lightDistance;
+    let turn: RouteTurn | null = null;
+    for (let k = 0; k < route.turns.length && !turn; k++) if (route.turns[k].node === st.node) turn = route.turns[k];
+    if (s.light === LIGHT_RED && lineAhead < 60) this.held = s.stop;
+    if (s.light === LIGHT_YELLOW && this.stopsForYellow(l, lineAhead, turn ? turn.end - turn.s : 24, st)) this.held = s.stop;
+    if (this.held >= 0) return lineAhead - LINE_GAP;
+    if (lineAhead > 25 || l.inIntersection || !turn) return Infinity;
+    // Before the line: the junction must be free of anyone it could meet in there, and the lane beyond must have room.
+    const dir = city.elements[turn.element].dir;
+    const blocked =
+      (turn.turn === -1 ? oncomingTraffic(city, world, st.node, dir) || !exitCrossingQuiet(city, world, turn.element) : oncomingLeftTurn(city, world, st.node, dir)) ||
+      crossTraffic(city, world, st.node, dir) ||
+      exitBlocked(route.path, world, turn.end, l.routeIndex, SUV_SIZE.length + 3);
+    // Rolling too fast to stop before the line means it is already committed; creeping, it can always stop.
+    const committed = v > 1 && lineAhead - LINE_GAP < (v * v) / (2 * FIRM_BRAKE);
+    return blocked && !committed ? lineAhead - LINE_GAP : Infinity;
+  }
+
+  /**
+   * Whether to stop for a yellow: always when a comfortable stop is
+   * possible, and also with firm braking when going on would leave the SUV
+   * in the junction or on its far crossing after the cross street gets green.
+   */
+  private stopsForYellow(l: DrivingLearner, lineAhead: number, through: number, st: { signal: number; axis: number }): boolean {
+    const v = l.car.speed;
+    const room = lineAhead - LINE_GAP;
+    if (room > (v * v) / (2 * YELLOW_BRAKE)) return true;
+    const left = lightRemaining(this.world.time, this.city.signalOffsets[st.signal], st.axis) + ALL_RED;
+    const needed = (lineAhead + through + SUV_SIZE.length) / Math.max(v, 2);
+    return needed > left && room > (v * v) / (2 * FIRM_BRAKE);
+  }
+
+  /**
    * The speed to aim for now. Every stop target is measured from the front
    * bumper to where the front should come to rest.
    */
@@ -83,25 +145,8 @@ export class Autopilot {
       const k = Math.abs(p.k[p.indexAt(l.progress + d, l.routeIndex)]);
       if (k > 1e-3) target = Math.min(target, Math.sqrt(TURN_GRIP / k + 2 * PLAN_BRAKE * d));
     }
-    let stop = Infinity;
+    let stop = this.lineStop(l);
     const s = l.sense;
-    const lineAhead = s.stop >= 0 ? s.lightDistance : Infinity;
-    if (s.light === LIGHT_RED && lineAhead < 60) stop = Math.min(stop, lineAhead - LINE_GAP);
-    if (s.light === LIGHT_YELLOW && lineAhead - LINE_GAP > (v * v) / (2 * YELLOW_BRAKE)) stop = Math.min(stop, lineAhead - LINE_GAP);
-    // Before the line: wait for oncoming traffic to turn left, and for the box to clear.
-    if (s.stop >= 0 && lineAhead < 25 && !l.inIntersection) {
-      const st = this.route.stops[s.stop];
-      let turn = 0;
-      let dir = 0;
-      for (let k = 0; k < this.route.turns.length; k++) {
-        const t = this.route.turns[k];
-        if (t.node !== st.node) continue;
-        turn = t.turn;
-        dir = this.city.elements[t.element].dir;
-        break;
-      }
-      if ((turn === -1 && oncomingTraffic(this.city, this.world, st.node, dir)) || crossTrafficInBox(this.city, this.world, st.node, dir)) stop = Math.min(stop, lineAhead - LINE_GAP);
-    }
     if (s.car >= 0) {
       const lead = Math.max(0, v + s.relSpeed);
       target = Math.min(target, Math.sqrt(lead * lead + 2 * PLAN_BRAKE * Math.max(0, s.gap - 3 - v * 0.6)));
