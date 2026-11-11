@@ -20,7 +20,8 @@ export interface MetricSpec {
   format(value: number): string;
   /**
    * Also chart a champion metric in the Progress tab. Generation metrics
-   * always chart, since the champion table does not show them.
+   * chart unless this is false, since the champion table does not show
+   * them; a lab that draws them in its own charts sets it false.
    */
   chart?: boolean;
   /** The one metric a run card on the Runs page shows. Left out everywhere, the first champion metric. */
@@ -32,9 +33,9 @@ export function summaryMetric(specs: readonly MetricSpec[]): MetricSpec | undefi
   return specs.find((m) => m.summary) ?? specs.find((m) => m.source === 'champion');
 }
 
-/** The metrics the Progress tab charts: every generation metric, and champion metrics that ask for it. */
+/** The metrics the Progress tab charts: generation metrics unless they opt out, and champion metrics that ask for it. */
 export function chartedMetrics(specs: readonly MetricSpec[]): MetricSpec[] {
-  return specs.filter((m) => m.source === 'generation' || m.chart === true);
+  return specs.filter((m) => (m.source === 'generation' ? m.chart !== false : m.chart === true));
 }
 
 /**
