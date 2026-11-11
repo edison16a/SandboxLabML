@@ -4,6 +4,8 @@ import { sampleFlow } from '../course/fieldSample';
 import { navRayAngles, STANDARD_NAVIGATION_INPUTS } from '../sensors/inputConfig';
 import { bearingOf, NavigationObserver } from '../sensors/observe';
 import { castRay, rayRects, type RayWorld } from '../sensors/raycast';
+import { builtinNavigationController } from '../builtinReward';
+import { NavigationEnv } from '../env';
 import { agentAt, params, room, worldAt } from './helpers';
 
 describe('rays', () => {
@@ -57,6 +59,24 @@ describe('observer', () => {
     expect(Math.abs(out[base + 2])).toBeGreaterThan(0.15);
     expect(out[base + 3]).toBeCloseTo(0.5, 9);
     expect(out[base + 4]).toBeCloseTo(0, 9);
+  });
+
+  it('counts time left on the env clock, not the course default', () => {
+    const course = room([]);
+    // Shorter than the stuck rule, so standing still ends the run on time.
+    const maxTime = 3;
+    expect(course.timeLimit).toBeGreaterThan(maxTime * 2);
+    const env = new NavigationEnv({ course, params, inputs: STANDARD_NAVIGATION_INPUTS, controller: builtinNavigationController, maxTime });
+    env.reset([{ activate() {} }], [3]);
+    const schema = env.inputSchema();
+    const k = schema.findIndex((s) => s.key === 'timeLeft');
+    const ticks = Math.round(maxTime / 2 / params.dt);
+    for (let t = 0; t < ticks; t++) env.step();
+    expect(env.agents[0].timeLimit).toBeCloseTo(maxTime, 9);
+    expect(env.lastObservation(0)[k]).toBeCloseTo(0.5, 6);
+    while (!env.done) env.step();
+    expect(env.agents[0].stopReason).toBe('time');
+    expect(env.agents[0].time).toBeCloseTo(maxTime, 6);
   });
 
   it('reads bearings with left positive', () => {

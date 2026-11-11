@@ -80,7 +80,8 @@ export class NavigationObserver {
       out[n++] = (a.vx * cy - a.vz * sy) / top;
       out[n++] = (-a.vx * sy - a.vz * cy) / top;
     }
-    if (cfg.time) out[n++] = clamp(1 - a.time / course.timeLimit, 0, 1);
+    // The agent's own clock: an env with its own maxTime sets timeLimit, not the course.
+    if (cfg.time) out[n++] = clamp(1 - a.time / a.timeLimit, 0, 1);
     if (noise && cfg.noise > 0) for (let i = 0; i < n; i++) out[i] += noise.gaussian() * cfg.noise;
     return n;
   }
