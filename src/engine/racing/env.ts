@@ -1,11 +1,13 @@
 import { Rng } from '../core/rng';
-import { makeTickIO, type AgentController, type InputSpec, type SnapshotLayout } from '../env/types';
+import type { EpisodeEnv } from '../env/episode';
+import { makeTickIO, type AgentController, type CustomSensorSpec, type InputSpec, type SnapshotLayout } from '../env/types';
 import type { Network } from '../neat/network';
 import { stepCar } from './car/dynamics';
 import type { CarParams } from './car/params';
 import { createRacingCar, stopCar, updateTrackState, STATUS_DRIVING, type RacingCar } from './car/runtime';
+import { resultOf, type RacingResult } from './result';
 import { rayAngles, type RacingInputConfig } from './sensors/inputConfig';
-import { racingInputSchema, type CustomSensorSpec } from './sensors/inputSchema';
+import { racingInputSchema } from './sensors/inputSchema';
 import { RacingObserver } from './sensors/observe';
 import type { Track } from './track/types';
 
@@ -36,8 +38,10 @@ export const RACING_SNAPSHOT: SnapshotLayout = {
  * seed. That is what makes ghost replays exact: re-simulating one champion
  * alone gives the same ticks as it had in its 100-car generation.
  */
-export class RacingEnv {
+export class RacingEnv implements EpisodeEnv<RacingResult> {
   readonly opts: RacingEnvOptions;
+  /** Racing has no shared world state beyond the track, which never changes in an episode. */
+  readonly worldFloats = 0;
   readonly observer: RacingObserver;
   readonly inputCount: number;
   cars: RacingCar[] = [];
@@ -77,6 +81,14 @@ export class RacingEnv {
 
   get done(): boolean {
     return this.active === 0;
+  }
+
+  get agentCount(): number {
+    return this.cars.length;
+  }
+
+  get raysPerAgent(): number {
+    return this.opts.inputs.rays.count;
   }
 
   /** Advances every car that is still driving by one 1/30 s tick. */
@@ -121,6 +133,42 @@ export class RacingEnv {
   /** Latest observation of car i, without recomputing it. */
   lastObservation(i: number): Float64Array {
     return this.obs[i];
+  }
+
+  /** Car furthest along the road among those still driving, or overall if all stopped. */
+  leaderIndex(): number {
+    let best = 0;
+    let bestScore = -Infinity;
+    for (let i = 0; i < this.cars.length; i++) {
+      const c = this.cars[i];
+      const score = c.progress + (c.status === STATUS_DRIVING ? 1e6 : 0);
+      if (score > bestScore) {
+        bestScore = score;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  results(): RacingResult[] {
+    return this.cars.map(resultOf);
+  }
+
+  /** The steering the brain asked for (before the rate limit) and the pedal. */
+  writeOutputs(i: number, out: Float32Array): void {
+    const car = this.cars[i].car;
+    out[0] = car.steerCmd;
+    out[1] = car.pedal;
+  }
+
+  writeRays(i: number, out: Float32Array, offset: number): void {
+    const rays = this.cars[i].rays;
+    const range = this.opts.inputs.rays.range;
+    for (let r = 0; r < rays.length; r++) out[offset + r] = rays[r] / range;
+  }
+
+  writeSnapshot(out: Float32Array, offset = 0): void {
+    this.snapshot(out, offset);
   }
 
   snapshot(out: Float32Array, offset = 0): void {
