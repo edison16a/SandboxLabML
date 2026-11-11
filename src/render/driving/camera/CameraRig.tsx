@@ -22,7 +22,7 @@ const TOP_FOV = 30;
  * at, so the sun's shadow box can follow it.
  */
 export function CameraRig({ mode, target }: { mode: DrivingCamera; target: React.RefObject<THREE.Vector3> }) {
-  const { frame, city, route } = useDrivingScene();
+  const { frame, city, route, view } = useDrivingScene();
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const chase = useMemo(() => chaseRig(), []);
   const corner = useMemo(() => cornerCam(), []);
@@ -69,9 +69,9 @@ export function CameraRig({ mode, target }: { mode: DrivingCamera; target: React
       const c = orbit.current;
       if (!placed.current && frame.focus >= 0) {
         // Start on a three quarter front view of the car, the angle a car is photographed from.
-        const h = frame.yaw;
+        const h = frame.yaw + ((view.orbitAngle ?? 38) * Math.PI) / 180;
         const p = frame.pos;
-        camera.position.set(p.x + Math.cos(h) * 5.6 - Math.sin(h) * 4.4, 1.6, p.z - Math.sin(h) * 5.6 - Math.cos(h) * 4.4);
+        camera.position.set(p.x + Math.cos(h) * 7.1, 1.6, p.z - Math.sin(h) * 7.1);
         c.target.set(p.x, 0.9, p.z);
         last.copy(p);
         placed.current = true;

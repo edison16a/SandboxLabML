@@ -20,8 +20,9 @@ function num(v: string | null, fallback: number): number {
 /**
  * The city on its own, driven by autopilots on the main thread, so its
  * look can be judged before the lab exists. Address options: city, level,
- * seed, cars, camera, sensors (0 or 1), quality, at (seconds to run ahead
- * before the first frame) and freeze (1 holds the scene there). C cycles
+ * seed, cars, camera, sensors (0 or 1), ghosts (0 or 1), angle (where the
+ * orbit camera starts, degrees round the car), quality, at (seconds to run
+ * ahead before the first frame) and freeze (1 holds the scene there). C cycles
  * cameras, S toggles sensors, 1 to 5 pick the level.
  */
 export function DrivingPreview() {
@@ -43,7 +44,7 @@ export function DrivingPreview() {
   const [trip, setTrip] = useState(() => sim.setup);
   const world = useMemo(() => buildDrivingWorld(trip), [trip]);
   const city = useMemo(() => cityFor(trip.city), [trip]);
-  const view = useMemo<DrivingView>(() => ({ camera, sensors, focus: num(params.get('focus'), -1), population: true }), [camera, sensors, params]);
+  const view = useMemo<DrivingView>(() => ({ camera, sensors, focus: num(params.get('focus'), -1), population: params.get('ghosts') !== '0', orbitAngle: num(params.get('angle'), 38) }), [camera, sensors, params]);
 
   useEffect(() => {
     let raf = requestAnimationFrame(function loop(t) {

@@ -14,7 +14,7 @@ import { HEAD_HEIGHT, NEAR_HEIGHT, type Spot, type Streetscape } from './layout'
 import { armGeometry, LAMP_X, LAMP_Y, lampGeometry, poleGeometry, signalHeadGeometry, walkFaceGeometry, walkHeadGeometry } from './signalGeometry';
 
 /** Lit and dark lamp colors, linear, past 1 so High's bloom catches the lit ones. */
-const LIT = [new THREE.Color(5, 0.25, 0.12), new THREE.Color(5, 2.2, 0.1), new THREE.Color(0.2, 4.2, 1.6)];
+const LIT = [new THREE.Color(5, 0.1, 0.04), new THREE.Color(5, 1.9, 0.04), new THREE.Color(0.08, 4.2, 1.3)];
 const DARK = [new THREE.Color(0.09, 0.015, 0.01), new THREE.Color(0.09, 0.06, 0.01), new THREE.Color(0.01, 0.07, 0.04)];
 const WALK_WHITE = new THREE.Color(3.2, 3.2, 3);
 const WALK_HAND = new THREE.Color(4, 1.3, 0.15);

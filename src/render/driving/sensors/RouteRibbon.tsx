@@ -71,7 +71,7 @@ void main() {
   float fadeOut = 1.0 - smoothstep(${AHEAD * 0.55}, ${AHEAD.toFixed(1)}, ahead);
   float edge = 1.0 - abs(vAcross);
   // A soft wide glow, a brighter rim along each edge and a fine core line down the middle.
-  float band = smoothstep(0.0, 0.7, edge) * 0.38 + smoothstep(0.08, 0.0, abs(edge - 0.16)) * 0.55 + smoothstep(0.93, 0.99, edge) * 0.9;
+  float band = smoothstep(0.0, 0.7, edge) * 0.26 + smoothstep(0.08, 0.0, abs(edge - 0.16)) * 0.42 + smoothstep(0.93, 0.99, edge) * 0.7;
   float pulse = 0.7 + 0.3 * smoothstep(0.55, 1.0, fract((vAlong - uTime * 9.0) / 7.0));
   float a = band * pulse * fadeIn * fadeOut * uOpacity;
   gl_FragColor = vec4(uColor * a, a);

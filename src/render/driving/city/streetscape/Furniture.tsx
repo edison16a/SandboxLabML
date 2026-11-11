@@ -43,7 +43,7 @@ function Trees({ spots, tier }: { spots: Spot[]; tier: DrivingTier }) {
     groups.forEach((list, v) => {
       const mesh = meshes.current[v];
       if (!mesh) return;
-      matrices(list, (t) => 0.72 + t.seed * 0.26, 1).forEach((mat, i) => {
+      matrices(list, (t) => 0.6 + t.seed * 0.2, 1).forEach((mat, i) => {
         mesh.setMatrixAt(i, mat);
         mesh.setColorAt(i, tint.setRGB(0.88 + ((i * 37) % 13) / 60, 0.95 + ((i * 17) % 7) / 70, 0.85));
       });

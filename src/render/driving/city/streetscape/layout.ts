@@ -57,7 +57,7 @@ function along(out: Streetscape, rng: Rng, ax: number, ay: number, dx: number, d
   const trees = Math.max(1, Math.round((end - start) / 15));
   for (let k = 0; k < trees; k++) {
     const s = start + ((end - start) * (k + 0.5)) / trees;
-    if (rng.chance(0.85)) out.trees.push(at(s, FURNITURE + 0.2));
+    if (rng.chance(0.85)) out.trees.push(at(s, FURNITURE + 0.75));
     if (rng.chance(0.18)) out.benches.push(at(s + 3.2, FURNITURE + 0.1));
     else if (rng.chance(0.15)) out.bins.push(at(s - 3, FURNITURE - 0.1));
   }

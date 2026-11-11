@@ -23,6 +23,8 @@ export interface DrivingView {
   focus: number;
   /** Show the rest of the population as ghosts. */
   population: boolean;
+  /** Where the orbit camera starts, degrees round the car from straight ahead (left positive). */
+  orbitAngle?: number;
 }
 
 export const DEFAULT_VIEW: DrivingView = { camera: 'chase', sensors: true, focus: -1, population: true };
