@@ -16,13 +16,13 @@ import { deg, key, type Key } from './section';
  * sculpt are creases; the shoulder rolls over in one clean radius.
  */
 const halfWidth = profile([[-2.45, 0.85], [-2.36, 0.93], [-2.2, 0.975], [-1.9, 0.996], [-1.42, 1.0], [-1.0, 0.988], [-0.55, 0.962], [0.0, 0.955], [0.6, 0.958], [1.1, 0.976], [1.48, 0.985], [1.9, 0.973], [2.2, 0.938], [2.38, 0.88], [2.45, 0.845]]);
-const shoulderY = profile([[-2.45, 0.99], [-2.2, 0.962], [-1.9, 0.942], [-1.42, 0.936], [-0.6, 0.912], [0.6, 0.9], [1.48, 0.91], [2.1, 0.915], [2.45, 0.925]]);
+const shoulderY = profile([[-2.45, 0.99], [-2.2, 0.962], [-1.9, 0.942], [-1.42, 0.936], [-0.6, 0.912], [0.6, 0.9], [1.48, 0.925], [2.1, 0.945], [2.45, 0.955]]);
 /** The lower door sculpt: low at the front door, rising toward the rear haunch. */
 const creaseY = profile([[-2.45, 0.6], [-1.42, 0.655], [-0.95, 0.645], [1.0, 0.575], [1.48, 0.57], [2.45, 0.55]]);
 /** The belt line, which carries on ahead of the windshield as the fender peak and drops toward the headlights. */
 const beltY = profile([[-2.45, 1.18], [-2.3, 1.19], [-1.8, 1.176], [-1.0, 1.14], [0.0, 1.11], [1.0, 1.1], [1.5, 1.092], [2.0, 1.076], [2.3, 1.055], [2.45, 1.035]]);
 /** How far the belt sits in from the shoulder: the tumblehome shelf, widest over the haunches and the front fenders. */
-const beltInset = profile([[-2.45, 0.17], [-2.2, 0.2], [-1.42, 0.205], [-0.8, 0.18], [0.0, 0.166], [0.9, 0.172], [1.5, 0.21], [2.2, 0.2], [2.45, 0.155]]);
+const beltInset = profile([[-2.45, 0.17], [-2.2, 0.2], [-1.42, 0.205], [-0.8, 0.18], [0.0, 0.166], [0.9, 0.172], [1.5, 0.2], [2.2, 0.185], [2.45, 0.15]]);
 
 export const NOSE = BODY.nose;
 export const TAIL = BODY.tail;
