@@ -6,6 +6,7 @@ import { Buildings } from './city/buildings/Buildings';
 import { CityGround } from './city/ground/CityGround';
 import { Streetscape } from './city/streetscape/Streetscape';
 import { useDrivingScene } from './frame/sceneContext';
+import type { FrameSource } from './frame/source';
 import { People } from './people/People';
 import { PopulationSuvs } from './population/PopulationSuvs';
 import { TIERS } from './quality';
@@ -17,9 +18,10 @@ import { CityEnvironment } from './world/CityEnvironment';
 /**
  * Everything in the city, static and alive: light and sky, the streets and
  * buildings, street furniture and signals, traffic and people, the
- * population of SUVs, and the followed SUV with its sensors.
+ * population of SUVs, past champions when the lab shows them over it, and
+ * the followed SUV with its sensors.
  */
-export function CityScene({ target }: { target: React.RefObject<THREE.Vector3> }) {
+export function CityScene({ target, ghosts, onPick }: { target: React.RefObject<THREE.Vector3>; ghosts?: FrameSource | null; onPick?: (index: number) => void }) {
   const { city, tier } = useDrivingScene();
   const shadows = TIERS[tier].shadows;
   const box = useRef(new THREE.Vector3(1e9, 0, 0));
@@ -31,7 +33,8 @@ export function CityScene({ target }: { target: React.RefObject<THREE.Vector3> }
       <Streetscape city={city} tier={tier} />
       <TrafficCars />
       <People />
-      <PopulationSuvs />
+      <PopulationSuvs onPick={onPick} />
+      {ghosts && <PopulationSuvs source={ghosts} colors="age" />}
       <FollowedSuv />
       <SensorOverlay />
     </>

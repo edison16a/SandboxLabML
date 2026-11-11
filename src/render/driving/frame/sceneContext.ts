@@ -25,6 +25,8 @@ export interface DrivingView {
   population: boolean;
   /** Where the orbit camera starts, degrees round the car from straight ahead (left positive). */
   orbitAngle?: number;
+  /** How the population is tinted: species hues, or an age ramp when it is a stream of past champions. */
+  colors?: 'species' | 'age';
 }
 
 export const DEFAULT_VIEW: DrivingView = { camera: 'chase', sensors: true, focus: -1, population: true };
