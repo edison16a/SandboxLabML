@@ -15,7 +15,7 @@ export function warp(p: Vec3): Vec3 {
   const [x, y, z] = p;
   let dx = 0;
   if (x > NOSE_BEND.from) dx += smooth((x - NOSE_BEND.from) / (NOSE - NOSE_BEND.from)) * (noseLean(y) + noseBow(z));
-  if (x < TAIL_BEND.from) dx -= smooth((TAIL_BEND.from - x) / (TAIL_BEND.from - TAIL)) * tailLean(y);
+  if (x < TAIL_BEND.from) dx -= smooth((TAIL_BEND.from - x) / (TAIL_BEND.from - TAIL)) * (tailLean(y) + ledge(y, z));
   return [x + dx, y, z];
 }
 
@@ -59,4 +59,17 @@ const TAIL_BEND = { from: -1.9, lip: 1.22, bumper: 0.885, diffuser: 0.55, gate: 
 export function tailLean(y: number): number {
   const b = TAIL_BEND;
   return b.gate * (hinge(b.lip - y, 0.02) - hinge(b.bumper - y, 0.03)) - b.tuck * hinge(b.diffuser - y, 0.05);
+}
+
+/**
+ * The bumper's crease: just under the tailgate's shut line the bumper's
+ * lower half stands `step` m further out over a tight fold, so it reads
+ * as its own volume. It runs across the tailgate and fades out before the
+ * corners, where the face curls into the sides.
+ */
+export const LEDGE = { y: 0.6, step: 0.01, r: 0.008, half: 0.45, fade: 0.15 };
+
+function ledge(y: number, z: number): number {
+  const across = smooth((LEDGE.half + LEDGE.fade - Math.abs(z)) / LEDGE.fade);
+  return LEDGE.step * smooth((LEDGE.y + LEDGE.r - y) / (2 * LEDGE.r)) * across;
 }

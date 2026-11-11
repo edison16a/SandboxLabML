@@ -2,6 +2,7 @@ import { endFace, faceNormal } from './face';
 import { bothSides, gridGeometry } from './grid';
 import { intakeCut } from './intakes';
 import { bodyNormals } from './normals';
+import { LEDGE_ROWS, plateCut } from './tailgate';
 import type { Detail, PartBin, Slot } from './parts';
 import { ARCHED_BANDS, archFloor, NOSE, sectionAt, stations, TAIL } from './profile';
 import { along, resample, span, type Pt } from './section';
@@ -84,9 +85,9 @@ export function addBody(bin: PartBin, detail: Detail): void {
     ends[1].forEach(([z, y], j) => n.setXYZ(last * cols + j, ...faceNormal(1, xs[last], y, z)));
     bin.add(PANELS[p].slot, bothSides(g));
   });
-  const cut = detail.fine || detail.brakes ? intakeCut(detail) : undefined;
+  const cut = detail.fine || detail.brakes ? intakeCut() : undefined;
   bin.add('paint', endFace(1, NOSE, outline(NOSE, detail), detail, cut));
-  bin.add('paint', endFace(-1, TAIL, outline(TAIL, detail), detail));
+  bin.add('paint', endFace(-1, TAIL, outline(TAIL, detail), detail, cut && plateCut(), LEDGE_ROWS));
 }
 
 /** The section at x from sill to centerline with `counts` steps per band, as the panels draw it. */

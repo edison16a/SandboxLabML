@@ -73,15 +73,30 @@ function spacedLike(like: Pt[], a: number, b: number): Pt[] {
 }
 
 /**
- * A hole in the nose face for the central intake: between two rows of the
- * face's outline (by index, so it lines up with the grid exactly) and out
- * to `half(y)` either side of the centerline. The intake's own walls and
- * mesh fill it from behind.
+ * A hole in an end face: between two heights and out to `half(y)` either
+ * side of the centerline. The face gets rows at exactly those heights, so
+ * the hole's edge is a clean line in its grid. The nose leaves one for
+ * the central intake, the tail one for the plate; their walls and the
+ * mesh or plate behind fill it from behind.
  */
 export interface FaceCut {
-  from: number;
-  to: number;
+  y0: number;
+  y1: number;
   half: (y: number) => number;
+}
+
+/** The outline with a point added at each height in `ys` below index `upto`, unless one is there already. */
+function withRows(pts: Pt[], upto: number, ys: number[]): Pt[] {
+  const out = [...pts];
+  for (const y of ys) {
+    const i = out.findIndex((p, k) => k < upto && p[1] <= y + 1e-6 && out[k + 1][1] >= y - 1e-6);
+    if (i < 0 || Math.abs(out[i][1] - y) < 1e-5 || Math.abs(out[i + 1][1] - y) < 1e-5) continue;
+    const [a, b] = [out[i], out[i + 1]];
+    const t = (y - a[1]) / (b[1] - a[1]);
+    out.splice(i + 1, 0, [a[0] + (b[0] - a[0]) * t, y]);
+    upto++;
+  }
+  return out;
 }
 
 /**
@@ -92,10 +107,13 @@ export interface FaceCut {
  * down and dipping toward the top edge's lowest point higher up; above,
  * a patch from that row to the hood or deck edge. Normals come from the
  * bend itself, so the face shades smooth whatever its grid looks like.
+ * A hole's rows, and any asked for in `rowsAt` to carry a tight fold,
+ * are added on the outline's own segments.
  */
-export function endFace(end: 1 | -1, x: number, half: Pt[], detail: Detail, cut?: FaceCut): THREE.BufferGeometry {
+export function endFace(end: 1 | -1, x: number, outline: Pt[], detail: Detail, cut?: FaceCut, rowsAt: number[] = []): THREE.BufferGeometry {
   const [b0, b1, b2, b3] = detail.bands;
-  const sh = b0 + b1 + b2;
+  const half = withRows(outline, b0 + b1 + b2, cut ? [cut.y0, cut.y1, ...rowsAt] : rowsAt);
+  const sh = b0 + b1 + b2 + half.length - outline.length;
   const top = half.slice(sh + b3).reverse();
   const ys = half[0][1];
   const ysh = half[sh][1];
@@ -103,7 +121,7 @@ export function endFace(end: 1 | -1, x: number, half: Pt[], detail: Detail, cut?
   // The top row: level at the shoulder, dipping at the middle only if the top edge is low there.
   const ym = Math.min(ysh, ys + 0.85 * (yt - ys));
   // Rows stay level up to the hole's top, then ease toward that dip.
-  const level = cut ? half[cut.to][1] + 0.005 : ys;
+  const level = cut ? cut.y1 + 0.005 : ys;
   const cols = top.length - 1;
   const inner = cut ? Math.round(cols * 0.55) : 0;
   const rows: Pt[][] = half.slice(0, sh + 1).map(([zr, yr]) => {
@@ -118,7 +136,9 @@ export function endFace(end: 1 | -1, x: number, half: Pt[], detail: Detail, cut?
   // outline is split, which keeps every body vertex on the edge and adds points only along its segments.
   const upRight = split(half.slice(sh, sh + b3 + 1), detail.fine ? 3 : detail.brakes ? 2 : 1);
   const upper = coons(rows[sh], top, spacedLike(upRight, ym, yt), upRight);
-  const skip = (i: number, j: number) => !!cut && i >= cut.from && i < cut.to && j < inner;
+  const from = cut ? half.findIndex(([, y]) => Math.abs(y - cut.y0) < 1e-5) : -1;
+  const to = cut ? half.findIndex(([, y]) => Math.abs(y - cut.y1) < 1e-5) : -1;
+  const skip = (i: number, j: number) => !!cut && i >= from && i < to && j < inner;
   // Rows up and columns across face +x; flipped for the tail.
   const lower = grid(end, x, end > 0 ? rows : transpose(rows), end > 0 ? skip : (i, j) => skip(j, i));
   return bothSides(merge([lower, grid(end, x, end > 0 ? transpose(upper) : upper)]));

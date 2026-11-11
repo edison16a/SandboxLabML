@@ -28,9 +28,9 @@ function centerHalf(y: number): number {
 }
 
 /** The hole the nose face leaves for the central intake, between its key 1 and key 2 rows. */
-export function intakeCut(detail: Detail): FaceCut {
-  const [b0, b1] = detail.bands;
-  return { from: b0, to: b0 + b1, half: centerHalf };
+export function intakeCut(): FaceCut {
+  const [y0, y1] = centerSpan();
+  return { y0, y1, half: centerHalf };
 }
 
 /**
