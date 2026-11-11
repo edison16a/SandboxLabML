@@ -1,6 +1,7 @@
 'use client';
 
-import { FINISH_INSET, START_ZONE, type CourseSpec } from '@/engine/navigation/course/types';
+import { courseLines } from '@/engine/navigation/course/lines';
+import type { CourseSpec } from '@/engine/navigation/course/types';
 import { NAV_COLORS } from '@/render/navigation/palette';
 
 /**
@@ -16,11 +17,11 @@ export function CourseThumb({ spec, width = 120, className }: { spec: CourseSpec
   const pad = 0.6;
   const view = `${-hl - pad} ${-hw - pad} ${spec.length + pad * 2} ${spec.width + pad * 2}`;
   const height = (width * (spec.width + pad * 2)) / (spec.length + pad * 2);
-  const finishX = hl - FINISH_INSET;
+  const { start, finish: finishX } = courseLines(spec);
   return (
     <svg viewBox={view} width={width} height={height} className={className} aria-hidden="true">
       <rect x={-hl} y={-hw} width={spec.length} height={spec.width} rx={0.8} fill={NAV_COLORS.floor} stroke={NAV_COLORS.wall} strokeWidth={0.5} />
-      <rect x={-hl} y={-hw} width={START_ZONE} height={spec.width} fill={NAV_COLORS.startPad} opacity={0.28} />
+      <rect x={-hl} y={-hw} width={start + hl} height={spec.width} fill={NAV_COLORS.startPad} opacity={0.28} />
       <rect x={finishX - 0.35} y={-hw} width={0.7} height={spec.width} fill={NAV_COLORS.checkerDark} />
       {spec.obstacles.map((o, i) => {
         if (o.kind === 'mover') {

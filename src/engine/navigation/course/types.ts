@@ -66,6 +66,13 @@ export interface CourseSpec {
   length: number;
   width: number;
   obstacles: ObstacleSpec[];
+  /**
+   * Where the start line and the finish line stand along x, m. Left out
+   * (every generated and named course), they take the standard spots;
+   * a course drawn in the Sandbox may set them. See courseLines.
+   */
+  start?: number;
+  finish?: number;
 }
 
 /**

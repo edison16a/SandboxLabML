@@ -1,4 +1,5 @@
-import { FINISH_INSET, OUTER_WALL, START_ZONE, type CourseSpec } from '@/engine/navigation/course/types';
+import { courseLines } from '@/engine/navigation/course/lines';
+import { OUTER_WALL, type CourseSpec } from '@/engine/navigation/course/types';
 import type { NavigationPreviewScene } from '@/engine/navigation/pipeline/lessons';
 import { WORLD_HEADER } from '@/engine/navigation/snapshot';
 import type { EpisodePreview } from '@/engine/lessons/preview/types';
@@ -39,11 +40,11 @@ function drawRoom(g: CanvasRenderingContext2D, v: View, spec: CourseSpec): void 
   rect(g, v, 0, 0, hl, hw);
   g.fillStyle = C.tile;
   for (let x = -hl; x < hl; x += 2) for (let z = -hw; z < hw; z += 2) if ((Math.round(x + hl) / 2 + Math.round(z + hw) / 2) % 2 === 0) rect(g, v, x + 1, z + 1, 1, 1);
+  const { start, finish: fx } = courseLines(spec);
   g.fillStyle = C.start;
-  rect(g, v, -hl + START_ZONE / 2, 0, START_ZONE / 2, hw);
+  rect(g, v, (start - hl) / 2, 0, (start + hl) / 2, hw);
   g.fillStyle = C.startLine;
-  rect(g, v, -hl + START_ZONE, 0, 0.06, hw);
-  const fx = hl - FINISH_INSET;
+  rect(g, v, start, 0, 0.06, hw);
   const cell = 0.5;
   for (let k = 0; k * cell < spec.width; k++) {
     for (let col = 0; col < 2; col++) {

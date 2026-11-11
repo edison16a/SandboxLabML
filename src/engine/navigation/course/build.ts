@@ -1,9 +1,10 @@
 import { DEFAULT_NAVIGATION_PARAMS, type NavigationParams } from '../params';
 import { buildField, type DistanceField } from './field';
 import { sampleDistance } from './fieldSample';
-import { startFormation, startLineX, type StartFormation } from './formation';
+import { startFormation, type StartFormation } from './formation';
+import { courseLines } from './lines';
 import { MOVER_SPEED_LIMIT } from './movers';
-import { FINISH_INSET, MAX_MOVERS, OUTER_WALL, type CourseSpec, type MoverSpec, type Rect } from './types';
+import { MAX_MOVERS, OUTER_WALL, type CourseSpec, type MoverSpec, type Rect } from './types';
 
 /**
  * A course ready to run: the spec plus everything derived from it once,
@@ -78,8 +79,7 @@ function pack(rects: readonly Rect[]): Float64Array {
 export function buildCourse(spec: CourseSpec, params: NavigationParams = DEFAULT_NAVIGATION_PARAMS): Course {
   const halfLength = spec.length / 2;
   const halfWidth = spec.width / 2;
-  const startX = startLineX(spec.length);
-  const finishX = halfLength - FINISH_INSET;
+  const { start: startX, finish: finishX } = courseLines(spec);
   const inner: Rect[] = [];
   const spikes: Rect[] = [];
   const movers: MoverSpec[] = [];
