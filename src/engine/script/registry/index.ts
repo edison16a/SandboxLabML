@@ -1,8 +1,7 @@
 import type { EnvId } from '../../env/types';
+import { SCRIPT_ENV_TABLE } from '../envs';
 import { CORE_SLICE } from './core';
 import { GENERATION_SLICE } from './generation';
-import { HIDESEEK_SLICE } from './hideseek';
-import { RACING_SLICE } from './racing';
 import type { RegistryEntry, RegistrySlice, Scope } from './types';
 
 export * from './types';
@@ -10,15 +9,15 @@ export * from './types';
 /**
  * Every registry slice. The registry is the single source of truth for what
  * scripts can use: the checker, compiler, docs, block palette and
- * autocomplete all read it. A new environment is one slice file plus one
- * line here.
+ * autocomplete all read it. A new environment is a slice folder plus one
+ * line in the script env table (../envs.ts).
  */
-export const SLICES: readonly RegistrySlice[] = [CORE_SLICE, GENERATION_SLICE, RACING_SLICE, HIDESEEK_SLICE];
+export const SLICES: readonly RegistrySlice[] = [CORE_SLICE, GENERATION_SLICE, ...SCRIPT_ENV_TABLE.map((e) => e.slice)];
 
 export const REGISTRY: readonly RegistryEntry[] = SLICES.flatMap((s) => s.entries);
 
-/** Environments a script header may name, even before their slice exists. */
-export const SCRIPT_ENVS: readonly EnvId[] = ['racing', 'hideseek'];
+/** Environments a script header may name: every env in the script env table. */
+export const SCRIPT_ENVS: readonly EnvId[] = SCRIPT_ENV_TABLE.map((e) => e.env);
 
 export type BlockScope = 'tick' | 'generation';
 

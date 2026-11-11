@@ -1,0 +1,18 @@
+import type { EnvId } from '../../env/types';
+import { SCRIPT_ENV_TABLE } from '../envs';
+import type { ScriptPreset } from './types';
+
+export type { ScriptPreset };
+
+/** Every preset of every environment, in the order of the script env table. */
+export const SCRIPT_PRESETS: readonly ScriptPreset[] = SCRIPT_ENV_TABLE.flatMap((e) => e.presets);
+
+/** Finds a preset of any environment by id. */
+export function findScriptPreset(id: string): ScriptPreset | undefined {
+  return SCRIPT_PRESETS.find((p) => p.id === id);
+}
+
+/** The read only scripts offered for one environment. */
+export function presetsOf(env: EnvId): readonly ScriptPreset[] {
+  return SCRIPT_ENV_TABLE.find((e) => e.env === env)?.presets ?? [];
+}

@@ -1,19 +1,19 @@
 import { findPresetBlueprint } from '@/engine/blueprints/presets';
-import type { HideSeekBlueprint, RacingBlueprint } from '@/engine/blueprints/types';
+import type { Blueprint, EpisodeBlueprint, EpisodeEnvId, HideSeekBlueprint, RacingBlueprint } from '@/engine/blueprints/types';
 import type { EnvId } from '@/engine/env/types';
-import { compileScript, HIDESEEK_PRESETS, RACING_PRESETS, type ScriptPreset } from '@/engine/script';
+import { compileScript, presetsOf, type ScriptPreset } from '@/engine/script';
 
 /** The blueprint type a lab works with, so each dialog gets back the shape it can train. */
-export type BlueprintOf<E extends EnvId> = E extends 'racing' ? RacingBlueprint : HideSeekBlueprint;
+export type BlueprintOf<E extends EnvId> = E extends 'racing' ? RacingBlueprint : E extends 'hideseek' ? HideSeekBlueprint : EpisodeBlueprint<E & EpisodeEnvId>;
 
 /** The reward a new run trains with: the built-in reward or a compiled SBL script. */
-export type ScriptChoice<B = RacingBlueprint | HideSeekBlueprint> =
+export type ScriptChoice<B = Blueprint> =
   | { kind: 'builtin' }
   | { kind: 'script'; id: string; name: string; compiled: { source: string; hash: string; customSensors: number }; blueprint?: B };
 
 /** The read only scripts offered for one environment. */
 export function presetsFor(env: EnvId): readonly ScriptPreset[] {
-  return env === 'racing' ? RACING_PRESETS : HIDESEEK_PRESETS;
+  return presetsOf(env);
 }
 
 /**

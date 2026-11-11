@@ -5,7 +5,7 @@ import type { RunConfig } from '@/engine/training/runConfig';
 import { cn } from '@/ui/cn';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import { runScriptInfo } from './runScript';
-import { BUILTIN } from './ScriptPicker';
+import { builtinSummary } from './ScriptPicker';
 
 interface Props {
   run: RunConfig | null;
@@ -23,7 +23,7 @@ interface Props {
 export function RunScriptBadge({ run, generation, running }: Props) {
   if (!run) return null;
   const info = runScriptInfo(run, generation);
-  const about = info.builtin ? `No script. ${BUILTIN[run.env]}` : 'Sets the rewards and how each generation breeds.';
+  const about = info.builtin ? `No script. ${builtinSummary(run.env)}` : 'Sets the rewards and how each generation breeds.';
   const edited = info.editedAt !== null ? ` In force since generation ${info.editedAt + 1}.` : '';
   return (
     <Tooltip content={`${about}${edited}`}>

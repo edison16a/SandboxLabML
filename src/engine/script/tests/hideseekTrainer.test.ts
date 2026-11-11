@@ -4,7 +4,7 @@ import { createArenaPool, HideSeekTrainer, type ArenaPool, type HideSeekGenerati
 import { builtinHost } from '../../training/scriptHost';
 import { hideSeekPhysics } from '../../hideseek/physics';
 import { createScriptHost, type ScriptHostAdapter } from '../host';
-import { findScriptPreset } from '../presets/racing';
+import { findScriptPreset } from '../presets';
 import { HIDESEEK_ACT } from './helpers';
 
 let pool: ArenaPool;

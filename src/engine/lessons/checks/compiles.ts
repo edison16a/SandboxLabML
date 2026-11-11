@@ -1,7 +1,7 @@
 import type { Program } from '../../script/ast';
 import { compileScript } from '../../script/compiler';
 import { print } from '../../script/printer';
-import { findScriptPreset } from '../../script/presets/racing';
+import { findScriptPreset } from '../../script/presets';
 import { firstProblem, type PreparedScript } from '../prepare';
 import type { CheckOutcome, LessonCheck } from '../types';
 

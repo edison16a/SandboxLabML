@@ -8,7 +8,7 @@ import { Population } from '../../neat/population';
 import { blockPalette, fromBlocks, toBlocks } from '../blocks';
 import { createScriptHost } from '../host';
 import { parse } from '../parser';
-import { findScriptPreset } from '../presets/racing';
+import { findScriptPreset } from '../presets';
 import { print } from '../printer';
 import { errors, HIDESEEK_ACT, inHideSeekGeneration, inHideSeekTick } from './helpers';
 

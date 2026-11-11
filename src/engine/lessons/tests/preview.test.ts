@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { HIDESEEK_SNAPSHOT } from '../../hideseek/snapshot';
-import { findScriptPreset } from '../../script/presets/racing';
+import { findScriptPreset } from '../../script/presets';
 import { HIDESEEK_BEGINNER } from '../../script/presets/hideseekBeginner';
 import { testDrive } from '../checks/testRun';
 import { playTestMatch } from '../hideseek/testMatch';

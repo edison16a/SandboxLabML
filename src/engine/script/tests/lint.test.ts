@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { compileScript } from '../compiler';
-import { SCRIPT_PRESETS } from '../presets/racing';
+import { SCRIPT_PRESETS } from '../presets';
 
 const HEAD = 'script "t" for racing v1\nbrain racing-standard\n';
 const GEN = '\neach generation {\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75)\n  keepChampions()\n}\n';

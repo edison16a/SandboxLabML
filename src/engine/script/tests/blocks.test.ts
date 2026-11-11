@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { blockPalette, fromBlocks, toBlocks, type ScriptBlock } from '../blocks';
 import { parse } from '../parser';
-import { findScriptPreset } from '../presets/racing';
+import { findScriptPreset } from '../presets';
 import { print } from '../printer';
 import { errors } from './helpers';
 
