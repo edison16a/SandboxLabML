@@ -25,7 +25,7 @@ describe('Navigation lesson hooks', () => {
   });
 
   it('turns toward the finish when the brain has no path hint', async () => {
-    const m = await testEpisode(prepared(STARTER.replace('navigation-standard', 'navigation-advanced')));
+    const m = await testEpisode(prepared(STARTER.replace('navigation-starter', 'navigation-advanced')));
     expect(m.inputs).toBe(53);
     expect(m.progress).toBeGreaterThan(0.2);
   });
@@ -38,8 +38,8 @@ describe('Navigation lesson hooks', () => {
     expect(scene.level).toBe(LESSON_LEVEL);
     expect(scene.spec.obstacles.length).toBeGreaterThan(0);
     expect(p.fields.slice(0, 3)).toEqual(['x', 'z', 'yaw']);
-    expect(p.rays).toHaveLength(12);
-    expect(p.reach).toHaveLength(p.ticks * 12);
+    expect(p.rays).toHaveLength(8);
+    expect(p.reach).toHaveLength(p.ticks * 8);
     expect(p.bounds!.maxX - p.bounds!.minX).toBeGreaterThan(scene.spec.length);
     expect(p.stopReason).toBe('finished');
   });

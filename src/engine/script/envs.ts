@@ -81,7 +81,7 @@ const table: ScriptEnv[] = [
     builtin: 'New ground, a finish bonus and a cost for dying.',
     starter: [
       'script "My script" for navigation v1',
-      'brain navigation-standard',
+      'brain navigation-starter',
       '',
       'each tick {',
       '  act(move: brain.move, turn: brain.turn)',

@@ -10,6 +10,6 @@ describe('the Studio test run of a Navigation script', () => {
     expect(result.metrics.map((m) => m.label)).toEqual(['Progress', 'Finish time', 'Finished', 'Died']);
     expect(result.metrics[0].value).toBe('100%');
     expect(result.metrics[1].value).toMatch(/^\d+\.\d s$/);
-    expect(result.blueprint).toBe('Navigation Standard');
+    expect(result.blueprint).toBe('Navigation Starter');
   });
 });
