@@ -114,7 +114,9 @@ export function endFace(end: 1 | -1, x: number, half: Pt[], detail: Detail, cut?
       return [z, yl + (yr - yl) * (z / zr) ** 2] as Pt;
     });
   });
-  const upRight = half.slice(sh, sh + b3 + 1);
+  // The upper patch crosses the fold under the hood's edge, so it gets extra rows: each step of the
+  // outline is split, which keeps every body vertex on the edge and adds points only along its segments.
+  const upRight = split(half.slice(sh, sh + b3 + 1), detail.fine ? 3 : detail.brakes ? 2 : 1);
   const upper = coons(rows[sh], top, spacedLike(upRight, ym, yt), upRight);
   const skip = (i: number, j: number) => !!cut && i >= cut.from && i < cut.to && j < inner;
   // Rows up and columns across face +x; flipped for the tail.
@@ -123,6 +125,16 @@ export function endFace(end: 1 | -1, x: number, half: Pt[], detail: Detail, cut?
 }
 
 const transpose = (m: Pt[][]): Pt[][] => m[0].map((_, j) => m.map((r) => r[j]));
+
+/** A polyline with each segment cut into `n` equal steps. */
+function split(pts: Pt[], n: number): Pt[] {
+  const out: Pt[] = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const [a, b] = [pts[i - 1], pts[i]];
+    for (let k = 1; k <= n; k++) out.push([a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n]);
+  }
+  return out;
+}
 
 /** A face grid laid through the bend, with the bend's own normals and flat UVs in meters; `skip` drops cells for a hole. */
 function grid(end: 1 | -1, x: number, rows: Pt[][], skip?: (i: number, j: number) => boolean): THREE.BufferGeometry {
