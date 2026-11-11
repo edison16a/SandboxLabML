@@ -20,8 +20,10 @@ test.describe('Studio with Driving scripts', () => {
     await page.getByRole('button', { name: 'Run one episode' }).click();
     await expect(page.getByText('Replay', { exact: true })).toBeVisible({ timeout: 90_000 });
     await expect(page.getByRole('img', { name: /Top view of the test drive/ })).toBeVisible();
-    await expect(page.getByText('Route covered')).toBeVisible();
+    // Beside the stop reason: whether it arrived, and the red lights it ran.
     await expect(page.getByText('arrived', { exact: true })).toBeVisible();
+    await expect(page.getByText('Red lights', { exact: true })).toBeVisible();
+    await expect(page.getByText('yes', { exact: true })).toBeVisible();
     // The scrubber moves the replay to any tick.
     const scrub = page.getByRole('slider', { name: 'Replay position' });
     await scrub.focus();

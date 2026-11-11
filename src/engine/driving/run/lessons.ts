@@ -21,7 +21,7 @@ const tripOf = (env: unknown) => (env as DrivingTrips).current.opts;
 export const DRIVING_LESSONS: EpisodeLessons<DrivingRunResult> = {
   ...DRIVING_LESSONS_INFO,
   measure: (r) => ({
-    arrived: r.arrivals / Math.max(1, r.trips),
+    arrival: r.arrivals / Math.max(1, r.trips),
     completion: r.completion,
     distance: r.distance,
     redLightRuns: r.redLightRuns,

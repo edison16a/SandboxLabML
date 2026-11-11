@@ -2,20 +2,25 @@ import type { EpisodeLessonsInfo } from '../../env/hooks';
 
 const percent = (v: number) => (Number.isFinite(v) ? `${Math.round(v * 100)}%` : '-');
 
+/** One trip arrived or did not; over several trips, the share that did. */
+const arrival = (v: number) => (v === 1 ? 'yes' : v === 0 ? 'no' : percent(v));
+
 /**
  * What Driving lessons can check, as far as the main thread needs to know.
- * A test drive is one trip with the hand set test driver; it measures the
- * share of its trips that arrived (0 or 1 for one trip), the share of the
- * route covered, the meters driven, the red lights run and the seconds it
- * took. A training check measures the generation metrics, which are shares
- * too, so both read as percentages.
+ * A test drive is one trip with the hand set test driver; it measures
+ * whether the trip arrived, the red lights run, the share of the route
+ * covered, the meters driven and the seconds it took. The Studio's test
+ * run shows the first two beside the stop reason, the two a driver most
+ * wants to know. The arrival has its own key because a training check's
+ * `arrived` is a share of a whole generation, where 0 means 0%, not no.
  */
 export const DRIVING_LESSONS_INFO: EpisodeLessonsInfo = {
   testRunName: 'a test drive',
-  testRunMetrics: ['arrived', 'completion', 'distance', 'redLightRuns', 'time'],
+  testRunMetrics: ['arrival', 'redLightRuns', 'completion', 'distance', 'time'],
   brain: 'driving-standard',
-  labels: { arrived: 'Arrived', completion: 'Route covered', distance: 'Distance', redLightRuns: 'Red lights', time: 'Time' },
+  labels: { arrival: 'Arrived', completion: 'Route covered', distance: 'Distance', redLightRuns: 'Red lights', time: 'Time' },
   formats: {
+    arrival,
     arrived: percent,
     safe: percent,
     eliteSafe: percent,
