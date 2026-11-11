@@ -19,6 +19,7 @@ test.describe('Studio with Navigation scripts', () => {
     await page.getByRole('tab', { name: 'Test run' }).click();
     await page.getByRole('button', { name: 'Run one episode' }).click();
     await expect(page.getByRole('img', { name: /Top view of the test run/ })).toBeVisible({ timeout: 90_000 });
+    await expect(page.getByRole('slider', { name: 'Replay position' })).toBeVisible();
     await expect(page.getByText('Stopped by')).toBeVisible();
     await expect(page.getByText('finished', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('Progress', { exact: true })).toBeVisible();

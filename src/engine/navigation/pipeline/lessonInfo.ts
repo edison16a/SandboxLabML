@@ -14,6 +14,7 @@ export const NAVIGATION_LESSONS_INFO = {
   testRunName: 'a test run',
   testRunMetrics: ['progress', 'finishTime', 'finished', 'died'],
   brain: 'navigation-starter',
+  labels: { progress: 'Progress', finishTime: 'Finish time', finished: 'Finished', died: 'Died' },
   formats: {
     progress: percent,
     finishShare: percent,

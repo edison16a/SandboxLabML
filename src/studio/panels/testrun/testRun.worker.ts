@@ -23,14 +23,12 @@ const api = {
     return Comlink.transfer(result, [time.buffer, reward.buffer, total.buffer, speed.buffer] as ArrayBuffer[]);
   },
 
-  /** One test episode of a script for an env added through the registry, with a recording of it for the top view. */
+  /** One test episode of a script for an env added through the registry. */
   async episode(source: string): Promise<EpisodeTestResult> {
     const result = await runEpisodeTest(source);
     if (!result.ok) return result;
-    const recorded = await recordPreview(source);
-    const preview = recorded.ok && recorded.preview.kind === 'episode' ? recorded.preview : undefined;
     const { time, reward, total } = result.log;
-    return Comlink.transfer({ ...result, preview }, [time.buffer, reward.buffer, total.buffer, ...(preview ? previewBuffers(preview) : [])] as ArrayBuffer[]);
+    return Comlink.transfer(result, [time.buffer, reward.buffer, total.buffer] as ArrayBuffer[]);
   },
 
   async match(req: MatchTestRequest): Promise<MatchTestResult> {

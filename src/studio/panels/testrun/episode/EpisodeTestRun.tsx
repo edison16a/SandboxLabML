@@ -1,18 +1,20 @@
 'use client';
 
 import { useMemo } from 'react';
+import type { EpisodePreview } from '@/engine/lessons/preview/types';
 import { Stat } from '@/ui/primitives/Panel';
 import type { Analysis } from '../../../doc/analyze';
 import { ResultSection } from '../ResultSection';
 import { RewardChart } from '../RewardChart';
 import { RunBar, RunFailure } from '../RunBar';
-import { runEpisodeInWorker } from '../testRunClient';
+import { recordInWorker, runEpisodeInWorker } from '../testRunClient';
 import { TickTable, type TickColumn } from '../TickTable';
 import { useTestJob } from '../useTestJob';
+import { EpisodeReplay } from './EpisodeReplay';
 import type { EpisodeTestResult, EpisodeTickLog } from './run';
-import { TestRunPreview } from './TestRunPreview';
 
-type Ok = Extract<EpisodeTestResult, { ok: true }>;
+/** A finished test episode, with its recording for the replay when the env has a top view to draw. */
+type Ok = Extract<EpisodeTestResult, { ok: true }> & { preview: EpisodePreview | null };
 
 /** Ticks of an episode test: the points each gave and the running total. Ticks with points count as notable. */
 function Ticks({ log }: { log: EpisodeTickLog }) {
@@ -33,7 +35,14 @@ function Ticks({ log }: { log: EpisodeTickLog }) {
  */
 export function EpisodeTestRun({ text, analysis }: { text: string; analysis: Analysis }) {
   const job = useTestJob<Ok>();
-  const run = () => job.start((signal) => runEpisodeInWorker(text, signal));
+  const run = () =>
+    job.start(async (signal) => {
+      const result = await runEpisodeInWorker(text, signal);
+      if (!result.ok) return result;
+      // The same episode recorded for the replay. A recording that fails only leaves the replay out.
+      const recorded = await recordInWorker(text, signal);
+      return { ...result, preview: recorded.ok && recorded.preview.kind === 'episode' ? recorded.preview : null };
+    });
   const result = job.result;
   return (
     <>
@@ -48,9 +57,9 @@ export function EpisodeTestRun({ text, analysis }: { text: string; analysis: Ana
               <Stat key={m.label} label={m.label} value={m.value} />
             ))}
           </div>
-          {result.preview && (
-            <ResultSection title="Top view" hint="The same episode, replayed">
-              <TestRunPreview preview={result.preview} />
+          {result.preview && result.preview.scene !== null && (
+            <ResultSection title="Replay" hint="from above, at real time">
+              <EpisodeReplay preview={result.preview} />
             </ResultSection>
           )}
           <ResultSection title="Reward" hint={`${(result.ticks / result.tickHz).toFixed(1)} s with ${result.blueprint}`}>
