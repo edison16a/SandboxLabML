@@ -13,6 +13,8 @@ export interface GenerationContext {
   meanFitness: number;
   /** Generations since the best fitness of the run last improved. */
   stagnation: number;
+  /** The env's generation metrics, such as the level or the share that arrived. */
+  metrics?: Readonly<Record<string, number>>;
 }
 
 export type TrackDirective = { kind: 'builtin'; id: string } | { kind: 'random'; seed: number };
@@ -23,6 +25,8 @@ export interface GenerationDirectives {
   racing?: { track?: TrackDirective };
   /** Match rules from the Hide and Seek operators, such as prepTime and opponents. */
   hideseek?: HideSeekDirective;
+  /** Requests for the script's own env, written by its registry operators and read by its env module. */
+  env?: Record<string, unknown>;
 }
 
 /**

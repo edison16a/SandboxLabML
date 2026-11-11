@@ -5,7 +5,10 @@ import type { Effect, EffectArgs, PresetTier, Reader, RegistryEntry, RegistrySli
 
 const view = (v: unknown) => v as GenerationView;
 
-function counter(name: string, field: keyof GenerationContext, summary: string, description: string, example: string, explain: string, presets: readonly PresetTier[] = []): RegistryEntry {
+/** The numeric fields of the generation context, the ones a counter can read. */
+type CounterField = Exclude<keyof GenerationContext, 'metrics'>;
+
+function counter(name: string, field: CounterField, summary: string, description: string, example: string, explain: string, presets: readonly PresetTier[] = []): RegistryEntry {
   return entry({
     name,
     kind: 'sensor',

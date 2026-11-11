@@ -3,6 +3,7 @@ import { mixSeed } from '../core/rng';
 import { BENCHMARK_VERSION, ENGINE_VERSION } from '../core/version';
 import { modelMetrics } from '../neat/metrics';
 import type { Genome } from '../neat/types';
+import type { RacingCar } from '../racing/car/runtime';
 import { builtInInputCount } from '../racing/sensors/inputSchema';
 import { createScriptHost } from '../script/host';
 import type { RunConfig } from '../training/runConfig';
@@ -27,7 +28,7 @@ function examDriverFor(config: RunConfig): ExamDriver | null {
   return {
     inputs: config.blueprint.inputs,
     customSensors: host?.customSensors ?? [],
-    sensorsFor: (seed, course) => host?.createRacingController(seed, course.track) ?? null,
+    sensorsFor: (seed, course) => host?.createController<RacingCar>({ seed, track: course.track }) ?? null,
   };
 }
 
