@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { RAY_MOVER, RAY_NONE, RAY_SOLID, RAY_SPIKES } from '../agent';
 import { sampleFlow } from '../course/fieldSample';
+import { NAVIGATION_BLUEPRINTS } from '../pipeline/blueprints';
 import { navRayAngles, STANDARD_NAVIGATION_INPUTS } from '../sensors/inputConfig';
+import { navigationInputSchema } from '../sensors/inputSchema';
 import { bearingOf, NavigationObserver } from '../sensors/observe';
 import { castRay, rayRects, type RayWorld } from '../sensors/raycast';
 import { builtinNavigationController } from '../builtinReward';
@@ -97,5 +99,16 @@ describe('observer', () => {
     expect(f.z).toBeGreaterThan(0.5);
     sampleFlow(course.field, -10, 5.5, f);
     expect(f.x).toBeGreaterThan(0.8);
+  });
+});
+
+describe('input labels', () => {
+  it('fit the network graph and never read the same twice, for every brain', () => {
+    for (const b of NAVIGATION_BLUEPRINTS) {
+      const labels = navigationInputSchema(b.inputs).map((s) => s.label);
+      // The graph shows 17 characters before it cuts a label short.
+      expect(labels.filter((l) => l.length > 17), b.id).toEqual([]);
+      expect(new Set(labels).size, b.id).toBe(labels.length);
+    }
   });
 });
