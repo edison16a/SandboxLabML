@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { HIT_NONE } from '@/engine/driving/sensors/lidar';
+import { HIT_CAR, HIT_NONE, HIT_PED, HIT_STATIC } from '@/engine/driving/sensors/lidar';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { FRAME_PRIORITY } from '../frame/FrameDriver';
 import { useDrivingScene } from '../frame/sceneContext';
@@ -10,9 +10,10 @@ import { glowTexture } from '../city/streetscape/glow';
 import { hitColor } from './palette';
 
 const MAX = 64;
-/** The sensor's height on the roof, and the height beams land at on what they hit, m. */
+/** The sensor's height on the roof, m. */
 const ROOF = 1.78;
-const HIT_HEIGHT = 0.75;
+/** Where a beam lands on what it hit, m: the top of a curb, a car's flank, a person's chest. A miss fades out at 1 m. */
+const LAND = { [HIT_NONE]: 1.0, [HIT_STATIC]: 0.12, [HIT_CAR]: 0.7, [HIT_PED]: 1.1 } as Record<number, number>;
 
 /**
  * The lidar the brain reads, drawn as a fan of fine beams from the roof
@@ -63,11 +64,12 @@ export function LidarBeams() {
       const c = hitColor(kind);
       const far = kind === HIT_NONE ? 0.18 : 0.55;
       lp.setXYZ(i * 2, ox, ROOF, oz);
-      lp.setXYZ(i * 2 + 1, hx, kind === HIT_NONE ? 1.0 : HIT_HEIGHT, hz);
+      const land = LAND[kind] ?? 1;
+      lp.setXYZ(i * 2 + 1, hx, land, hz);
       lc.setXYZ(i * 2, c.r * 0.04, c.g * 0.04, c.b * 0.04);
       lc.setXYZ(i * 2 + 1, c.r * far, c.g * far, c.b * far);
       if (kind !== HIT_NONE) {
-        dp.setXYZ(dots, hx, HIT_HEIGHT, hz);
+        dp.setXYZ(dots, hx, land, hz);
         dc.setXYZ(dots, c.r * 0.9, c.g * 0.9, c.b * 0.9);
         dots++;
       }
