@@ -167,6 +167,12 @@ export class NavigationEnv {
     return this.obs[i];
   }
 
+  /** What agent i commanded on its latest tick, move then turn, for the inputs panel. */
+  writeOutputs(i: number, out: Float32Array): void {
+    out[0] = this.actions[i][0];
+    out[1] = this.actions[i][1];
+  }
+
   /** Moves every mover to where it stands at `time`. */
   private placeMovers(time: number): void {
     const list = this.course.movers;

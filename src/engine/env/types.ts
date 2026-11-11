@@ -4,7 +4,7 @@
  * knowing about Racing or Hide and Seek directly.
  */
 
-export type EnvId = 'racing' | 'hideseek';
+export type EnvId = 'racing' | 'hideseek' | 'navigation';
 
 /** One brain input, described well enough to label it and draw it in 3D. */
 export interface InputSpec {

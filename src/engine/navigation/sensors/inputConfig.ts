@@ -1,9 +1,10 @@
 /**
  * Which inputs a Navigation brain gets. Chosen when a run is created and
  * frozen afterwards, because input nodes and innovation numbers depend on
- * it. Each flag adds a fixed group of input nodes.
+ * it. Each flag adds a fixed group of input nodes. A type, not an
+ * interface, so a blueprint can carry it as the generic EpisodeInputs.
  */
-export interface NavigationInputConfig {
+export type NavigationInputConfig = {
   rays: {
     count: number;
     /** Total field of view, rad. A full turn spreads rays all round, starting straight ahead. */
@@ -23,7 +24,7 @@ export interface NavigationInputConfig {
   time: boolean;
   /** Gaussian sensor noise as a fraction of each input's range, 0 to 0.1. */
   noise: number;
-}
+};
 
 export const STANDARD_NAVIGATION_INPUTS: NavigationInputConfig = {
   rays: { count: 12, fov: 2 * Math.PI, range: 10, hitTypes: true },
