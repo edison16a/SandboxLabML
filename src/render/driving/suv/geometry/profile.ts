@@ -15,7 +15,7 @@ import { deg, key, type Key } from './section';
  * The spans between keys are smooth curves. Only the rocker and the door
  * sculpt are creases; the shoulder rolls over in one clean radius.
  */
-const halfWidth = profile([[-2.45, 0.85], [-2.36, 0.93], [-2.2, 0.975], [-1.9, 0.996], [-1.42, 1.0], [-1.0, 0.988], [-0.55, 0.962], [0.0, 0.955], [0.6, 0.958], [1.1, 0.976], [1.48, 0.985], [1.9, 0.973], [2.2, 0.938], [2.38, 0.88], [2.45, 0.845]]);
+const halfWidth = profile([[-2.45, 0.965], [-2.3, 0.979], [-1.9, 0.996], [-1.42, 1.0], [-1.0, 0.988], [-0.55, 0.962], [0.0, 0.955], [0.6, 0.958], [1.1, 0.976], [1.48, 0.985], [1.9, 0.975], [2.2, 0.956], [2.45, 0.94]]);
 const shoulderY = profile([[-2.45, 0.99], [-2.2, 0.962], [-1.9, 0.942], [-1.42, 0.936], [-0.6, 0.912], [0.6, 0.9], [1.48, 0.925], [2.1, 0.945], [2.45, 0.955]]);
 /** The lower door sculpt: low at the front door, rising toward the rear haunch. */
 const creaseY = profile([[-2.45, 0.6], [-1.42, 0.655], [-0.95, 0.645], [1.0, 0.575], [1.48, 0.57], [2.45, 0.55]]);
@@ -26,6 +26,25 @@ const beltInset = profile([[-2.45, 0.17], [-2.2, 0.2], [-1.42, 0.205], [-0.8, 0.
 
 export const NOSE = BODY.nose;
 export const TAIL = BODY.tail;
+
+/**
+ * How the ends round off. Over the last `plan` m the sides curl in until
+ * they face straight forward (or back), a corner radius in plan view,
+ * while the top drops by `roll`, so the hood rolls down into the face.
+ * The face then meets the body with no crease anywhere round its edge.
+ */
+export const ROUND = { nose: { plan: 0.22, roll: 0.06 }, tail: { plan: 0.18, roll: 0.025 } };
+
+/** How far the end rounding pulls the section at x in (plan) and down (roll), m. */
+export function endRound(x: number): { inset: number; drop: number } {
+  const end = x > 0 ? ROUND.nose : ROUND.tail;
+  const into = x > 0 ? x - NOSE + end.plan : TAIL + end.plan - x;
+  if (into <= 0) return { inset: 0, drop: 0 };
+  // A quarter circle in plan and a quarter ellipse in side view, both reaching vertical at the end.
+  const s = Math.min(1, into / end.plan);
+  const k = 1 - Math.sqrt(1 - s * s);
+  return { inset: end.plan * k, drop: end.roll * k };
+}
 
 /** Height of the bottom edge: an SUV's ground clearance, climbing past the wheels for the approach and departure angles. */
 function sillY(x: number): number {
@@ -47,16 +66,17 @@ export interface Section {
 
 /** The belt line at x as (z, y): where the cabin's glass sits on the body. */
 export function beltAt(x: number): [number, number] {
-  return [halfWidth(x) - beltInset(x), beltY(x)];
+  const r = endRound(x);
+  return [halfWidth(x) - r.inset - beltInset(x), beltY(x) - r.drop];
 }
 
 /** Height of the body's top at the centerline: the hood's valley floor, or the rear deck. */
 export function deckY(x: number): number {
-  return beltY(x) - valley(x) + 0.006;
+  return beltY(x) - valley(x) + 0.006 - endRound(x).drop;
 }
 
 export function sectionAt(x: number): Section {
-  const w = halfWidth(x);
+  const w = halfWidth(x) - endRound(x).inset;
   const [bz, by] = beltAt(x);
   const v = valley(x);
   // The sculpt only dishes the doors between the arches; it fades out over the fenders.
@@ -95,14 +115,24 @@ export function archFloor(x: number): number {
   return -1;
 }
 
-/** Stations where sections are taken: even spacing plus dense stations over each arch so its curve stays round. */
+/**
+ * Stations where sections are taken: even spacing, plus dense stations
+ * over each arch so its curve stays round and round each end's curl.
+ */
 export function stations(count: number, archSteps: number): number[] {
   const xs: number[] = [];
-  // Over an arch only its own stations are used: mixing two spacings there streaks the reflections.
+  // Over an arch or an end only its own stations are used: mixing two spacings there streaks the reflections.
   const overArch = (x: number) => AXLES.some((a) => Math.abs(x - a) < ARCH.radius + 0.01);
+  const atEnd = (x: number) => x > NOSE - ROUND.nose.plan - 0.01 || x < TAIL + ROUND.tail.plan + 0.01;
   for (let i = 0; i <= count; i++) {
     const x = TAIL + ((NOSE - TAIL) * i) / count;
-    if (!overArch(x)) xs.push(x);
+    if (!overArch(x) && !atEnd(x)) xs.push(x);
+  }
+  // Spaced by angle round each curl, so the tight end gets as many sections as the gentle start.
+  const steps = Math.max(2, Math.round(archSteps / 2));
+  for (let i = 0; i <= steps; i++) {
+    const s = Math.sin((Math.PI / 2) * (i / steps));
+    xs.push(NOSE - ROUND.nose.plan * (1 - s), TAIL + ROUND.tail.plan * (1 - s));
   }
   for (const axle of AXLES) {
     for (let i = 0; i <= archSteps; i++) {

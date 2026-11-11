@@ -1,4 +1,4 @@
-import { endFace } from './face';
+import { endFace, faceNormal } from './face';
 import { bothSides, gridGeometry, type Vec3 } from './grid';
 import type { Detail, PartBin, Slot } from './parts';
 import { ARCHED_BANDS, archFloor, NOSE, sectionAt, stations, TAIL } from './profile';
@@ -73,9 +73,16 @@ function panelPoints(x: number, bands: number[], counts: number[]): Pt[] {
 /** The body shell, sill to centerline, one grid per panel on each side. */
 export function addBody(bin: PartBin, detail: Detail): void {
   const xs = stations(detail.stations, detail.archSteps);
+  const last = xs.length - 1;
   for (const panel of PANELS) {
-    const rows = xs.map((x) => panelPoints(x, panel.bands, detail.bands).map(([z, y]) => warp([x, y, z])));
-    bin.add(panel.slot, bothSides(gridGeometry(rows)));
+    const raw = xs.map((x) => panelPoints(x, panel.bands, detail.bands));
+    const g = gridGeometry(raw.map((row, i) => row.map(([z, y]) => warp([xs[i], y, z]))));
+    // The end rows have curled round to face straight back and forward: give them the faces' own normals, so the corner and the face shade as one.
+    const n = g.attributes.normal;
+    const cols = raw[0].length;
+    raw[0].forEach(([z, y], j) => n.setXYZ(j, ...faceNormal(-1, xs[0], y, z)));
+    raw[last].forEach(([z, y], j) => n.setXYZ(last * cols + j, ...faceNormal(1, xs[last], y, z)));
+    bin.add(panel.slot, bothSides(g));
   }
   bin.add('paint', endFace(1, NOSE, outline(NOSE, detail), detail));
   bin.add('paint', endFace(-1, TAIL, outline(TAIL, detail), detail));

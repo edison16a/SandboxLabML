@@ -4,7 +4,7 @@ import { at, capPanel, capSpan } from './panels';
 import type { Pt } from './section';
 
 /** The headlight's span across the face, inner to outer end, m. */
-const LAMP = { inner: 0.4, outer: 0.815 };
+const LAMP = { inner: 0.34, outer: 0.69 };
 
 /** A point along the headlight, `u` from its inner end to its outer end, `down` m below the face's top edge. */
 function lampEdge(u: number, down: number): Pt {
@@ -43,8 +43,8 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 /** A side intake's outline, inset by `k` m: a trapezoid whose inner edge leans out and whose top falls toward the corner. */
 function sideIntake(k: number): { lo: (u: number) => Pt; hi: (u: number) => Pt } {
   return {
-    lo: (u) => [lerp(0.505 + k, 0.805 - k, u), 0.432 + k],
-    hi: (u) => [lerp(0.6 + k * 0.6, 0.805 - k, u), lerp(0.745 - k, 0.708 - k, u)],
+    lo: (u) => [lerp(0.43 + k, 0.64 - k, u), 0.432 + k],
+    hi: (u) => [lerp(0.52 + k * 0.6, 0.66 - k, u), lerp(0.745 - k, 0.708 - k, u)],
   };
 }
 
@@ -55,7 +55,7 @@ function sideIntake(k: number): { lo: (u: number) => Pt; hi: (u: number) => Pt }
  */
 function addIntakes(bin: PartBin, detail: Detail): void {
   const c = detail.fine ? 8 : detail.brakes ? 4 : 2;
-  const center = (k: number) => (y: number) => 0.44 - k - (y - 0.432) * 0.3;
+  const center = (k: number) => (y: number) => 0.38 - k - (y - 0.432) * 0.3;
   bin.add('trim', capPanel(1, (y) => -center(0)(y), center(0), 0.432, 0.6, 0.004, c * 2, 2, false));
   bin.add('grille', capPanel(1, (y) => -center(0.016)(y), center(0.016), 0.448, 0.584, 0.007, c * 2, 2, false));
   const frame = sideIntake(0);
@@ -69,7 +69,7 @@ function addIntakes(bin: PartBin, detail: Detail): void {
     return [lerp(a[0], b[0], v), lerp(a[1], b[1], v)];
   };
   bin.add('trim', capSpan(1, mid(0.47), mid(0.55), 0.014, c, 1));
-  bin.add('trim', capPanel(1, at(-0.75), at(0.75), 0.417, 0.437, 0.016, c * 3, 1, false));
+  bin.add('trim', capPanel(1, at(-0.6), at(0.6), 0.42, 0.437, 0.016, c * 3, 1, false));
 }
 
 /** The whole nose: lamps on top, intakes below, all laid on the warped face. */
