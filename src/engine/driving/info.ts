@@ -5,6 +5,7 @@ import { DRIVING_BLUEPRINTS } from './blueprints';
 import { physicsHash, SUV } from './car/params';
 import { DRIVING_METRICS } from './run/metrics';
 import { drivingInputsOf } from './run/inputs';
+import { DRIVING_LESSONS_INFO } from './run/lessonsInfo';
 import type { DrivingInputConfig } from './sensors/inputConfig';
 import { builtInInputCount, DRIVING_OUTPUTS, drivingInputSchema } from './sensors/inputSchema';
 import { DRIVING_SNAPSHOT } from './snapshotLayout';
@@ -55,6 +56,8 @@ export const drivingInfo = {
     // Loaded on first use: the exam brings the autopilot and the script compiler, which training without a script never needs.
     run: async (config, genome, opts) => (await import('../bench/driving/runner')).benchmarkDriving(config, genome, opts),
   },
+
+  lessons: DRIVING_LESSONS_INFO,
 
   load: () => import('./module').then((m) => m.drivingModule),
 } satisfies EpisodeEnvInfo;

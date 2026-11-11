@@ -2,6 +2,7 @@ import type { EpisodeEnvModule } from '../env/episode';
 import type { ChampionRecord } from '../training/records';
 import { drivingInfo } from './info';
 import { drivingContentHash, initialDrivingContent, nextDrivingContent, type DrivingContent } from './run/content';
+import { DRIVING_LESSONS } from './run/lessons';
 import { drivingChampionFields, drivingGenerationMetrics } from './run/metrics';
 import type { DrivingRunResult } from './run/results';
 import { createDrivingRunSetup, type DrivingRunSetup } from './run/setup';
@@ -26,4 +27,5 @@ export const drivingModule: EpisodeEnvModule<DrivingRunSetup, DrivingContent, Dr
 
   championFields: drivingChampionFields,
   generationMetrics: drivingGenerationMetrics,
+  lessons: DRIVING_LESSONS,
 };
