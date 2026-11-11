@@ -10,7 +10,7 @@ export interface FollowTarget {
   key: number;
   x: number;
   z: number;
-  /** A new episode puts everyone back on the start pad: the camera flies there, keeping your angle. */
+  /** A new episode puts everyone back on the start grid: the camera flies there, keeping your angle. */
   epoch: number;
   /** Half the course's size, m, to keep the aim inside it. */
   hx: number;

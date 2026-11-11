@@ -65,7 +65,7 @@ function furnish(d: CourseDraft, level: number): void {
 /**
  * A fresh course for a curriculum level, the same for the same seed.
  * Pieces are placed at random with spacing rules, and the result must
- * leave a walkable path from the start pad to the finish with room to
+ * leave a walkable path from the start line to the finish with room to
  * spare (see isSolvable); a draft that does not is thrown away and the
  * next sub seed tried.
  */

@@ -108,11 +108,12 @@ describe('movers', () => {
   });
 });
 
-describe('the start pad', () => {
-  it('never traps an agent that starts inside a crate', () => {
+describe('the start grid', () => {
+  it('never traps an agent whose spot is inside a crate', () => {
     const course = room([{ kind: 'block', x: -12.4, z: 0, hx: 0.6, hz: 1.6, height: 1 }]);
     const env = new NavigationEnv({ course, params, inputs: STANDARD_NAVIGATION_INPUTS, controller: hold(1) });
-    env.reset([idle, idle, idle], [1, 2, 3]);
+    // The middle spots of the fifth and sixth rows lie inside that crate.
+    env.reset([idle, idle, idle], [1, 2, 3], [66, 83, 84]);
     for (const a of env.agents) expect(deepestOverlap(a.x, a.z, R, course.solidData, course.solids.length)).toBeLessThanOrEqual(1e-6);
     const start = env.agents.map((a) => [a.x, a.z]);
     for (let t = 0; t < 30; t++) {

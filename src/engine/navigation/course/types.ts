@@ -1,6 +1,6 @@
 /**
  * Course data. A course is a rectangular room on the floor: x runs from the
- * start pad to the finish line, z across the width, both in meters with the
+ * start line to the finish line, z across the width, both in meters with the
  * room's center at the origin. Agents face +x at the start, and heading 0
  * points along +x (forward is (cos yaw, -sin yaw), as in Hide and Seek).
  *

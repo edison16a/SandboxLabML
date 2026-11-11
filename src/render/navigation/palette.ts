@@ -22,7 +22,7 @@ export const NAV_COLORS = {
   spikeSteel: '#eef1f5',
   spikeBase: '#24272d',
   spikeTrim: '#d8333f',
-  /** The start pad and the finish gate. */
+  /** The start zone and the finish gate. */
   startPad: '#4c9aff',
   finishGlow: '#eafff4',
   checkerDark: '#1d2129',
