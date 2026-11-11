@@ -2,11 +2,12 @@
 
 import { RotateCcw, ScanEye } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { NAV_LEVELS } from '@/engine/navigation/course/levels';
 import { useLabQuality } from '@/features/settings/useLabQuality';
 import { Button } from '@/ui/primitives/Button';
 import { Segmented } from '@/ui/primitives/Segmented';
+import { useCameraKey } from '../camera/useCameraKey';
 import { NavigationCanvas } from '../NavigationCanvas';
 import { NAV_CAMERAS, nextCamera, type NavCamera } from '../types';
 import { PreviewSim } from './previewSim';
@@ -43,14 +44,7 @@ export function NavigationPreview() {
   const getFeed = useCallback(() => sim, [sim]);
   const onFrame = useCallback((dt: number) => sim.advance(dt), [sim]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey) return;
-      if (e.key === 'c' || e.key === 'C') setCamera((c) => nextCamera(c));
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  useCameraKey(useCallback(() => setCamera((c) => nextCamera(c)), []));
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-bg">
