@@ -4,6 +4,7 @@ import { addArches, addUnderbody } from './arches';
 import { addBody } from './body';
 import { addCabin } from './cabin';
 import { addFront } from './front';
+import { addHoodLines } from './hood';
 import { addRear } from './rear';
 import { merge, mirrorZ } from './grid';
 import { DETAIL, PartBin, type Detail, type Slot } from './parts';
@@ -24,6 +25,7 @@ export function buildBody(detail: Detail): Map<Slot, THREE.BufferGeometry> {
   addFront(bin, detail);
   addRear(bin, detail);
   addSides(bin, detail);
+  addHoodLines(bin, detail);
   addWindows(bin, detail);
   return bin.build();
 }
