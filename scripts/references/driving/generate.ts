@@ -2,25 +2,21 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { DrivingReferenceModel } from '../../../src/engine/bench/driving/models';
 import { REFERENCE_TIERS, summarizeCurve } from '../../../src/engine/bench/references';
 import type { BenchReferences, ReferenceTier } from '../../../src/engine/bench/types';
-import type { DrivingInputConfig } from '../../../src/engine/driving/sensors/inputConfig';
 import { DRIVING_BENCHMARK_VERSION, DRIVING_ENGINE_VERSION } from '../../../src/engine/driving/version';
 import { checkpoints } from '../checkpoints';
 import { numberArg, writeReferences, type Args } from '../file';
 import type { JobPool } from '../pool';
+import { pickDrivingModel } from './pick';
 import type { DrivingReferenceJob, DrivingReferenceResult } from './train';
 
 /** A Driving reference file: the shared curves plus the models the Sandbox can drive. */
 type DrivingReferences = BenchReferences & { models: DrivingReferenceModel[] };
 
-/**
- * The model a tier ships: the final champion of its median seed by final
- * score, so it is typical of the preset rather than its luckiest run.
- */
+/** The model a tier ships (see pickDrivingModel), with how often it arrived safely on the pick's trips logged and left out of the file. */
 function modelOf(tier: ReferenceTier, runs: DrivingReferenceResult[]): DrivingReferenceModel {
-  const sorted = [...runs].sort((a, b) => a.champion.score - b.champion.score || a.job.seed - b.job.seed);
-  const r = sorted[Math.floor((sorted.length - 1) / 2)];
-  const c = r.champion;
-  return { tier, seed: r.job.seed, generation: c.generation, score: Math.round(c.score * 10) / 10, blueprint: c.blueprint, inputs: c.inputs as DrivingInputConfig, genome: c.genome };
+  const { sandboxShare, ...model } = pickDrivingModel(tier, runs);
+  console.log(`${tier} model: seed ${model.seed}, generation ${model.generation}, benchmark ${model.score}, safe on ${Math.round(sandboxShare * 100)}% of Sandbox trips`);
+  return model;
 }
 
 /**
@@ -43,12 +39,13 @@ function stableDate(path: string, next: DrivingReferences): DrivingReferences {
  * it trains several seeds with a population of 100 on the settings a new
  * run uses (Midtown, the automatic curriculum, three trips), benchmarks
  * the champion every few generations, keeps the median and middle half of
- * the scores at each checkpoint, and ships each tier's typical final
- * champion as a model the Sandbox can drive.
+ * the scores at each checkpoint, and ships each tier's most reliable
+ * champion as a model the Sandbox can drive (see pickDrivingModel).
  *
  * Options: --seeds 6, --first-seed 1, --generations 200, --every 10,
  * --population 100, --tiers beginner,intermediate,advanced, --out file,
- * --dump file (every run's checkpoints and champions as JSON, to study).
+ * --dump file (every run's checkpoints and champions as JSON, to study),
+ * --from-dump file (build the file from such a dump without training).
  * A smoke run: --seeds 1 --generations 4 --every 2 --population 20.
  */
 export async function generateDriving(args: Args, pool: JobPool): Promise<void> {
@@ -61,26 +58,35 @@ export async function generateDriving(args: Args, pool: JobPool): Promise<void> 
   const tiers = args.tiers ? (args.tiers.split(',') as ReferenceTier[]) : [...REFERENCE_TIERS];
   // Advanced first: runs that climb further drive busier streets and take longer, so they start early.
   const jobs: DrivingReferenceJob[] = [...tiers].reverse().flatMap((tier) => Array.from({ length: seeds }, (_, i) => ({ kind: 'driving' as const, tier, seed: firstSeed + i, generations, every, population })));
-  console.log(`Driving reference runs: ${tiers.length} tiers x ${seeds} seeds, ${generations} generations, population ${population}.`);
+  if (!args['from-dump']) console.log(`Driving reference runs: ${tiers.length} tiers x ${seeds} seeds, ${generations} generations, population ${population}.`);
   const started = performance.now();
-  const results = await pool.run<DrivingReferenceResult>(jobs, (r) =>
-    console.log(`${r.job.tier} seed ${r.job.seed}: final ${r.scores[r.scores.length - 1].toFixed(1)}, level ${r.levels[r.levels.length - 1]}, in ${r.seconds.toFixed(0)} s`),
-  );
-  const gens = checkpoints(generations, every);
+  // A dump from an earlier run skips the training and only builds the file again, with the current picking rules.
+  const results = args['from-dump']
+    ? (JSON.parse(readFileSync(args['from-dump'], 'utf8')) as DrivingReferenceResult[])
+    : await pool.run<DrivingReferenceResult>(jobs, (r) =>
+        console.log(`${r.job.tier} seed ${r.job.seed}: final ${r.scores[r.scores.length - 1].toFixed(1)}, level ${r.levels[r.levels.length - 1]}, in ${r.seconds.toFixed(0)} s`),
+      );
+  if (args.dump) writeFileSync(args.dump, JSON.stringify(results));
+  const file = referenceFile(results, tiers);
+  writeReferences(out, stableDate(out, file));
+  for (const r of file.references) console.log(`${r.tier}: final median ${r.finalScore}`);
+  console.log(`Wrote ${out} in ${((performance.now() - started) / 1000).toFixed(0)} s.`);
+}
+
+/** The reference file from finished runs: each tier's curve, from the median and middle half of its seeds, and its model. */
+function referenceFile(results: readonly DrivingReferenceResult[], tiers: readonly ReferenceTier[]): DrivingReferences {
+  const first = results[0].job;
+  const gens = checkpoints(first.generations, first.every);
   const byTier = (tier: ReferenceTier) => results.filter((r) => r.job.tier === tier).sort((a, b) => a.job.seed - b.job.seed);
   // The last two checkpoints: the curriculum keeps moving the level, so one checkpoint alone swings with it.
   const references = tiers.map((tier) => summarizeCurve(tier, gens, byTier(tier).map((r) => r.scores), 2));
-  const file: DrivingReferences = {
+  return {
     env: 'driving',
     benchmarkVersion: DRIVING_BENCHMARK_VERSION,
     engineVersion: DRIVING_ENGINE_VERSION,
     generatedAt: new Date().toISOString().slice(0, 10),
-    seeds,
+    seeds: new Set(results.map((r) => r.job.seed)).size,
     references,
     models: tiers.map((tier) => modelOf(tier, byTier(tier))),
   };
-  writeReferences(out, stableDate(out, file));
-  if (args.dump) writeFileSync(args.dump, JSON.stringify(results));
-  for (const r of references) console.log(`${r.tier}: final median ${r.finalScore}`);
-  console.log(`Wrote ${out} in ${((performance.now() - started) / 1000).toFixed(0)} s.`);
 }
