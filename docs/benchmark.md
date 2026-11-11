@@ -227,4 +227,4 @@ The brain matters more than the rewards. Four seeds of 60 generations each, pool
 | Advanced without the extra courses | Standard | 74 |
 | Advanced | Advanced (no path hint) | 39 |
 
-The Starter brain has 11 inputs. The Standard brain sees more (hit types, its speed and the clock) but has 42 inputs, so evolution needs longer to tune it. The Advanced brain has no path hint and mostly stays stuck behind walls in 60 generations. All three presets therefore use the Starter brain, and on it they rank Beginner, Intermediate, Advanced.
+The Starter brain has 11 inputs. The Standard brain sees more (hit types, its speed and the clock) but has 42 inputs, so evolution needs longer to tune it. The Advanced brain has no path hint and mostly stays stuck behind walls in 60 generations. All three presets therefore use the Starter brain, and on it they rank Beginner, Intermediate, Advanced. New runs in the lab start on the Starter brain too, so a first run climbs along the reference curves.

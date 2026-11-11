@@ -19,7 +19,7 @@ export const NAVIGATION_BLUEPRINTS: NavigationBlueprint[] = [
     name: 'Navigation Starter',
     tier: 'starter',
     description: 'Eight rays, the finish and the path hint. 11 inputs.',
-    teaches: 'Running to the line and round crates.',
+    teaches: 'Every level: the path hint leads round crates, walls and spikes.',
     inputs: { ...STANDARD_NAVIGATION_INPUTS, rays: { count: 8, fov: 2 * Math.PI, range: 8, hitTypes: false }, velocity: false, time: false },
   },
   {
@@ -28,7 +28,7 @@ export const NAVIGATION_BLUEPRINTS: NavigationBlueprint[] = [
     name: 'Navigation Standard',
     tier: 'standard',
     description: 'Twelve rays that tell walls, spikes and movers apart, the finish, the path hint, speed and time. 42 inputs.',
-    teaches: 'Every level, spikes and movers included.',
+    teaches: 'Telling spikes and movers from walls, which takes longer to learn.',
     inputs: STANDARD_NAVIGATION_INPUTS,
   },
   {
