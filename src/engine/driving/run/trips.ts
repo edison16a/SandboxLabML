@@ -9,12 +9,10 @@ import { drivingEnvOptions } from '../setup';
 import { WORLD_SIZE } from '../snapshot';
 import { combineLegs, type DrivingRunResult } from './results';
 import type { DrivingRunSetup } from './setup';
+import { WORLD_TRIP, WORLD_TRIPS } from './tripHeader';
 
 /** Ticks the finished scene of a trip stays on before the next trip starts: 1.5 s, so a viewer sees how it ended. */
 export const TRIP_HOLD = 45;
-/** World header slots this env fills: the trip on screen and how many trips there are. */
-export const WORLD_TRIP = 6;
-export const WORLD_TRIPS = 7;
 
 /**
  * A generation of Driving: every brain drives each trip of the setup, one

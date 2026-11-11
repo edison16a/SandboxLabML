@@ -35,7 +35,8 @@ export function writeLearner(l: DrivingLearner, out: Float32Array, o: number): v
  * The world snapshot: a header, then fixed size blocks for signals, other
  * cars and people, so a reader finds any field by offset alone.
  *
- * header: time, signal count, car count, person count, signals on (1/0), level, 0, 0
+ * header: time, signal count, car count, person count, signals on (1/0), level, trip, trips
+ * (the trip slots are 0 here; a generation of several trips fills them, see run/tripHeader.ts)
  * signal: light for east, north, west and south bound traffic (-1 no street), walk with north south, walk with east west
  * car: x, y, heading, kind, speed, flags, length, width
  * person: x, y, heading, walk phase, state, look
