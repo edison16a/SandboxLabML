@@ -38,3 +38,15 @@ export function inHideSeekTick(lines: string): string {
 export function inHideSeekGeneration(lines: string): string {
   return `script "t" for hideseek v1\neach tick {\n  ${HIDESEEK_ACT}\n}\n\neach generation {\n${lines}\n}\n`;
 }
+
+/** The line that makes a Navigation runner follow its brain. */
+export const NAVIGATION_ACT = 'act(move: brain.move, turn: brain.turn)';
+
+/** Wraps lines in a Navigation script with one each tick block. */
+export function inNavigationTick(lines: string): string {
+  return `script "t" for navigation v1\nbrain navigation-standard\n\neach tick {\n  ${NAVIGATION_ACT}\n${lines}\n}\n`;
+}
+
+export function inNavigationGeneration(lines: string): string {
+  return `script "t" for navigation v1\neach tick {\n  ${NAVIGATION_ACT}\n}\n\neach generation {\n${lines}\n}\n`;
+}

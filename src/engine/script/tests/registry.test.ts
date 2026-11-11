@@ -10,7 +10,7 @@ import { check } from '../checker';
 import { parse } from '../parser';
 import { HIDESEEK_PRESETS } from '../presets/hideseek';
 import { RACING_PRESETS } from '../presets/racing';
-import { errors, inGeneration, inHideSeekGeneration, inHideSeekTick, inTick, problems } from './helpers';
+import { errors, inGeneration, inHideSeekGeneration, inHideSeekTick, inNavigationGeneration, inNavigationTick, inTick, problems } from './helpers';
 
 const CATEGORIES = ['sensors', 'actions', 'rewards', 'logic', 'math', 'evolution', 'environment'];
 const TIERS = ['beginner', 'intermediate', 'advanced'];
@@ -26,13 +26,17 @@ const holes = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]
 function exampleScripts(e: RegistryEntry): string[] {
   const body = `  ${e.example.replace(/\n/g, '\n  ')}`;
   const out: string[] = [];
-  if (e.env !== 'hideseek') {
+  if (e.env === 'racing' || e.env === 'core') {
     if (e.scope !== 'generation') out.push(inTick(`  drive(steer: brain.steer, pedal: brain.pedal)\n${body}`));
     if (e.scope !== 'tick') out.push(inGeneration(body));
   }
-  if (e.env !== 'racing') {
+  if (e.env === 'hideseek' || e.env === 'core') {
     if (e.scope !== 'generation') out.push(inHideSeekTick(body));
     if (e.scope !== 'tick') out.push(inHideSeekGeneration(body));
+  }
+  if (e.env === 'navigation' || e.env === 'core') {
+    if (e.scope !== 'generation') out.push(inNavigationTick(body));
+    if (e.scope !== 'tick') out.push(inNavigationGeneration(body));
   }
   return out;
 }
@@ -72,7 +76,7 @@ describe('registry entries', () => {
   it('presets lists exactly the tiers whose preset script uses the entry', () => {
     for (const preset of RACING_PRESETS) {
       const used = usedBy(preset.source).map((e) => e.name);
-      const tagged = REGISTRY.filter((e) => e.env !== 'hideseek' && e.presets.includes(preset.tier)).map((e) => e.name);
+      const tagged = REGISTRY.filter((e) => (e.env === 'racing' || e.env === 'core') && e.presets.includes(preset.tier)).map((e) => e.name);
       expect(used.sort(), preset.id).toEqual(tagged.sort());
     }
   });
@@ -87,7 +91,7 @@ describe('registry entries', () => {
   });
 
   it('names are unique within each environment', () => {
-    for (const env of ['racing', 'hideseek'] as const) {
+    for (const env of ['racing', 'hideseek', 'navigation'] as const) {
       const names = SLICES.filter((s) => s.env === 'core' || s.env === env).flatMap((s) => s.entries.map((e) => e.name));
       expect(new Set(names).size).toBe(names.length);
       expect(entriesByName(env).size).toBe(names.length);
