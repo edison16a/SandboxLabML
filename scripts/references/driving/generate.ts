@@ -58,7 +58,7 @@ export async function generateDriving(args: Args, pool: JobPool): Promise<void> 
   const population = numberArg(args, 'population', 100);
   const out = args.out ?? 'public/references/driving.json';
   const tiers = args.tiers ? (args.tiers.split(',') as ReferenceTier[]) : [...REFERENCE_TIERS];
-  // Longest first: the Advanced preset drives three trips at every level, so it is handed out before the rest.
+  // Advanced first: runs that climb further drive busier streets and take longer, so they start early.
   const jobs: DrivingReferenceJob[] = [...tiers].reverse().flatMap((tier) => Array.from({ length: seeds }, (_, i) => ({ kind: 'driving' as const, tier, seed: firstSeed + i, generations, every, population })));
   console.log(`Driving reference runs: ${tiers.length} tiers x ${seeds} seeds, ${generations} generations, population ${population}.`);
   const started = performance.now();

@@ -26,7 +26,7 @@ export const DRIVING_PRESETS: readonly ScriptPreset[] = [
     name: 'Advanced',
     tier: 'advanced',
     env: 'driving',
-    description: 'The built-in reward plus care around people and cars, three trips a generation and new random cities once the lights are learned.',
+    description: 'The built-in reward plus care around people and cars, and new random cities once the lights are learned.',
     source: DRIVING_ADVANCED,
   },
 ];

@@ -78,9 +78,9 @@ describe('the Driving presets', () => {
   it('Advanced mixes in random cities only once the lights are learned', () => {
     const script = compiled(preset('advanced'));
     const at = (generation: number, level: number) => script.runGeneration({ ...GEN, generation, metrics: { level } }, new Rng(1), NEAT).env;
-    expect(at(5, 2)).toEqual({ trips: 3 });
-    expect(at(5, 3)).toEqual({ trips: 3, city: 'random-5' });
-    expect(at(6, 3)).toEqual({ trips: 3, city: 'midtown' });
+    expect(at(5, 2) ?? {}).toEqual({});
+    expect(at(5, 3)).toEqual({ city: 'random-5' });
+    expect(at(6, 3)).toEqual({ city: 'midtown' });
   });
 
   it('driving entries list exactly the tiers whose preset uses them', () => {

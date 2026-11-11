@@ -1,8 +1,9 @@
 /**
  * Advanced driving preset: the Intermediate rules, two habits that keep
- * people and cars ahead safe, three trips a generation, and new random
- * cities once the lights are learned, so the brain is ready for streets
- * it has never seen (which is what the benchmark drives).
+ * people and cars ahead safe, and new random cities once the lights are
+ * learned, so the brain is ready for streets it has never seen (which is
+ * what the benchmark drives). It drives the run's own trips per
+ * generation, three in a new run.
  */
 export const DRIVING_ADVANCED = `// Advanced: careful drivers for cities they have never seen.
 script "Advanced: new streets, safer habits" for driving v1
@@ -46,9 +47,6 @@ each generation {
   select(top: 20%)
   breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })
   keepChampions()
-
-  // Three trips a generation: a fairer score, and turns and straight runs in each one.
-  routesPerGeneration(count: 3)
 
   // Once the lights are learned, every other generation drives a new random city.
   // A brain that only ever sees Midtown learns Midtown. New streets teach it to read the road.

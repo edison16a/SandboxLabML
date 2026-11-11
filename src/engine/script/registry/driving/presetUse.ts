@@ -34,7 +34,6 @@ const USED_BY: Readonly<Record<string, readonly PresetTier[]>> = {
   'person.distance': ADVANCED,
   'carAhead.seen': ADVANCED,
   'carAhead.gap': ADVANCED,
-  routesPerGeneration: ADVANCED,
   'curriculum.level': ADVANCED,
   randomCity: ADVANCED,
   useCity: ADVANCED,
