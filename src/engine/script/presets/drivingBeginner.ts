@@ -36,7 +36,8 @@ each generation {
   // The best brain of each species moves on unchanged, so it is never lost.
   keepChampions()
   // Move up a level once half the trips of the best brains arrive safely.
-  // Nothing here punishes a red light, so expect this run to stall at traffic lights.
+  // Nothing here punishes a red light. Its brains learn to stop for one late, once
+  // cross traffic turns running it into a crash that ends the trip.
   autoLevel(share: 50%)
 }
 `;

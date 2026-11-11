@@ -10,7 +10,7 @@ export const DRIVING_PRESETS: readonly ScriptPreset[] = [
     name: 'Beginner',
     tier: 'beginner',
     env: 'driving',
-    description: 'Points for progress and for arriving, with a small brain. Quick to learn the streets, and it never learns to stop at red.',
+    description: 'Points for progress and for arriving, with a small brain. Nothing punishes a red light, so it learns to stop for one only once cross traffic arrives.',
     source: DRIVING_BEGINNER,
   },
   {

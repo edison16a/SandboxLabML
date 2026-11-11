@@ -207,17 +207,20 @@ In the lab the exam runs in the background on every fifth generation's champion,
 
 Scores only compare within one `DRIVING_BENCHMARK_VERSION` (in `src/engine/driving/version.ts`). Changing a trip, a seed or anything in `src/engine/bench/driving/scoring.ts` must bump it. A change to the simulation bumps `DRIVING_ENGINE_VERSION` instead. Both are stored in every result and in the reference file.
 
-`public/references/driving.json` holds a curve per preset and, beside it, each preset's typical final champion as a model the Sandbox can drive ("Try a trained model"). `scripts/references/driving/generate.ts` trains several seeds per preset on the settings a new run uses (Midtown, the automatic curriculum from level 1, three trips) and benchmarks the champion every few generations. A preset's final score is the median of every seed's scores at the last two checkpoints, because the curriculum keeps moving the level under the champion.
+`public/references/driving.json` holds a curve per preset and, beside it, each preset's most reliable champion as a model the Sandbox can drive ("Try a trained model"). `scripts/references/driving/generate.ts` trains several seeds per preset on the settings a new run uses (Midtown, the automatic curriculum from level 1, three trips) and benchmarks the champion every few generations. A preset's final score is the median of every seed's scores at the last two checkpoints, because the curriculum keeps moving the level under the champion.
+
+The model is picked in `scripts/references/driving/pick.ts`. Every champion benchmarked in the second half of a seed's training drives the Sandbox's first trip (Midtown, level 2) on forty routes, alone, with the built-in rules the Sandbox uses, and the one that arrives safely most often ships. A final champion won its generation on one lucky score over three trips, and the earlier stand-in mostly parked short of the first light. A test drives the model a new run picks on twenty other routes and asks for safe arrivals on at least 70% of them.
 
     npm run refs -- --env driving --workers 3
 
-The defaults are 6 seeds of 120 generations with 100 SUVs. The file shipped now is a stand-in from one seed of 60 generations per preset (about a minute on two threads), so the Sandbox has a model that drives. Its final scores are Beginner 32.9, Intermediate 42.4 and Advanced 42.4. Intermediate and Advanced are the same run until the curriculum reaches level 3, which none did by generation 60.
+The defaults are 6 seeds of 200 generations with 100 SUVs. `--dump file` keeps every run's checkpoints and champions, and `--from-dump file` builds the reference file again from such a dump without training.
 
-Single seed runs of 120 generations, scoring the champion every 20 generations, gave this at generations 100 and 120:
+The file shipped now comes from 3 seeds of 200 generations per preset (22 minutes on three threads). Every seed passed traffic lights and pedestrians and spent its last 30 to 80 generations at traffic, and one Beginner seed reached rush hour.
 
-| Preset | Seed 1 | Seed 2 |
-| --- | --- | --- |
-| Intermediate | 41.1, 48.3 | 40.2, 23.9 |
-| Advanced | 41.1, 53.0 | 53.3, 68.2 |
+| Preset | Final score | Model | Its benchmark | Safe on Sandbox trips |
+| --- | --- | --- | --- | --- |
+| Beginner | 45.4 | seed 3, generation 150 | 72.2 | 80% |
+| Intermediate | 38.7 | seed 1, generation 120 | 50.4 | 95% |
+| Advanced | 43.7 | seed 3, generation 160 | 50.8 | 78% |
 
-Single champions swing a lot from one checkpoint to the next, so these say little on their own. Advanced pulls ahead once its random cities and its care around people and cars come into play at level 3 and up.
+The presets do not rank in order. Beginner punishes nothing but leaving the road, yet its seeds climbed as fast as the others: at level 2 a trip that meets no red light counts as safe, and from level 4 on a red light run drives into cross traffic, which ends the trip. Single champions swing a lot from one checkpoint to the next (one Intermediate seed fell from 50 to 1 within twenty generations at traffic), so three seeds say little about the order.

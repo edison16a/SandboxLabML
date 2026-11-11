@@ -3,10 +3,11 @@ import { REFERENCE_TIERS, referencesPath } from '../references';
 import type { ReferenceTier } from '../types';
 
 /**
- * A trained Driving champion shipped with the reference curves: the final
- * champion of a typical reference run of one preset. The Sandbox drives it
- * so a newcomer sees a skilled SUV without training one first. Its inputs
- * travel with it, so it plays whatever brain the open run uses.
+ * A trained Driving champion shipped with the reference curves: the most
+ * reliable champion of one preset's reference runs (see the generator's
+ * pickDrivingModel). The Sandbox drives it so a newcomer sees a skilled
+ * SUV without training one first. Its inputs travel with it, so it plays
+ * whatever brain the open run uses.
  */
 export interface DrivingReferenceModel {
   tier: ReferenceTier;
