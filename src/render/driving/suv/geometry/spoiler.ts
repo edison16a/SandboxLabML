@@ -13,7 +13,7 @@ import { warp } from './warp';
  * ends, about 3 cm above where the deck would run on, so the roofline
  * turns up at its end. `half` is how far it reaches: the whole tail.
  */
-export const LIP = { root: -2.2, edge: TAIL - 0.002, top: 1.226, crown: 0.03, half: 0.645, edgeDepth: 0.007 };
+export const LIP = { root: -2.2, edge: TAIL - 0.002, top: 1.23, crown: 0.03, half: 0.645, edgeDepth: 0.007 };
 
 /** The deck's top at (x, z) behind the rear glass: the cabin's section there from belt to centerline, read at z. */
 export function deckAt(x: number, z: number): number {
