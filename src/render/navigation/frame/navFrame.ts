@@ -1,5 +1,5 @@
 import type { Course } from '@/engine/navigation/course/build';
-import { MAX_MOVERS } from '@/engine/navigation/snapshot';
+import { MAX_MOVERS } from '@/engine/navigation/course/types';
 import type { NavFeed } from '../types';
 
 /** A blended pose on the floor. */

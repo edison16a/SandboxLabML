@@ -1,7 +1,8 @@
 import { DEFAULT_NAVIGATION_PARAMS, type NavigationParams } from '../params';
 import { buildField, type DistanceField } from './field';
 import { sampleDistance } from './fieldSample';
-import { FINISH_INSET, OUTER_WALL, START_INSET, type CourseSpec, type MoverSpec, type Rect } from './types';
+import { MOVER_SPEED_LIMIT } from './movers';
+import { FINISH_INSET, MAX_MOVERS, OUTER_WALL, START_INSET, type CourseSpec, type MoverSpec, type Rect } from './types';
 
 /**
  * A course ready to run: the spec plus everything derived from it once,
@@ -21,6 +22,7 @@ export interface Course {
   solidData: Float64Array;
   spikes: Rect[];
   spikeData: Float64Array;
+  /** The movers as they run: at most MAX_MOVERS, none faster than MOVER_SPEED_LIMIT (see runnableMover). */
   movers: MoverSpec[];
   field: DistanceField;
   /** Walking distance from the start pad to the finish, m. Progress is measured against it. */
@@ -48,6 +50,21 @@ export function outerWalls(spec: Pick<CourseSpec, 'length' | 'width'>): Rect[] {
   ];
 }
 
+/**
+ * A mover as the course runs it. One faster than MOVER_SPEED_LIMIT could
+ * pass through an agent between two pushes, so its period is stretched
+ * until it is not; it keeps its path and phase. A bad period (zero, or
+ * not a number) gets the slowest safe one. Specs from the Sandbox or a
+ * script go through here, so the physics never meets a mover it cannot
+ * handle.
+ */
+export function runnableMover(m: MoverSpec): MoverSpec {
+  // Top speed is pi * travel / (2 * period), so this is the shortest period within the limit.
+  const shortest = (Math.PI * Math.hypot(m.bx - m.ax, m.bz - m.az)) / (2 * MOVER_SPEED_LIMIT);
+  if (!Number.isFinite(m.period) || m.period <= 0) return { ...m, period: Math.max(1, shortest) };
+  return m.period < shortest ? { ...m, period: shortest } : m;
+}
+
 function pack(rects: readonly Rect[]): Float64Array {
   const out = new Float64Array(rects.length * 4);
   rects.forEach((r, i) => out.set([r.x, r.z, r.hx, r.hz], i * 4));
@@ -65,7 +82,10 @@ export function buildCourse(spec: CourseSpec, params: NavigationParams = DEFAULT
   const movers: MoverSpec[] = [];
   for (const o of spec.obstacles) {
     if (o.kind === 'spikes') spikes.push({ x: o.x, z: o.z, hx: o.hx, hz: o.hz });
-    else if (o.kind === 'mover') movers.push(o);
+    // The world block streams MAX_MOVERS movers at most; any past that are left out.
+    else if (o.kind === 'mover') {
+      if (movers.length < MAX_MOVERS) movers.push(runnableMover(o));
+    }
     else inner.push({ x: o.x, z: o.z, hx: o.hx, hz: o.hz });
   }
   const r = params.agent.radius;

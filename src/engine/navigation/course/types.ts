@@ -83,3 +83,5 @@ export const WALL_HEIGHT = 1.4;
 /** Longest and widest course any level makes, m. Inputs scale distances by these. */
 export const MAX_COURSE_LENGTH = 50;
 export const MAX_COURSE_WIDTH = 16;
+/** Most movers a course runs, so a world buffer can be sized once. buildCourse keeps the first this many. */
+export const MAX_MOVERS = 12;

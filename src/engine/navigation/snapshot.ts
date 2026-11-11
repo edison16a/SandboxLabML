@@ -1,4 +1,5 @@
 import type { SnapshotLayout } from '../env/types';
+import { MAX_MOVERS } from './course/types';
 
 /**
  * 8 floats per agent, shared by the population stream and champion replays.
@@ -30,8 +31,6 @@ export const SNAP_STOP_TIME = 7;
 export const WORLD_TIME = 0;
 export const WORLD_MOVER_COUNT = 1;
 export const WORLD_HEADER = 2;
-/** Most movers a course may hold, so a world buffer can be sized once. */
-export const MAX_MOVERS = 12;
 
 /** Floats in a world block for `movers` movers. */
 export function navigationWorldSize(movers = MAX_MOVERS): number {

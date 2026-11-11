@@ -5,8 +5,9 @@ import { generateCourse } from '../course/generate';
 import { NAV_LEVELS } from '../course/levels';
 import { MOVER_SPEED_LIMIT, moverSweep, moverTopSpeed } from '../course/movers';
 import { NAMED_COURSES } from '../course/presets';
-import type { CourseSpec, Rect } from '../course/types';
+import { MAX_MOVERS, type CourseSpec, type MoverSpec, type Rect } from '../course/types';
 import { generationCourses, nextLevel } from '../curriculum';
+import { navigationWorldSize, WORLD_HEADER } from '../snapshot';
 import { params } from './helpers';
 
 function rectOf(o: CourseSpec['obstacles'][number]): Rect {
@@ -59,6 +60,28 @@ describe('generated courses', () => {
         }
       }
     }
+  });
+});
+
+describe('building a course', () => {
+  const slider = (z: number, period: number): MoverSpec => ({ kind: 'mover', hx: 0.5, hz: 0.5, height: 1, ax: 0, az: z - 2, bx: 0, bz: z + 2, period, phase: 0 });
+  const spec = (obstacles: CourseSpec['obstacles']): CourseSpec => ({ id: 't', name: 'T', level: 5, length: 40, width: 14, obstacles });
+
+  it('slows a mover that is too fast and keeps its path', () => {
+    const course = buildCourse(spec([slider(0, 0.4), slider(0, 4), slider(0, 0), slider(0, Number.NaN)]), params);
+    for (const m of course.movers) {
+      expect(moverTopSpeed(m)).toBeLessThanOrEqual(MOVER_SPEED_LIMIT + 1e-9);
+      expect(Number.isFinite(m.period) && m.period > 0).toBe(true);
+      expect([m.az, m.bz]).toEqual([-2, 2]);
+    }
+    expect(course.movers[1].period).toBe(4);
+  });
+
+  it('runs at most MAX_MOVERS movers, so the world block always fits', () => {
+    const many = Array.from({ length: MAX_MOVERS + 5 }, (_, k) => ({ ...slider(0, 4), ax: -15 + k * 2, bx: -15 + k * 2 }));
+    const course = buildCourse(spec(many), params);
+    expect(course.movers).toHaveLength(MAX_MOVERS);
+    expect(navigationWorldSize()).toBeGreaterThanOrEqual(WORLD_HEADER + course.movers.length * 2);
   });
 });
 
