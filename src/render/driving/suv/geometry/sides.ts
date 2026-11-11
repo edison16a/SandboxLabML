@@ -82,7 +82,8 @@ export function addSides(bin: PartBin, detail: Detail): void {
     m.glass.dispose();
     return;
   }
-  bin.add('metal', m.glass);
+  // Dark mirror glass: a chrome disc would read as a bright button from the chase camera.
+  bin.add('glass', m.glass);
   for (const x of [1.0, -0.235, -0.955]) bin.add('liner', shutLine(x));
   for (const x of [0.2, -0.68]) bin.add('trim', bodyStrip(3, 0.2, 0.3, x, x + 0.18, 0.003, 4));
 }
