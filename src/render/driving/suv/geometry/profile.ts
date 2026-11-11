@@ -48,8 +48,8 @@ export function sectionAt(x: number): Section {
   const v = by - deckY(x);
   // The shoulder: the side arrives upright, the shelf leaves leaning in, a little flatter on the front fender.
   // Round the nose's corner the crease softens, so it fades into the face's top edge instead of stopping dead.
-  const up = deg(1);
-  const shelf = deg(55 + 9 * onHood(x));
+  const up = deg(-3);
+  const shelf = deg(58 + 8 * onHood(x));
   const r = SHOULDER_R * (1 + (x > 0 ? pull.side / ROUND.nose.plan : 0));
   const t = r * Math.tan((shelf - up) / 2);
   // Along the cabin the shelf ends under the glass; on the hood it crests flat at the fender peak, and the tail's deck flattens too.
