@@ -87,6 +87,8 @@ export const toyModule: EpisodeEnvModule<ToySetup, { level: number }, ToyResult,
       for (const c of genome.connections) c.weight = c.from === genome.biasId ? 1 : 0;
       return genome;
     },
+    // The toy builds every episode as a ToyEnv, so the cast only names what createEnv returned.
+    preview: { scene: (env) => ({ goal: (env as ToyEnv).goal }) },
   },
   telemetry: {
     sample: (env, i, out) => {

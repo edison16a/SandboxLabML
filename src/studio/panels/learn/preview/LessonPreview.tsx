@@ -9,10 +9,11 @@ import { LoadingCover } from '@/ui/feedback/LoadingCover';
 import { Loading, Spinner } from '@/ui/feedback/Spinner';
 import { Button } from '@/ui/primitives/Button';
 import { analyze } from '../../../doc/analyze';
+import { previewDrawer } from './episode/drawers';
 import { usePlayback } from './usePlayback';
 import { usePreview } from './usePreview';
 
-/** Words for the preview of each course. A course without its own falls back to plain ones. */
+/** Words for the preview of Racing and Hide and Seek. Registry envs take theirs from their preview drawer. */
 const CAPTION: Partial<Record<EnvId, string>> = {
   racing: 'The drive a check runs, with a fixed test brain.',
   hideseek: 'The match a check plays, with fixed test players. Hider blue, seeker red.',
@@ -61,7 +62,7 @@ export function LessonPreview({ lesson, step, text }: Props) {
         </Button>
       </div>
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md border border-border bg-bg">
-        <canvas ref={canvas} className="absolute inset-0 h-full w-full" role="img" aria-label={LABEL[lesson.course] ?? 'Top view of the test run'} />
+        <canvas ref={canvas} className="absolute inset-0 h-full w-full" role="img" aria-label={LABEL[lesson.course] ?? previewDrawer(lesson.course).label} />
         {!state.preview &&
           (state.message || state.broken ? (
             <p className="absolute inset-0 flex items-center justify-center p-4 text-center text-[12px] text-muted">{state.message ?? 'Fix the errors in the script to see it play.'}</p>
@@ -73,7 +74,7 @@ export function LessonPreview({ lesson, step, text }: Props) {
         <span ref={readout} className="tabular pointer-events-none absolute bottom-1.5 left-1.5 rounded bg-bg/80 px-1.5 py-0.5 font-mono text-[11px] text-muted empty:hidden" aria-hidden="true" />
       </div>
       <p className="text-[11px] text-subtle">
-        {CAPTION[lesson.course] ?? 'The run a check plays, with a fixed test brain.'}
+        {CAPTION[lesson.course] ?? previewDrawer(lesson.course).caption}
         {!own && ` Playing the starter, since the editor holds no ${GAME[lesson.course] ?? envLabel(lesson.course)} script.`}
       </p>
     </section>

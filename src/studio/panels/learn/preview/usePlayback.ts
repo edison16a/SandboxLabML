@@ -2,17 +2,26 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { LessonPreview } from '@/engine/lessons/preview/types';
 import { driveReadout, drawDrive } from './drawDrive';
 import { drawMatch, matchReadout } from './drawMatch';
+import { previewDrawer } from './episode/drawers';
 import { advance } from './playback';
 import { prepareCanvas } from './view';
+
+/** The readout line of a preview at the playhead. Registry envs read theirs from their drawer. */
+function readoutOf(preview: LessonPreview, pos: number): string {
+  if (preview.kind === 'racing') return driveReadout(preview, pos);
+  if (preview.kind === 'hideseek') return matchReadout(preview, pos);
+  return previewDrawer(preview.env).readout(preview, pos);
+}
 
 /** Draws the frame at `pos` and sets the readout, or clears both when there is nothing to show. Waits until the canvas has a size. */
 function paint(canvas: HTMLCanvasElement | null, readout: HTMLElement | null, preview: LessonPreview | null, pos: number): void {
   const ctx = canvas ? prepareCanvas(canvas) : null;
-  if (readout) readout.textContent = !preview ? '' : preview.kind === 'racing' ? driveReadout(preview, pos) : matchReadout(preview, pos);
+  if (readout) readout.textContent = preview ? readoutOf(preview, pos) : '';
   if (!ctx) return;
   if (!preview) ctx.g.clearRect(0, 0, ctx.w, ctx.h);
   else if (preview.kind === 'racing') drawDrive(ctx.g, ctx.w, ctx.h, preview, pos);
-  else drawMatch(ctx.g, ctx.w, ctx.h, preview, pos);
+  else if (preview.kind === 'hideseek') drawMatch(ctx.g, ctx.w, ctx.h, preview, pos);
+  else previewDrawer(preview.env).draw(ctx.g, ctx.w, ctx.h, preview, pos);
 }
 
 function reducedMotion(): boolean {
@@ -60,7 +69,7 @@ export function usePlayback(preview: LessonPreview | null, canvas: RefObject<HTM
     let raf = 0;
     let last = performance.now();
     const frame = (now: number) => {
-      pos.current = advance(pos.current, now - last, preview.ticks);
+      pos.current = advance(pos.current, now - last, preview.ticks, preview.kind === 'episode' ? preview.tickHz : undefined);
       last = now;
       paint(canvas.current, readout.current, preview, pos.current);
       raf = requestAnimationFrame(frame);

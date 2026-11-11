@@ -63,6 +63,11 @@ export class ToyEnv implements EpisodeEnv<ToyResult> {
     private readonly controller: AgentController<ToyWalker>,
   ) {}
 
+  /** Where the walkers are headed, m. The preview hook reads it. */
+  get goal(): number {
+    return this.setup.goal;
+  }
+
   get agentCount(): number {
     return this.walkers.length;
   }

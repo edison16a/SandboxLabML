@@ -63,4 +63,31 @@ export interface EpisodeLessons<R extends EpisodeResult> extends EpisodeLessonsI
   settings(): Readonly<Record<string, unknown>>;
   /** The fixed hand set brain of every test run, so a test means the same thing for every brain shape. */
   testBrain(shape: GenomeShape, schema: readonly InputSpec[]): Genome;
+  /**
+   * What the lesson preview adds to the recording. The recorder plays the
+   * same test episode a check runs and keeps every snapshot, world block,
+   * ray and reward. Left out, the Studio draws the agent's trail from its
+   * snapshot's x and y (or z) fields alone.
+   */
+  preview?: EpisodePreviewHook<R>;
+}
+
+/** World meters, with the second axis named y for every env. */
+export interface PreviewBounds {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
+/** What an env adds to its lesson preview, read once from the freshly reset test episode. */
+export interface EpisodePreviewHook<R extends EpisodeResult> {
+  /**
+   * The still parts of the scene as plain data (it is posted from a
+   * worker), such as walls and spikes or the streets near the route. The
+   * env's Studio drawer reads it.
+   */
+  scene(env: EpisodeEnv<R>): unknown;
+  /** The area the drawer should fit, when the trail alone would crop the scene. */
+  bounds?(env: EpisodeEnv<R>): PreviewBounds;
 }
