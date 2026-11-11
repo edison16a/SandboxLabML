@@ -14,6 +14,14 @@ const CROWN = 1.6;
 const CROWN_BASE = 2.5;
 /** Points along the approach the camera must see: the stop line and up to 30 m back. */
 const SAMPLES = [0, 7.5, 15, 22.5, 30];
+/**
+ * A pole, signal or lamp nearer the lens than this fills the frame as the
+ * camera pans to follow the car through the junction, m. Such a spot is
+ * as bad as a fully blocked one.
+ */
+const TOO_CLOSE = 2.4;
+/** How far the camera steps out along the cross street to clear a pole beside it, m. */
+const CLEAR_STEP = 3.2;
 
 /** A camera spot on a corner, in sim meters, and its height. */
 export interface CornerSpot {
@@ -36,8 +44,16 @@ function blocks(px: number, py: number, ph: number, tx: number, ty: number, c: S
   return ex * ex + ey * ey < reach * reach;
 }
 
-/** How many of the approach's sample points the spot cannot see past poles, lamps and trees. */
+/** True when a pole, signal head or lamp stands so close to the spot that it would fill the frame. */
+function crowded(city: City, spot: CornerSpot): boolean {
+  const s = streetscapeFor(city);
+  const near = (c: { x: number; y: number }) => Math.hypot(c.x - spot.x, c.y - spot.y) < TOO_CLOSE;
+  return s.signals.some((g) => near(g.pole) || near(g.head) || near(g.near)) || s.walks.some(near) || s.lamps.some(near);
+}
+
+/** How many of the approach's sample points the spot cannot see past poles, lamps and trees; all of them when a pole crowds the lens. */
 function blockedSamples(city: City, spot: CornerSpot, node: number, dir: number): number {
+  if (crowded(city, spot)) return SAMPLES.length;
   const s = streetscapeFor(city);
   const n = city.nodes[node];
   const fx = DIR_X[dir];
@@ -91,5 +107,7 @@ export function pickCornerSpot(city: City, node: number, dir: number, turn: numb
   if (bestBlocked <= 1) return best!;
   const lx = -fy * bestSide;
   const ly = fx * bestSide;
-  return { x: best!.x + lx * DODGE, y: best!.y + ly * DODGE, height: RAISED_HEIGHT };
+  const raised = { x: best!.x + lx * DODGE, y: best!.y + ly * DODGE, height: RAISED_HEIGHT };
+  // Further out along the cross street when a pole still stands at the lens.
+  return crowded(city, raised) ? { x: best!.x + lx * CLEAR_STEP, y: best!.y + ly * CLEAR_STEP, height: RAISED_HEIGHT } : raised;
 }
