@@ -49,7 +49,9 @@ function train(script: boolean): { hash: string; tracks: number } {
     const opts = envOptionsFor(setup, cache.get(setup.track), t.host(), mixSeed(t.generation, 0x51));
     records.push(t.complete(evaluateRacing(t.genomes, opts, t.seeds()), 0));
   }
-  return { hash: hashObject({ records, state: t.toState() }), tracks: new Set(records.map((r) => r.trackHash)).size };
+  // The state is hashed in its pre refactor layout, which kept the track under `track`.
+  const { content, ...state } = t.toState();
+  return { hash: hashObject({ records, state: { ...state, track: content } }), tracks: new Set(records.map((r) => r.trackHash)).size };
 }
 
 /**
