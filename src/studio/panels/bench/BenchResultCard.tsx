@@ -8,6 +8,9 @@ import { Radar } from './Radar';
 
 const TIER_LABEL = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' } as const;
 
+/** Reference seeds needed before a band is a spread to rank a score in. Fewer give a line, so the card shows the median alone. */
+const MIN_SPREAD_SEEDS = 3;
+
 function Bar({ label, score, you }: { label: string; score: number; you?: boolean }) {
   return (
     <div className="grid grid-cols-[96px_1fr_36px] items-center gap-2 text-[12px]">
@@ -34,6 +37,7 @@ interface Props {
  */
 export function BenchResultCard({ result, references, generation }: Props) {
   const refs = references && references.benchmarkVersion === result.benchmarkVersion ? references.references : [];
+  const spread = (references?.seeds ?? 0) >= MIN_SPREAD_SEEDS;
   return (
     <div className="flex flex-col gap-5 rounded-lg border border-border bg-surface-2 p-4">
       <div className="grid grid-cols-2 gap-3">
@@ -57,8 +61,8 @@ export function BenchResultCard({ result, references, generation }: Props) {
             <thead className="text-left text-subtle">
               <tr>
                 <th className="py-1 font-medium">Reference</th>
-                <th className="py-1 font-medium">Middle half</th>
-                <th className="py-1 text-right font-medium">You beat</th>
+                <th className="py-1 font-medium">{spread ? 'Middle half' : 'Median'}</th>
+                {spread && <th className="py-1 text-right font-medium">You beat</th>}
               </tr>
             </thead>
             <tbody className="tabular font-mono">
@@ -67,8 +71,8 @@ export function BenchResultCard({ result, references, generation }: Props) {
                 return (
                   <tr key={r.tier} className="border-t border-border">
                     <td className="py-1.5 font-sans">{TIER_LABEL[r.tier]}</td>
-                    <td className="py-1.5">{band ? `${Math.round(band.p25)} to ${Math.round(band.p75)}` : 'none'}</td>
-                    <td className="py-1.5 text-right">{band ? `${percentileIn(result.score, band)}%` : 'none'}</td>
+                    <td className="py-1.5">{band ? (spread ? `${Math.round(band.p25)} to ${Math.round(band.p75)}` : Math.round(band.median)) : 'none'}</td>
+                    {spread && <td className="py-1.5 text-right">{band ? `${percentileIn(result.score, band)}%` : 'none'}</td>}
                   </tr>
                 );
               })}
