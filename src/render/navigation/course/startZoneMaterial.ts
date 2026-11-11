@@ -45,7 +45,7 @@ void main() {
   float behind = uLine - p.x;
   float zone = smoothstep(-aa, aa, behind);
   float wash = zone * (0.045 + 0.085 * exp(-behind * 0.45));
-  float line = 1.0 - smoothstep(0.05 - aa, 0.05 + aa, abs(behind));
+  float line = 1.0 - smoothstep(0.065 - aa, 0.065 + aa, abs(behind));
 
   // The nearest spot of the grid, and whether an agent stands on it.
   float row = floor((uFrontX - p.x) / uRowGap + 0.5);
@@ -60,8 +60,9 @@ void main() {
     spot = ring * step(slot + 0.5, uCount);
   }
 
-  float a = max(max(wash, line * 0.92), spot * 0.5);
-  vec3 col = mix(uColor, vec3(1.0), line * 0.55);
+  // The line in the full start blue, so it holds on the pale tiles and under the sensor fan.
+  float a = max(max(wash, line * 0.95), spot * 0.5);
+  vec3 col = mix(uColor, vec3(1.0), line * 0.12);
   gl_FragColor = vec4(col, a);
   #include <colorspace_fragment>
 }
