@@ -14,15 +14,21 @@ import type { NavigationReferenceJob, NavigationReferenceResult } from './train'
 const FINAL_WINDOW = 3;
 
 /**
- * The shipped model of a tier: the last champion of the seed whose final
- * score sits in the middle of the tier's seeds, so it is typical of the
- * preset rather than its luckiest run.
+ * The run whose final score is closest to the tier's pooled final score,
+ * so the model is typical of the preset: neither its luckiest run nor,
+ * as a lower median of two seeds would be, its weaker one. A tie goes to
+ * the higher score, then the lower seed.
  */
-function typicalModel(tier: ReferenceTier, runs: NavigationReferenceResult[], generations: number): ReferenceModel {
-  const sorted = [...runs].sort((a, b) => a.scores[a.scores.length - 1] - b.scores[b.scores.length - 1] || a.job.seed - b.job.seed);
-  const mid = sorted[Math.floor((sorted.length - 1) / 2)];
+export function typicalRun<T extends { job: { seed: number }; scores: number[] }>(runs: readonly T[], target: number): T {
+  const last = (r: T) => r.scores[r.scores.length - 1];
+  return [...runs].sort((a, b) => Math.abs(last(a) - target) - Math.abs(last(b) - target) || last(b) - last(a) || a.job.seed - b.job.seed)[0];
+}
+
+/** The shipped model of a tier: the last champion of its typical run (see typicalRun). */
+function typicalModel(tier: ReferenceTier, runs: NavigationReferenceResult[], generations: number, finalScore: number): ReferenceModel {
+  const mid = typicalRun(runs, finalScore);
   const preset = NAVIGATION_PRESETS.find((p) => p.tier === tier)!;
-  const brain = compileScript(preset.source).script?.header.brain ?? 'navigation-standard';
+  const brain = compileScript(preset.source).script?.header.brain ?? 'navigation-starter';
   return { tier, seed: mid.job.seed, generation: generations, score: Math.round(mid.scores[mid.scores.length - 1] * 10) / 10, blueprint: brain, preset: preset.id, genome: mid.champion };
 }
 
@@ -69,7 +75,7 @@ export async function generateNavigation(args: Args, pool: JobPool): Promise<voi
     generatedAt: new Date().toISOString().slice(0, 10),
     seeds,
     references,
-    models: tiers.map((tier, i) => typicalModel(tier, byTier[i], generations)),
+    models: tiers.map((tier, i) => typicalModel(tier, byTier[i], generations, references[i].finalScore)),
   });
   if (args.raw) writeFileSync(args.raw, JSON.stringify(results.map((r) => ({ ...r.job, scores: r.scores, levels: r.levels }))));
   for (const [i, r] of references.entries()) {
