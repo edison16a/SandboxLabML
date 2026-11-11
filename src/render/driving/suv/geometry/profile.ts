@@ -47,12 +47,12 @@ export function endRound(x: number): { inset: number; drop: number } {
 }
 
 /** Height of the bottom edge: an SUV's ground clearance, climbing past the wheels for the approach and departure angles. */
-function sillY(x: number): number {
-  return 0.375 + 0.045 * smooth((x - 2.0) / 0.45) + 0.08 * smooth((-x - 1.95) / 0.5);
+export function sillY(x: number): number {
+  return 0.28 + 0.045 * smooth((x - 2.0) / 0.45) + 0.08 * smooth((-x - 1.95) / 0.5);
 }
 
 function rockerY(x: number): number {
-  return 0.48 + 0.035 * smooth((x - 1.95) / 0.45) + 0.06 * smooth((-x - 1.9) / 0.5);
+  return 0.37 + 0.035 * smooth((x - 1.95) / 0.45) + 0.06 * smooth((-x - 1.9) / 0.5);
 }
 
 /** How deep the hood's valley sits below the fender peaks; negative domes the short rear deck instead. */
