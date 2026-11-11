@@ -2,7 +2,7 @@ import type * as THREE from 'three';
 import type { Flight, Orbit } from '@/render/hideseek/camera/flight';
 import { orbitShot } from '@/render/hideseek/camera/framing';
 import { stepSpring } from '@/render/shared/interpolate';
-import { FOLLOW, followShot } from './shots';
+import { FOLLOW, followAim, followAzimuth, followShot, followSide } from './shots';
 
 /** The runner the camera follows this frame, and what can make it jump. */
 export interface FollowTarget {
@@ -28,15 +28,23 @@ export interface FollowTarget {
 export class FollowBest {
   private readonly aim = { x: { value: 0, velocity: 0 }, z: { value: 0, velocity: 0 } };
   private readonly offset = { x: 0, y: 0, z: 0 };
+  private readonly at = { x: 0, z: 0 };
   private epoch = Number.NaN;
+  /** The side of the runner the camera keeps to, and its azimuth gliding toward that side on a spring. */
+  private side = 1;
+  private readonly azimuth = { value: followAzimuth(1), velocity: 0 };
 
   update(camera: THREE.Camera, c: Orbit, f: Flight, t: FollowTarget, dt: number, timeScale: number): void {
-    const ax = Math.max(-t.hx, Math.min(t.hx, t.x + FOLLOW.lead));
-    const az = Math.max(-t.hz, Math.min(t.hz, t.z));
+    followAim(t.x, t.z, t.hx, t.hz, this.at);
+    const ax = this.at.x;
+    const az = this.at.z;
     if (t.key !== f.key) {
       f.key = t.key;
       this.epoch = t.epoch;
-      this.fly(camera, c, f, followShot(t.x, t.z));
+      this.side = followSide(t.z, this.side);
+      this.azimuth.value = followAzimuth(this.side);
+      this.azimuth.velocity = 0;
+      this.fly(camera, c, f, followShot(t.x, t.z, t.hx, t.hz, this.side));
     } else if (f.t >= 1 && t.epoch !== this.epoch) {
       this.epoch = t.epoch;
       const dx = camera.position.x - c.target.x;
@@ -56,6 +64,25 @@ export class FollowBest {
     const nx = stepSpring(this.aim.x, ax, FOLLOW.stiffness, sim);
     const nz = stepSpring(this.aim.z, az, FOLLOW.stiffness, sim);
     f.carry(camera, c, nx - c.target.x, FOLLOW.height - c.target.y, nz - c.target.z);
+    this.swing(camera, c, t.z, sim);
+  }
+
+  /**
+   * Swings the camera round the aim to the side of the wall the runner is
+   * near (see followSide), on its own spring, by turning whatever offset it
+   * has: an angle you orbited to is kept, only shifted.
+   */
+  private swing(camera: THREE.Camera, c: Orbit, z: number, dt: number): void {
+    this.side = followSide(z, this.side);
+    const before = this.azimuth.value;
+    const turn = stepSpring(this.azimuth, followAzimuth(this.side), FOLLOW.swing, dt) - before;
+    if (Math.abs(turn) < 1e-7) return;
+    const dx = camera.position.x - c.target.x;
+    const dz = camera.position.z - c.target.z;
+    const cos = Math.cos(turn);
+    const sin = Math.sin(turn);
+    camera.position.x = c.target.x + dx * cos + dz * sin;
+    camera.position.z = c.target.z + dz * cos - dx * sin;
   }
 
   private fly(camera: THREE.Camera, c: Orbit, f: Flight, shot: { px: number; py: number; pz: number; tx: number; ty: number; tz: number }): void {
