@@ -10,6 +10,9 @@ const BUDGET = 60;
  * the traffic. Each seed trains the lab's default run headless, through
  * the trainer and sim code the workers run, until it reaches level 2.
  */
+/** Generations a default run gets before its top level is judged: enough for seed 7 to climb past traffic lights. */
+const LONG_BUDGET = 70;
+
 describe('driving curriculum', () => {
   for (const seed of [1, 2]) {
     it(`reaches traffic lights within ${BUDGET} generations (seed ${seed})`, async () => {
@@ -18,4 +21,15 @@ describe('driving curriculum', () => {
       expect(reached[1]).toBeLessThanOrEqual(BUDGET);
     }, 600_000);
   }
+
+  it(`still arrives safely at the top level a default run reaches in ${LONG_BUDGET} generations`, async () => {
+    const seen: Array<{ level: number; eliteSafe: number }> = [];
+    await trainDriving({ seed: 7, generations: LONG_BUDGET, onGeneration: (g) => seen.push({ level: g.level, eliteSafe: g.metrics.eliteSafe ?? 0 }) });
+    const top = Math.max(...seen.map((g) => g.level));
+    const recent = seen.slice(-10).filter((g) => g.level === top);
+    expect(top).toBeGreaterThanOrEqual(3);
+    expect(recent.length).toBeGreaterThan(0);
+    // A dead end shows here as a top level the best brains never finish a trip on.
+    expect(recent.reduce((n, g) => n + g.eliteSafe, 0) / recent.length).toBeGreaterThan(0.05);
+  }, 900_000);
 });
