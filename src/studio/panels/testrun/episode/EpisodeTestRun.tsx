@@ -49,7 +49,7 @@ export function EpisodeTestRun({ text, analysis }: { text: string; analysis: Ana
             ))}
           </div>
           {result.preview && (
-            <ResultSection title="Top view" hint={`Stopped: ${result.stopReason}`}>
+            <ResultSection title="Top view" hint="The same episode, replayed">
               <TestRunPreview preview={result.preview} />
             </ResultSection>
           )}
