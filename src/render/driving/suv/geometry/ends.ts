@@ -4,7 +4,7 @@
  * footprint's front and the tail's bumper back to its rear, so these sit
  * a little inside the 4.9 m box.
  */
-export const NOSE = 2.352;
+export const NOSE = 2.362;
 export const TAIL = -2.3;
 
 /**

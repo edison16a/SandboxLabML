@@ -38,7 +38,7 @@ export function noseLean(y: number): number {
  * it reads taut and alive instead of flat, and the hood's edge follows it
  * in a gentle arc. It fades out before the corners.
  */
-export const NOSE_BOW = 0.025;
+export const NOSE_BOW = 0.015;
 
 function noseBow(z: number): number {
   const t = Math.min(1, (z / 0.97) ** 2);
