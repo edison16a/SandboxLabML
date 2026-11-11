@@ -1,7 +1,7 @@
 import { SUV, SUV_SIZE } from '@/engine/driving/car/params';
 
-/** 21 inch wheels on low profile tires, m. */
-export const WHEEL = { radius: 0.375, width: 0.29, rim: 0.272 };
+/** 22 inch wheels on low profile tires, m. */
+export const WHEEL = { radius: 0.388, width: 0.29, rim: 0.286 };
 
 /**
  * The SUV's frame. +X is forward, +Y up, Z across with +Z on the left, and

@@ -62,7 +62,7 @@ export function sectionAt(x: number): Section {
  * round the wheel center; inside it, below the center, the opening runs
  * straight down to the sill.
  */
-export const ARCH = { radius: 0.445, centerY: WHEEL.radius };
+export const ARCH = { radius: 0.455, centerY: WHEEL.radius };
 export const AXLES = [BODY.axleFront, BODY.axleRear];
 /** Bands low enough to meet the wheels: the cladding, the lower door and the band up to the shoulder. */
 export const ARCHED_BANDS = 3;

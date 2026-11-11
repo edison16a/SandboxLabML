@@ -59,7 +59,7 @@ function dish(g: THREE.BufferGeometry): THREE.BufferGeometry {
   return g;
 }
 
-/** The five double spokes of the SUV's 21 inch wheel, faces chamfered so their edges catch the light. */
+/** The five double spokes of the SUV's 22 inch wheel, faces chamfered so their edges catch the light. */
 export function spokes(detail: Detail): THREE.BufferGeometry {
   const depth = detail.brakes ? 0.026 : 0.02;
   const bevel = detail.brakes ? 0.005 : 0;
