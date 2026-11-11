@@ -1,7 +1,8 @@
 import type { Remote } from 'comlink';
-import type { RacingResult } from '@/engine/racing/episode';
+import type { EpisodeResult } from '@/engine/env/episode';
+import { requireEpisodeModule } from '@/engine/env/registry';
+import { EpisodeTrainer, type EpisodeTrainerState } from '@/engine/training/episodeTrainer';
 import type { RunConfig } from '@/engine/training/runConfig';
-import { RacingTrainer, type RacingTrainerState } from '@/engine/training/racingTrainer';
 import { isWatchSpeed, WATCH_SPEEDS, type SpeedMode } from '../shared/protocol';
 import type { SimApi } from '../sim/sim.worker';
 import type { EventSink } from './events';
@@ -10,12 +11,12 @@ import type { EventSink } from './events';
 const CHECKPOINT_EVERY = 10;
 
 /**
- * Drives racing training across the sim workers. Watch speeds run the whole
- * generation live in sim worker 0; Turbo and Max split the population across
- * every worker and run headless.
+ * Drives single population training for any registered env across the sim
+ * workers. Watch speeds run the whole generation live in sim worker 0;
+ * Turbo and Max split the population across every worker and run headless.
  */
-export class RacingCoordinator {
-  private trainer: RacingTrainer;
+export class EpisodeCoordinator {
+  private trainer: EpisodeTrainer;
   private speed: SpeedMode = '1x';
   private running = false;
   private pauseRequested = false;
@@ -24,11 +25,11 @@ export class RacingCoordinator {
   private readonly emit: EventSink;
   private readonly sims: Remote<SimApi>[];
 
-  constructor(config: RunConfig, sims: Remote<SimApi>[], emit: EventSink, state?: RacingTrainerState) {
-    this.trainer = new RacingTrainer(config, state);
+  constructor(config: RunConfig, sims: Remote<SimApi>[], emit: EventSink, state?: EpisodeTrainerState) {
+    this.trainer = new EpisodeTrainer(requireEpisodeModule(config.env), config, state);
     this.sims = sims;
     this.emit = emit;
-    emit({ type: 'track', spec: this.trainer.setup().track });
+    emit({ type: 'content', content: this.trainer.content });
   }
 
   get generation(): number {
@@ -64,7 +65,7 @@ export class RacingCoordinator {
     await this.loopPromise;
   }
 
-  checkpoint(): RacingTrainerState {
+  checkpoint(): EpisodeTrainerState {
     return this.trainer.toState();
   }
 
@@ -84,31 +85,32 @@ export class RacingCoordinator {
 
   private async runGeneration(): Promise<void> {
     const t = this.trainer;
+    const env = t.config.env;
     const started = performance.now();
     const setup = t.setup();
     const genomes = t.genomes;
     const seeds = t.seeds();
     const generation = t.generation;
-    let results: RacingResult[];
+    let results: EpisodeResult[];
     if (isWatchSpeed(this.speed)) {
       this.emit({ type: 'live-start', generation, speed: WATCH_SPEEDS[this.speed] });
       const tags = genomes.map((g) => g.speciesId);
-      results = await this.sims[0].runRacingLive({ setup, genomes, seeds, generation, speed: WATCH_SPEEDS[this.speed], tags });
+      results = await this.sims[0].runLive({ env, setup, genomes, seeds, generation, speed: WATCH_SPEEDS[this.speed], tags });
     } else {
       const chunk = Math.ceil(genomes.length / this.sims.length);
       const parts = await Promise.all(
         this.sims.map((sim, i) => {
           const slice = genomes.slice(i * chunk, (i + 1) * chunk);
-          return slice.length ? sim.evaluateRacing(setup, slice, seeds.slice(i * chunk, (i + 1) * chunk), generation) : [];
+          return slice.length ? sim.evaluate(env, setup, slice, seeds.slice(i * chunk, (i + 1) * chunk), generation) : [];
         }),
       );
       results = parts.flat();
     }
     if (results.length !== genomes.length) return; // live run was stopped part way
-    const trackBefore = t.track.hash;
+    const contentBefore = t.content;
     const record = t.complete(results, performance.now() - started);
     this.emit({ type: 'generation', record });
-    if (t.track.hash !== trackBefore) this.emit({ type: 'track', spec: t.setup().track });
+    if (t.content !== contentBefore) this.emit({ type: 'content', content: t.content });
     if (t.generation % CHECKPOINT_EVERY === 0) this.emit({ type: 'checkpoint', generation: t.generation, state: t.toState() });
   }
 }

@@ -146,6 +146,18 @@ export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Con
   generationMetrics?(results: readonly R[], content: Content): Record<string, number>;
 
   bench?: EpisodeBench;
+  telemetry?: GhostTrace<R>;
+}
+
+/**
+ * Per tick numbers for a ghost's telemetry line (the speed strip and the
+ * brake map). Optional: an env without it shows no telemetry.
+ */
+export interface GhostTrace<R extends EpisodeResult> {
+  /** Writes [distance along the course in m, speed in m/s, brake from 0 to 1] for agent i after the latest tick. */
+  sample(env: EpisodeEnv<R>, i: number, out: Float64Array): void;
+  /** Where the agent's run ended in a crash, in world x and y, or null. */
+  crash(result: R): { x: number; y: number } | null;
 }
 
 /** Any registered module, with its type parameters erased for generic code. */

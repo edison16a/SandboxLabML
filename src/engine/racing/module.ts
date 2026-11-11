@@ -61,6 +61,17 @@ export const racingModule: EpisodeEnvModule<RacingSetup, TrackSpec, RacingResult
 
   championFields: (r) => ({ distance: r.distance, laps: r.laps, bestLapTime: r.bestLapTime, crashed: r.crashed, crashX: r.crashX, crashY: r.crashY }),
 
+  telemetry: {
+    // Racing builds every episode as a RacingEnv, so the cast only names what createEnv returned.
+    sample: (env, i, out) => {
+      const rc = (env as RacingEnv).cars[i];
+      out[0] = rc.progress;
+      out[1] = rc.car.speed;
+      out[2] = Math.max(0, -rc.car.pedal);
+    },
+    crash: (r) => (r.crashed ? { x: r.crashX, y: r.crashY } : null),
+  },
+
   bench: {
     version: BENCHMARK_VERSION,
     axes: RADAR_AXES.racing,

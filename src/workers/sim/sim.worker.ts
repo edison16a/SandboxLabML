@@ -2,38 +2,40 @@
 import * as Comlink from 'comlink';
 import '@/workers/shared/loadScripts';
 import type { MatchSpec } from '@/engine/hideseek/match/types';
+import type { EpisodeSetup } from '@/engine/env/episode';
 import type { Genome } from '@/engine/neat/types';
-import type { RacingSetup } from '@/engine/training/racingSetup';
 import { ArenaFrameWriter } from '../shared/arenaFrames';
 import { StreamSender } from '../shared/streamPort';
+import { EpisodeSim, type LiveEpisodeRequest } from './episodeSim';
 import { HideSeekSim, type LiveRoundPart } from './hideSeekSim';
-import { RacingSim, type LiveRacingRequest } from './racingSim';
 
 /**
  * A simulation worker. The main thread hands it two ports: one the
  * coordinator uses to send work, and one for streaming snapshots straight to
  * the renderer.
  */
-const racing = new RacingSim();
+const episodes = new EpisodeSim();
 let stream: StreamSender | null = null;
 let hideseek = new HideSeekSim(null);
 
 const api = {
-  evaluateRacing(setup: RacingSetup, genomes: Genome[], seeds: number[], generation: number) {
-    return racing.evaluate(setup, genomes, seeds, generation);
+  /** A headless batch of any single population env, as fast as it runs. */
+  evaluate(env: string, setup: EpisodeSetup, genomes: Genome[], seeds: number[], generation: number) {
+    return episodes.evaluate(env, setup, genomes, seeds, generation);
   },
-  runRacingLive(req: LiveRacingRequest) {
+  /** A whole generation paced to real time, streamed to the main thread. */
+  runLive(req: LiveEpisodeRequest) {
     if (!stream) throw new Error('Stream port not connected');
-    return racing.runLive(req, stream);
+    return episodes.runLive(req, stream);
   },
   setSpeed(speed: number) {
-    racing.setSpeed(speed);
+    episodes.setSpeed(speed);
   },
   setPaused(paused: boolean) {
-    racing.setPaused(paused);
+    episodes.setPaused(paused);
   },
   stopLive() {
-    racing.stopLive();
+    episodes.stopLive();
   },
   evaluateHideSeek(specs: MatchSpec[], scriptSource: string | null) {
     return hideseek.evaluate(specs, scriptSource);

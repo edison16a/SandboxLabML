@@ -1,50 +1,40 @@
 import { mixSeed } from '@/engine/core/rng';
+import type { AnyEpisodeModule, EpisodeEnv, EpisodeSetup } from '@/engine/env/episode';
+import { requireEpisodeModule } from '@/engine/env/registry';
 import { Network } from '@/engine/neat/network';
 import type { Genome } from '@/engine/neat/types';
-import { STATUS_CRASHED } from '@/engine/racing/car/runtime';
-import { RacingEnv, RACING_SNAPSHOT } from '@/engine/racing/env';
-import { envOptionsFor, TrackCache, type RacingSetup } from '@/engine/training/racingSetup';
 import { hostFor } from '@/engine/training/scriptHost';
 import { Pacer } from '../shared/pacer';
 import type { StreamSender } from '../shared/streamPort';
+import { GhostFrames, type GhostGroup } from './ghostFrames';
+import { traceGhost, type GhostTelemetry } from './ghostTrace';
+
+export type { GhostTelemetry } from './ghostTrace';
 
 export interface GhostSpec {
   generation: number;
   genome: Genome;
   seed: number;
   scriptSource: string | null;
-  /** Start grid slot. Left out, the ghost starts on the line where it trained. */
+  /** Start grid slot. Left out, the ghost starts where it trained. */
   slot?: number;
 }
 
-export interface GhostTelemetry {
-  generation: number;
-  /** Grid slot the car started from; 0 is the start line. */
-  slot: number;
-  /** Progress along the road per tick. Negative until a car from a back slot reaches the line. */
-  distance: Float32Array;
-  speed: Float32Array;
-  /** Brake pedal per tick, 0 to 1, for the brake map. */
-  brake: Float32Array;
-  /**
-   * Where the replay left the road, if it did, and how many meters the car
-   * drove from its own grid slot to get there. The Sandbox draws crash rings
-   * from this, since its track is not the one the records were made on.
-   */
-  crash: { x: number; y: number; driven: number } | null;
-}
+/** Salt of a ghost's controller seed. Script rand() in a tick draws from the agent's own stream, so it does not change a lap. */
+const GHOST_CONTROLLER_SALT = 0x9405;
 
 /**
- * Re-simulates stored champions as ghosts. Ghosts are driven by the same
- * RacingEnv as training, so they reproduce their original laps exactly.
- * Ghosts trained under different script versions get separate envs, stepped
- * in lockstep and merged into one stream.
+ * Re-simulates stored champions of any episode env as ghosts. Ghosts are
+ * driven by the same env code as training, so they reproduce their
+ * original runs exactly. Ghosts trained under different script versions
+ * get separate envs, stepped in lockstep and merged into one stream.
  */
 export class GhostPlayer {
-  private readonly tracks = new TrackCache();
-  private setup: RacingSetup | null = null;
+  private module: AnyEpisodeModule | null = null;
+  private setup: EpisodeSetup | null = null;
   private ghosts: GhostSpec[] = [];
-  private envs: Array<{ env: RacingEnv; order: number[] }> = [];
+  private envs: GhostGroup[] = [];
+  private readonly frames: GhostFrames;
   private pacer: Pacer | null = null;
   private loop = true;
   private paused = false;
@@ -52,11 +42,14 @@ export class GhostPlayer {
   /** Ticks every run skips before it is shown. See play. */
   private warmup = 0;
   private run = 0;
-  private scratch = new Float32Array(RACING_SNAPSHOT.stride * 64);
 
-  constructor(private readonly stream: StreamSender) {}
+  constructor(private readonly stream: StreamSender) {
+    this.frames = new GhostFrames(stream);
+  }
 
-  setScene(setup: RacingSetup, ghosts: GhostSpec[]): void {
+  /** The env, its setup (Racing: the track to drive) and the champions to replay on it. */
+  setScene(env: string, setup: EpisodeSetup, ghosts: GhostSpec[]): void {
+    this.module = requireEpisodeModule(env);
     this.setup = setup;
     this.ghosts = ghosts;
   }
@@ -65,24 +58,23 @@ export class GhostPlayer {
    * Restarts every ghost from its grid slot at `speed` times real time.
    * `warmup` ticks are simulated before the first frame, so a showcase can
    * open on a car already at speed. The ticks are the same ones a cold
-   * start would run, so the lap itself does not change.
+   * start would run, so the run itself does not change.
    */
   play(speed: number, loop: boolean, warmup = 0): void {
     this.stop();
     this.paused = false;
     this.speed = speed;
     this.warmup = warmup;
-    if (!this.setup || this.ghosts.length === 0) return;
+    const envModule = this.module;
+    if (!envModule || !this.setup || this.ghosts.length === 0) return;
     this.loop = loop;
     this.build();
     for (let k = 0; k < warmup; k++) for (const e of this.envs) if (!e.env.done) e.env.step();
     const runId = ++this.run;
-    const count = this.ghosts.length;
-    this.stream.ring.resize(count * RACING_SNAPSHOT.stride);
-    this.stream.send({ kind: 'start', stream: 'ghosts', generation: 0, count, tags: Int32Array.from(this.ghosts.map((g) => g.generation)) });
+    this.frames.start(envModule, this.envs, this.ghosts.map((g) => g.generation));
     const pacer = new Pacer(
       speed,
-      30,
+      envModule.tickHz,
       (n) => {
         for (let k = 0; k < n; k++) {
           let alive = false;
@@ -94,9 +86,9 @@ export class GhostPlayer {
         }
         return true;
       },
-      () => this.sendFrame(),
+      () => this.frames.send(this.envs),
       () => {
-        this.sendFrame();
+        this.frames.send(this.envs);
         if (this.loop && runId === this.run) setTimeout(() => runId === this.run && this.replay(), 1200);
       },
     );
@@ -132,35 +124,21 @@ export class GhostPlayer {
   }
 
   /**
-   * Speed against distance for every ghost, computed headless in one pass.
-   * One line per car, in stream order, so a line's color matches its car
-   * even when a Sandbox grid holds several copies of one champion.
+   * Distance, speed and brake for every ghost, computed headless in one
+   * pass. One line per agent, in stream order, so a line's color matches
+   * its agent even when a Sandbox grid holds several copies of one
+   * champion. Empty for an env without telemetry.
    */
   telemetry(): GhostTelemetry[] {
-    if (!this.setup) return [];
-    return this.ghosts.map((g) => {
-      const env = this.makeEnv([g]);
-      const dist: number[] = [];
-      const speed: number[] = [];
-      const brake: number[] = [];
-      while (!env.done) {
-        env.step();
-        const rc = env.cars[0];
-        dist.push(rc.progress);
-        speed.push(rc.car.speed);
-        brake.push(Math.max(0, -rc.car.pedal));
-      }
-      const rc = env.cars[0];
-      const crash = rc.status === STATUS_CRASHED ? { x: rc.crashX, y: rc.crashY, driven: Math.max(0, (dist[dist.length - 1] ?? 0) - (dist[0] ?? 0)) } : null;
-      return { generation: g.generation, slot: g.slot ?? 0, distance: Float32Array.from(dist), speed: Float32Array.from(speed), brake: Float32Array.from(brake), crash };
-    });
+    const trace = this.module?.telemetry;
+    if (!trace || !this.setup) return [];
+    return this.ghosts.map((g) => traceGhost(this.makeEnv([g]), trace, g.generation, g.slot ?? 0));
   }
 
-  private makeEnv(ghosts: GhostSpec[]): RacingEnv {
-    const setup = this.setup as RacingSetup;
+  private makeEnv(ghosts: GhostSpec[]): EpisodeEnv {
+    const envModule = this.module as AnyEpisodeModule;
     const source = ghosts[0]?.scriptSource ?? null;
-    const track = this.tracks.get(setup.track);
-    const env = new RacingEnv(envOptionsFor({ ...setup, scriptSource: source }, track, hostFor(source), mixSeed(0x9405)));
+    const env = envModule.createEnv({ ...(this.setup as EpisodeSetup), scriptSource: source }, hostFor(source), mixSeed(GHOST_CONTROLLER_SALT));
     env.reset(
       ghosts.map((g) => new Network(g.genome)),
       ghosts.map((g) => g.seed),
@@ -177,33 +155,5 @@ export class GhostPlayer {
       else groups.set(g.scriptSource, [i]);
     });
     this.envs = [...groups.values()].map((order) => ({ env: this.makeEnv(order.map((i) => this.ghosts[i])), order }));
-  }
-
-  private sendFrame(): void {
-    const buffer = this.stream.ring.take();
-    if (!buffer) return;
-    const stride = RACING_SNAPSHOT.stride;
-    let tmp = this.scratch;
-    let tick = 0;
-    for (const { env, order } of this.envs) {
-      if (tmp.length < env.cars.length * stride) tmp = this.scratch = new Float32Array(env.cars.length * stride);
-      env.snapshot(tmp);
-      order.forEach((ghostIndex, k) => buffer.set(tmp.subarray(k * stride, (k + 1) * stride), ghostIndex * stride));
-      tick = Math.max(tick, env.tick);
-    }
-    this.stream.send({ kind: 'frame', stream: 'ghosts', generation: 0, tick, count: this.ghosts.length, buffer, inspect: this.inspected() });
-  }
-
-  /** Observation and outputs of the inspected ghost, for the inputs overlay. */
-  private inspected() {
-    const index = this.stream.inspect;
-    if (index === null) return undefined;
-    for (const { env, order } of this.envs) {
-      const k = order.indexOf(index);
-      if (k < 0) continue;
-      const car = env.cars[k].car;
-      return { index, obs: Float32Array.from(env.lastObservation(k)), out: Float32Array.from([car.steerCmd, car.pedal]) };
-    }
-    return undefined;
   }
 }

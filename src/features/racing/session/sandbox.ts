@@ -60,7 +60,7 @@ export async function sendSandboxScene(pool: WorkerPool): Promise<void> {
   const { specs, generations } = fieldScene(s.run, s.records, s.sandboxField);
   const setup = racingSetupFor(s.run, s.sandboxTrack, null);
   const lesion = Object.entries(s.lesions).map(([k, v]) => [Number(k), v] as [number, number]);
-  await pool.replay.setGhostScene({ ...setup, lesion: lesion.length ? lesion : undefined }, specs);
+  await pool.replay.setGhostScene('racing', { ...setup, lesion: lesion.length ? lesion : undefined }, specs);
   s.set({ ghostGenerations: generations, sandboxPaused: false });
   if (!specs.length) {
     await pool.replay.stopGhosts();

@@ -43,6 +43,8 @@ export type StreamOut =
       tags?: Int32Array;
       /** A stream split over several workers: this part's first agent, the total across parts and the episode it belongs to. */
       part?: StreamPart;
+      /** Floats of the env's world block (lights, traffic, movers) that follow the agents in every frame. */
+      world?: number;
     }
   | {
       kind: 'frame';

@@ -1,4 +1,5 @@
 import type { RacingTrainerState } from '@/engine/training/racingTrainer';
+import type { TrackSpec } from '@/engine/racing/track/types';
 import type { RacingRecord } from '@/engine/training/records';
 import { racingSetupFor } from '@/engine/training/racingSetup';
 import type { RunConfig } from '@/engine/training/runConfig';
@@ -69,7 +70,7 @@ export class RacingSession {
     pool.ghosts.clear();
     await pool.replay.stopGhosts();
     this.store.set({ trackSpec: null });
-    const generation = await pool.coordinator.loadRacing(config, state);
+    const generation = await pool.coordinator.load(config, state);
     this.ghostKey = '';
     this.store.set(openedRunState(config, history, generation, this.store.mode));
     await pool.coordinator.setSpeed(this.store.speed);
@@ -148,7 +149,7 @@ export class RacingSession {
     if (key === this.ghostKey && !force) return;
     this.ghostKey = key;
     const track = this.store.trackSpec ?? run.racing!.track;
-    await pool.replay.setGhostScene(racingSetupFor(run, track, null), ghostSpecs(run, records, gens));
+    await pool.replay.setGhostScene('racing', racingSetupFor(run, track, null), ghostSpecs(run, records, gens));
     this.store.set({ ghostGenerations: gens });
     if (!isWatchSpeed(speed) || this.store.status !== 'running') await this.playGhosts(isWatchSpeed(speed) ? WATCH_SPEEDS[speed] : 1, true);
     const telemetry = await pool.replay.ghostTelemetry();
@@ -177,8 +178,8 @@ export class RacingSession {
       case 'checkpoint':
         if (run) void this.writes.push(() => saveCheckpoint(run.id, e.generation, e.state));
         break;
-      case 'track':
-        this.store.set({ trackSpec: e.spec });
+      case 'content':
+        this.store.set({ trackSpec: e.content as TrackSpec });
         void this.refreshGhosts(true);
         break;
       case 'live-start':
