@@ -23,6 +23,11 @@ const LANE = 3.5;
 /** The street grid: asphalt over the whole extent, then every block's sidewalk and building on top. */
 function drawBlocks(g: CanvasRenderingContext2D, v: View, s: DrivingPreviewScene): void {
   const e = s.extent;
+  // Past the outer streets the city goes on: a sidewalk all round, then buildings to the edge of the frame.
+  g.fillStyle = CITY_COLORS.building;
+  g.fillRect(0, 0, g.canvas.width, g.canvas.height);
+  g.fillStyle = CITY_COLORS.sidewalk;
+  g.fillRect(px(v, e.minX - SIDEWALK), py(v, e.maxY + SIDEWALK), (e.maxX - e.minX + 2 * SIDEWALK) * v.scale, (e.maxY - e.minY + 2 * SIDEWALK) * v.scale);
   g.fillStyle = CITY_COLORS.asphalt;
   g.fillRect(px(v, e.minX), py(v, e.maxY), (e.maxX - e.minX) * v.scale, (e.maxY - e.minY) * v.scale);
   for (let k = 0; k < s.blocks.length; k += 4) {
