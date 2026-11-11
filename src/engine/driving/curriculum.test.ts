@@ -49,8 +49,8 @@ describe('automatic curriculum', () => {
 describe('levels', () => {
   const city = cityFor(builtInCity(DEFAULT_CITY_ID)!);
 
-  it('gives every level below rush hour short trips with at most one turn', () => {
-    for (const level of [1, 2, 3, 4]) {
+  it('gives every level short trips with at most one turn, rush hour included', () => {
+    for (const level of [1, 2, 3, 4, 5]) {
       for (let seed = 1; seed <= 12; seed++) {
         const setup = createDrivingSetup({ level, seed });
         const route = buildRoute(city, setup.route.elements, setup.route.startS, setup.route.destS);
@@ -58,6 +58,15 @@ describe('levels', () => {
         expect(route.destS - route.startS).toBeLessThan(DRIVING_LEVELS[0].route.maxLength + 20);
       }
     }
+  });
+
+  it('adds only crowds at rush hour, on the trips and rules of the level before', () => {
+    const [traffic, rush] = [DRIVING_LEVELS[3], DRIVING_LEVELS[4]];
+    expect(rush.route).toEqual(traffic.route);
+    expect(rush.lenientCurb).toBe(traffic.lenientCurb);
+    expect(rush.arriveSpeed).toBe(traffic.arriveSpeed);
+    expect(rush.pedestrians).toBeGreaterThan(traffic.pedestrians);
+    expect(rush.traffic).toBeGreaterThan(traffic.traffic);
   });
 
   it('allows more time per stop line where queues form', () => {

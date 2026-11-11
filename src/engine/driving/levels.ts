@@ -1,4 +1,4 @@
-import { DEFAULT_ROUTE, type RouteOptions } from './route/planner';
+import type { RouteOptions } from './route/planner';
 
 /**
  * Traffic profiles, from empty streets to rush hour. A run's curriculum
@@ -22,21 +22,18 @@ export interface DrivingLevel {
   /**
    * Only the car's center leaving the road ends the episode; a wheel over
    * the curb just costs a little. Brains that are learning to steer can
-   * then clip a corner and still find out what a turn is. Rush hour, the
-   * final exam, is strict.
+   * then clip a corner and still find out what a turn is. Every level is
+   * lenient today; the flag stays so a stricter level is one line away.
    */
   lenientCurb: boolean;
   /**
    * Arriving means the car's center is in the destination zone below this
    * speed, m/s. The first level only asks to stay under the speed limit,
-   * the second to roll in under 30 km/h, the next two under 15 km/h, and
-   * rush hour asks the car to stop there.
+   * the second to roll in under 30 km/h, and the rest under 15 km/h.
    */
   arriveSpeed: number;
 }
 
-/** Below this speed a car counts as stopped at its destination, m/s. */
-const STOPPED = 1.5;
 /** Rolling in at a walking pace counts as arriving on the middle levels, m/s. */
 const SLOW = 4;
 /** The town speed limit, m/s: on empty streets, reaching the zone without speeding counts. */
@@ -47,16 +44,18 @@ const FIRST_TRIPS: RouteOptions = { minLength: 120, maxLength: 260, minTurns: 0,
 /**
  * Each level adds one thing to learn, so the curriculum climbs in steps a
  * population can take: steering and turns, then lights, then people, then
- * other cars. Rush hour adds the crowds, the long trips and the full rules
- * (a strict curb and a real stop at the destination) all at once, as the
- * final exam.
+ * other cars. Rush hour adds only the crowds: more people and cars, and
+ * people who cross late or away from the crossings. Its trips and rules
+ * stay those of the level before. Adding long trips, a strict curb and a
+ * full stop on top of the crowds, all at once, left runs arriving on no
+ * trip for good.
  */
 export const DRIVING_LEVELS: readonly DrivingLevel[] = [
   { id: 1, name: 'Empty streets', signals: false, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0, route: FIRST_TRIPS, stopWait: 15, lenientCurb: true, arriveSpeed: UNDER_LIMIT },
   { id: 2, name: 'Traffic lights', signals: true, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0, route: FIRST_TRIPS, stopWait: 15, lenientCurb: true, arriveSpeed: 8 },
   { id: 3, name: 'Pedestrians', signals: true, pedestrians: 60, traffic: 0, jaywalk: 0, lateCross: 0, route: FIRST_TRIPS, stopWait: 18, lenientCurb: true, arriveSpeed: SLOW },
   { id: 4, name: 'Traffic', signals: true, pedestrians: 76, traffic: 28, jaywalk: 0, lateCross: 0.1, route: FIRST_TRIPS, stopWait: 26, lenientCurb: true, arriveSpeed: SLOW },
-  { id: 5, name: 'Rush hour', signals: true, pedestrians: 120, traffic: 44, jaywalk: 0.5, lateCross: 0.3, route: DEFAULT_ROUTE, stopWait: 30, lenientCurb: false, arriveSpeed: STOPPED },
+  { id: 5, name: 'Rush hour', signals: true, pedestrians: 120, traffic: 44, jaywalk: 0.5, lateCross: 0.3, route: FIRST_TRIPS, stopWait: 30, lenientCurb: true, arriveSpeed: SLOW },
 ];
 
 export const MIN_LEVEL = 1;

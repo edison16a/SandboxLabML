@@ -5,7 +5,7 @@
  * show a drive that never happened. It is the Driving env's own number, so
  * a change here never blocks another lab's replays.
  */
-export const DRIVING_ENGINE_VERSION = 1;
+export const DRIVING_ENGINE_VERSION = 2;
 
 /**
  * Bump when the Driving benchmark's cities, routes, levels, seeds or
