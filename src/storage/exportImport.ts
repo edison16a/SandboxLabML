@@ -58,8 +58,12 @@ export async function importRun(text: string): Promise<RunConfig> {
   }
   if (parsed?.format !== EXPORT_FORMAT || parsed.version !== 1) throw new ImportError('This is not a SandboxLab run file.');
   const c = parsed.config;
-  if (!c || typeof c.env !== 'string' || !isKnownEnv(c.env) || !c.blueprint || !Array.isArray(c.scripts)) {
+  if (!c || typeof c.env !== 'string' || !c.blueprint || !Array.isArray(c.scripts)) {
     throw new ImportError('The run config in this file is incomplete.');
+  }
+  // A whole run of a lab this build does not have (one a later version removed) is a different problem from a broken file.
+  if (!isKnownEnv(c.env)) {
+    throw new ImportError('This run is from a lab this version does not have.');
   }
   for (const s of c.scripts) if (typeof s.source !== 'string') throw new ImportError('A script in this file is not text.');
   const config: RunConfig = { ...c, id: newRunId(), name: `${c.name} (imported)` };

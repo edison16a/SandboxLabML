@@ -57,7 +57,8 @@ describe('runs and trash', () => {
     expect(await listTrash()).toHaveLength(0);
     expect(await purgeTrash(Date.now() + 8 * 24 * 3600 * 1000)).toBe(1);
     expect(await getRun('gone')).toBeUndefined();
-    await expect(importRun(JSON.stringify({ ...(await exportRun(config.id)), config: gone }))).rejects.toThrow('incomplete');
+    await expect(importRun(JSON.stringify({ ...(await exportRun(config.id)), config: gone }))).rejects.toThrow('This run is from a lab this version does not have.');
+    await expect(importRun(JSON.stringify({ ...(await exportRun(config.id)), config: { ...gone, blueprint: undefined } }))).rejects.toThrow('incomplete');
   });
 
   it('keeps only the newest three checkpoints', async () => {
