@@ -34,7 +34,10 @@ describe('how a run ends on screen', () => {
     expect(p.thin * p.spread).toBeLessThan(0.4);
     expect(p.spread).toBeGreaterThan(1.15);
     expect(p.squash).toBeGreaterThan(0.85);
+    expect(p.lift).toBeGreaterThan(0.15);
     expect(p.tip).toBe(0);
+    stopPose(NAV_DIED, FLAG_CRUSHED, 0.6, p);
+    expect(p.lift).toBeCloseTo(0, 9);
   });
 
   it('hops and turns a finisher, then fades it past the line', () => {

@@ -35,6 +35,9 @@ const JOLT = 0.3;
 const JOLT_HEIGHT = 0.3;
 export const FADE_START = { died: 0.9, crushed: 0.5, finished: 1, stopped: 0.2 };
 const FADE_LENGTH = { died: 0.9, crushed: 0.8, finished: 0.8, stopped: 0.9 };
+/** A crushed body pops up this far as it is squeezed out, m, over this long, s. */
+const SQUEEZE_UP = 0.24;
+const SQUEEZE = 0.45;
 /** A body lying flat keeps its head and back out of the floor by this much at full tip, m. */
 const LYING_LIFT = 0.34;
 
@@ -67,11 +70,12 @@ export function stopPose(status: number, flags: number, age: number, out: StopPo
   if (status === NAV_RUNNING) return out;
   const a = Math.max(0, age);
   if (status === NAV_DIED && flags & FLAG_CRUSHED) {
-    // Pressed flat against the wall in a blink, along the push, so it still stands clear above the mover; then it fades.
+    // Pressed flat against the wall in a blink, along the push, and squeezed up a little so it shows over the mover; then it fades.
     const k = smooth(0, 0.12, a);
     out.thin = 1 - 0.72 * k;
     out.spread = 1 + 0.22 * k;
     out.squash = 1 - 0.1 * k;
+    out.lift = SQUEEZE_UP * Math.sin(Math.PI * Math.min(1, a / SQUEEZE));
     out.flash = Math.max(0, 1 - a / 0.45);
     out.grey = 0.5 * smooth(0, 0.4, a);
     out.alpha = 1 - smooth(FADE_START.crushed, FADE_START.crushed + FADE_LENGTH.crushed, a);
