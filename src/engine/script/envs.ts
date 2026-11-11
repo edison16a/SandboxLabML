@@ -2,6 +2,7 @@ import type { EnvId } from '../env/types';
 import { HIDESEEK_PRESETS } from './presets/hideseek';
 import { RACING_PRESETS } from './presets/racing';
 import type { ScriptPreset } from './presets/types';
+import { DRIVING_SLICE } from './registry/driving';
 import { HIDESEEK_SLICE } from './registry/hideseek';
 import { RACING_SLICE } from './registry/racing';
 import type { RegistrySlice } from './registry/types';
@@ -70,6 +71,32 @@ const table: ScriptEnv[] = [
       'for each': 'for each ${1:r} in ${2:rays} {\n  ${3}\n}',
       sensor: 'sensor ${1:name} "${2:Label}" in ${3:0 m} .. ${4:12 m} = ${5:rays.min}',
       'each tick': 'each tick {\n  ${1:act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)}\n}',
+    },
+  },
+  {
+    env: 'driving',
+    slice: DRIVING_SLICE,
+    presets: [],
+    builtin: 'Progress along the route, a big bonus for arriving, small costs for breaking rules.',
+    starter: [
+      'script "My script" for driving v1',
+      'brain driving-standard',
+      '',
+      'each tick {',
+      '  drive(steer: brain.steer, pedal: brain.pedal)',
+      '  reward +0.02 * route.gain',
+      '  reward +10 when car.arrived',
+      '  reward -2 when rules.ranRedLight',
+      '  stop "stuck" when car.noProgress > 8 s',
+      '}',
+      '',
+    ].join('\n'),
+    templates: {
+      'reward when': 'reward ${1:+10} when ${2:car.arrived}',
+      'reward every tick': 'reward ${1:+0.02} * ${2:route.gain}',
+      'stop when': 'stop "${1:stuck}" when ${2:car.noProgress > 8 s}',
+      sensor: 'sensor ${1:name} "${2:Label}" in ${3:0 m/s} .. ${4:20 m/s} = ${5:car.speed}',
+      'each tick': 'each tick {\n  ${1:drive(steer: brain.steer, pedal: brain.pedal)}\n}',
     },
   },
 ];

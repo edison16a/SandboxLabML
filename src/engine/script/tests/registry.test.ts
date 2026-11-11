@@ -38,7 +38,8 @@ function exampleScripts(e: RegistryEntry): string[] {
 }
 
 describe('registry entries', () => {
-  for (const e of REGISTRY) {
+  // Envs added through the registry check their own slice next to it, such as registry/driving/driving.test.ts.
+  for (const e of REGISTRY.filter((x) => x.env === 'core' || x.env === 'racing' || x.env === 'hideseek')) {
     it(`${e.name} is documented and its example compiles`, () => {
       expect(e.summary.length).toBeGreaterThan(10);
       expect(sentences(e.summary)).toBe(1);
@@ -72,7 +73,7 @@ describe('registry entries', () => {
   it('presets lists exactly the tiers whose preset script uses the entry', () => {
     for (const preset of RACING_PRESETS) {
       const used = usedBy(preset.source).map((e) => e.name);
-      const tagged = REGISTRY.filter((e) => e.env !== 'hideseek' && e.presets.includes(preset.tier)).map((e) => e.name);
+      const tagged = REGISTRY.filter((e) => (e.env === 'core' || e.env === 'racing') && e.presets.includes(preset.tier)).map((e) => e.name);
       expect(used.sort(), preset.id).toEqual(tagged.sort());
     }
   });
