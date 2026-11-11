@@ -1,4 +1,4 @@
-/** Ticks per second of both simulations, so playing 30 ticks a second is real time. */
+/** Ticks per second of Racing and Hide and Seek, so playing 30 ticks a second is real time. Registry envs pass their own rate. */
 export const TICKS_PER_SECOND = 30;
 /** How long the last frame stays up before the replay starts over, s. */
 export const HOLD_SECONDS = 1.5;
@@ -14,9 +14,9 @@ export const MAX_STEP_MS = 100;
  * tick it holds the final frame for a moment, then starts over, so a
  * learner can see how the episode ended before it loops.
  */
-export function advance(pos: number, ms: number, ticks: number): number {
-  const next = pos + (Math.min(ms, MAX_STEP_MS) / 1000) * TICKS_PER_SECOND;
-  return next >= ticks - 1 + HOLD_SECONDS * TICKS_PER_SECOND ? 0 : next;
+export function advance(pos: number, ms: number, ticks: number, hz = TICKS_PER_SECOND): number {
+  const next = pos + (Math.min(ms, MAX_STEP_MS) / 1000) * hz;
+  return next >= ticks - 1 + HOLD_SECONDS * hz ? 0 : next;
 }
 
 /** The two recorded frames either side of the playhead and how far between them it is, 0 to 1. Holds on the last frame. */
@@ -28,8 +28,8 @@ export function frameAt(pos: number, ticks: number): { i: number; j: number; f: 
 }
 
 /** Seconds into the episode at the playhead. Frame 0 is the state after the first tick. */
-export function secondsAt(pos: number, ticks: number): number {
-  return (Math.min(Math.max(pos, 0), Math.max(0, ticks - 1)) + 1) / TICKS_PER_SECOND;
+export function secondsAt(pos: number, ticks: number, hz = TICKS_PER_SECOND): number {
+  return (Math.min(Math.max(pos, 0), Math.max(0, ticks - 1)) + 1) / hz;
 }
 
 export const lerp = (a: number, b: number, f: number) => a + (b - a) * f;

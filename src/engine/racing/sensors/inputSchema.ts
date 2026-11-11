@@ -1,15 +1,8 @@
-import type { InputSpec, OutputSpec } from '../../env/types';
+import type { CustomSensorSpec, InputSpec, OutputSpec } from '../../env/types';
 import type { CarParams } from '../car/params';
 import { CURVATURE_FAR, CURVATURE_NEAR, CURVATURE_SCALE, rayAngles, type RacingInputConfig } from './inputConfig';
 
-/** Custom sensor declared by a script, as the schema needs it. */
-export interface CustomSensorSpec {
-  key: string;
-  label: string;
-  unit: string;
-  min: number;
-  max: number;
-}
+export type { CustomSensorSpec };
 
 function rayLabel(angle: number): string {
   const deg = Math.round((angle * 180) / Math.PI);
@@ -22,7 +15,7 @@ function rayLabel(angle: number): string {
  * overlay, the network graph labels and the observation builder all follow
  * this exact order, and a test checks the lengths agree.
  */
-export function racingInputSchema(cfg: RacingInputConfig, car: CarParams, custom: CustomSensorSpec[] = []): InputSpec[] {
+export function racingInputSchema(cfg: RacingInputConfig, car: CarParams, custom: readonly CustomSensorSpec[] = []): InputSpec[] {
   const specs: Omit<InputSpec, 'index'>[] = [];
   for (const angle of rayAngles(cfg.rays.count, cfg.rays.fov)) {
     // Keyed by angle, not position, so a fork that changes the ray count keeps the rays that did not move.

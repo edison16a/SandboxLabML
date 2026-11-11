@@ -2,13 +2,12 @@ import type { Rng } from '../core/rng';
 import type { AgentController } from '../env/types';
 import type { HideSeekAgent } from '../hideseek/agents/agent';
 import type { NeatConfig } from '../neat/config';
-import type { RacingCar } from '../racing/car/runtime';
-import type { CustomSensorSpec } from '../racing/sensors/inputSchema';
-import type { Track } from '../racing/track/types';
+import type { CustomSensorSpec } from '../env/types';
 import type { CheckOptions } from './checker';
 import { compileScript } from './compiler';
 import { lineOf, type Diagnostic } from './diagnostics';
 import type { GenerationContext, GenerationDirectives } from './generationTypes';
+import type { ControllerContext } from './registry/types';
 
 /**
  * The shape the training layer's ScriptHost expects. It is declared here
@@ -17,7 +16,8 @@ import type { GenerationContext, GenerationDirectives } from './generationTypes'
  */
 export interface ScriptHostAdapter {
   readonly customSensors: CustomSensorSpec[];
-  createRacingController(seed: number, track: Track): AgentController<RacingCar>;
+  /** The tick block bound to one episode batch. The view type follows the script's env. */
+  createController<V>(ctx: ControllerContext): AgentController<V>;
   /**
    * One controller per Hide and Seek team for a match with this seed. Both
    * run the same each tick block (a script tells the teams apart with
@@ -45,7 +45,7 @@ export function createScriptHost(source: string, opts: CheckOptions = {}): Scrip
   if (!script) throw new ScriptCompileError(diagnostics, source);
   return {
     customSensors: script.sensors,
-    createRacingController: (seed, track) => script.createController<RacingCar>({ seed, track }),
+    createController: <V>(ctx: ControllerContext) => script.createController<V>(ctx),
     createHideSeekControllers: (seed) => ({
       hider: script.createController<HideSeekAgent>({ seed }),
       seeker: script.createController<HideSeekAgent>({ seed }),

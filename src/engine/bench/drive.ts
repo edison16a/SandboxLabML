@@ -5,7 +5,7 @@ import { DEFAULT_CAR } from '../racing/car/params';
 import { STATUS_CRASHED, type RacingCar } from '../racing/car/runtime';
 import { RacingEnv } from '../racing/env';
 import type { RacingInputConfig } from '../racing/sensors/inputConfig';
-import type { CustomSensorSpec } from '../racing/sensors/inputSchema';
+import type { CustomSensorSpec } from '../env/types';
 import type { ExamCourse } from './exam';
 import { BENCH_EPISODE_SECONDS } from './tracks';
 

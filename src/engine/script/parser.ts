@@ -1,6 +1,7 @@
 import { emptyTrivia, type BrainDecl, type EachItem, type EventName, type Header, type Item, type Program, type SensorItem } from './ast';
 import { bestSuggestion } from './autocorrect/suggest';
 import { insertFix, makeDiagnostic, replaceFix, sortDiagnostics, type Diagnostic } from './diagnostics';
+import { DEFAULT_SCRIPT_ENV, SCRIPT_ENV_TABLE } from './envs';
 import { lex, type Token } from './lexer';
 import { Cursor } from './parse/cursor';
 import { parseExpr } from './parse/expr';
@@ -14,7 +15,8 @@ export interface ParseResult {
 
 const ITEM_WORDS = ['let', 'sensor', 'each'];
 const BLOCK_ONLY = new Set(['reward', 'stop', 'if', 'repeat', 'for', 'else']);
-export const DEFAULT_HEADER = 'script "My script" for racing v1';
+/** The header the missing header fix inserts, for the env the Studio offers first. */
+export const DEFAULT_HEADER = `script "My script" for ${DEFAULT_SCRIPT_ENV} v1`;
 
 export function emptyProgram(): Program {
   return { header: null, brain: null, items: [], dangling: [] };
@@ -81,8 +83,8 @@ function parseHeader(c: Cursor): Header {
   const name = c.peek();
   if (name.kind !== 'string') c.fail(`Give the script a name in quotes, like ${DEFAULT_HEADER}`, c.spanHere(), 'bad-header');
   c.next();
-  if (!eatWord(c, 'for')) c.fail('Expected for and the environment, like for racing.', c.spanHere(), 'bad-header');
-  const env = c.expect('ident', undefined, 'Expected the environment name, racing or hideseek.');
+  if (!eatWord(c, 'for')) c.fail(`Expected for and the environment, like for ${DEFAULT_SCRIPT_ENV}.`, c.spanHere(), 'bad-header');
+  const env = c.expect('ident', undefined, `Expected the environment name, ${SCRIPT_ENV_TABLE.map((e) => e.env).join(' or ')}.`);
   const v = c.peek();
   const m = v.kind === 'ident' && v.line === env.line ? /^v(\d+)$/.exec(v.text) : null;
   if (!m) c.fail('Expected the script version, like v1.', c.spanHere(), 'bad-header', [insertFix('Add v1', env.to, ' v1')]);

@@ -43,11 +43,36 @@ export interface HideSeekBlueprint extends BlueprintBase {
   inputs: HideSeekInputConfig;
 }
 
+/** Ids of the envs that plug in through the env registry after Racing. */
+export type EpisodeEnvId = Exclude<EnvId, 'racing' | 'hideseek'>;
+
+/**
+ * The sensor config of an env added through the registry. Only its module
+ * reads the groups; every env shares the noise level, which the blueprint
+ * form edits for all of them.
+ */
+export type EpisodeInputs = { noise: number } & Readonly<Record<string, unknown>>;
+
+/**
+ * A blueprint of an env added through the env registry. Its inputs are the
+ * env's own sensor config, read only by its module (inputCount,
+ * inputSchema, validateInputs), so this layer never needs to know them.
+ */
+export interface EpisodeBlueprint<E extends EpisodeEnvId = EpisodeEnvId, I extends EpisodeInputs = EpisodeInputs> extends BlueprintBase {
+  env: E;
+  inputs: I;
+}
+
 /**
  * What a brain senses and how it starts out. Stored as JSON in the
  * blueprints table and frozen into a run's config when the run is created.
  */
-export type Blueprint = RacingBlueprint | HideSeekBlueprint;
+export type Blueprint = RacingBlueprint | HideSeekBlueprint | EpisodeBlueprint;
+
+export interface BlueprintIssue {
+  field: string;
+  message: string;
+}
 
 export function isEnv<E extends EnvId>(b: Blueprint, env: E): b is Extract<Blueprint, { env: E }> {
   return b.env === env;

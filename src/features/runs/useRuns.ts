@@ -14,7 +14,8 @@ export interface RunSummary {
 
 async function latestModel(row: RunRow): Promise<ModelMetrics | null> {
   const d = db();
-  if (row.env === 'racing') {
+  // Hide and Seek keeps two champions per generation in its own table; every other env uses the shared one.
+  if (row.env !== 'hideseek') {
     const last = await d.generations.where('runId').equals(row.id).last();
     return last ? modelMetrics(decodeGenome(last.genome)) : null;
   }

@@ -1,35 +1,9 @@
 import { Network } from '../neat/network';
 import type { Genome } from '../neat/types';
-import { STATUS_CRASHED, type RacingCar } from './car/runtime';
 import { RacingEnv, type RacingEnvOptions } from './env';
+import type { RacingResult } from './result';
 
-/** Per-car outcome of an episode, used for fitness and the champion record. */
-export interface RacingResult {
-  fitness: number;
-  /** Meters driven along the road. */
-  distance: number;
-  laps: number;
-  bestLapTime: number;
-  crashed: boolean;
-  crashX: number;
-  crashY: number;
-  stopReason: string | null;
-  time: number;
-}
-
-export function resultOf(rc: RacingCar): RacingResult {
-  return {
-    fitness: rc.fitness,
-    distance: rc.maxProgress,
-    laps: rc.lap,
-    bestLapTime: rc.bestLapTime,
-    crashed: rc.status === STATUS_CRASHED,
-    crashX: rc.crashX,
-    crashY: rc.crashY,
-    stopReason: rc.stopReason,
-    time: rc.time,
-  };
-}
+export { resultOf, type RacingResult } from './result';
 
 /**
  * Runs a whole generation headless: all genomes drive together until every
@@ -42,7 +16,7 @@ export function evaluateRacing(genomes: Genome[], opts: RacingEnvOptions, seeds:
     seeds,
   );
   while (!env.done) env.step();
-  return env.cars.map(resultOf);
+  return env.results();
 }
 
 /** Path of one car as flat [x, y, heading, speed] per tick, for path caches and tests. */

@@ -2,7 +2,7 @@ import type { Rng } from '../core/rng';
 import type { AgentController, EnvId } from '../env/types';
 import { DEFAULT_NEAT, type NeatConfig } from '../neat/config';
 import type { RacingCar } from '../racing/car/runtime';
-import type { CustomSensorSpec } from '../racing/sensors/inputSchema';
+import type { CustomSensorSpec } from '../env/types';
 import type { Program } from './ast';
 import { check, type CheckOptions } from './checker';
 import { buildController, sensorRange } from './compile/controller';

@@ -2,18 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Car, Code2, FolderOpen, Users } from 'lucide-react';
+import { Code2, FolderOpen } from 'lucide-react';
 import { Logo } from '@/ui/brand/Logo';
 import { SettingsMenu } from '@/features/settings/SettingsMenu';
 import { GitHubButton } from '@/ui/brand/GitHubButton';
 import { cn } from '@/ui/cn';
+import { LABS } from './labs';
 
-const NAV = [
-  { href: '/lab/racing', label: 'Racing', icon: Car },
-  { href: '/lab/hide-seek', label: 'Hide and Seek', icon: Users },
-  { href: '/studio', label: 'Studio', icon: Code2 },
-  { href: '/runs', label: 'Runs', icon: FolderOpen },
-] as const;
+/** Every lab in order, then the Studio and the Runs page. */
+const NAV = [...LABS.map((l) => ({ href: l.path, label: l.label, icon: l.icon })), { href: '/studio', label: 'Studio', icon: Code2 }, { href: '/runs', label: 'Runs', icon: FolderOpen }];
 
 /** Top bar shared by every page: logo on the left, sections, then GitHub and Settings. */
 export function AppHeader({ right }: { right?: React.ReactNode }) {

@@ -1,11 +1,8 @@
 import type { Rng } from '../core/rng';
-import type { AgentController } from '../env/types';
+import type { AgentController, CustomSensorSpec } from '../env/types';
 import { defaultPlan } from '../neat/population';
 import type { NeatConfig } from '../neat/config';
 import type { GenerationPlan } from '../neat/plan';
-import { builtinRacingController } from '../racing/builtinReward';
-import type { RacingCar } from '../racing/car/runtime';
-import type { CustomSensorSpec } from '../racing/sensors/inputSchema';
 import type { Track } from '../racing/track/types';
 import type { HideSeekAgent } from '../hideseek/agents/agent';
 
@@ -17,6 +14,8 @@ export interface GenerationContext {
   meanFitness: number;
   /** Generations since the best fitness of the run last improved. */
   stagnation: number;
+  /** The env's generation metrics (see EpisodeEnvModule.generationMetrics), so a block can read a level or an arrival share. */
+  metrics?: Readonly<Record<string, number>>;
 }
 
 export type TrackDirective = { kind: 'builtin'; id: string } | { kind: 'random'; seed: number };
@@ -26,6 +25,22 @@ export interface GenerationDirectives {
   plan: GenerationPlan;
   racing?: { track?: TrackDirective };
   hideseek?: Record<string, unknown>;
+  /**
+   * Requests for the script's own env, such as a level or a course. A
+   * script belongs to one env, so one slot is enough: that env's registry
+   * operators each set their own key in it with setEnvDirective, and its
+   * module's nextContent reads them.
+   */
+  env?: Record<string, unknown>;
+}
+
+/** What a compiled script's controller is bound to for one episode batch. Matches the script registry's ControllerContext. */
+export interface ControllerRequest {
+  seed: number;
+  /** Racing scripts that read the road need it. */
+  track?: Track;
+  /** Whatever else an env's script entries read, such as a city. */
+  extra?: Readonly<Record<string, unknown>>;
 }
 
 /**
@@ -35,7 +50,11 @@ export interface GenerationDirectives {
  */
 export interface ScriptHost {
   readonly customSensors: CustomSensorSpec[];
-  createRacingController(seed: number, track: Track): AgentController<RacingCar>;
+  /**
+   * The script's per tick controller for one episode. Null means the run
+   * has no script, and the env module uses its own built in reward.
+   */
+  createController<V>(ctx: ControllerRequest): AgentController<V> | null;
   /**
    * Controllers for both Hide and Seek teams. Optional: when it is missing
    * the trainer uses the built-in rewards. Script sensors for each team come
@@ -47,7 +66,7 @@ export interface ScriptHost {
 
 export const builtinHost: ScriptHost = {
   customSensors: [],
-  createRacingController: () => builtinRacingController,
+  createController: () => null,
   runGeneration: (_ctx, _rng, neat) => ({ plan: defaultPlan(neat) }),
 };
 

@@ -3,6 +3,7 @@ import { blueprintInputCount, blueprintShape } from '@/engine/blueprints/shape';
 import type { RacingBlueprint } from '@/engine/blueprints/types';
 import { Rng } from '@/engine/core/rng';
 import { createGenome, createTemplate, InnovationTracker, Network, type Genome } from '@/engine/neat';
+import { builtinRacingController } from '@/engine/racing/builtinReward';
 import { DEFAULT_CAR } from '@/engine/racing/car/params';
 import { STATUS_DRIVING, type RacingCar } from '@/engine/racing/car/runtime';
 import { RacingEnv, type RacingEnvOptions } from '@/engine/racing/env';
@@ -65,13 +66,14 @@ export function runTestEpisode(req: TestRunRequest): TestRunResult {
   if (typeof brain === 'string') return fail(brain);
   const host = hostFor(req.source);
   const track = buildTrack(findTrack(req.trackId) ?? BUILT_IN_TRACKS[0]);
+  const controller = () => host.createController<RacingCar>({ seed: req.seed, track }) ?? builtinRacingController;
   const champion = req.brain.kind === 'champion' ? req.brain : null;
   const options = (): RacingEnvOptions => ({
     track,
     car: champion?.car ?? DEFAULT_CAR,
     inputs: brain.blueprint.inputs,
     maxTime: champion?.maxTime ?? 60,
-    controller: host.createRacingController(req.seed, track),
+    controller: controller(),
     customSensors: host.customSensors,
   });
 
@@ -106,7 +108,7 @@ export function runTestEpisode(req: TestRunRequest): TestRunResult {
     while (!timing.done) timing.step();
     tickMicros = Math.min(tickMicros, ((performance.now() - t0) * 1000) / Math.max(1, n));
   }
-  const scriptMicros = measureScriptMicros(() => host.createRacingController(req.seed, track), views);
+  const scriptMicros = measureScriptMicros(controller, views);
   const base = Math.max(0.05, tickMicros - scriptMicros);
   const trim = (a: Float32Array) => a.slice(0, n);
   return {

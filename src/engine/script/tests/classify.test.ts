@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { classifyChange } from '../compiler';
-import { findScriptPreset } from '../presets/racing';
+import { findScriptPreset } from '../presets';
 
 const base = findScriptPreset('racing-intermediate')!.source;
 const edit = (from: string, to: string) => {

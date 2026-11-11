@@ -2,7 +2,7 @@ import { GRID_SLOTS } from '@/engine/racing/car/startGrid';
 import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { GhostSpec } from '@/workers/replay/ghostPlayer';
-import { ghostSpecs } from './ghostSelection';
+import { ghostSpecs } from '@/features/lab/session/ghostSelection';
 
 /** One row of the Sandbox field: a stored champion and how many copies of it line up. */
 export interface FieldEntry {

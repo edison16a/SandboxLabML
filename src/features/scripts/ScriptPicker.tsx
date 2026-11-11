@@ -3,17 +3,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FileCode2, Sparkles } from 'lucide-react';
 import type { EnvId } from '@/engine/env/types';
+import { scriptEnv } from '@/engine/script';
 import { listScripts } from '@/storage/scripts';
 import { cn } from '@/ui/cn';
 import { firstSentence } from '@/ui/firstSentence';
 import { Field } from '@/ui/primitives/Field';
 import { choiceFromPreset, choiceFromSource, presetsFor, type BlueprintOf, type ScriptChoice } from './scriptChoice';
 
-/** What the built-in option does in each lab, said in one line. */
-export const BUILTIN: Record<EnvId, string> = {
-  racing: 'Checkpoints, laps and a little speed.',
-  hideseek: 'Hiders score while unseen, seekers while they see.',
-};
+/** What the built-in option does in a lab, said in one line. */
+export function builtinSummary(env: EnvId): string {
+  return scriptEnv(env)?.builtin ?? 'The lab\'s own rewards.';
+}
 
 /** What a training script is, in one line. */
 const HINT = 'Sets the rewards and how each generation breeds.';
@@ -35,7 +35,7 @@ export function ScriptPicker<E extends EnvId>({ env, value, onChange }: Props<E>
   return (
     <Field label="Training script" hint={HINT}>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Option active={selected === 'builtin'} icon={<Sparkles />} title="Built-in" body={BUILTIN[env]} onClick={() => onChange({ kind: 'builtin' })} />
+        <Option active={selected === 'builtin'} icon={<Sparkles />} title="Built-in" body={builtinSummary(env)} onClick={() => onChange({ kind: 'builtin' })} />
         {presets.map(({ preset, choice }) =>
           choice ? (
             <Option key={preset.id} active={selected === preset.id} icon={<FileCode2 />} title={preset.name} body={firstSentence(preset.description)} onClick={() => onChange(choice)} />

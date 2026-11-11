@@ -2,36 +2,48 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { racingModule } from '@/engine/racing/module';
 import { buildTrack } from '@/engine/racing/track/buildTrack';
 import { TelemetryStrip } from '@/features/charts/TelemetryStrip';
+import { InputsCard } from '@/features/lab/components/InputsCard';
+import { SidePanel } from '@/features/lab/components/SidePanel';
+import { useInspectSubscription } from '@/features/lab/hooks/useInspectSubscription';
+import { useLabTier } from '@/features/lab/hooks/useLabTier';
+import { useRunBootstrap } from '@/features/lab/hooks/useRunBootstrap';
+import { useRunSchema } from '@/features/lab/hooks/useRunSchema';
+import { LabProvider, type LabContextValue } from '@/features/lab/LabContext';
+import type { LabStoreApi } from '@/features/lab/state/labState';
+import { RACING_TOUR } from '@/features/onboarding/racingTour';
+import { useTrainScriptParam } from '@/features/scripts/useTrainScriptParam';
 import { RacingCanvas } from '@/render/racing/RacingCanvas';
-import { useInspectSubscription } from '../hooks/useInspectSubscription';
+import { TrackEditor } from '@/render/racing/TrackEditor';
+import { LoadingCover } from '@/ui/feedback/LoadingCover';
+import { ResizeHandle } from '@/ui/split/ResizeHandle';
+import { Walkthrough } from '@/ui/walkthrough/Walkthrough';
 import { useLabShortcuts } from '../hooks/useLabShortcuts';
-import { useRacingQuality } from '../hooks/useRacingQuality';
-import { useRunBootstrap } from '../hooks/useRunBootstrap';
-import { useRunSchema } from '../hooks/useRunSchema';
+import { defaultRacingRun, LAST_RUN_KEY } from '../hooks/useRunBootstrap';
 import { racingSession } from '../session/RacingSession';
 import { useRacingLab } from '../state/labStore';
 import { LabToolbar } from './LabToolbar';
 import { NewRunDialog } from './NewRunDialog';
-import { RACING_TOUR } from '@/features/onboarding/racingTour';
-import { useTrainScriptParam } from '@/features/scripts/useTrainScriptParam';
-import { LoadingCover } from '@/ui/feedback/LoadingCover';
-import { Walkthrough } from '@/ui/walkthrough/Walkthrough';
-import { ResizeHandle } from '@/ui/split/ResizeHandle';
-import { SidePanel } from './SidePanel';
-import { ViewportHud } from './ViewportHud';
-import { InputsCard } from './InputsCard';
 import { SandboxPanel } from './SandboxPanel';
-import { TrackEditor } from '@/render/racing/TrackEditor';
-import { InputsTab } from './InputsTab';
-import { ModelTab } from './ModelTab';
-import { NetworkTab } from './NetworkTab';
+import { ViewportHud } from './ViewportHud';
 
-/** The Racing lab: viewport, telemetry, controls and the side panel. */
+/** The Racing lab: the shared lab parts bound to the Racing store and session, around the circuit. */
 export function RacingLab() {
+  // The Racing store holds more than the shared fields; the shared parts only touch theirs.
+  const lab = useMemo<LabContextValue>(() => ({ env: 'racing', module: racingModule, api: useRacingLab as unknown as LabStoreApi, session: racingSession(), lastRunKey: LAST_RUN_KEY, agentNoun: 'car' }), []);
+  return (
+    <LabProvider value={lab}>
+      <RacingLabBody />
+    </LabProvider>
+  );
+}
+
+/** Viewport, telemetry, controls and the side panel. */
+function RacingLabBody() {
   const params = useSearchParams();
-  const ready = useRunBootstrap(params.get('run'));
+  const ready = useRunBootstrap(params.get('run'), defaultRacingRun);
   const run = useRacingLab((s) => s.run);
   const trackSpec = useRacingLab((s) => s.trackSpec);
   const mode = useRacingLab((s) => s.mode);
@@ -46,7 +58,7 @@ export function RacingLab() {
   const pendingScript = useTrainScriptParam('racing', params, openNewRun);
   useLabShortcuts(openNewRun);
   // ?quality=low|medium|high pins the render tier over Settings, handy on slow machines and in browser tests.
-  useRacingQuality(params.get('quality'));
+  useLabTier(params.get('quality'));
   useInspectSubscription(ready);
 
   const spec = (mode === 'sandbox' ? sandboxTrack : null) ?? trackSpec ?? run?.racing?.track ?? null;
@@ -89,7 +101,7 @@ export function RacingLab() {
       {/* The props mirror the panel's classes below. 380 px keeps every tab visible, and with the viewport's 600 px it fits a 1024 px (lg) window. */}
       <ResizeHandle id="racing" cssVar="--panel-w" pane="after" defaultSize={400} min={380} max={900} label="Resize the side panel" />
       <aside data-tour="panel" className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[var(--panel-w,400px)] lg:min-w-[380px] lg:shrink lg:border-t-0 lg:border-l">
-        <SidePanel network={<NetworkTab />} inputs={<InputsTab />} model={<ModelTab />} />
+        <SidePanel />
       </aside>
       <NewRunDialog open={newRun} onOpenChange={setNewRun} initialScript={pendingScript} />
       <Walkthrough tour={RACING_TOUR} ready={ready && sceneReady} />

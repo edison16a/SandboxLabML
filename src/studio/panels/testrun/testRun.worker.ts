@@ -4,6 +4,7 @@ import '@/workers/shared/loadScripts';
 import { recordPreview } from '@/engine/lessons/preview/record';
 import { previewBuffers, type PreviewResult } from '@/engine/lessons/preview/types';
 import { runTestEpisode } from './episode';
+import { runEpisodeTest, type EpisodeTestResult } from './episode/run';
 import type { MatchTestRequest, MatchTestResult } from './hideseek/types';
 import type { TestRunRequest, TestRunResult } from './types';
 
@@ -20,6 +21,14 @@ const api = {
     if (!result.ok) return result;
     const { time, reward, total, speed } = result.log;
     return Comlink.transfer(result, [time.buffer, reward.buffer, total.buffer, speed.buffer] as ArrayBuffer[]);
+  },
+
+  /** One test episode of a script for an env added through the registry. */
+  async episode(source: string): Promise<EpisodeTestResult> {
+    const result = await runEpisodeTest(source);
+    if (!result.ok) return result;
+    const { time, reward, total } = result.log;
+    return Comlink.transfer(result, [time.buffer, reward.buffer, total.buffer] as ArrayBuffer[]);
   },
 
   async match(req: MatchTestRequest): Promise<MatchTestResult> {

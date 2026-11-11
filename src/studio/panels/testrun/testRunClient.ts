@@ -1,4 +1,5 @@
 import * as Comlink from 'comlink';
+import type { EpisodeTestResult } from './episode/run';
 import type { MatchTestRequest, MatchTestResult } from './hideseek/types';
 import type { TestRunApi } from './testRun.worker';
 import type { TestRunRequest, TestRunResult } from './types';
@@ -59,6 +60,11 @@ function inWorker<T>(signal: AbortSignal, call: (api: Comlink.Remote<TestRunApi>
 /** Runs one racing test episode in a test worker. */
 export function runInWorker(req: TestRunRequest, signal: AbortSignal): Promise<TestRunResult> {
   return inWorker<TestRunResult>(signal, async (api) => api.run(req));
+}
+
+/** Runs one test episode of a script for an env added through the registry. */
+export function runEpisodeInWorker(source: string, signal: AbortSignal): Promise<EpisodeTestResult> {
+  return inWorker<EpisodeTestResult>(signal, async (api) => api.episode(source));
 }
 
 /** Plays one Hide and Seek test match in a test worker. */

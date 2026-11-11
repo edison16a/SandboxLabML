@@ -1,11 +1,13 @@
 import { mixSeed, Rng } from '@/engine/core/rng';
 import { Population } from '@/engine/neat/population';
 import { populationFromChampion, trackerFromGenomes } from '@/engine/training/branch';
-import type { RacingTrainerState } from '@/engine/training/racingTrainer';
+import { isEpisodeEnv, loadEpisodeModule } from '@/engine/env/registry';
+import type { EpisodeTrainerState } from '@/engine/training/episodeTrainer';
 import { newRunId, runShape, scriptAt, type RunConfig } from '@/engine/training/runConfig';
 import { saveCheckpoint } from './checkpoints';
 import { db } from './db';
-import { loadChampion } from './generations';
+import { fromRow, loadChampion } from './generations';
+import { foldSummary } from './runBest';
 import { createRun, getRun, trashRun } from './runs';
 
 /** A fresh copy of a run's config with a new identity. */
@@ -16,7 +18,9 @@ function cloneConfig(config: RunConfig, patch: Partial<RunConfig>): RunConfig {
 /**
  * Starts a new run from the champion of one generation. Nothing is removed
  * from the original run. The new population is that champion plus mutated
- * copies, and the script version it trained under comes along.
+ * copies, and the script version it trained under comes along. An env
+ * that keeps content on its records resumes on what that generation ran
+ * on (Navigation: its level); the rest start on the run's first content.
  */
 export async function branchRun(runId: string, generation: number): Promise<RunConfig> {
   const run = await getRun(runId);
@@ -33,10 +37,12 @@ export async function branchRun(runId: string, generation: number): Promise<RunC
   const template = { shape: runShape(config), inputs: champion.inputs, outputs: champion.outputs, biasId: champion.biasId, hidden: [] };
   const pop = Population.fromGenomes(genomes, template, trackerFromGenomes([champion]), seed, config.neat);
   await createRun(config);
-  if (config.racing) {
-    const state: RacingTrainerState = {
+  const envModule = isEpisodeEnv(config.env) ? await loadEpisodeModule(config.env) : null;
+  if (envModule) {
+    const kept = envModule.contentOnRecords ? (await db().generations.get([runId, generation]))?.content : undefined;
+    const state: EpisodeTrainerState = {
       population: pop.toState(),
-      track: config.racing.track,
+      content: kept ?? envModule.initialContent(config),
       bestEver: -1e9,
       stagnation: 0,
       scriptRng: new Rng(seed).getState(),
@@ -60,8 +66,9 @@ export async function rewindRun(runId: string, checkpointGeneration: number): Pr
   await createRun(config);
   await d.generations.bulkPut(gens.map((g) => ({ ...g, runId: config.id })));
   await d.checkpoints.put({ ...cp, runId: config.id });
-  const best = gens.reduce((b, g) => Math.max(b, g.champion.fitness), 0);
-  await d.runs.update(config.id, { generation: checkpointGeneration, bestFitness: best });
+  const created = await d.runs.get(config.id);
+  const summary = created ? foldSummary(created, [...gens].sort((a, b) => a.generation - b.generation).map(fromRow)) : {};
+  await d.runs.update(config.id, { ...summary, generation: checkpointGeneration });
   await trashRun(runId);
   return config;
 }

@@ -1,4 +1,4 @@
-import { PRESET_BLUEPRINTS } from '@/engine/blueprints/presets';
+import { presetBlueprints } from '@/engine/blueprints/presets';
 import { createScriptHost } from '@/engine/script/host';
 import { registerScriptHostFactory } from '@/engine/training/scriptHost';
 
@@ -9,7 +9,7 @@ import { registerScriptHostFactory } from '@/engine/training/scriptHost';
  */
 registerScriptHostFactory((source) => {
   const brain = /^\s*brain\s+([a-z0-9-]+)/m.exec(source)?.[1];
-  const blueprints = PRESET_BLUEPRINTS.map((b) => b.id);
+  const blueprints = presetBlueprints().map((b) => b.id);
   if (brain) blueprints.push(brain);
   return createScriptHost(source, { blueprints });
 });

@@ -8,8 +8,8 @@ import { copyId, saveBlueprint } from '@/storage/blueprints';
 import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
 import { Dialog } from '@/ui/primitives/Dialog';
-import { HideSeekBlueprintForm } from './HideSeekBlueprintForm';
-import { RacingBlueprintForm } from './RacingBlueprintForm';
+import { BrainStartFields } from './BrainStartFields';
+import { BLUEPRINT_FORMS } from './forms';
 
 interface Props<B extends Blueprint> {
   open: boolean;
@@ -27,13 +27,19 @@ function startingParameters(b: Blueprint): number {
   return startingLinks(blueprintShape(b));
 }
 
-/** The form for a blueprint's game. The draft keeps the base's game, so the casts only undo the narrowing. */
+/**
+ * The form for a blueprint's env, from BLUEPRINT_FORMS. The draft keeps the
+ * base's env, so the cast only undoes the narrowing. An env without a form
+ * of its own gets the fields every blueprint shares: noise and how the
+ * brain starts.
+ */
 function BlueprintForm<B extends Blueprint>({ value, onChange }: { value: B; onChange: (b: B) => void }) {
-  const set = onChange as (b: Blueprint) => void;
-  return value.env === 'racing' ? <RacingBlueprintForm value={value} onChange={set} /> : <HideSeekBlueprintForm value={value} onChange={set} />;
+  const Form = BLUEPRINT_FORMS[value.env];
+  if (Form) return <Form value={value} onChange={onChange as (b: Blueprint) => void} />;
+  return <BrainStartFields value={value} onChange={onChange} />;
 }
 
-/** Edits a copy of a blueprint for either game, shows its size live, and saves it as the user's own. */
+/** Edits a copy of a blueprint of any env, shows its size live, and saves it as the user's own. */
 export function BlueprintDialog<B extends Blueprint>({ open, onOpenChange, base, title, description, action, onSave }: Props<B>) {
   const [draft, setDraft] = useState<B>(base);
   const [busy, setBusy] = useState(false);

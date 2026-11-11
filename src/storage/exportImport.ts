@@ -1,7 +1,9 @@
-import { engineVersionOf } from '@/engine/core/version';
+import { engineVersionOf, isKnownEnv } from '@/engine/env/registry';
 import { base64ToBytes, bytesToBase64 } from '@/engine/neat/serialize';
 import { newRunId, type RunConfig } from '@/engine/training/runConfig';
 import { db, type GenerationRow, type HideSeekGenerationRow } from './db';
+import { fromRow } from './generations';
+import { foldSummary } from './runBest';
 import { createRun, getRun } from './runs';
 
 export const EXPORT_FORMAT = 'sandboxlab-run';
@@ -56,8 +58,12 @@ export async function importRun(text: string): Promise<RunConfig> {
   }
   if (parsed?.format !== EXPORT_FORMAT || parsed.version !== 1) throw new ImportError('This is not a SandboxLab run file.');
   const c = parsed.config;
-  if (!c || (c.env !== 'racing' && c.env !== 'hideseek') || !c.blueprint || !Array.isArray(c.scripts)) {
+  if (!c || typeof c.env !== 'string' || !c.blueprint || !Array.isArray(c.scripts)) {
     throw new ImportError('The run config in this file is incomplete.');
+  }
+  // A whole run of a lab this build does not have (one a later version removed) is a different problem from a broken file.
+  if (!isKnownEnv(c.env)) {
+    throw new ImportError('This run is from a lab this version does not have.');
   }
   for (const s of c.scripts) if (typeof s.source !== 'string') throw new ImportError('A script in this file is not text.');
   const config: RunConfig = { ...c, id: newRunId(), name: `${c.name} (imported)` };
@@ -81,8 +87,9 @@ export async function importRun(text: string): Promise<RunConfig> {
       bytes: JSON.stringify(parsed.checkpoint.state).length,
     });
   }
-  const best = rows.reduce((b, r) => Math.max(b, r.champion.fitness), 0);
-  await d.runs.update(config.id, { generation: Math.max(rows.length, hsRows.length), bestFitness: best });
+  const created = await d.runs.get(config.id);
+  const summary = created ? foldSummary(created, [...rows].sort((a, b) => a.generation - b.generation).map(fromRow)) : {};
+  await d.runs.update(config.id, { ...summary, generation: Math.max(rows.length, hsRows.length) });
   return config;
 }
 

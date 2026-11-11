@@ -45,6 +45,13 @@ export interface RunConfig {
   racing?: RacingSettings;
   /** Hide and Seek settings are opaque here so this file does not depend on that engine. */
   hideseek?: Record<string, unknown>;
+  /**
+   * The env's own options for envs added through the registry (a city, a
+   * level, an episode length), opaque here and read only by the env's
+   * module through envSettings. Racing and Hide and Seek predate it and
+   * keep theirs under their own ids.
+   */
+  settings?: Readonly<Record<string, unknown>>;
   /** Set when the run was forked from another run. */
   parent?: { runId: string; generation: number };
 }
@@ -87,6 +94,12 @@ export function createRacingRunConfig(input: NewRacingRun): RunConfig {
     }),
     racing: { track: input.track, carPreset: input.carPreset, car, maxTime: input.maxTime ?? 60 },
   };
+}
+
+/** A registry env's options, typed by the module that reads them. Throws when the run has none. */
+export function envSettings<T>(config: RunConfig): T {
+  if (!config.settings) throw new Error(`This ${config.env} run has no settings.`);
+  return config.settings as T;
 }
 
 export function runShape(config: RunConfig): GenomeShape {

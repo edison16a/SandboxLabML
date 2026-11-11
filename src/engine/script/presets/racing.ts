@@ -1,4 +1,3 @@
-import { HIDESEEK_PRESETS } from './hideseek';
 import { RACING_ADVANCED } from './racingAdvanced';
 import { RACING_BEGINNER } from './racingBeginner';
 import { RACING_INTERMEDIATE } from './racingIntermediate';
@@ -32,14 +31,3 @@ export const RACING_PRESETS: readonly ScriptPreset[] = [
     source: RACING_ADVANCED,
   },
 ];
-
-/**
- * Every preset of every environment, racing first. It lives in this file
- * so code that already imports findScriptPreset from here keeps working.
- */
-export const SCRIPT_PRESETS: readonly ScriptPreset[] = [...RACING_PRESETS, ...HIDESEEK_PRESETS];
-
-/** Finds a preset of any environment by id. */
-export function findScriptPreset(id: string): ScriptPreset | undefined {
-  return SCRIPT_PRESETS.find((p) => p.id === id);
-}

@@ -18,6 +18,8 @@ export interface RunRow {
   bestFitness: number;
   bestDistance: number;
   bestLapTime: number;
+  /** Best value of each env metric so far, in the direction it prefers, keyed like the env's metrics. */
+  best?: Record<string, number>;
   benchmark?: number;
   /** Hide and Seek only: share of seek time the newest hiders stayed hidden from current seekers, 0 to 1. */
   hiddenShare?: number;
@@ -38,6 +40,10 @@ export interface GenerationRow {
   wallMs: number;
   markers?: string[];
   benchmark?: number;
+  /** Stats over the whole generation, from the env module. Racing rows have none. */
+  metrics?: Record<string, number>;
+  /** The content the generation ran on, for envs whose module keeps it (contentOnRecords). */
+  content?: unknown;
 }
 
 /** Whole-population snapshots. Only the newest three per run are kept. */

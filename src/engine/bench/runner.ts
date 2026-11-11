@@ -1,23 +1,20 @@
-import { PRESET_BLUEPRINTS } from '../blueprints/presets';
+import { presetBlueprints } from '../blueprints/presets';
 import { mixSeed } from '../core/rng';
 import { BENCHMARK_VERSION, ENGINE_VERSION } from '../core/version';
 import { modelMetrics } from '../neat/metrics';
 import type { Genome } from '../neat/types';
+import type { RacingCar } from '../racing/car/runtime';
 import { builtInInputCount } from '../racing/sensors/inputSchema';
 import { createScriptHost } from '../script/host';
 import type { RunConfig } from '../training/runConfig';
 import { driveCourse, type EpisodeResult, type ExamDriver } from './drive';
 import { examTracks } from './exam';
 import { averageScores, composite, scoreEpisode, trackScore, type EpisodeScore } from './scoring';
-import type { BenchResult } from './types';
+import type { BenchOptions, BenchResult } from './types';
 
 /** Seed for sensor noise and script sensors during the exam. Fixed, so the same brain always scores the same. */
 const BENCH_SEED = 0xbe7c;
 
-export interface BenchOptions {
-  onProgress?: (fraction: number) => void;
-  signal?: AbortSignal;
-}
 
 /**
  * What the exam needs from a run: the blueprint's inputs plus the custom
@@ -27,11 +24,11 @@ export interface BenchOptions {
 function examDriverFor(config: RunConfig): ExamDriver | null {
   if (config.env !== 'racing' || config.blueprint.env !== 'racing') return null;
   const source = config.scripts[config.scripts.length - 1]?.source;
-  const host = source ? createScriptHost(source, { blueprints: [...PRESET_BLUEPRINTS.map((b) => b.id), config.blueprint.id] }) : null;
+  const host = source ? createScriptHost(source, { blueprints: [...presetBlueprints().map((b) => b.id), config.blueprint.id] }) : null;
   return {
     inputs: config.blueprint.inputs,
     customSensors: host?.customSensors ?? [],
-    sensorsFor: (seed, course) => host?.createRacingController(seed, course.track) ?? null,
+    sensorsFor: (seed, course) => host?.createController<RacingCar>({ seed, track: course.track }) ?? null,
   };
 }
 

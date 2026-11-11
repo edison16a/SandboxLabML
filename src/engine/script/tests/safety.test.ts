@@ -7,7 +7,7 @@ import { fromBlocks, toBlocks } from '../blocks';
 import { compileScript } from '../compiler';
 import { tokenize } from '../highlight';
 import { parse } from '../parser';
-import { SCRIPT_PRESETS } from '../presets/racing';
+import { SCRIPT_PRESETS } from '../presets';
 import { print } from '../printer';
 import { inTick } from './helpers';
 import { buildTrack } from '../../racing/track/buildTrack';

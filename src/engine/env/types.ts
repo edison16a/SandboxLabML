@@ -21,6 +21,15 @@ export interface InputSpec {
   ray?: { angle: number; maxLength: number };
 }
 
+/** A brain input a script declares with `sensor`, scaled into [0, 1] by its constant range. */
+export interface CustomSensorSpec {
+  key: string;
+  label: string;
+  unit: string;
+  min: number;
+  max: number;
+}
+
 export interface OutputSpec {
   index: number;
   key: string;

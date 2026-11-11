@@ -1,4 +1,5 @@
 import type { EnvId } from '@/engine/env/types';
+import { scriptEnv } from '@/engine/script';
 import { getSetting, setSetting } from '@/storage/settings';
 import { createScript, deleteScript, duplicateScript, getScript, listPresets, renameScript, saveScript } from '@/storage/scripts';
 import { toast } from '@/ui/toast/toastStore';
@@ -9,18 +10,7 @@ const LAST_SCRIPT_KEY = 'studio.lastScript';
 
 /** What a new script starts with, so it runs before the author changes anything. */
 export function starterSource(env: EnvId): string {
-  if (env === 'hideseek') return 'script "My script" for hideseek v1\n\n// Hide and Seek scripts are coming soon. Sketch your ideas here.\n';
-  return [
-    'script "My script" for racing v1',
-    'brain racing-standard',
-    '',
-    'each tick {',
-    '  drive(steer: brain.steer, pedal: brain.pedal)',
-    '  reward +1 when checkpoint.passed',
-    '  stop "crash" when car.offTrack',
-    '}',
-    '',
-  ].join('\n');
+  return scriptEnv(env)?.starter ?? `script "My script" for ${env} v1\n`;
 }
 
 const fail =

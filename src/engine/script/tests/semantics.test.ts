@@ -14,7 +14,7 @@ import { racingInputSchema, type CustomSensorSpec } from '../../racing/sensors/i
 import { buildTrack } from '../../racing/track/buildTrack';
 import { BUILT_IN_TRACKS } from '../../racing/track/presets';
 import { compileScript, type CompiledScript } from '../compiler';
-import { findScriptPreset } from '../presets/racing';
+import { findScriptPreset } from '../presets';
 import { inTick } from './helpers';
 
 const oval = buildTrack(BUILT_IN_TRACKS[0]);

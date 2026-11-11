@@ -4,7 +4,7 @@ import { parse } from './parser';
 
 export { editDistance, allowedDistance } from './autocorrect/distance';
 export { suggest, bestSuggestion, type Suggestion } from './autocorrect/suggest';
-export { SNIPPETS, snippetsFor, callSnippets, type Snippet, type SnippetScope } from './autocorrect/snippets';
+export { SNIPPETS, sharedSnippets, snippetsFor, callSnippets, type Snippet, type SnippetScope } from './autocorrect/snippets';
 
 /**
  * Fixes that need a decision from the author: a missing argument gets a

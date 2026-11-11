@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import * as Comlink from 'comlink';
 import '@/workers/shared/loadScripts';
-import type { RacingSetup } from '@/engine/training/racingSetup';
+import type { EpisodeSetup } from '@/engine/env/episode';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { loadReferences, runBenchmark, type BenchModel, type BenchReferences } from '@/engine/bench';
 import type { RoundReplay } from '@/engine/training/hideseekRecords';
@@ -32,8 +32,10 @@ const api = {
   connect(streamPort: MessagePort) {
     ghosts = new GhostPlayer(new StreamSender(streamPort, 'ghosts'));
   },
-  setGhostScene(setup: RacingSetup, specs: GhostSpec[]) {
-    ghosts?.setScene(setup, specs);
+  /** Champions of any episode env to replay on one setup (Racing: a track). */
+  /** Resolves once the env's module has loaded and the scene is in place. */
+  async setGhostScene(env: string, setup: EpisodeSetup, specs: GhostSpec[]) {
+    await ghosts?.setScene(env, setup, specs);
   },
   playGhosts(speed: number, loop: boolean, warmup?: number) {
     ghosts?.play(speed, loop, warmup);

@@ -1,4 +1,4 @@
-import { PRESET_BLUEPRINTS } from '../../blueprints/presets';
+import { presetBlueprints } from '../../blueprints/presets';
 import type { HideSeekInputConfig } from '../../hideseek/inputConfig';
 import { hideSeekBrainInputs } from '../../hideseek/sensing/inputSchema';
 import type { Genome } from '../../neat/types';
@@ -17,7 +17,7 @@ function scriptHost(config: RunConfig, blueprintIds: string[]): ScriptHostAdapte
   const source = config.scripts[config.scripts.length - 1]?.source;
   if (!source) return null;
   try {
-    return createScriptHost(source, { blueprints: [...PRESET_BLUEPRINTS.map((b) => b.id), ...blueprintIds] });
+    return createScriptHost(source, { blueprints: [...presetBlueprints().map((b) => b.id), ...blueprintIds] });
   } catch {
     return null;
   }

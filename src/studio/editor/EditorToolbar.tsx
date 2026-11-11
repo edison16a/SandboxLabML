@@ -6,13 +6,13 @@ import { canRedo, canUndo } from '../doc/history';
 import { fixAllDocument, formatDocument } from '../state/docActions';
 import { saveCurrent } from '../state/scriptActions';
 import { isDirty, useStudio, type EditorMode } from '../state/studioStore';
-import { LAB_PATH } from '@/features/shell/labPaths';
+import { envLabel } from '@/engine/env/registry';
+import { labPath } from '@/features/shell/labs';
 import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 
-const ENV = { racing: 'Racing', hideseek: 'Hide and Seek' } as const;
 
 function SaveState() {
   const dirty = useStudio(isDirty);
@@ -37,7 +37,7 @@ export function EditorToolbar() {
         <h1 className="truncate text-[14px] font-semibold" title={script?.name}>
           {script?.name ?? 'Loading'}
         </h1>
-        {script && <Badge tone="accent">{ENV[script.env]}</Badge>}
+        {script && <Badge tone="accent">{envLabel(script.env)}</Badge>}
         <SaveState />
       </div>
       <Segmented<EditorMode>
@@ -73,9 +73,9 @@ export function EditorToolbar() {
           </Button>
         </Tooltip>
         {script && (
-          <Tooltip content={dirty ? 'Save first, then train with this script' : `Start a ${ENV[script.env]} run that trains with this script`}>
+          <Tooltip content={dirty ? 'Save first, then train with this script' : `Start a ${envLabel(script.env)} run that trains with this script`}>
             <Link
-              href={`${LAB_PATH[script.env]}?trainScript=${encodeURIComponent(script.id)}`}
+              href={`${labPath(script.env)}?trainScript=${encodeURIComponent(script.id)}`}
               prefetch={false}
               aria-disabled={dirty}
               onClick={(e) => dirty && e.preventDefault()}

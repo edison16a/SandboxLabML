@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { EachItem } from '../ast';
 import { explainStmt } from '../explain';
 import { parse } from '../parser';
-import { findScriptPreset } from '../presets/racing';
+import { findScriptPreset } from '../presets';
 
 function explainBlock(source: string, event: 'tick' | 'generation'): string[] {
   const each = parse(source).program.items.find((i) => i.kind === 'each' && i.event === event) as EachItem;

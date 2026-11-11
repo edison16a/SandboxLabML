@@ -2,14 +2,15 @@
 import * as Comlink from 'comlink';
 import '@/workers/shared/loadScripts';
 import type { RunConfig } from '@/engine/training/runConfig';
-import type { RacingTrainerState } from '@/engine/training/racingTrainer';
+import type { EpisodeTrainerState } from '@/engine/training/episodeTrainer';
 import type { HideSeekTrainerState } from '@/engine/hideseek/trainer/types';
 import type { SpeedMode } from '../shared/protocol';
 import type { SimApi } from '../sim/sim.worker';
+import { loadEpisodeModule } from '@/engine/env/registry';
+import { EpisodeCoordinator } from './episodeCoordinator';
 import type { EventSink } from './events';
 import { HideSeekCoordinator } from './hideSeekCoordinator';
 import type { HideSeekEventSink } from './hideSeekEvents';
-import { RacingCoordinator } from './racingCoordinator';
 
 /**
  * The coordinator owns NEAT: selection, generations and checkpoints. It never
@@ -17,7 +18,8 @@ import { RacingCoordinator } from './racingCoordinator';
  * main thread handed it.
  */
 let sims: Comlink.Remote<SimApi>[] = [];
-let racing: RacingCoordinator | null = null;
+/** The single population run this pool trains. Each lab has its own pool, so one is enough. */
+let episodes: EpisodeCoordinator | null = null;
 let emit: EventSink = () => {};
 let hideseek: HideSeekCoordinator | null = null;
 let emitHideSeek: HideSeekEventSink = () => {};
@@ -27,26 +29,29 @@ const api = {
     sims = simPorts.map((p) => Comlink.wrap<SimApi>(p));
     emit = sink;
   },
-  async loadRacing(config: RunConfig, state?: RacingTrainerState) {
-    await racing?.stop();
-    racing = new RacingCoordinator(config, sims, (e) => emit(e), state);
-    return racing.generation;
+  /** Opens a run of any registered episode env, from a checkpoint when there is one. */
+  async load(config: RunConfig, state?: EpisodeTrainerState) {
+    await episodes?.stop();
+    episodes = null;
+    await loadEpisodeModule(config.env);
+    episodes = new EpisodeCoordinator(config, sims, (e) => emit(e), state);
+    return episodes.generation;
   },
   start(generations?: number) {
-    racing?.start(generations);
+    episodes?.start(generations);
   },
   pause() {
-    racing?.pause();
+    episodes?.pause();
   },
   setSpeed(mode: SpeedMode) {
-    racing?.setSpeed(mode);
+    episodes?.setSpeed(mode);
   },
   checkpoint() {
-    return racing?.checkpoint() ?? null;
+    return episodes?.checkpoint() ?? null;
   },
   async unload() {
-    await racing?.stop();
-    racing = null;
+    await episodes?.stop();
+    episodes = null;
   },
   /** Hide and Seek has its own event sink, so its messages never reach the Racing lab. */
   connectHideSeek(sink: HideSeekEventSink) {

@@ -8,7 +8,7 @@ import { Segmented } from '@/ui/primitives/Segmented';
 import { Switch } from '@/ui/primitives/Switch';
 import { racingSession } from '../session/RacingSession';
 import { fieldFromGenerations } from '../session/field';
-import { selectGhosts, type GhostSelection } from '../session/ghostSelection';
+import { selectGhosts, type GhostSelection } from '@/features/lab/session/ghostSelection';
 import { useRacingLab } from '../state/labStore';
 
 type Mode = GhostSelection['mode'];

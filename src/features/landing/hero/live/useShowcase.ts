@@ -46,7 +46,7 @@ async function startCar(pool: ShowcasePool, data: unknown): Promise<CarShowcase 
   const racer = parseHeroRacer(data);
   if (!racer) return null;
   const ghost = { generation: racer.file.generation, genome: racer.genome, seed: racer.file.replaySeed, scriptSource: null, slot: 0 };
-  await pool.replay.setGhostScene(racer.setup, [ghost]);
+  await pool.replay.setGhostScene('racing', racer.setup, [ghost]);
   pool.car.subscribe(0, false);
   await pool.replay.playGhosts(1, true, WARMUP_TICKS);
   return { racer, track: buildTrack(racer.setup.track), schema: racingInputSchema(racer.setup.inputs, racer.setup.car) };

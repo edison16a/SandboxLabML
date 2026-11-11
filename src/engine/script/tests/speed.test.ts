@@ -11,7 +11,7 @@ import { buildTrack } from '../../racing/track/buildTrack';
 import { BUILT_IN_TRACKS } from '../../racing/track/presets';
 import { compileScript } from '../compiler';
 import { costToMicros } from '../cost';
-import { findScriptPreset } from '../presets/racing';
+import { findScriptPreset } from '../presets';
 
 const track = buildTrack(BUILT_IN_TRACKS[0]);
 const options = (controller: AgentController<RacingCar>): RacingEnvOptions => ({ track, car: DEFAULT_CAR, inputs: STANDARD_RACING_INPUTS, controller, maxTime: 60 });

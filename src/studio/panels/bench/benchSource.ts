@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { BenchModel } from '@/engine/bench';
+import { episodeInfo } from '@/engine/env/registry';
 import type { RunRow } from '@/storage/db';
 import { listGenerationNumbers, listHideSeekGenerationNumbers } from '@/storage/generationIndex';
 import { loadChampion, setGenerationBenchmark } from '@/storage/generations';
@@ -15,10 +16,11 @@ export interface BenchSource {
   latest: number;
 }
 
+/** A run with a champion whose env has a benchmark and whose brain belongs to that env. */
 function benchable(r: RunRow): boolean {
-  if (r.generation <= 0) return false;
-  if (r.env === 'racing') return !!r.config.racing && r.config.blueprint.env === 'racing';
-  return r.env === 'hideseek' && r.config.blueprint.env === 'hideseek';
+  if (r.generation <= 0 || r.config.blueprint.env !== r.env) return false;
+  if (r.env === 'hideseek') return true;
+  return !!episodeInfo(r.env)?.bench && (r.env !== 'racing' || !!r.config.racing);
 }
 
 /** Runs in IndexedDB that the Bench tab can score, newest first. */

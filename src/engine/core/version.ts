@@ -14,11 +14,6 @@ export const ENGINE_VERSION = 1;
  */
 export const HIDESEEK_ENGINE_VERSION = 3;
 
-/** The engine version a run of `env` is stamped with and checked against. */
-export function engineVersionOf(env: 'racing' | 'hideseek'): number {
-  return env === 'hideseek' ? HIDESEEK_ENGINE_VERSION : ENGINE_VERSION;
-}
-
 /** Bump when the Racing benchmark's tracks, seeds or scoring change. */
 export const BENCHMARK_VERSION = 1;
 

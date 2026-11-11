@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { useRef, useState } from 'react';
-import { Car, FileUp, Trash2, Users } from 'lucide-react';
+import { FileUp, Trash2 } from 'lucide-react';
+import type { EnvId } from '@/engine/env/types';
+import { LABS } from '@/features/shell/labs';
 import { importRun } from '@/storage/exportImport';
 import { destroyRun, emptyTrash, restoreRun } from '@/storage/runs';
 import type { RunRow } from '@/storage/db';
@@ -16,7 +18,7 @@ import { TrashList } from './TrashList';
 import { useRunActions } from './useRunActions';
 import { useRuns } from './useRuns';
 
-type Filter = 'all' | 'racing' | 'hideseek';
+type Filter = 'all' | EnvId;
 
 /** Every saved run, the storage they take, Trash, import and the destructive actions. */
 export function RunsPage() {
@@ -60,24 +62,15 @@ export function RunsPage() {
             onChange={setFilter}
             options={[
               { value: 'all', label: 'All' },
-              {
-                value: 'racing',
+              ...LABS.map(({ env, label, icon: Icon }) => ({
+                value: env,
                 label: (
                   <>
-                    <Car />
-                    Racing
+                    <Icon />
+                    {label}
                   </>
                 ),
-              },
-              {
-                value: 'hideseek',
-                label: (
-                  <>
-                    <Users />
-                    Hide and Seek
-                  </>
-                ),
-              },
+              })),
             ]}
           />
           <div className="ml-auto flex gap-2">
@@ -101,20 +94,20 @@ export function RunsPage() {
             <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border px-6 py-14 text-center">
               <p className="text-[15px] font-medium">No runs yet</p>
               <div className="flex gap-2">
-                <Link
-                  href="/lab/racing"
-                  prefetch={false}
-                  className="inline-flex h-8 items-center rounded-md bg-accent px-3 text-[13px] font-semibold text-[#06101f]"
-                >
-                  Open the Racing lab
-                </Link>
-                <Link
-                  href="/lab/hide-seek"
-                  prefetch={false}
-                  className="inline-flex h-8 items-center rounded-md border border-border px-3 text-[13px]"
-                >
-                  Hide and Seek
-                </Link>
+                {LABS.map((lab, i) => (
+                  <Link
+                    key={lab.env}
+                    href={lab.path}
+                    prefetch={false}
+                    className={
+                      i === 0
+                        ? 'inline-flex h-8 items-center rounded-md bg-accent px-3 text-[13px] font-semibold text-[#06101f]'
+                        : 'inline-flex h-8 items-center rounded-md border border-border px-3 text-[13px]'
+                    }
+                  >
+                    {i === 0 ? `Open the ${lab.label} lab` : lab.label}
+                  </Link>
+                ))}
               </div>
             </div>
           )}

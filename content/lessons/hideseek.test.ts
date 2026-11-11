@@ -3,7 +3,7 @@ import { findLesson, lessonsFor, LESSONS } from '@/engine/lessons/catalog';
 import { evaluateCheck } from '@/engine/lessons/evaluate';
 import { validateLesson } from '@/engine/lessons/validate';
 import { compileScript } from '@/engine/script/compiler';
-import { findScriptPreset } from '@/engine/script/presets/racing';
+import { findScriptPreset } from '@/engine/script/presets';
 
 const course = lessonsFor('hideseek');
 

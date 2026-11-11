@@ -1,20 +1,23 @@
 'use client';
 
 import Link from 'next/link';
-import { Car, Copy, Download, GitBranch, MoreHorizontal, Pencil, RotateCcw, Trash2, Undo2, Users } from 'lucide-react';
+import { Copy, Download, GitBranch, MoreHorizontal, Pencil, RotateCcw, Trash2, Undo2 } from 'lucide-react';
+import { summaryMetric } from '@/engine/env/metrics';
+import { episodeInfo } from '@/engine/env/registry';
 import { formatBytes } from '@/engine/neat/metrics';
 import { TrackThumb } from '@/features/racing/components/TrackThumb';
 import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
 import { Menu } from '@/ui/primitives/Menu';
-import { LAB_PATH } from '@/features/shell/labPaths';
+import { labOf, labPath } from '@/features/shell/labs';
+import { runBest } from '@/storage/runBest';
 import { timeAgo } from './format';
 import type { RunSummary } from './useRuns';
 
 export type RunAction = 'rename' | 'export' | 'branch' | 'rewind' | 'reset' | 'delete' | 'duplicate';
 
 function labHref(summary: RunSummary): string {
-  return `${LAB_PATH[summary.row.env]}?run=${summary.row.id}`;
+  return `${labPath(summary.row.env)}?run=${summary.row.id}`;
 }
 
 function Metric({ label, value }: { label: string; value: React.ReactNode }) {
@@ -30,16 +33,25 @@ function Metric({ label, value }: { label: string; value: React.ReactNode }) {
 export function RunCard({ summary, onAction }: { summary: RunSummary; onAction: (a: RunAction) => void }) {
   const { row, model } = summary;
   const racing = row.env === 'racing';
+  const hideseek = row.env === 'hideseek';
+  // Branching and rewinding rebuild a single population from stored champions and checkpoints.
+  const info = episodeInfo(row.env);
+  const episode = info !== undefined;
+  // The env's own headline number, such as Racing's best lap or the share of routes driven.
+  const headline = info && summaryMetric(info.metrics);
+  const best = headline ? runBest(row, headline) : NaN;
   const track = row.config.racing?.track;
+  const lab = labOf(row.env);
+  const Icon = lab?.icon;
   return (
     <article className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong sm:flex-row sm:items-center">
       <div className="flex size-16 shrink-0 items-center justify-center rounded-md bg-surface-2 text-accent">
-        {racing && track ? <TrackThumb spec={track} size={56} /> : racing ? <Car className="size-6" /> : <Users className="size-6 text-seeker" />}
+        {racing && track ? <TrackThumb spec={track} size={56} /> : Icon ? <Icon className={hideseek ? 'size-6 text-seeker' : 'size-6'} /> : null}
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="truncate text-[15px] font-semibold">{row.name}</h3>
-          <Badge tone={racing ? 'accent' : 'orange'}>{racing ? 'Racing' : 'Hide and Seek'}</Badge>
+          <Badge tone={lab?.tone ?? 'neutral'}>{lab?.label ?? row.env}</Badge>
           <Badge>{row.config.blueprint.name}</Badge>
           {row.config.scripts.length > 0 && <Badge tone="success">Script</Badge>}
           {row.config.parent && (
@@ -51,12 +63,9 @@ export function RunCard({ summary, onAction }: { summary: RunSummary; onAction: 
         </div>
         <div className="grid grid-cols-3 gap-x-6 gap-y-2 sm:grid-cols-6">
           <Metric label="Generations" value={row.generation} />
-          <Metric label={racing ? 'Best fitness' : 'Hider best'} value={row.bestFitness.toFixed(1)} />
-          {racing ? (
-            <Metric label="Best lap" value={row.bestLapTime > 0 ? `${row.bestLapTime.toFixed(2)} s` : '-'} />
-          ) : (
-            <Metric label="Hidden" value={row.hiddenShare !== undefined ? `${Math.round(row.hiddenShare * 100)}%` : '-'} />
-          )}
+          <Metric label={hideseek ? 'Hider best' : 'Best fitness'} value={row.bestFitness.toFixed(1)} />
+          {headline && <Metric label={headline.label} value={Number.isFinite(best) ? headline.format(best) : '-'} />}
+          {hideseek && <Metric label="Hidden" value={row.hiddenShare !== undefined ? `${Math.round(row.hiddenShare * 100)}%` : '-'} />}
           <Metric label="Benchmark" value={row.benchmark !== undefined ? row.benchmark.toFixed(0) : '-'} />
           <Metric label="Parameters" value={model ? model.parameters : '-'} />
           <Metric label="Brain size" value={model ? formatBytes(model.bytes) : '-'} />
@@ -77,8 +86,8 @@ export function RunCard({ summary, onAction }: { summary: RunSummary; onAction: 
             items={[
               { label: 'Rename', icon: <Pencil />, onSelect: () => onAction('rename') },
               { label: 'Export file', icon: <Download />, onSelect: () => onAction('export') },
-              { label: 'Branch from generation', icon: <GitBranch />, onSelect: () => onAction('branch'), disabled: !racing || row.generation === 0 },
-              { label: 'Rewind to checkpoint', icon: <Undo2 />, onSelect: () => onAction('rewind'), disabled: !racing },
+              { label: 'Branch from generation', icon: <GitBranch />, onSelect: () => onAction('branch'), disabled: !episode || row.generation === 0 },
+              { label: 'Rewind to checkpoint', icon: <Undo2 />, onSelect: () => onAction('rewind'), disabled: !episode },
               { label: 'Start over with same setup', icon: <RotateCcw />, onSelect: () => onAction('reset'), separatorBefore: true },
               { label: 'Duplicate settings', icon: <Copy />, onSelect: () => onAction('duplicate') },
               { label: 'Move to Trash', icon: <Trash2 />, onSelect: () => onAction('delete'), danger: true, separatorBefore: true },

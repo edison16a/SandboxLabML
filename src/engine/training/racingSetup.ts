@@ -6,6 +6,8 @@ import { findTrack } from '../racing/track/presets';
 import { randomTrackSpec } from '../racing/track/randomTrack';
 import type { Track } from '../racing/track/types';
 import type { RacingEnvOptions } from '../racing/env';
+import { builtinRacingController } from '../racing/builtinReward';
+import type { RacingCar } from '../racing/car/runtime';
 import type { ScriptHost, TrackDirective } from './scriptHost';
 import type { RunConfig } from './runConfig';
 
@@ -41,7 +43,7 @@ export function envOptionsFor(setup: RacingSetup, track: Track, host: ScriptHost
     car: setup.car,
     inputs: setup.inputs,
     maxTime: setup.maxTime,
-    controller: host.createRacingController(seed, track),
+    controller: host.createController<RacingCar>({ seed, track }) ?? builtinRacingController,
     customSensors: host.customSensors,
     lesion: setup.lesion,
   };

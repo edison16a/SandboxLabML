@@ -22,7 +22,13 @@ export interface HideSeekRadar {
  * chart reads their keys and labels from RADAR_AXES instead of assuming
  * Racing's four.
  */
-export type BenchRadar = RacingRadar | HideSeekRadar;
+export type BenchRadar = RacingRadar | HideSeekRadar | Readonly<Record<string, number>>;
+
+/** Progress and cancel for a benchmark that runs in slices. */
+export interface BenchOptions {
+  onProgress?: (fraction: number) => void;
+  signal?: AbortSignal;
+}
 
 /** The preset tiers that have reference results. */
 export type ReferenceTier = 'beginner' | 'intermediate' | 'advanced';

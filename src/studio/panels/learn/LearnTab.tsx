@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Clock, GraduationCap } from 'lucide-react';
+import { envLabel } from '@/engine/env/registry';
 import type { EnvId } from '@/engine/env/types';
+import { DEFAULT_SCRIPT_ENV, SCRIPT_ENV_TABLE } from '@/engine/script';
 import { findLesson, lessonsFor } from '@/engine/lessons/catalog';
 import type { Lesson } from '@/engine/lessons/types';
 import { listLessonProgress, type LessonProgress } from '@/storage/lessonProgress';
@@ -20,7 +22,7 @@ import { lessonFraction } from './player';
 export default function LearnTab() {
   const text = useStudio(selectText);
   const lessonId = useStudio((s) => s.lessonId);
-  const [course, setCourse] = useState<EnvId>(() => analyze(text).env ?? 'racing');
+  const [course, setCourse] = useState<EnvId>(() => analyze(text).env ?? DEFAULT_SCRIPT_ENV);
   // Null until loaded, so a lesson opened from a link resumes from saved progress instead of step one.
   const [progress, setProgress] = useState<Map<string, LessonProgress> | null>(null);
   const reload = useCallback(() => void listLessonProgress().then(setProgress, () => setProgress(new Map())), []);
@@ -41,10 +43,7 @@ export default function LearnTab() {
         label="Course"
         value={course}
         onChange={setCourse}
-        options={[
-          { value: 'racing', label: 'Racing' },
-          { value: 'hideseek', label: 'Hide and Seek' },
-        ]}
+        options={SCRIPT_ENV_TABLE.map((e) => ({ value: e.env, label: envLabel(e.env) }))}
       />
       {lessonId && !open && <p className="rounded-md border border-border bg-surface-2 px-3 py-2 text-[12px] text-muted">The lesson in the link was not found. Pick one below.</p>}
       {lessons.length === 0 ? (
