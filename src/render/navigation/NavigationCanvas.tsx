@@ -2,10 +2,11 @@
 
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { GRID_LAYER, XRAY_LAYER } from '@/render/hideseek/grid/scratch';
 import { FramePacer } from '@/render/shared/FramePacer';
 import { useFrameLoop } from '@/render/shared/frameLoop';
+import { SceneReady } from '@/render/shared/SceneReady';
 import { StatsProbe } from '@/render/shared/StatsProbe';
 import { NavCameraRig } from './camera/NavCameraRig';
 import { CourseScene } from './course/CourseScene';
@@ -36,6 +37,8 @@ export interface NavigationCanvasProps {
   hoveredInput?: number;
   /** Runs first every frame with the wall time step, s: the preview advances its simulation here. */
   onFrame?: (dt: number) => void;
+  /** Told once a course and its runners have drawn, so a loading cover can lift. */
+  onReady?: (ready: boolean) => void;
 }
 
 /**
@@ -44,7 +47,7 @@ export interface NavigationCanvasProps {
  * golden crates, the grey block city, the same characters and the same
  * daylight, with the course pieces this game adds.
  */
-export function NavigationCanvas({ getFeed, tier, camera, sensors, effects = true, live, hoveredInput = -1, onFrame }: NavigationCanvasProps) {
+export function NavigationCanvas({ getFeed, tier, camera, sensors, effects = true, live, hoveredInput = -1, onFrame, onReady }: NavigationCanvasProps) {
   const loop = useFrameLoop(live ? 'live' : 'idle');
   const frame = useMemo(() => createNavFrame(), []);
   const view = useMemo<NavView>(() => ({ tier, sensors, hoveredInput }), []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -57,6 +60,7 @@ export function NavigationCanvas({ getFeed, tier, camera, sensors, effects = tru
   const composer = effects && (tier === 'high' || tier === 'ultra');
   const shadows = tier !== 'low';
   const instances = useMemo(() => () => ({ agents: frame.count, movers: frame.course?.movers.length ?? 0 }), [frame]);
+  const hasCourse = useCallback(() => frame.course !== null && frame.curr !== null, [frame]);
 
   return (
     <Canvas
@@ -86,6 +90,7 @@ export function NavigationCanvas({ getFeed, tier, camera, sensors, effects = tru
         <SensorOverlay />
         <NavCameraRig mode={camera} />
         {composer && <NavEffects tier={tier} />}
+        {onReady && <SceneReady isReady={hasCourse} onChange={onReady} />}
         <StatsProbe wholeFrame instances={instances} />
       </NavSceneContext.Provider>
     </Canvas>
