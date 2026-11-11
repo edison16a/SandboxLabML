@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { faceEdge, faceTop } from './cap';
-import { headlampLens, LAMP } from './front';
+import { headlampLens, LAMP, lampTop } from './front';
+import { NOSE, sectionAt } from './profile';
 import { BAND, tailBand } from './rear';
 
 const steps = Array.from({ length: 101 }, (_, i) => i / 100);
@@ -10,9 +11,17 @@ describe('SUV lamps', () => {
     for (const u of steps) {
       const { lo, hi } = headlampLens(u);
       expect(hi[1]).toBeGreaterThan(lo[1] + 0.01);
-      // Across the face it hangs under the hood's edge; round the corner, under the shoulder.
-      if (hi[0] <= faceEdge(1, hi[1])) expect(hi[1]).toBeLessThan(faceTop(1, hi[0]) - 0.015);
+      // Across the face its bezel stays clear of the hood's edge, even where that edge rounds into the side.
+      if (hi[0] <= faceEdge(1, hi[1])) expect(headlampLens(u, 0.007).hi[1]).toBeLessThan(faceTop(1, hi[0]) - 0.003);
     }
+  });
+
+  it('hangs the headlight top 2 to 3 cm under the hood edge, with no flick at the corner', () => {
+    const peak = sectionAt(NOSE).keys[5].z;
+    for (let s = LAMP.inner + LAMP.round; s <= peak; s += 0.01) expect(lampTop(s) - faceTop(1, s)).toBeGreaterThanOrEqual(-0.03);
+    for (let s = LAMP.inner + LAMP.round; s <= peak; s += 0.01) expect(lampTop(s) - faceTop(1, s)).toBeLessThanOrEqual(-0.02);
+    // Round the corner the top runs level: it never climbs above where it left the face.
+    for (let s = peak; s <= LAMP.outer; s += 0.01) expect(lampTop(s)).toBeLessThanOrEqual(lampTop(peak) + 0.002);
   });
 
   it('sizes the headlights as drawn: 8 cm tall inboard, 11 cm at the corner, wrapping round it', () => {

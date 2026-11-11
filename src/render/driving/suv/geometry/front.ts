@@ -1,18 +1,31 @@
-import { smooth } from './curve';
+import { faceTop } from './cap';
+import { profile } from './curve';
 import { addIntakes, addLip } from './intakes';
 import { capDisc, capPanel, capSpan, at } from './panels';
 import type { Detail, PartBin } from './parts';
+import { NOSE, sectionAt } from './profile';
 import type { Pt } from './section';
 
 /**
  * The headlight in the face's unrolled coordinates (s runs across the
  * face and on round the corner): 0.34 m on the face and 0.12 m wrapped
- * round onto the fender, right under the fender peak.
+ * round onto the fender, right under the fender peak. `drop` is how far
+ * its top edge hangs under the hood's leading edge.
  */
-export const LAMP = { inner: 0.4, outer: 0.86, round: 0.026 };
+export const LAMP = { inner: 0.4, outer: 0.86, round: 0.026, drop: 0.025 };
 
-/** The lens's top edge at s: level across the face, rising round the corner to tuck just under the shoulder crease, which runs on from it. */
-const lampTop = (s: number) => 0.878 + 0.05 * smooth((s - 0.58) / 0.22);
+/** Where the fender peak meets the face: past it the face's top edge rounds down into the side. */
+const PEAK = sectionAt(NOSE).keys[5].z;
+
+/**
+ * The lens's top edge at s: a fixed drop under the hood's leading edge,
+ * so it rises with the edge toward the fender peak and levels out there.
+ * Past the peak it holds that height round the corner, where it runs
+ * just under the shoulder crease, so the lamp reads as one smooth line
+ * with no upward flick at its outer end.
+ */
+const topLine = profile([0.3, 0.38, 0.46, 0.52, PEAK + 0.04, 1.2].map((s) => [s, faceTop(1, Math.min(s, PEAK)) - LAMP.drop] as const));
+export const lampTop = (s: number) => topLine(s);
 
 /** The lens's height at s: 8 cm at the inner end, 11 cm at the outer end. */
 const lampHeight = (s: number) => 0.08 + (0.03 * (s - LAMP.inner)) / (LAMP.outer - LAMP.inner);
@@ -43,8 +56,8 @@ const spread = (u: number) => 0.5 - 0.5 * Math.cos(Math.PI * u);
 
 /**
  * The headlights: a tight gloss black bezel round a dark lens, a slim
- * light strip along its top edge, a projector inboard and the four point
- * light signature in a square, the mark you recognize in a mirror.
+ * light strip along its top edge and the four point light signature in
+ * a square, the mark you recognize in a mirror. One graphic per lamp.
  */
 function addHeadlights(bin: PartBin, detail: Detail): void {
   const c = detail.fine ? 30 : detail.brakes ? 14 : 6;
@@ -59,15 +72,11 @@ function addHeadlights(bin: PartBin, detail: Detail): void {
   bin.add('led', capSpan(1, strip(0.016), strip(0.008), 0.0095, c, 1));
   if (!detail.fine && !detail.brakes) return;
   const seg = detail.fine ? 20 : 10;
-  // A projector inboard: a chrome ring with a dark lens in it.
-  const py = lampTop(0.5) - lampHeight(0.5) * 0.58;
-  bin.add('metal', capDisc(1, 0.5, py, 0.021, 0.0085, seg));
-  bin.add('glass', capDisc(1, 0.5, py, 0.014, 0.0095, seg));
-  // Four points in a square on a dark ground, toward the corner.
-  const qs = 0.665;
+  // Four points in a square on a dark ground, on the outer half of the face where the front view sees them.
+  const qs = 0.53;
   const qy = lampTop(qs) - lampHeight(qs) * 0.56;
-  bin.add('trim', capPanel(1, at(qs - 0.034), at(qs + 0.034), qy - 0.03, qy + 0.03, 0.0085, 3, 2));
-  for (const ds of [-0.017, 0.017]) for (const dy of [-0.0145, 0.0145]) bin.add('led', capDisc(1, qs + ds, qy + dy, 0.0095, 0.0105, seg));
+  bin.add('trim', capPanel(1, at(qs - 0.032), at(qs + 0.032), qy - 0.028, qy + 0.028, 0.0085, 3, 2));
+  for (const ds of [-0.016, 0.016]) for (const dy of [-0.0135, 0.0135]) bin.add('led', capDisc(1, qs + ds, qy + dy, 0.0085, 0.0105, seg));
 }
 
 /** The whole nose: lamps on top, intakes below, the splitter under them, all laid on the bent face. */
