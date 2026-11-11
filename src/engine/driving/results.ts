@@ -5,7 +5,7 @@ export interface DrivingResult {
   fitness: number;
   /** Meters driven along the route from the start. */
   distance: number;
-  /** Share of the trip covered, 0 to 1. */
+  /** Share of the trip covered, 0 to 1, and 1 on arrival (the car may stop a few meters short of the zone's middle). */
   completion: number;
   arrived: boolean;
   /** Ended by a crash, a person hit or the curb. */
@@ -33,7 +33,7 @@ export function resultOf(l: DrivingLearner, startS: number, destS: number): Driv
   return {
     fitness: l.fitness,
     distance,
-    completion: Math.min(1, distance / Math.max(1, destS - startS)),
+    completion: arrived ? 1 : Math.min(1, distance / Math.max(1, destS - startS)),
     arrived,
     crashed: l.status === STATUS_CRASHED,
     hitPedestrian: l.stopReason === 'pedestrian',
