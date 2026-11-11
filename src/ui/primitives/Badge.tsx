@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/ui/cn';
 
-type Tone = 'neutral' | 'accent' | 'orange' | 'success' | 'danger' | 'warn';
+export type BadgeTone = 'neutral' | 'accent' | 'orange' | 'success' | 'danger' | 'warn';
 
-const tones: Record<Tone, string> = {
+const tones: Record<BadgeTone, string> = {
   neutral: 'bg-surface-3 text-muted border-border',
   accent: 'bg-accent-soft text-accent border-accent/30',
   orange: 'bg-orange-soft text-orange border-orange/30',
@@ -13,7 +13,7 @@ const tones: Record<Tone, string> = {
 };
 
 /** A small status pill. */
-export function Badge({ tone = 'neutral', children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
+export function Badge({ tone = 'neutral', children, className }: { tone?: BadgeTone; children: ReactNode; className?: string }) {
   return (
     <span
       className={cn(

@@ -6,7 +6,7 @@ import { canRedo, canUndo } from '../doc/history';
 import { fixAllDocument, formatDocument } from '../state/docActions';
 import { saveCurrent } from '../state/scriptActions';
 import { isDirty, useStudio, type EditorMode } from '../state/studioStore';
-import { LAB_PATH } from '@/features/shell/labPaths';
+import { labPath } from '@/features/shell/labs';
 import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
 import { Segmented } from '@/ui/primitives/Segmented';
@@ -75,7 +75,7 @@ export function EditorToolbar() {
         {script && (
           <Tooltip content={dirty ? 'Save first, then train with this script' : `Start a ${ENV[script.env]} run that trains with this script`}>
             <Link
-              href={`${LAB_PATH[script.env]}?trainScript=${encodeURIComponent(script.id)}`}
+              href={`${labPath(script.env)}?trainScript=${encodeURIComponent(script.id)}`}
               prefetch={false}
               aria-disabled={dirty}
               onClick={(e) => dirty && e.preventDefault()}
