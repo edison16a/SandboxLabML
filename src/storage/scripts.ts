@@ -85,7 +85,7 @@ export async function getScript(id: string): Promise<ScriptEntry | undefined> {
 }
 
 /** Reads the environment from the header so a new script lands in the right group. */
-export function envFromSource(source: string, fallback: EnvId = 'racing'): EnvId {
+export function envFromSource(source: string, fallback: EnvId = sbl.DEFAULT_SCRIPT_ENV): EnvId {
   const env = /^\s*script\s+"[^"\n]*"\s+for\s+([a-z]+)/m.exec(source)?.[1];
   return env && (sbl.SCRIPT_ENVS as readonly string[]).includes(env) ? (env as EnvId) : fallback;
 }

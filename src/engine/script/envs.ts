@@ -17,6 +17,13 @@ export interface ScriptEnv {
   builtin: string;
   /** The source a new Studio script starts from. It should compile and run as it is. */
   starter: string;
+  /**
+   * Snippet templates with this env's names in the blanks, by snippet
+   * label ("reward when", "stop when", "each tick" and so on). The script
+   * and brain lines fill in the env on their own; a label left out keeps
+   * the plain template.
+   */
+  templates?: Readonly<Record<string, string>>;
 }
 
 /**
@@ -41,6 +48,14 @@ const table: ScriptEnv[] = [
       '}',
       '',
     ].join('\n'),
+    templates: {
+      'reward when': 'reward ${1:+1} when ${2:checkpoint.passed}',
+      'reward every tick': 'reward ${1:+0.01} * ${2:car.speed}',
+      'stop when': 'stop "${1:crash}" when ${2:car.offTrack}',
+      'for each': 'for each ${1:r} in ${2:rays} {\n  ${3}\n}',
+      sensor: 'sensor ${1:name} "${2:Label}" in ${3:0 m} .. ${4:60 m} = ${5:rays.min}',
+      'each tick': 'each tick {\n  ${1:drive(steer: brain.steer, pedal: brain.pedal)}\n}',
+    },
   },
   {
     env: 'hideseek',
@@ -48,6 +63,14 @@ const table: ScriptEnv[] = [
     presets: HIDESEEK_PRESETS,
     builtin: 'Hiders score while unseen, seekers while they see.',
     starter: 'script "My script" for hideseek v1\n\n// Hide and Seek scripts are coming soon. Sketch your ideas here.\n',
+    templates: {
+      'reward when': 'reward ${1:+1} * dt when ${2:agent.hidden}',
+      'reward every tick': 'reward ${1:+0.1} * dt * ${2:agent.boxesLocked}',
+      'stop when': 'stop "${1:done}" when ${2:agent.timeLeft < 1 s}',
+      'for each': 'for each ${1:r} in ${2:rays} {\n  ${3}\n}',
+      sensor: 'sensor ${1:name} "${2:Label}" in ${3:0 m} .. ${4:12 m} = ${5:rays.min}',
+      'each tick': 'each tick {\n  ${1:act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)}\n}',
+    },
   },
 ];
 

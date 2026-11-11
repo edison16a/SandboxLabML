@@ -5,11 +5,13 @@ import { linkScriptCompiler } from '../../lessons/compilerLink';
 import { validateLesson } from '../../lessons/validate';
 import type { Lesson } from '../../lessons/types';
 import { neatConfig } from '../../neat/config';
+import { snippetsFor } from '../../script/autocorrect';
 import { compileScript } from '../../script/compiler';
-import { registerScriptEnv } from '../../script/envs';
+import { parse } from '../../script/parser';
+import { DEFAULT_SCRIPT_ENV, registerScriptEnv } from '../../script/envs';
 import { hostFor } from '../../training/scriptHost';
 import { registerEpisodeModule } from '../registry';
-import { toyModule } from './toyEnv';
+import { TOY_ENV, toyModule } from './toyEnv';
 import { toyConfig, toyGeneration, toyTrainer } from './toyRun';
 import { TOY_SCRIPT_ENV } from './toyScript';
 
@@ -31,6 +33,18 @@ function scripted(source: string) {
 }
 
 describe('scripts of an env added through the registry', () => {
+  it('get snippets with their own names, and header help that lists them', () => {
+    expect(snippetsFor('script', 'top', TOY_ENV)[0].template).toBe('script "${1:My script}" for ${2:toy} v1');
+    expect(snippetsFor('brain', 'top', TOY_ENV)[0].template).toBe('brain ${1:toy-basic}');
+    // No row templates: the plain blanks, never another env's sensors.
+    expect(snippetsFor('stop', 'tick', TOY_ENV)[0].template).toBe('stop "${1:done}" when ${2:condition}');
+    expect(snippetsFor('wal', 'tick', TOY_ENV).map((s) => s.label)).toEqual(['walk']);
+    const bad = parse('script "x" for 3 v1\n').diagnostics.map((d) => d.message);
+    expect(bad).toContain('Expected the environment name, racing or hideseek or toy.');
+    // The missing header fix names the env the Studio offers first.
+    expect(parse('brain toy-basic\n').diagnostics[0].fixes?.[0]).toMatchObject({ title: 'Add a script line', edits: [{ insert: `script "My script" for ${DEFAULT_SCRIPT_ENV} v1\n` }] });
+  });
+
   it('compile against that env only', () => {
     expect(compileScript(STARTER).diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
     expect(compileScript(STARTER.replace('stop "there" when walker.reached', 'stop "off" when car.offTrack')).script).toBeNull();
