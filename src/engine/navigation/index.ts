@@ -19,3 +19,4 @@ export * from './builtinReward';
 export * from './episode';
 export * from './curriculum';
 export * from './navigator/navigator';
+export * from './navigator/memory';

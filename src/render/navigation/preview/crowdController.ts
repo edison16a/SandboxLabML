@@ -2,6 +2,7 @@ import type { AgentController, TickIO } from '@/engine/env/types';
 import type { NavAgent } from '@/engine/navigation/agent';
 import { builtinNavigationController } from '@/engine/navigation/builtinReward';
 import type { Course } from '@/engine/navigation/course/build';
+import { createMemory, type NavigatorMemory } from '@/engine/navigation/navigator/memory';
 import { crowdSkill, navigate, type NavigatorSkill } from '@/engine/navigation/navigator/navigator';
 import type { NavigationParams } from '@/engine/navigation/params';
 
@@ -13,13 +14,14 @@ import type { NavigationParams } from '@/engine/navigation/params';
  */
 export function crowdController(course: Course, params: NavigationParams): AgentController<NavAgent> {
   const skills: NavigatorSkill[] = [];
+  const memories: NavigatorMemory[] = [];
   return {
     customSensorCount: 0,
     sensors() {},
     tick(a: NavAgent, io: TickIO) {
       builtinNavigationController.tick(a, io);
       skills[a.index] ??= crowdSkill(a.seed);
-      navigate(a, course, params, skills[a.index], io.action);
+      navigate(a, course, params, skills[a.index], io.action, (memories[a.index] ??= createMemory()));
     },
   };
 }

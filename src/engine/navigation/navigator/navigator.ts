@@ -7,7 +7,8 @@ import type { Course } from '../course/build';
 import { sampleFlow } from '../course/fieldSample';
 import type { NavBrain } from '../env';
 import type { NavigationParams } from '../params';
-import { planIsSafe } from './predict';
+import { planCrossing, type CrossingOrder } from './crossing';
+import { createMemory, type NavigatorMemory } from './memory';
 
 /**
  * How well a scripted navigator walks. The perfect one is the benchmark
@@ -45,34 +46,37 @@ export function crowdSkill(seed: number): NavigatorSkill {
 }
 
 const flow = { x: 0, z: 0 };
+const order: CrossingOrder = { move: 0, hx: 1, hz: 0 };
 
 /**
  * Writes move and turn (each -1 to 1) for an agent following the path
- * hint: turn toward it, slow down to turn sharply, and at movers pick the
- * first safe plan of three (go on, wait, back off), so it dashes through
- * a gap only when the mover will not get there first.
+ * hint: turn toward it and slow down to turn sharply. A careful one plans
+ * its way past movers (see planCrossing): it lines up short of a mover's
+ * floor and dashes across a lane only when no mover will reach it there.
+ * `memory` keeps those choices steady from tick to tick.
  */
-export function navigate(a: NavAgent, course: Course, params: NavigationParams, skill: NavigatorSkill, out: Float64Array): void {
-  sampleFlow(course.field, a.x, a.z, flow);
-  let dx = flow.x + skill.shortcut;
-  let dz = flow.z;
-  const len = Math.hypot(dx, dz);
-  dx /= len;
-  dz /= len;
+export function navigate(a: NavAgent, course: Course, params: NavigationParams, skill: NavigatorSkill, out: Float64Array, memory: NavigatorMemory | null = null): void {
+  let dx: number;
+  let dz: number;
+  let pace = skill.pace;
+  if (skill.careful && planCrossing(a, course, params, skill.pace, memory, order)) {
+    dx = order.hx;
+    dz = order.hz;
+    pace = order.move;
+  } else {
+    sampleFlow(course.field, a.x, a.z, flow);
+    dx = flow.x + skill.shortcut;
+    dz = flow.z;
+    const len = Math.hypot(dx, dz);
+    dx /= len;
+    dz /= len;
+  }
   const sway = skill.wobble * Math.sin(a.time * skill.swayRate * 2 * Math.PI + skill.swayPhase);
   const bearing = wrapAngle(Math.atan2(-dz, dx) - a.yaw + sway);
   out[1] = clamp(bearing * 3, -1, 1);
-  const turning = Math.abs(bearing);
-  let move = turning > 1.3 ? 0.15 : turning > 0.6 ? 0.6 * skill.pace : skill.pace;
-  if (skill.careful && course.movers.length > 0) {
-    const speed = params.agent.maxSpeed * move;
-    const r = params.agent.radius;
-    if (!planIsSafe(course, a.x, a.z, r, a.time, speed)) {
-      if (planIsSafe(course, a.x, a.z, r, a.time, 0)) move = 0;
-      else if (planIsSafe(course, a.x, a.z, r, a.time, -params.agent.maxSpeed * params.agent.backShare)) move = -1;
-    }
-  }
-  out[0] = move;
+  // Backing out of a mover's way keeps its heading; anything else slows down to turn sharply.
+  const turning = pace < 0 ? 0 : Math.abs(bearing);
+  out[0] = turning > 1.3 ? Math.min(pace, 0.15) : turning > 0.6 ? 0.6 * pace : pace;
 }
 
 /** A brain that does nothing, for agents driven by a scripted controller. */
@@ -85,12 +89,13 @@ export const IDLE_BRAIN: NavBrain = { activate() {} };
  * benchmark par and to drive the preview crowd.
  */
 export function navigatorController(course: Course, params: NavigationParams, skillOf: (a: NavAgent) => NavigatorSkill = () => PERFECT_NAVIGATOR): AgentController<NavAgent> {
+  const memories: NavigatorMemory[] = [];
   return {
     customSensorCount: 0,
     sensors() {},
     tick(a: NavAgent, io: TickIO) {
       builtinNavigationController.tick(a, io);
-      navigate(a, course, params, skillOf(a), io.action);
+      navigate(a, course, params, skillOf(a), io.action, (memories[a.index] ??= createMemory()));
     },
   };
 }

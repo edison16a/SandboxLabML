@@ -27,7 +27,7 @@ export interface Course {
   field: DistanceField;
   /** Walking distance from the start pad to the finish, m. Progress is measured against it. */
   startDistance: number;
-  /** Episode length, s: room for a careful walk, the waits at movers, and a margin. */
+  /** Episode length, s: room for a slow, careful walk with waits at every mover, and a margin. */
   timeLimit: number;
 }
 
@@ -103,7 +103,8 @@ export function buildCourse(spec: CourseSpec, params: NavigationParams = DEFAULT
   const startDistance = sampleDistance(field, startX, 0);
   // An unsolvable spec still gets a finite clock, so an env built from it ends.
   const walk = Number.isFinite(startDistance) ? startDistance : spec.length * 2;
-  const timeLimit = Math.round(walk / (params.agent.maxSpeed * 0.5) + 6 + movers.length * 1.5);
+  // One and a half times the walk at half speed, and a full mover cycle or so for each mover to wait out.
+  const timeLimit = Math.round((1.5 * walk) / (params.agent.maxSpeed * 0.5) + 6 + movers.length * 2.5);
   return {
     spec,
     halfLength,
