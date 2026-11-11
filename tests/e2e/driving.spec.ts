@@ -75,8 +75,8 @@ test.describe('Driving lab', () => {
     await page.getByRole('button', { name: 'New run' }).click();
     const dialog = page.getByRole('dialog', { name: 'New driving run' });
     await expect(dialog).toBeVisible();
-    for (const city of ['Midtown', 'Harbor', 'Old Town', 'Random']) await expect(dialog.getByRole('button', { name: city })).toBeVisible();
-    await dialog.getByRole('button', { name: /Harbor/ }).click();
+    for (const city of ['Midtown', 'Harbor', 'Old Town', 'Random']) await expect(dialog.getByRole('button', { name: city, exact: true })).toBeVisible();
+    await dialog.getByRole('button', { name: 'Harbor', exact: true }).click();
     await expect(dialog).toContainText('The benchmark drives here');
     await dialog.getByRole('radio', { name: 'Fixed level' }).click();
     await expect(dialog).toContainText('Stays on this level the whole run');
