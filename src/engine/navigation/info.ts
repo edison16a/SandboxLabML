@@ -3,6 +3,7 @@ import { hashObject } from '../core/hash';
 import type { EpisodeEnvInfo } from '../env/episode';
 import { NAVIGATION_ENGINE_VERSION, navigationParamsHash } from './params';
 import { NAVIGATION_BLUEPRINTS, validateNavigationInputs } from './pipeline/blueprints';
+import { NAVIGATION_LESSONS_INFO } from './pipeline/lessonInfo';
 import { NAVIGATION_METRICS } from './pipeline/metricSpecs';
 import { navigationOf } from './pipeline/settings';
 import { navigationInputCount, type NavigationInputConfig } from './sensors/inputConfig';
@@ -43,6 +44,8 @@ export const navigationInfo = {
     // Loaded on first use: the exam pulls in the courses and the script compiler.
     run: async (config, genome, opts) => (await import('../bench/navigation/runner')).benchmarkNavigation(config, genome, opts),
   },
+
+  lessons: NAVIGATION_LESSONS_INFO,
 
   load: () => import('./module').then((m) => m.navigationModule),
 } satisfies EpisodeEnvInfo;

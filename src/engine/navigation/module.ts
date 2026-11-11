@@ -2,6 +2,7 @@ import type { EpisodeEnvModule } from '../env/episode';
 import type { ChampionRecord } from '../training/records';
 import { formationSlots } from './course/formation';
 import { navigationInfo } from './info';
+import { navigationLessons } from './pipeline/lessons';
 import { initialNavigationContent, navigationContentHash, nextNavigationContent, type NavigationContent } from './pipeline/content';
 import { navigationChampionMetrics, navigationGenerationMetrics } from './pipeline/metrics';
 import type { NavigationRunResult } from './pipeline/runResult';
@@ -26,4 +27,5 @@ export const navigationModule: EpisodeEnvModule<NavigationSetup, NavigationConte
 
   championFields: (r) => ({ metrics: navigationChampionMetrics(r) }),
   generationMetrics: navigationGenerationMetrics,
+  lessons: navigationLessons,
 };
