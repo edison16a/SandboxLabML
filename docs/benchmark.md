@@ -169,3 +169,53 @@ Ramps took a second change. The Advanced preset used to spar with the scripted a
 Advanced now plays the hall of fame from the start. That lifted it against the old champions, but once its own new champion joined the opponents the three presets came out level again.
 
 A test checks that every preset learns: each ends at least 4 points above where its runs started. It asked for 8 until the contact fix lifted Beginner's start. It used to check that the tiers rank in order. If a later change makes them rank cleanly again, bring that check back.
+
+# The Driving benchmark
+
+## The exam
+
+The champion drives sixteen short trips alone, in Harbor and Old Town. Training uses Midtown by default and never picks those two unless a script asks for them, so the score says how well a brain drives streets it has not learned by heart. Each city gets two trips at every level from 2 to 5: one through a single turn and one straight along a street, each 160 to 320 m. Even rush hour uses these short trips, so a level is tested on its rules rather than on stamina. The trips, their world seeds and their time limits come from fixed seeds in `src/engine/bench/driving/exam.ts`.
+
+The brain gets the inputs of its run's blueprint plus the custom sensors of its script, and its outputs go straight to the SUV. Nothing is rewarded and the script stops nothing. A trip ends the way the city ends it (arriving, a crash, a person hit, leaving the road, a wrong turn or the time limit) or after 15 seconds without progress that no light, car or person explains. Changing a script's rewards never changes a score, and a test checks this.
+
+Every trip is timed against the autopilot, the hand written driver that knows the city perfectly. A test proves it arrives safely on all sixteen.
+
+## Scoring
+
+Each trip gets three numbers between 0 and 1.
+
+Completion is the share of the trip covered, 1 on arrival.
+
+Safety is that share again, times how cleanly it was driven: 0 for a crash, a person hit or leaving the road, half off for each red light run, a fifth off for each stop line overrun, and less for the share of the time spent speeding, on the wrong side or out of the lane. Scaling by the share covered means a brain that parks at the start is not called safe.
+
+Efficiency is the autopilot's time over the brain's on an arrival. A trip that does not arrive scores its mean pace against the autopilot's, times the share covered.
+
+The radar averages the three over all sixteen trips. The fourth axis, generalization, is the score of the weaker city, so a brain that copes with one street layout and not the other scores low there. The score is a weighted sum of the radar:
+
+| Part | Weight |
+| --- | --- |
+| Completion | 35% |
+| Safety | 35% |
+| Efficiency | 15% |
+| Generalization | 15% |
+
+The result also lists, per level, the share of trips that arrived and arrived safely, and the score per 100 parameters.
+
+## Versions and references
+
+Scores only compare within one `DRIVING_BENCHMARK_VERSION` (in `src/engine/driving/version.ts`). Changing a trip, a seed or anything in `src/engine/bench/driving/scoring.ts` must bump it. A change to the simulation bumps `DRIVING_ENGINE_VERSION` instead. Both are stored in every result and in the reference file.
+
+`public/references/driving.json` holds a curve per preset and, beside it, each preset's typical final champion as a model the Sandbox can drive ("Try a trained model"). `scripts/references/driving/generate.ts` trains several seeds per preset on the settings a new run uses (Midtown, the automatic curriculum from level 1, three trips) and benchmarks the champion every few generations. A preset's final score is the median of every seed's scores at the last two checkpoints, because the curriculum keeps moving the level under the champion.
+
+    npm run refs -- --env driving --workers 3
+
+The defaults are 6 seeds of 120 generations with 100 SUVs. The file shipped now is a stand-in from one seed of 60 generations per preset (about a minute on two threads), so the Sandbox has a model that drives. Its final scores are Beginner 32.9, Intermediate 42.4 and Advanced 42.4. Intermediate and Advanced are the same run until the curriculum reaches level 3, which none did by generation 60.
+
+Single seed runs of 120 generations, scoring the champion every 20 generations, gave this at generations 100 and 120:
+
+| Preset | Seed 1 | Seed 2 |
+| --- | --- | --- |
+| Intermediate | 41.1, 48.3 | 40.2, 23.9 |
+| Advanced | 41.1, 53.0 | 53.3, 68.2 |
+
+Single champions swing a lot from one checkpoint to the next, so these say little on their own. Advanced pulls ahead once its random cities and its care around people and cars come into play at level 3 and up.
