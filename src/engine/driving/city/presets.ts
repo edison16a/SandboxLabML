@@ -4,8 +4,8 @@ import type { CitySpec } from './types';
 /**
  * The built in cities. Midtown is where runs train by default. Harbor and
  * Old Town are held out: the benchmark drives champions there, on streets
- * they have never seen, so a score means the brain learned to drive and did
- * not just learn a map.
+ * they have never seen, so a score means the brain learned to drive rather
+ * than learning one map by heart.
  */
 export const BUILT_IN_CITIES: readonly CitySpec[] = [
   { id: 'midtown', name: 'Midtown', columns: [78, 70, 86, 70, 78], rows: [72, 84, 66, 84, 72], seed: 1307, slow: { vertical: [1], horizontal: [4] } },
