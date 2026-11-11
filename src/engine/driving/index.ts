@@ -19,6 +19,8 @@ export * from './sensors/lidar';
 export * from './sensors/perception';
 export * from './sensors/observe';
 export * from './levels';
+export * from './curriculum';
+export * from './neatDefaults';
 export * from './snapshot';
 export * from './env';
 export * from './results';

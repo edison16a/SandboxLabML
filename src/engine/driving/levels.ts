@@ -55,18 +55,6 @@ export function drivingLevel(id: number): DrivingLevel {
   return DRIVING_LEVELS[k - 1];
 }
 
-/** Share of the population that must arrive safely before the curriculum moves up a level. */
-export const ADVANCE_SHARE = 0.2;
-
-/**
- * The automatic curriculum: move up one level once enough of the
- * generation arrived with no crash, red light run or person hit.
- */
-export function nextLevel(level: number, safeArrivals: number, population: number): number {
-  if (population <= 0 || level >= MAX_LEVEL) return Math.min(level, MAX_LEVEL);
-  return safeArrivals / population >= ADVANCE_SHARE ? level + 1 : level;
-}
-
 /** Episode time limit for a trip, s: generous enough to wait at every light on the way. */
 export function timeLimit(routeLength: number, stops: number, stopWait = 15): number {
   return Math.round(30 + routeLength / 5 + stops * stopWait);
