@@ -1,14 +1,16 @@
 /**
  * Intermediate Navigation preset. It must behave exactly like
  * builtinNavigationController, and a test compares the two runner by
- * runner, so its rewards add up in the same order.
+ * runner, so its rewards add up in the same order. It names the Starter
+ * brain, which trained best of the three in the reference runs.
  */
 export const NAVIGATION_INTERMEDIATE = `// Intermediate: the same rules the app uses when a run has no script.
 script "Intermediate: built-in reward" for navigation v1
 
-// navigation-standard sees twelve rays that tell walls, spikes and movers apart,
-// the finish, the path hint, its own speed and the time left.
-brain navigation-standard
+// navigation-starter sees eight rays, the way to the finish and the path hint.
+// The Standard brain sees more, but with four times the inputs it learned
+// slower in testing, and scored lower after 60 generations.
+brain navigation-starter
 
 // Runs for every runner, 30 times per second.
 each tick {

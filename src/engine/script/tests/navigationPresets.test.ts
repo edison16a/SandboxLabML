@@ -52,7 +52,7 @@ describe('Navigation presets', () => {
 
   it('Intermediate gives exactly the fitness and stop reasons of the built-in reward', () => {
     const script = compiled(NAVIGATION_PRESETS[1].source);
-    const inputs = NAVIGATION_BLUEPRINTS[1].inputs;
+    const inputs = NAVIGATION_BLUEPRINTS.find((b) => b.id === script.header.brain)!.inputs;
     const pop = Population.create({ inputCount: navigationInputSchema(inputs).length, outputCount: 2, activation: 'tanh', wiring: 'direct' }, 17, { populationSize: 30 });
     let finished = 0;
     let died = 0;

@@ -9,7 +9,7 @@ export const NAVIGATION_PRESETS: readonly ScriptPreset[] = [
     name: 'Beginner',
     tier: 'beginner',
     env: 'navigation',
-    description: 'Points for new ground and a finish bonus, with the small brain. The quickest way to see runners learn.',
+    description: 'Points for new ground and a finish bonus, nothing else. The quickest way to see runners learn.',
     source: NAVIGATION_BEGINNER,
   },
   {
@@ -17,7 +17,7 @@ export const NAVIGATION_PRESETS: readonly ScriptPreset[] = [
     name: 'Intermediate',
     tier: 'intermediate',
     env: 'navigation',
-    description: 'The built-in reward written out: new ground, the finish, a cost for dying and for standing still. Runs exactly like a run without a script.',
+    description: 'The built-in reward written out: new ground, the finish, a cost for dying and for standing still. Trains exactly like a run without a script on the same brain.',
     source: NAVIGATION_INTERMEDIATE,
   },
   {

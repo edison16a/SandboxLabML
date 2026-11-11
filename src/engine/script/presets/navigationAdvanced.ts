@@ -1,14 +1,17 @@
 /**
  * Advanced Navigation preset: the Intermediate rules, a sharper cost for
  * dying and for brushing spikes, and more courses per generation once the
- * hazards start, so a lucky room carries less weight.
+ * hazards start, so a lucky room carries less weight. It keeps the
+ * Starter brain: the Standard and Advanced brains scored lower after 60
+ * generations in the preset experiments (see docs/benchmark.md).
  */
 export const NAVIGATION_ADVANCED = `// Advanced: careful runners that finish rooms they have never seen.
 script "Advanced: careful runners" for navigation v1
 
-// The standard brain. Its rays tell spikes and movers from walls,
-// which is what a runner needs to keep clear of them.
-brain navigation-standard
+// The small brain again. In testing, brains that see more (spikes and
+// movers told apart, speed and time) needed more generations, and one
+// without the path hint got lost behind walls. Small and well guided wins.
+brain navigation-starter
 
 // How close to the spikes is too close.
 let spikeMargin = 0.5 m
