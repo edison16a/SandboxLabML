@@ -16,7 +16,7 @@ import { createStopPose, stopPose } from './stopPose';
 
 /** Most agents the crowd draws. */
 export const MAX_AGENTS = 320;
-const BODY = new THREE.Color(NAV_COLORS.runner).lerp(new THREE.Color(NAV_COLORS.crowdGrey), 0.22);
+const BODY = new THREE.Color(NAV_COLORS.runner).lerp(new THREE.Color(NAV_COLORS.crowdGrey), 0.3);
 const GREY = new THREE.Color(NAV_COLORS.dormant);
 /** Crowd members closer than this to the champion fade back, m, so the one the view follows never hides in the pack. */
 const CLEAR_RADIUS = 0.85;

@@ -11,6 +11,7 @@ import { NavCameraRig } from './camera/NavCameraRig';
 import { CourseScene } from './course/CourseScene';
 import { ChampionAgent } from './crowd/ChampionAgent';
 import { CrowdAgents } from './crowd/CrowdAgents';
+import { DeathFlash } from './crowd/DeathFlash';
 import { FrameHook } from './frame/FrameHook';
 import { createNavFrame } from './frame/navFrame';
 import { NavFrameDriver } from './frame/NavFrameDriver';
@@ -79,6 +80,7 @@ export function NavigationCanvas({ getFeed, tier, camera, sensors, effects = tru
         <CourseScene tier={tier} aoPass={composer} />
         <CrowdAgents />
         <ChampionAgent tier={tier} />
+        <DeathFlash />
         <SensorOverlay />
         <NavCameraRig mode={camera} />
         {composer && <NavEffects tier={tier} />}

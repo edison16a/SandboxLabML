@@ -41,7 +41,7 @@ void main() {
   float chev = abs(fract(s + uDir * abs(m.y) * 0.9) - 0.5);
   float arrow = (1.0 - smoothstep(0.06, 0.06 + aa * 2.0, abs(chev - 0.25))) * (1.0 - smoothstep(0.42, 0.5, abs(m.y) / (uWidth * 0.5))) * step(0.22, abs(m.y));
   vec3 col = uColor;
-  float a = 0.05 + edge * dash * 0.4 + arrow * 0.32 * uActivity;
+  float a = 0.07 + edge * dash * 0.6 + arrow * 0.4 * uActivity;
   col = mix(col, uRail, slot);
   a = max(a, slot * 0.85);
   col = mix(col, vec3(0.86, 0.88, 0.9), lip);
