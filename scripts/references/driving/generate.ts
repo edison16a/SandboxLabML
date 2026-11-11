@@ -10,7 +10,7 @@ import { pickDrivingModel } from './pick';
 import type { DrivingReferenceJob, DrivingReferenceResult } from './train';
 
 /** A Driving reference file: the shared curves plus the models the Sandbox can drive. */
-type DrivingReferences = BenchReferences & { models: DrivingReferenceModel[] };
+type DrivingReferences = Omit<BenchReferences, 'models'> & { models: DrivingReferenceModel[] };
 
 /** The model a tier ships (see pickDrivingModel), with how often it arrived safely on the pick's trips logged and left out of the file. */
 function modelOf(tier: ReferenceTier, runs: DrivingReferenceResult[]): DrivingReferenceModel {

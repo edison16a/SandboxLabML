@@ -22,6 +22,17 @@ describe('parseReferences', () => {
   });
 });
 
+describe('parseReferences with models', () => {
+  it('keeps shared models and leaves out models of an env\'s own shape without losing the curves', () => {
+    const model = { tier: 'beginner', seed: 1, generation: 30, score: 80, blueprint: 'navigation-starter', preset: 'navigation-beginner', genome: 'U0JHMQ==' };
+    const nav = { ...SAMPLE, env: 'navigation' as const, models: [model] };
+    expect(parseReferences(JSON.parse(JSON.stringify(nav)))).toEqual(nav);
+    // Driving's models carry their inputs instead of a script preset, and Driving parses them itself.
+    const driving = { ...SAMPLE, env: 'driving' as const, models: [{ ...model, preset: undefined, inputs: {} }] };
+    expect(parseReferences(JSON.parse(JSON.stringify(driving)))).toEqual({ ...driving, models: [] });
+  });
+});
+
 const CHAMPION: ReferenceChampion = {
   tier: 'advanced',
   seed: 2,

@@ -38,9 +38,11 @@ export function parseReferences(data: unknown): BenchReferences | null {
   const { env, benchmarkVersion, engineVersion, generatedAt, seeds, references } = data;
   if (typeof env !== 'string' || !isKnownEnv(env) || !isNum(benchmarkVersion) || !isNum(engineVersion) || !isNum(seeds)) return null;
   if (typeof generatedAt !== 'string' || !Array.isArray(references) || !references.every(isCurve)) return null;
-  const { champions, models } = data;
+  const { champions } = data;
   if (champions !== undefined && (!Array.isArray(champions) || !champions.every(isChampion))) return null;
-  if (models !== undefined && (!Array.isArray(models) || !models.every(isModel))) return null;
+  // An env may ship models of its own shape (Driving's carry their inputs) and parse them itself,
+  // so a model this shape does not fit is left out rather than voiding the curves.
+  const models = Array.isArray(data.models) ? data.models.filter(isModel) : undefined;
   return { env, benchmarkVersion, engineVersion, generatedAt, seeds, references, ...(champions !== undefined && { champions }), ...(models !== undefined && { models }) };
 }
 
