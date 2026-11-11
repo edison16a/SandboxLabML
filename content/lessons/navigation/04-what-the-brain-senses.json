@@ -1,0 +1,79 @@
+{
+  "id": "navigation-04-what-the-brain-senses",
+  "course": "navigation",
+  "order": 4,
+  "title": "What the brain senses",
+  "summary": "Give the brain an input of your own, then try the bigger brains and see what each one adds.",
+  "minutes": 6,
+  "steps": [
+    {
+      "id": "a-sense-of-your-own",
+      "title": "A sense of your own",
+      "body": "A brain only knows what its inputs tell it. navigation-starter has 11: eight rays, two numbers for the finish and one for the path hint.\n\nA `sensor` line adds one more input, computed by your script. Give the brain the gap to the nearest spikes, from 0 to 5 m. The range tells the app how to scale it for the brain.\n\nThe check counts the test runner's inputs. It should now be 12.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"What the brain senses\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// Add a sensor here.\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  reward -3 when agent.died\n}\n",
+      "highlight": {
+        "lines": [
+          7
+        ]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "inputs",
+        "op": "==",
+        "value": 12,
+        "message": "The brain should have 12 inputs."
+      },
+      "hints": [
+        "A sensor line looks like sensor name \"Label\" in low .. high = value.",
+        "Write sensor spikeGap \"Spike gap\" in 0 m .. 5 m = agent.spikeDistance."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"What the brain senses\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// One more input: the gap to the nearest spikes, from 0 to 5 m.\nsensor spikeGap \"Spike gap\" in 0 m .. 5 m = agent.spikeDistance\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  reward -3 when agent.died\n}\n"
+    },
+    {
+      "id": "a-brain-that-sees-more",
+      "title": "A brain that sees more",
+      "body": "navigation-standard has twelve rays, and each ray also says whether it hit spikes or a mover. It feels its own speed and the time left too: 42 inputs.\n\nChange the brain line to `brain navigation-standard`. With your sensor that makes 43.\n\nMore inputs are not free. Each one adds weights that evolution has to tune, so a bigger brain often learns slower at first.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"What the brain senses\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// One more input: the gap to the nearest spikes, from 0 to 5 m.\nsensor spikeGap \"Spike gap\" in 0 m .. 5 m = agent.spikeDistance\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  reward -3 when agent.died\n}\n",
+      "highlight": {
+        "lines": [
+          5
+        ]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "inputs",
+        "op": "==",
+        "value": 43,
+        "message": "The brain should have 43 inputs."
+      },
+      "hints": [
+        "Only the brain line changes.",
+        "Write brain navigation-standard on the brain line."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"What the brain senses\" for navigation v1\n\n// navigation-standard also tells walls, spikes and movers apart, and feels its speed and the clock.\nbrain navigation-standard\n\n// One more input: the gap to the nearest spikes, from 0 to 5 m.\nsensor spikeGap \"Spike gap\" in 0 m .. 5 m = agent.spikeDistance\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  reward -3 when agent.died\n}\n"
+    },
+    {
+      "id": "no-path-hint",
+      "title": "No path hint",
+      "body": "The path hint is an arrow along the shortest way round whatever stands in the way. It makes the early levels easy, a bit like a satnav.\n\nnavigation-advanced trades it for sixteen longer rays: 53 inputs, 54 with your sensor. Without the hint a brain has to work out the way round walls on its own, which takes far longer to learn.\n\nSwitch to `brain navigation-advanced`. The test runner now steers by the bearing to the finish alone.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"What the brain senses\" for navigation v1\n\n// navigation-standard also tells walls, spikes and movers apart, and feels its speed and the clock.\nbrain navigation-standard\n\n// One more input: the gap to the nearest spikes, from 0 to 5 m.\nsensor spikeGap \"Spike gap\" in 0 m .. 5 m = agent.spikeDistance\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  reward -3 when agent.died\n}\n",
+      "highlight": {
+        "lines": [
+          5
+        ]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "inputs",
+        "op": "==",
+        "value": 54,
+        "message": "The brain should have 54 inputs."
+      },
+      "hints": [
+        "Only the brain line changes again.",
+        "Write brain navigation-advanced on the brain line."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"What the brain senses\" for navigation v1\n\n// navigation-advanced has sixteen rays and no path hint, so it must find the way itself.\nbrain navigation-advanced\n\n// One more input: the gap to the nearest spikes, from 0 to 5 m.\nsensor spikeGap \"Spike gap\" in 0 m .. 5 m = agent.spikeDistance\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  reward -3 when agent.died\n}\n"
+    }
+  ]
+}

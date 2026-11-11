@@ -1,0 +1,87 @@
+{
+  "id": "navigation-05-steer-the-curriculum",
+  "course": "navigation",
+  "order": 5,
+  "title": "Steer the curriculum",
+  "summary": "Levels climb on their own as runners master them. Your script can pick the level, the number of courses and the bar for moving up.",
+  "minutes": 7,
+  "steps": [
+    {
+      "id": "start-on-the-spikes",
+      "title": "Start on the spikes",
+      "body": "A curriculum is a list of lessons for the population, easiest first. Every generation runs fresh courses of the current level, and the level goes up once the best runners finish most of them.\n\nThe each generation block can change that. `useLevel` trains the next generation on another level, and the curriculum carries on from there.\n\nMove the run to level 3 after its first generation. The check trains 2 generations and reports the highest level it saw.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Steer the curriculum\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, the line, and a cost for dying.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  reward -3 when agent.died\n}\n\n// This block runs once per generation, after every runner has stopped.\neach generation {\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Pick the starting level here.\n}\n",
+      "highlight": {
+        "lines": [
+          25
+        ]
+      },
+      "check": {
+        "kind": "metricAbove",
+        "generations": 2,
+        "metric": "level",
+        "value": 2,
+        "message": "Training should reach level 3."
+      },
+      "hints": [
+        "generation counts from 0, so if generation == 0 runs once, after the first generation.",
+        "Write if generation == 0 { useLevel(level: 3) } inside each generation."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Steer the curriculum\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, the line, and a cost for dying.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  reward -3 when agent.died\n}\n\n// This block runs once per generation, after every runner has stopped.\neach generation {\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Start the run on the spikes.\n  if generation == 0 {\n    useLevel(level: 3)\n  }\n}\n"
+    },
+    {
+      "id": "more-courses-per-brain",
+      "title": "More courses per brain",
+      "body": "Each brain runs two courses per generation by default, and its score is the average. A brain can get lucky on one room, but rarely on three.\n\n`coursesPerGeneration` sets the count, from 1 to 4. More courses judge brains more fairly, but each generation takes longer. Ask for 3.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Steer the curriculum\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, the line, and a cost for dying.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  reward -3 when agent.died\n}\n\n// This block runs once per generation, after every runner has stopped.\neach generation {\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Start the run on the spikes.\n  if generation == 0 {\n    useLevel(level: 3)\n  }\n\n  // Set the courses per generation here.\n}\n",
+      "highlight": {
+        "lines": [
+          30
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "call",
+            "scope": "generation",
+            "callee": "coursesPerGeneration"
+          }
+        ],
+        "message": "Call coursesPerGeneration in the each generation block."
+      },
+      "hints": [
+        "It takes one argument named count.",
+        "Write coursesPerGeneration(count: 3)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Steer the curriculum\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, the line, and a cost for dying.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  reward -3 when agent.died\n}\n\n// This block runs once per generation, after every runner has stopped.\neach generation {\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Start the run on the spikes.\n  if generation == 0 {\n    useLevel(level: 3)\n  }\n\n  // Three courses per brain, so one lucky room decides less.\n  coursesPerGeneration(count: 3)\n}\n"
+    },
+    {
+      "id": "your-own-bar",
+      "title": "Your own bar",
+      "body": "The level goes up once the best fifth of the population finish 75% of their courses over two generations. The best fifth breed the next generation, so their score is what counts.\n\n`autoLevel` sets a bar of your own. A higher bar means more practice on each level before the next. Set it to 0.9.\n\nIn the lab, the Progress tab shows the level climb and both finish shares, so you can watch your bar at work.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Steer the curriculum\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, the line, and a cost for dying.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  reward -3 when agent.died\n}\n\n// This block runs once per generation, after every runner has stopped.\neach generation {\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Start the run on the spikes.\n  if generation == 0 {\n    useLevel(level: 3)\n  }\n\n  // Three courses per brain, so one lucky room decides less.\n  coursesPerGeneration(count: 3)\n\n  // Set your own bar for moving up here.\n}\n",
+      "highlight": {
+        "lines": [
+          33
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "call",
+            "scope": "generation",
+            "callee": "autoLevel"
+          }
+        ],
+        "message": "Call autoLevel in the each generation block."
+      },
+      "hints": [
+        "It takes one argument named threshold, from 0.05 to 1.",
+        "Write autoLevel(threshold: 0.9)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Steer the curriculum\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, the line, and a cost for dying.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  reward -3 when agent.died\n}\n\n// This block runs once per generation, after every runner has stopped.\neach generation {\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n\n  // Start the run on the spikes.\n  if generation == 0 {\n    useLevel(level: 3)\n  }\n\n  // Three courses per brain, so one lucky room decides less.\n  coursesPerGeneration(count: 3)\n\n  // Move up only once the best fifth finish 90% of their courses.\n  autoLevel(threshold: 0.9)\n}\n"
+    }
+  ]
+}
