@@ -14,8 +14,8 @@ const BLOCK_SIZES: ReadonlyArray<readonly [number, number]> = [
 export const MIN_GAP = 1.7;
 /** Tries per piece before a section gives up on it. */
 export const TRIES = 40;
-/** Shortest wall left between an opening and a side wall, m. A shorter piece reads as a mistake, so the opening runs to the wall instead. */
-export const MIN_STUB = 1.2;
+/** Shortest wall left between an opening and a side wall, m: about two agent widths. A shorter piece reads as a mistake, so the opening runs to the wall instead. */
+export const MIN_STUB = 1.5;
 
 /**
  * Moves an opening [lo, hi] across a room of half width `half` so the wall
