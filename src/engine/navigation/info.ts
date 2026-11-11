@@ -1,3 +1,4 @@
+import { NAVIGATION_BENCHMARK_VERSION, NAVIGATION_RADAR_AXES } from '../bench/navigation/axes';
 import { hashObject } from '../core/hash';
 import type { EpisodeEnvInfo } from '../env/episode';
 import { NAVIGATION_ENGINE_VERSION, navigationParamsHash } from './params';
@@ -32,6 +33,15 @@ export const navigationInfo = {
   physicsHash: (config) => {
     const { settings, inputs } = navigationOf(config);
     return hashObject({ rules: navigationParamsHash(settings.params), inputs });
+  },
+
+  bench: {
+    version: NAVIGATION_BENCHMARK_VERSION,
+    axes: NAVIGATION_RADAR_AXES,
+    hint: 'unseen courses, 0 to 100',
+    about: 'Every 5 generations, the champion runs courses it never trained on.',
+    // Loaded on first use: the exam pulls in the courses and the script compiler.
+    run: async (config, genome, opts) => (await import('../bench/navigation/runner')).benchmarkNavigation(config, genome, opts),
   },
 
   load: () => import('./module').then((m) => m.navigationModule),
