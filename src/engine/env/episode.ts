@@ -128,7 +128,7 @@ export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Con
   /** Generation stats the env records, in the order the lab shows them. */
   readonly metrics: readonly MetricSpec[];
 
-  /** The preset brains, simplest first. The first is the default for a new run. */
+  /** The preset brains, simplest first. The lab picks which one a new run starts on. */
   readonly blueprints: readonly Blueprint[];
   /** Brain inputs the blueprint's built in sensors produce, before script sensors. */
   inputCount(inputs: unknown): number;
