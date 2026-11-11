@@ -1,5 +1,6 @@
 import type { EnvId } from '../env/types';
 import { HIDESEEK_PRESETS } from './presets/hideseek';
+import { NAVIGATION_PRESETS } from './presets/navigation';
 import { RACING_PRESETS } from './presets/racing';
 import type { ScriptPreset } from './presets/types';
 import { HIDESEEK_SLICE } from './registry/hideseek';
@@ -76,7 +77,7 @@ const table: ScriptEnv[] = [
   {
     env: 'navigation',
     slice: NAVIGATION_SLICE,
-    presets: [],
+    presets: NAVIGATION_PRESETS,
     builtin: 'New ground, a finish bonus and a cost for dying.',
     starter: [
       'script "My script" for navigation v1',

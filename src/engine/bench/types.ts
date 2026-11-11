@@ -90,6 +90,25 @@ export interface ReferenceChampion {
   seeker: ReferenceBrain;
 }
 
+/**
+ * A shipped champion of a single population env: the final champion of a
+ * typical seed of one preset's reference runs. The Sandbox plays it under
+ * "Try a trained model", so a newcomer sees a skilled agent before
+ * training one. Its brain is the preset blueprint `blueprint`, plus the
+ * sensors of the script preset `preset`, if that script has any.
+ */
+export interface ReferenceModel {
+  tier: ReferenceTier;
+  seed: number;
+  generation: number;
+  /** Its benchmark score, 0 to 100. */
+  score: number;
+  blueprint: string;
+  preset: string;
+  /** The genome in the binary format, as base64. */
+  genome: string;
+}
+
 /** What the Bench tab shows next to the user's result. */
 export interface BenchReferences {
   env: EnvId;
@@ -101,4 +120,6 @@ export interface BenchReferences {
   references: ReferenceCurve[];
   /** Hide and Seek only: the champions the exam plays against. */
   champions?: ReferenceChampion[];
+  /** Single population envs: one trained champion per preset, for the Sandbox. */
+  models?: ReferenceModel[];
 }

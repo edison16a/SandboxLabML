@@ -1,13 +1,12 @@
 import { wrapAngle } from '../../../core/math';
-import { NEAR_CAP } from '../../../navigation/agent';
 import { MAX_COURSE_LENGTH } from '../../../navigation/course/types';
 import { DEFAULT_NAVIGATION_PARAMS } from '../../../navigation/params';
 import type { RegistryEntry } from '../types';
-import { boolSensor, numSensor, runner } from './sensor';
+import { ALL_TIERS, boolSensor, LATER, numSensor, runner } from './sensor';
 
 const P = DEFAULT_NAVIGATION_PARAMS.agent;
 
-/** What a runner knows about its own run: how far it got, what just happened and how much time is left. */
+/** What a runner knows about its own run: how far it got, what just happened and how much time is left. Contacts and hazards are in hazards.ts. */
 export const NAVIGATION_AGENT_ENTRIES: RegistryEntry[] = [
   numSensor(
     {
@@ -26,6 +25,7 @@ export const NAVIGATION_AGENT_ENTRIES: RegistryEntry[] = [
   numSensor(
     {
       name: 'agent.progressGain',
+      presets: ALL_TIERS,
       unit: '',
       range: [0, 1],
       summary: 'How much new ground the runner covered this tick, as a share of its walk.',
@@ -40,6 +40,7 @@ export const NAVIGATION_AGENT_ENTRIES: RegistryEntry[] = [
   boolSensor(
     {
       name: 'agent.finished',
+      presets: ALL_TIERS,
       unit: '',
       summary: 'True on the tick the runner crosses the finish line.',
       description: 'The run ends right after this tick. Reward it to make finishing worth more than getting close.',
@@ -52,6 +53,7 @@ export const NAVIGATION_AGENT_ENTRIES: RegistryEntry[] = [
   boolSensor(
     {
       name: 'agent.died',
+      presets: LATER,
       unit: '',
       summary: 'True on the tick the runner steps on spikes or is crushed by a mover.',
       description: 'The run ends right after this tick. A penalty here teaches runners to keep clear of spikes and to time the movers.',
@@ -90,6 +92,7 @@ export const NAVIGATION_AGENT_ENTRIES: RegistryEntry[] = [
   numSensor(
     {
       name: 'agent.speed',
+      presets: LATER,
       unit: 'm/s',
       range: [-P.maxSpeed * P.backShare, P.maxSpeed],
       summary: 'How fast the runner is moving forward.',
@@ -103,6 +106,7 @@ export const NAVIGATION_AGENT_ENTRIES: RegistryEntry[] = [
   numSensor(
     {
       name: 'agent.time',
+      presets: LATER,
       unit: 's',
       range: [0, 120],
       summary: 'Seconds since the run started.',
@@ -128,6 +132,20 @@ export const NAVIGATION_AGENT_ENTRIES: RegistryEntry[] = [
   ),
   numSensor(
     {
+      name: 'agent.timeLimit',
+      presets: LATER,
+      unit: 's',
+      range: [0, 120],
+      summary: 'Seconds the runner has for the whole course.',
+      description: 'The same for every runner on a course, plus a little for a spot further back on the start grid. Divide the time by it for the share of the time used.',
+      example: 'reward +10 * max(0, 1 - agent.time / agent.timeLimit) when agent.finished',
+      explain: 'the time limit',
+      label: 'time limit',
+    },
+    (v) => runner(v).timeLimit,
+  ),
+  numSensor(
+    {
       name: 'agent.stuckTime',
       unit: 's',
       range: [0, 10],
@@ -138,43 +156,5 @@ export const NAVIGATION_AGENT_ENTRIES: RegistryEntry[] = [
       label: 'time stuck',
     },
     (v) => runner(v).noProgress,
-  ),
-  boolSensor(
-    {
-      name: 'agent.touching',
-      unit: '',
-      summary: 'True while the runner is pressed against a wall, a crate or a mover.',
-      description: 'Runners slide along whatever they touch, so touching is not fatal. A small penalty teaches them to keep some room.',
-      example: 'reward -0.002 when agent.touching',
-      explain: 'the runner touches something',
-      label: 'touching',
-    },
-    (v) => runner(v).touching,
-  ),
-  numSensor(
-    {
-      name: 'agent.spikeDistance',
-      unit: 'm',
-      range: [0, NEAR_CAP],
-      summary: 'Gap between the runner and the nearest spikes.',
-      description: `Meters from the edge of its body to the nearest spike pad, capped at ${NEAR_CAP} m. It is 0 when the runner is on them.`,
-      example: 'reward -0.002 when agent.spikeDistance < 0.5 m',
-      explain: 'the gap to the spikes',
-      label: 'spike gap',
-    },
-    (v) => runner(v).spikeDistance,
-  ),
-  numSensor(
-    {
-      name: 'agent.moverDistance',
-      unit: 'm',
-      range: [0, NEAR_CAP],
-      summary: 'Gap between the runner and the nearest moving crate.',
-      description: `Meters from the edge of its body to the nearest mover where it stands now, capped at ${NEAR_CAP} m. Movers push runners and crush any caught against a wall.`,
-      example: 'reward -0.002 when agent.moverDistance < 0.3 m',
-      explain: 'the gap to the movers',
-      label: 'mover gap',
-    },
-    (v) => runner(v).moverDistance,
   ),
 ];

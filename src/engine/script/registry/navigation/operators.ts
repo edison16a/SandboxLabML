@@ -7,6 +7,7 @@ import { clampTo, entry, param, req } from '../define';
 import { metricSensor, setEnvDirective } from '../envHelpers';
 import type { TickIO } from '../../../env/types';
 import type { EffectArgs, Reader, RegistryEntry } from '../types';
+import { ADVANCED } from './sensor';
 
 /** An operator of the each generation block that sets one Navigation request. */
 function operator(d: Omit<Parameters<typeof entry>[0], 'kind' | 'scope' | 'env' | 'type' | 'unit' | 'binding'>, key: string, value: (args: EffectArgs) => (v: unknown, io: TickIO) => unknown): RegistryEntry {
@@ -37,7 +38,7 @@ const numberOf = (r: Reader, lo: number, hi: number) => (v: unknown, io: TickIO)
  * applies it, so a script can steer the curriculum but never break it.
  */
 export const NAVIGATION_GENERATION_ENTRIES: RegistryEntry[] = [
-  metricSensor({ name: 'course.level', env: 'navigation', key: NAV_METRIC.level, unit: '', label: 'level', summary: 'The level the last generation ran on, from 0 to 6.', description: 'With the automatic curriculum on it climbs by itself as the best runners master each level. Compare it with a number to change rewards or rules as the courses get harder.', example: 'if course.level < 2 {\n  coursesPerGeneration(count: 1)\n}', explain: 'the level', range: [0, TOP_LEVEL] }),
+  metricSensor({ name: 'course.level', env: 'navigation', key: NAV_METRIC.level, unit: '', label: 'level', presets: ADVANCED, summary: 'The level the last generation ran on, from 0 to 6.', description: 'With the automatic curriculum on it climbs by itself as the best runners master each level. Compare it with a number to change rewards or rules as the courses get harder.', example: 'if course.level < 2 {\n  coursesPerGeneration(count: 1)\n}', explain: 'the level', range: [0, TOP_LEVEL] }),
   metricSensor({ name: 'course.finished', env: 'navigation', key: NAV_METRIC.finishShare, unit: '', label: 'share finished', summary: 'Share of all runs in the last generation that crossed the line.', description: 'Every brain runs every course, and this counts each run. Mutated brains always trip, so it stays below course.bestFinished on hard levels.', example: 'if course.finished > 0.6 {\n  useLevel(level: course.level + 1)\n}', explain: 'the share that finished', range: [0, 1] }),
   metricSensor({ name: 'course.bestFinished', env: 'navigation', key: NAV_METRIC.eliteShare, unit: '', label: 'share the best fifth finished', summary: 'Share of its courses the best fifth of the population finished.', description: 'The automatic curriculum climbs on this number, since the best brains are the ones that breed. It is 1 when every one of them finished every course.', example: 'if course.bestFinished > 0.9 {\n  coursesPerGeneration(count: 3)\n}', explain: 'the share the best fifth finished', range: [0, 1] }),
   metricSensor({ name: 'course.died', env: 'navigation', key: NAV_METRIC.deathShare, unit: '', label: 'share died', summary: 'Share of all runs in the last generation that ended on spikes or under a mover.', description: 'High when a level with hazards is new. Watch it fall as the population learns to keep clear.', example: 'if course.died > 0.5 {\n  useLevel(level: course.level - 1)\n}', explain: 'the share that died', range: [0, 1] }),
@@ -73,6 +74,7 @@ export const NAVIGATION_GENERATION_ENTRIES: RegistryEntry[] = [
   operator(
     {
       name: 'coursesPerGeneration',
+      presets: ADVANCED,
       params: [param('count', 'number', '', `How many courses each brain runs, ${MIN_COURSES} to ${MAX_COURSES}.`, { range: [MIN_COURSES, MAX_COURSES] })],
       summary: 'Sets how many fresh courses each brain runs per generation.',
       description: 'Each brain scores its average over the courses. More courses judge a brain more fairly, so a lucky room decides less, but a generation takes longer.',

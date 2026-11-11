@@ -6,6 +6,9 @@ import type { BlockCategory, PresetTier, Reader, RegistryEntry, Test } from '../
 export const runner = (v: unknown) => v as NavAgent;
 
 export const ALL_TIERS: readonly PresetTier[] = ['beginner', 'intermediate', 'advanced'];
+/** Entries the Intermediate and Advanced presets use and Beginner leaves out. */
+export const LATER: readonly PresetTier[] = ['intermediate', 'advanced'];
+export const ADVANCED: readonly PresetTier[] = ['advanced'];
 
 /** The documentation every Navigation sensor carries. */
 export interface SensorDocs {
