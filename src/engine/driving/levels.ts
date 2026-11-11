@@ -1,3 +1,5 @@
+import { DEFAULT_ROUTE, type RouteOptions } from './route/planner';
+
 /**
  * Traffic profiles, from empty streets to rush hour. A run's curriculum
  * walks up these; a script's generation block can also pick one.
@@ -13,14 +15,21 @@ export interface DrivingLevel {
   jaywalk: number;
   /** Chance that a person reaching a crossing on the flashing hand still goes. */
   lateCross: number;
+  /** The trips driven at this level: short and simple while brains learn to steer. */
+  route: RouteOptions;
+  /** Seconds allowed for each stop line on the way, on top of the drive itself: more where queues form. */
+  stopWait: number;
 }
 
+/** First trips: one turn at most, a couple of blocks long. */
+const FIRST_TRIPS: RouteOptions = { minLength: 120, maxLength: 260, minTurns: 0, maxTurns: 1 };
+
 export const DRIVING_LEVELS: readonly DrivingLevel[] = [
-  { id: 1, name: 'Empty streets', signals: false, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0 },
-  { id: 2, name: 'Traffic lights', signals: true, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0 },
-  { id: 3, name: 'Pedestrians', signals: true, pedestrians: 60, traffic: 0, jaywalk: 0, lateCross: 0 },
-  { id: 4, name: 'Traffic', signals: true, pedestrians: 76, traffic: 28, jaywalk: 0, lateCross: 0.1 },
-  { id: 5, name: 'Rush hour', signals: true, pedestrians: 120, traffic: 44, jaywalk: 0.5, lateCross: 0.3 },
+  { id: 1, name: 'Empty streets', signals: false, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0, route: FIRST_TRIPS, stopWait: 15 },
+  { id: 2, name: 'Traffic lights', signals: true, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0, route: FIRST_TRIPS, stopWait: 15 },
+  { id: 3, name: 'Pedestrians', signals: true, pedestrians: 60, traffic: 0, jaywalk: 0, lateCross: 0, route: DEFAULT_ROUTE, stopWait: 18 },
+  { id: 4, name: 'Traffic', signals: true, pedestrians: 76, traffic: 28, jaywalk: 0, lateCross: 0.1, route: DEFAULT_ROUTE, stopWait: 26 },
+  { id: 5, name: 'Rush hour', signals: true, pedestrians: 120, traffic: 44, jaywalk: 0.5, lateCross: 0.3, route: DEFAULT_ROUTE, stopWait: 30 },
 ];
 
 export const MIN_LEVEL = 1;
@@ -44,6 +53,6 @@ export function nextLevel(level: number, safeArrivals: number, population: numbe
 }
 
 /** Episode time limit for a trip, s: generous enough to wait at every light on the way. */
-export function timeLimit(routeLength: number, stops: number): number {
-  return Math.round(30 + routeLength / 5 + stops * 15);
+export function timeLimit(routeLength: number, stops: number, stopWait = 15): number {
+  return Math.round(30 + routeLength / 5 + stops * stopWait);
 }

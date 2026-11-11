@@ -6,7 +6,7 @@ import { builtInCity, DEFAULT_CITY_ID } from './city/presets';
 import type { City, CitySpec } from './city/types';
 import type { DrivingEnvOptions } from './env';
 import { drivingLevel, timeLimit, type DrivingLevel } from './levels';
-import { DEFAULT_ROUTE, pickRoute, type RouteOptions, type RouteSpec } from './route/planner';
+import { pickRoute, type RouteOptions, type RouteSpec } from './route/planner';
 import { buildRoute, type Route } from './route/route';
 import type { CarParams } from './car/params';
 import type { DrivingInputConfig } from './sensors/inputConfig';
@@ -33,15 +33,17 @@ export interface DrivingSetupOptions {
   level: number;
   /** Picks the trip and seeds the world: mix the run seed and the generation into it. */
   seed: number;
+  /** Defaults to the level's own trips (see DrivingLevel.route). */
   route?: RouteOptions;
 }
 
 export function createDrivingSetup(opts: DrivingSetupOptions): DrivingSetup {
   const spec = opts.city ?? builtInCity(DEFAULT_CITY_ID)!;
   const city = cityFor(spec);
-  const route = pickRoute(city, mixSeed(opts.seed, 0x40), opts.route ?? DEFAULT_ROUTE);
+  const level = drivingLevel(opts.level);
+  const route = pickRoute(city, mixSeed(opts.seed, 0x40), opts.route ?? level.route);
   const built = buildRoute(city, route.elements, route.startS, route.destS);
-  return { city: spec, level: opts.level, route, worldSeed: mixSeed(opts.seed, 0x77), maxTime: timeLimit(built.length, built.stops.length) };
+  return { city: spec, level: level.id, route, worldSeed: mixSeed(opts.seed, 0x77), maxTime: timeLimit(built.length, built.stops.length, level.stopWait) };
 }
 
 /** A setup's city, route and level, built (the city is cached by spec). */

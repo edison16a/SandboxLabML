@@ -63,8 +63,9 @@ export interface RouteOptions {
   /** Trip length along the road, m. */
   minLength: number;
   maxLength: number;
-  /** Turns (left or right) the trip must include. */
+  /** Turns (left or right) the trip must include, and at most how many (no limit when left out). */
   minTurns: number;
+  maxTurns?: number;
 }
 
 export const DEFAULT_ROUTE: RouteOptions = { minLength: 260, maxLength: 620, minTurns: 1 };
@@ -97,7 +98,9 @@ export function pickRoute(city: City, seed: number, opts: RouteOptions = DEFAULT
     for (const dest of fits) {
       const chain = chainTo(tree, dest.id)!;
       const spec = { elements: chain, startS, destS: dest.path.length * 0.6 };
-      if (turnsIn(city, chain) >= opts.minTurns) return spec;
+      const turns = turnsIn(city, chain);
+      if (turns > (opts.maxTurns ?? Infinity)) continue;
+      if (turns >= opts.minTurns) return spec;
       fallback ??= spec;
     }
   }
