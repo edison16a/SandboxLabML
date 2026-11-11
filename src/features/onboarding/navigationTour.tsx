@@ -68,7 +68,7 @@ export const NAVIGATION_TOUR: Tour = {
       prefer: ['bottom', 'right'],
       prepare: () => void keepNavigationTraining(),
       title: 'Harder courses as they learn',
-      body: 'Level 0 is an empty room. Once the best fifth finishes almost every course, the next level adds crates, spikes, walls or moving blocks.',
+      body: 'Level 0 is an empty room. Once the best fifth finishes three quarters of their courses, over two generations, the next level adds crates, spikes, walls or moving blocks.',
     },
     {
       id: 'progress',

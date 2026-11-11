@@ -67,7 +67,7 @@ export function CoursePicker({ value, onChange }: { value: CourseChoice; onChang
               options={NAV_LEVELS.map((l) => ({ value: String(l.level), label: String(l.level), title: l.name }))}
             />
           </Field>
-          <Field label="Curriculum" hint={value.autoLevel ? 'Moves up once the best fifth finishes almost every course.' : 'Stays on the start level.'}>
+          <Field label="Curriculum" hint={value.autoLevel ? 'Moves up once the best fifth finishes three quarters of their courses, over two generations.' : 'Stays on the start level.'}>
             <label className="flex h-8 items-center gap-2 text-[13px]">
               <Switch label="Climb the levels" checked={value.autoLevel} onChange={(v) => onChange({ ...value, autoLevel: v })} />
               Climb the levels
