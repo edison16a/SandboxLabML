@@ -14,6 +14,8 @@ export interface NavView {
 export interface NavSceneValue {
   frame: NavFrame;
   getFeed: () => NavFeed | null;
+  /** The ghost replay, when the viewport has one. */
+  getGhosts?: () => NavFeed | null;
   view: NavView;
 }
 

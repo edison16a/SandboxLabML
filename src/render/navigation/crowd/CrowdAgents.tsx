@@ -83,7 +83,8 @@ export function CrowdAgents() {
     const mf = fading.current;
     if (!ms || !mf) return;
     const curr = frame.curr;
-    if (!curr) {
+    // Following a ghost means the population is not on screen: the ghosts draw the rest.
+    if (!curr || frame.primaryGhosts) {
       commit(ms, 0);
       commit(mf, 0);
       return;

@@ -42,4 +42,12 @@ export interface NavFeed {
   inputs: NavigationInputConfig | null;
   /** An agent the view must follow (one the user picked), or null to follow the best. */
   follow?: number | null;
+  /** Per agent tags: for a ghost replay, the generation each ghost comes from. */
+  tags?: Int32Array;
+  /**
+   * The latest observation of one agent exactly as its brain received it,
+   * when the feed streams one. The sensor overlay draws it for the
+   * followed agent, so a lesioned or noisy input shows as the brain saw it.
+   */
+  inspect?: { index: number; obs: ArrayLike<number> } | null;
 }

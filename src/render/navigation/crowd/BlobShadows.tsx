@@ -49,7 +49,8 @@ export function BlobShadows() {
     if (!m) return;
     if (!curr || !frame.course) return commit(m, 0);
     let n = 0;
-    const count = Math.min(frame.count, MAX_AGENTS);
+    // Ghosts cast no shadows, so with the view on a ghost only the movers get one.
+    const count = frame.primaryGhosts ? 0 : Math.min(frame.count, MAX_AGENTS);
     for (let i = 0; i < count; i++) {
       if (i === frame.leader) continue;
       const o = i * STRIDE;
