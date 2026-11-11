@@ -32,7 +32,8 @@ const SHOULDER_R = 0.015;
 export function beltAt(x: number): [number, number] {
   const [bz, by] = beltKey(x);
   const pull = endPull(x);
-  return [bz - pull.peak, by - pull.drop];
+  // At the nose the fender peak only half drops into the face, easing from the unrolled shoulder to the rolled hood.
+  return [bz - pull.peak, by - pull.drop * (x > 0 ? 0.5 : 1)];
 }
 
 /** Height of the body's top at the centerline: the hood's valley floor, or the tail's deck. */
@@ -44,14 +45,15 @@ export function sectionAt(x: number): Section {
   const pull = endPull(x);
   const w = shoulderZ(x) - pull.side;
   // At the nose the shoulder keeps its height and rolls over into the face's top edge; the hood alone drops.
-  const roll = x > 0 ? pull.drop / ROUND.nose.roll : 0;
+  // How far round the nose corner the section is, 0 to 1: the shoulder turns over more and more toward the face.
+  const turn = x > 0 ? (pull.side / ROUND.nose.plan) ** 1.5 : 0;
   const ys = shoulderY(x) - (x > 0 ? 0 : pull.drop);
   const [bz, by] = beltAt(x);
   const v = by - deckY(x);
   // The shoulder: the side arrives upright, the shelf leaves leaning in, a little flatter on the front fender.
   // Round the nose's corner the crease softens and turns over further, so it flows into the hood's edge.
   const up = deg(-3);
-  const shelf = deg(58 + 8 * onHood(x) + 40 * roll);
+  const shelf = deg(58 + 8 * onHood(x) + 40 * turn);
   const r = SHOULDER_R * (1 + (x > 0 ? pull.side / ROUND.nose.plan : 0));
   const t = r * Math.tan((shelf - up) / 2);
   // Along the cabin the shelf ends under the glass; on the hood it crests flat at the fender peak, and the tail's deck flattens too.
