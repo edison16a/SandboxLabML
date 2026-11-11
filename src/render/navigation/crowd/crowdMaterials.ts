@@ -13,12 +13,14 @@ export function crowdSolidMaterial(): THREE.MeshStandardMaterial {
  * The same material for characters fading out (fallen, finished, out of
  * time) or melted back near the champion: a per instance opacity (aFade)
  * on top of the walk. Drawn in its own small pass after the solid crowd,
- * so only the few fading characters pay for transparency. It writes no
- * depth, so a faint ghost never hides the champion's face, its sensors
- * or its rings, and never sets off its x-ray outline.
+ * so only the few fading characters pay for transparency. It writes depth,
+ * so each body's own parts (eyes, hands, feet) do not show through each
+ * other, but it draws last of all (see CrowdAgents), so that depth can
+ * never hide the champion's face, its sensors or its rings, nor set off
+ * its x-ray outline.
  */
 export function crowdFadeMaterial(): THREE.MeshStandardMaterial {
-  const m = crowdGaitMaterial({ ...BODY, transparent: true, depthWrite: false });
+  const m = crowdGaitMaterial({ ...BODY, transparent: true, depthWrite: true });
   const gait = m.onBeforeCompile.bind(m);
   m.onBeforeCompile = (shader, renderer) => {
     gait(shader, renderer);

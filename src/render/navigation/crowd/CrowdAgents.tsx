@@ -17,6 +17,8 @@ import { crushAlongForward } from './crushAxis';
 import { crowdFadeMaterial, crowdFadeShadowMaterial, crowdSolidMaterial, instanceFloats } from './crowdMaterials';
 import { createStopPose, stopPose } from './stopPose';
 
+/** Draw order of the fading pass: after every other see-through part of the scene (the highest, the sensor hit marks, is 7). */
+const FADE_ORDER = 8;
 /** Most agents the crowd draws. */
 export const MAX_AGENTS = 320;
 const BODY = new THREE.Color(NAV_COLORS.runner).lerp(new THREE.Color(NAV_COLORS.crowdGrey), 0.3);
@@ -144,9 +146,9 @@ export function CrowdAgents() {
   return (
     <group>
       <instancedMesh ref={solid} args={[a.geometry, solidMat, MAX_AGENTS]} frustumCulled={false} castShadow receiveShadow />
-      {/* After the champion's own passes, so a ghost in front of it only tints it. */}
+      {/* Last of all, after the champion's passes and the sensors, so a ghost in front of them only tints them. */}
       {/* It casts its dwindling shadow; it takes none, as a see-through body darkened by its own shadow looks dirty. */}
-      <instancedMesh ref={fading} args={[b.geometry, fadeMat, MAX_AGENTS]} frustumCulled={false} renderOrder={5} castShadow customDepthMaterial={fadeShadow} />
+      <instancedMesh ref={fading} args={[b.geometry, fadeMat, MAX_AGENTS]} frustumCulled={false} renderOrder={FADE_ORDER} castShadow customDepthMaterial={fadeShadow} />
     </group>
   );
 }
