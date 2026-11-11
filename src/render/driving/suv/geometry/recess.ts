@@ -86,23 +86,26 @@ export function recess(end: 1 | -1, outline: Pt[], depth: number, width: number,
   const loops = across.map(([d, lift]) => ({ pts: offset(ring.slice(0, -1), d), lift }));
   const rows = ring.map((_, i) => loops.map(({ pts, lift }) => onCap(end, ...pts[i % pts.length], lift)));
   const bezel = facing(gridGeometry(rows), [end, 0, 0]);
-  // The mesh: rings shrinking to the middle, each laid on the bent face.
   const back = loops[loops.length - 1].pts;
-  const mid: Pt = [back.reduce((s, p) => s + p[0], 0) / back.length, back.reduce((s, p) => s + p[1], 0) / back.length];
-  const grid: Vec3[][] = [...back, back[0]].map(([z, y]) =>
-    Array.from({ length: rings + 1 }, (_, k) => {
-      const t = k / rings;
-      return onCap(end, z + (mid[0] - z) * t, y + (mid[1] - y) * t, MESH_LIFT);
-    }),
-  );
-  const mesh = facing(gridGeometry(grid), [end, 0, 0]);
-  // Flat UVs in meters across the face, so the mesh pattern keeps its scale.
-  const uv = mesh.attributes.uv;
-  [...back, back[0]].forEach(([z, y], i) => {
-    for (let k = 0; k <= rings; k++) {
-      const t = k / rings;
-      uv.setXY(i * (rings + 1) + k, z + (mid[0] - z) * t, y + (mid[1] - y) * t);
-    }
+  return { bezel, mesh: capFill(end, back, MESH_LIFT, rings) };
+}
+
+/**
+ * A flat panel filling a closed outline on the nose or tail: rings
+ * shrinking to its middle, every point laid on the bent face so the
+ * panel follows it. UVs are in meters across the face, so textures keep
+ * their scale.
+ */
+export function capFill(end: 1 | -1, outline: Pt[], lift: number, rings: number): THREE.BufferGeometry {
+  const mid: Pt = [outline.reduce((s, p) => s + p[0], 0) / outline.length, outline.reduce((s, p) => s + p[1], 0) / outline.length];
+  const at = ([z, y]: Pt, t: number): Pt => [z + (mid[0] - z) * t, y + (mid[1] - y) * t];
+  const loop = [...outline, outline[0]];
+  const grid: Vec3[][] = loop.map((p) => Array.from({ length: rings + 1 }, (_, k) => onCap(end, ...at(p, k / rings), lift)));
+  const g = facing(gridGeometry(grid), [end, 0, 0]);
+  const uv = g.attributes.uv;
+  loop.forEach((p, i) => {
+    for (let k = 0; k <= rings; k++) uv.setXY(i * (rings + 1) + k, ...at(p, k / rings));
   });
-  return { bezel, mesh };
+  return g;
+
 }

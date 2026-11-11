@@ -1,11 +1,13 @@
-import { faceTop, onCap } from './body';
+import { faceEdge, faceTop, onCap } from './body';
 import { gridGeometry, type Vec3 } from './grid';
 import type { Detail, PartBin } from './parts';
 import { at, capDisc, capPanel, capSpan } from './panels';
+import { sillY, TAIL } from './profile';
 import type { Pt } from './section';
+import { addTailgate } from './tailgate';
 
 /** The tail's light band: its half width, and how far its two edges sit under the face's top edge, m. */
-const BAND = { half: 0.755, hi: 0.055, lo: 0.115 };
+const BAND = { half: 0.755, hi: 0.072, lo: 0.13 };
 
 /**
  * The light band's lower and upper edge at z, both measured down from
@@ -82,25 +84,30 @@ function addSpoiler(bin: PartBin, detail: Detail): void {
 /**
  * The diffuser: a gloss black panel across the bottom of the bumper with
  * satin fins in the middle and a pair of oval tailpipes set into it on
- * each side.
+ * each side. It fills the face down to its lowest edge and keeps inside
+ * the face's own edge at every height.
  */
 function addDiffuser(bin: PartBin, detail: Detail): void {
   const c = detail.fine ? 10 : detail.brakes ? 4 : 2;
-  bin.add('trim', capPanel(-1, (y) => -(0.77 - (0.615 - y) * 0.2), (y) => 0.77 - (0.615 - y) * 0.2, 0.455, 0.615, 0.004, c * 2, 2, false));
-  bin.add('metal', capPanel(-1, at(-0.72), at(0.72), 0.618, 0.623, 0.006, c * 2, 1, false));
+  const y0 = sillY(TAIL);
+  const top = 0.6;
+  const half = (y: number) => faceEdge(-1, y) - 0.025;
+  bin.add('trim', capPanel(-1, (y) => -half(y), half, y0, top, 0.004, c * 2, detail.fine ? 9 : 5, false));
+  bin.add('metal', capPanel(-1, (y) => -half(y), half, top + 0.003, top + 0.008, 0.006, c * 2, 1, false));
   if (detail.fine) {
-    for (const z of [-0.2, -0.1, 0, 0.1, 0.2]) bin.add('clad', capPanel(-1, at(z - 0.006), at(z + 0.006), 0.46, 0.58, 0.014, 1, 1, false));
+    for (const z of [-0.2, -0.1, 0, 0.1, 0.2]) bin.add('clad', capPanel(-1, at(z - 0.006), at(z + 0.006), y0 + 0.012, top - 0.035, 0.014, 1, 1, false));
   }
   const seg = detail.fine ? 22 : detail.brakes ? 10 : 6;
   for (const z of [0.4, 0.555]) {
-    bin.add('metal', capDisc(-1, z, 0.522, 0.064, 0.009, seg, true, 0.52));
-    bin.add('liner', capDisc(-1, z, 0.522, 0.052, 0.011, seg, true, 0.46));
+    bin.add('metal', capDisc(-1, z, 0.48, 0.064, 0.009, seg, true, 0.52));
+    bin.add('liner', capDisc(-1, z, 0.48, 0.052, 0.011, seg, true, 0.46));
   }
 }
 
-/** The whole tail: lights, spoiler and diffuser, laid on the warped face. */
+/** The whole tail: lights, spoiler, tailgate and diffuser, laid on the warped face. */
 export function addRear(bin: PartBin, detail: Detail): void {
   addLights(bin, detail);
   addSpoiler(bin, detail);
+  addTailgate(bin, detail);
   addDiffuser(bin, detail);
 }
