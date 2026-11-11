@@ -47,6 +47,12 @@ export interface LabState {
   mode: 'train' | 'sandbox';
   /** Lesion test: input index mapped to the value it is forced to. Sandbox only. */
   lesions: Record<number, number>;
+  /**
+   * Set by a lab whose viewport follows a ghost on its own, such as when
+   * the population is not on screen, so the inputs panels read the ghost
+   * stream. Left out, only a clicked ghost or the Sandbox does that.
+   */
+  viewFollowsGhost?: boolean;
 }
 
 /** A lab store as the shared code sees it. A lab's own store is a superset, so it can stand in. */
@@ -110,12 +116,12 @@ export function withRecords<R extends GenerationRecord>(records: R[], batch: R[]
 }
 
 /**
- * True when the followed agent is a ghost: the user clicked one, or the lab
+ * True when the followed agent is a ghost: the user clicked one, the lab
  * is in the Sandbox, where only ghosts move and the population stream sits
- * frozen on its last training frame.
+ * frozen on its last training frame, or the lab's viewport says so.
  */
-export function followsGhost(s: { focus: Focus; mode: 'train' | 'sandbox' }): boolean {
-  return s.focus.kind === 'ghost' || s.mode === 'sandbox';
+export function followsGhost(s: { focus: Focus; mode: 'train' | 'sandbox'; viewFollowsGhost?: boolean }): boolean {
+  return s.focus.kind === 'ghost' || s.mode === 'sandbox' || s.viewFollowsGhost === true;
 }
 
 /**
