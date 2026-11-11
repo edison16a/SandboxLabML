@@ -13,7 +13,7 @@ test.describe('Driving walkthrough', () => {
     await expect(card).toBeFocused();
     await card.getByRole('button', { name: 'Start the tour' }).click();
     await expect(title('Every SUV has a brain')).toBeVisible();
-    await expect(card).toContainText('1 / 10');
+    await expect(card).toContainText('1 / 11');
 
     // The step waits for the real Train button, then explains what it started.
     await expect(card).toContainText('Press Train');
@@ -26,7 +26,7 @@ test.describe('Driving walkthrough', () => {
     await expect(title('The best become parents')).toBeVisible();
     await page.keyboard.press('Enter');
     await expect(title('One level at a time')).toBeVisible();
-    await expect(card).toContainText('3 / 10');
+    await expect(card).toContainText('3 / 11');
     // Space still reaches the lab, so training pauses and the software renderer gets the CPU back.
     await page.keyboard.press(' ');
     await expect(page.getByRole('button', { name: 'Train' })).toBeVisible();

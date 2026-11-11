@@ -164,12 +164,21 @@ export const DRIVING_TOUR: Tour = {
       body: 'Overlay and Both replay earlier champions on the same streets. The gap between them is what training bought.',
     },
     {
+      id: 'sandbox',
+      chapter: DRIVE,
+      target: '[data-tour="sandbox"]',
+      prefer: ['top'],
+      title: 'Drive them anywhere',
+      body: 'The Sandbox puts your champions on any city, level and route. Before you train, it drives a trained model so you can see where this goes.',
+    },
+    {
       id: 'studio',
       chapter: YOURS,
       target: '[data-tour="nav-studio"]',
       prefer: ['bottom'],
       title: 'Write the rules yourself',
-      body: 'In the Studio you write the training script: what earns fitness and when a trip ends. Replay this tour from the ? button.',
+      body: 'In the Studio you write the training script: what earns fitness and when a trip ends. The lessons show you how. Replay this tour from the ? button.',
+      links: [{ label: 'Start the first lesson', href: '/studio?lesson=driving-01-first-trip' }],
     },
   ],
 };
