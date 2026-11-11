@@ -44,7 +44,7 @@ export interface DrivingLearner {
   /** Offset from the lane center (left positive), m, and heading error, rad. */
   lateral: number;
   headingError: number;
-  /** Bearing from the car's heading to the lane center AIM_AHEAD meters on, rad, left positive: where to point the car. */
+  /** Bearing from the car's heading to the lane center a little way on (see aimDistance), rad, left positive: where to point the car. */
   aim: number;
   /** True while the car's center is inside the destination zone. */
   inDestination: boolean;
