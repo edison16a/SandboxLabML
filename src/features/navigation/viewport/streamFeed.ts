@@ -35,6 +35,8 @@ export class StreamFeed implements NavFeed {
   inspect: { index: number; obs: ArrayLike<number> } | null = null;
   /** The level of the course on screen, from the start message. */
   level = 0;
+  /** The streamed spec as JSON, worked out once per start message, so the Sandbox can tell its own course from another. */
+  specKey = '';
   private seenFrame: Float32Array | null = null;
   private seenScene: unknown = undefined;
   private running = false;
@@ -64,6 +66,7 @@ export class StreamFeed implements NavFeed {
       const scene = s.scene as NavigationScene | null;
       this.course = scene?.spec ? this.courses.get(scene.spec, params) : null;
       this.level = scene?.level ?? 0;
+      this.specKey = scene?.spec ? JSON.stringify(scene.spec) : '';
     }
     const buffer = s.curr?.buffer ?? null;
     if (buffer !== this.seenFrame) {

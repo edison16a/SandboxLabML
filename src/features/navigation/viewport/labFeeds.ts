@@ -15,11 +15,17 @@ import { StreamFeed } from './streamFeed';
  * replay, which then is the followed feed; else the next generation's
  * course with the population lined up. The view toggle hides one or the
  * other. A replay on the population's course rides along as ghosts.
+ *
+ * The Sandbox shows only its own scene: the replay once it streams the
+ * Sandbox course, and until then that course with the runners on their
+ * spots. Training's course and population never show there.
  */
 export class LabFeeds {
   readonly population: StreamFeed;
   readonly ghosts: StreamFeed;
   private readonly idle: IdleFeed;
+  /** The Sandbox course with its runners standing, while the replay of it starts. */
+  private readonly lineup: IdleFeed;
   private run: NavigationLabState['run'] = null;
   private parts: ReturnType<typeof navigationOf> | null = null;
 
@@ -31,6 +37,7 @@ export class LabFeeds {
     this.population = new StreamFeed(streams.population, courses);
     this.ghosts = new StreamFeed(streams.ghosts, courses);
     this.idle = new IdleFeed(courses);
+    this.lineup = new IdleFeed(courses);
   }
 
   /** Lets go of the streams, when the lab unmounts. */
@@ -44,8 +51,7 @@ export class LabFeeds {
     const s = this.state();
     if (!s.run || s.run.env !== 'navigation') return null;
     this.sync(s);
-    // In the Sandbox the replayed runners are the field on screen, drawn like a population with its champion, not as ghosts.
-    if (s.mode === 'sandbox' && this.ghosts.hasFrame) return this.ghosts;
+    if (s.mode === 'sandbox') return this.sandboxFeed(s);
     if (this.showsPopulation(s)) return this.population;
     // Between two watched generations the next one lines up, so the view never flicks over to the ghosts.
     const between = s.mode === 'train' && s.view !== 'overlay' && s.status === 'running' && isWatchSpeed(s.speed);
@@ -61,8 +67,52 @@ export class LabFeeds {
     return s.run && s.mode === 'train' && this.showsGhosts(s) ? this.ghosts : null;
   };
 
-  /** The level on screen: the streamed course's while one streams, else the content's. */
+  /**
+   * The Sandbox view. Its replayed runners are the field on screen, drawn
+   * like a population with its champion, not as ghosts. Frames of another
+   * course (an older scene, or training's ghosts) never show: until the
+   * replay streams this one, the runners stand on their start spots.
+   */
+  private sandboxFeed(s: NavigationLabState): NavFeed | null {
+    const lineup = s.sandbox.lineup;
+    const started = lineup !== null && this.ghosts.specKey === lineup.key;
+    if (started && this.ghosts.hasFrame) return this.ghosts;
+    this.lineup.syncLineup(lineup);
+    this.lineup.follow = this.ghosts.follow;
+    // Waiting for the first frame of a replay that has started, they share its episode, so the hand over is seamless.
+    // Before it starts they are an episode of their own, so the camera glides to them.
+    this.lineup.epoch = this.ghosts.epoch + (started ? 0 : 0.5);
+    return this.lineup;
+  }
+
+  /** True when the Sandbox view shows the replay itself, not its runners standing. */
+  private sandboxReplays(s: NavigationLabState): boolean {
+    const lineup = s.sandbox.lineup;
+    return lineup !== null && this.ghosts.specKey === lineup.key && this.ghosts.hasFrame;
+  }
+
+  /**
+   * The runners the HUD counts: the latest frame of the feed on screen, or
+   * null when no runners are on screen. Read from the stream itself, which
+   * holds its latest buffer until the next frame (the renderer's copy may
+   * already be handed back).
+   */
+  counted(s: NavigationLabState): { buffer: Float32Array; count: number } | null {
+    if (s.mode === 'sandbox') {
+      if (this.sandboxReplays(s)) return this.frameOf(this.ghosts);
+      return this.lineup.curr && this.lineup.count > 0 ? { buffer: this.lineup.curr, count: this.lineup.count } : null;
+    }
+    return this.showsPopulation(s) ? this.frameOf(this.population) : null;
+  }
+
+  private frameOf(feed: StreamFeed): { buffer: Float32Array; count: number } | null {
+    const buffer = feed.stream.curr?.buffer;
+    return buffer && buffer.length > 0 ? { buffer, count: feed.stream.count } : null;
+  }
+
+  /** The level on screen: the Sandbox course's in the Sandbox, the streamed course's while one streams, else the content's. */
   level(s: NavigationLabState): number {
+    if (s.mode === 'sandbox') return s.sandbox.lineup?.spec.level ?? 0;
     if (this.showsPopulation(s)) return this.population.level;
     if (this.showsGhosts(s)) return this.ghosts.level;
     return s.content?.curriculum.level ?? 0;

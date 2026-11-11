@@ -48,7 +48,7 @@ export class NavigationSession extends EpisodeSession<NavigationLabState> {
   }
 
   override async exitSandbox(): Promise<void> {
-    this.store.setSandbox({ inputs: null, paused: false });
+    this.store.setSandbox({ inputs: null, lineup: null, paused: false });
     this.set({ viewSchema: null });
     await super.exitSandbox();
   }

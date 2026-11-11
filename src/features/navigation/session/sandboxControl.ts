@@ -7,7 +7,7 @@ import type { WorkerPool } from '@/workers/client/workerPool';
 import { isWatchSpeed, WATCH_SPEEDS } from '@/workers/shared/protocol';
 import { useNavigationLab } from '../state/labStore';
 import { SANDBOX_SEED, STARTING_COPIES, type FieldEntry, type NavSandbox, type SandboxCourse } from '../state/sandboxState';
-import { sandboxScene } from './sandboxScene';
+import { sandboxLineup, sandboxScene } from './sandboxScene';
 
 const store = () => useNavigationLab.getState();
 
@@ -122,7 +122,8 @@ export class SandboxControl {
     const s = store();
     if (s.mode !== 'sandbox' || !s.run) return;
     const scene = sandboxScene(s.run, s.records, s.sandbox, s.lesions);
-    s.setSandbox({ inputs: scene?.inputs ?? null });
+    // From here the viewport shows this course and no other, with the runners on their spots until the replay streams.
+    s.setSandbox({ inputs: scene?.inputs ?? null, lineup: sandboxLineup(s.run, s.sandbox, scene) });
     // A shipped model reads other inputs than the run's brain, and the inputs panels should label those.
     s.set({ viewSchema: scene?.inputs ? navigationInputSchema(scene.inputs) : null });
     if (!scene) {

@@ -1,5 +1,6 @@
 import type { ReferenceModel, ReferenceTier } from '@/engine/bench/types';
 import type { CourseSpec } from '@/engine/navigation/course/types';
+import type { NavigationParams } from '@/engine/navigation/params';
 import type { NavigationInputConfig } from '@/engine/navigation/sensors/inputConfig';
 
 /** Which course the Sandbox runs: a fresh course of a level, a named course, or one the user drew. */
@@ -9,6 +10,22 @@ export type SandboxCourse = { kind: 'level'; level: number; seed: number } | { k
 export interface FieldEntry {
   generation: number;
   copies: number;
+}
+
+/**
+ * What the Sandbox last sent to the replay: its course and where each
+ * runner starts. Until the replay streams that course, the viewport stands
+ * the runners on those spots, so it never shows anything else.
+ */
+export interface SandboxLineup {
+  spec: CourseSpec;
+  /** The spec as JSON, to tell the replay's frames of this course from older ones. */
+  key: string;
+  params: NavigationParams;
+  inputs: NavigationInputConfig;
+  /** Each runner's seed and start slot, in stream order. Empty when nobody is lined up. */
+  seeds: number[];
+  slots: number[];
 }
 
 /**
@@ -29,6 +46,8 @@ export interface NavSandbox {
   paused: boolean;
   /** The inputs of the brains on screen, when they differ from the run's (a shipped model). The viewport's sensor drawing reads them. */
   inputs: NavigationInputConfig | null;
+  /** The scene in play, set each time one is sent. Null while the Sandbox is closed. */
+  lineup: SandboxLineup | null;
 }
 
 /** Most runners the Sandbox lines up: the front rows of the start grid, which the replay worker steps in well under a frame. */
@@ -48,6 +67,7 @@ export const SANDBOX_DEFAULTS: NavSandbox = {
   modelCopies: STARTING_COPIES,
   paused: false,
   inputs: null,
+  lineup: null,
 };
 
 export const fieldSize = (field: readonly FieldEntry[]) => field.reduce((n, e) => n + e.copies, 0);

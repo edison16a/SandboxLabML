@@ -9,7 +9,10 @@ import { createEpisodeRunConfig } from '@/engine/training/newRun';
 import { labDefaults } from '@/features/lab/state/labState';
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
 import type { StreamOut } from '@/workers/shared/protocol';
+import type { CourseSpec } from '@/engine/navigation/course/types';
+import { sandboxLineup, sandboxScene } from '../session/sandboxScene';
 import type { NavigationLabState } from '../state/labStore';
+import { SANDBOX_DEFAULTS, type NavSandbox } from '../state/sandboxState';
 import { LabFeeds } from './labFeeds';
 
 const run = createEpisodeRunConfig({ env: 'navigation', name: 't', seed: 3, blueprint: NAVIGATION_BLUEPRINTS[1], populationSize: 20, settings: { ...navigationSettings() } });
@@ -30,9 +33,9 @@ function fakeStream() {
     epoch: 0,
     alpha: () => 1,
     on: (fn: (m: StreamOut) => void) => (listeners.add(fn), () => listeners.delete(fn)),
-    start(count: number) {
+    start(count: number, shown: CourseSpec = spec) {
       s.count = count;
-      s.scene = { spec, index: 0, of: 1, level: 0 };
+      s.scene = { spec: shown, index: 0, of: 1, level: shown.level };
       s.epoch++;
       s.curr = s.prev = null;
       for (const fn of listeners) fn({ kind: 'start', stream: 'population', generation: 0, count });
@@ -121,5 +124,61 @@ describe('what the Navigation viewport shows', () => {
     ghosts.frame(NAV_RUNNING);
     expect(feeds.getFeed()).toBeNull();
     expect(feeds.getGhosts()).toBe(feeds.ghosts);
+  });
+
+  describe('in the Sandbox', () => {
+    // Two copies of the run's champion on a level 1 course, while training is on a level 0 course.
+    const records = [{ generation: 0, genome: { nodes: [], connections: [] }, replaySeed: 4, replaySlot: 0, champion: { fitness: 1 } }] as never;
+    const picked: NavSandbox = { ...SANDBOX_DEFAULTS, course: { kind: 'level', level: 1, seed: 7 }, field: [{ generation: 0, copies: 2 }] };
+    const scene = sandboxScene(run, records, picked, {})!;
+    const sandbox: NavSandbox = { ...picked, lineup: sandboxLineup(run, picked, scene) };
+    const course = sandbox.lineup!.spec;
+
+    it('never shows the training course, the population or their shares while the replay has no frame', () => {
+      const state = lab({ mode: 'sandbox', sandbox, status: 'paused' });
+      const { population, ghosts, feeds } = setup(state);
+      // Training's last frame and an older replay on the training course are both still in their streams.
+      population.start(20);
+      population.frame(NAV_RUNNING);
+      ghosts.start(3);
+      ghosts.frame(NAV_RUNNING);
+      for (let k = 0; k < 3; k++) {
+        const feed = feeds.getFeed();
+        expect(feed?.course?.spec).toEqual(course);
+        expect(feed?.count).toBe(2);
+        expect(feed).not.toBe(feeds.ghosts);
+        expect(feed).not.toBe(feeds.population);
+        expect(feeds.counted(state)?.count).toBe(2);
+        expect(feeds.level(state)).toBe(1);
+        expect(feeds.getGhosts()).toBeNull();
+      }
+    });
+
+    it('hands over to the replay once it streams the Sandbox course, in the same episode', () => {
+      const state = lab({ mode: 'sandbox', sandbox, status: 'paused' });
+      const { ghosts, feeds } = setup(state);
+      ghosts.start(2, course);
+      const standing = feeds.getFeed();
+      expect(standing).not.toBe(feeds.ghosts);
+      expect(standing?.epoch).toBe(feeds.ghosts.epoch);
+      ghosts.frame(NAV_RUNNING);
+      expect(feeds.getFeed()).toBe(feeds.ghosts);
+      expect(feeds.counted(state)?.count).toBe(2);
+      // The loop restarts: the runners stand on their spots for the moment before its first frame.
+      ghosts.start(2, course);
+      expect(feeds.getFeed()?.count).toBe(2);
+      expect(feeds.getFeed()?.course?.spec).toEqual(course);
+    });
+
+    it('shows the bare Sandbox course with no runners lined up, and counts nobody', () => {
+      const empty: NavSandbox = { ...picked, field: [], lineup: sandboxLineup(run, { ...picked, field: [] }, null) };
+      const state = lab({ mode: 'sandbox', sandbox: empty });
+      const { feeds } = setup(state);
+      const feed = feeds.getFeed();
+      expect(feed?.course?.spec).toEqual(course);
+      expect(feed?.count).toBe(0);
+      expect(feed?.leaderless).toBe(true);
+      expect(feeds.counted(state)).toBeNull();
+    });
   });
 });

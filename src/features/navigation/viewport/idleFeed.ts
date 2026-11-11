@@ -9,18 +9,22 @@ import type { NavigationContent } from '@/engine/navigation/pipeline/content';
 import type { CourseCache } from '@/engine/navigation/pipeline/courseCache';
 import { navigationOf } from '@/engine/navigation/pipeline/settings';
 import { contentSpecs } from '@/engine/navigation/pipeline/setup';
+import type { CourseSpec } from '@/engine/navigation/course/types';
+import type { NavigationParams } from '@/engine/navigation/params';
 import type { NavigationInputConfig } from '@/engine/navigation/sensors/inputConfig';
 import { NAVIGATION_SNAPSHOT, navigationWorldSize } from '@/engine/navigation/snapshot';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { NavFeed } from '@/render/navigation/types';
+import type { SandboxLineup } from '../state/sandboxState';
 
 /**
  * What the viewport shows before anything streams, and in the moment
  * between two watched generations: the course the next generation runs,
- * with the population lined up on its start grid. It is
- * built once per run and content, on the main thread, from the same
- * course code the workers run, so the first live frame lands on the very
- * room already on screen.
+ * with the population lined up on its start grid. In the Sandbox it is
+ * the Sandbox course with its runners, while the replay starts. It is
+ * built once per run and content (or lineup), on the main thread, from
+ * the same course code the workers run, so the first live frame lands on
+ * the very room already on screen.
  */
 export class IdleFeed implements NavFeed {
   course: Course | null = null;
@@ -40,6 +44,7 @@ export class IdleFeed implements NavFeed {
   private builtRun: RunConfig | null = null;
   private builtContent: NavigationContent | null = null;
   private builtAgents = false;
+  private builtLineup: SandboxLineup | null = null;
 
   constructor(private readonly courses: CourseCache) {}
 
@@ -60,14 +65,45 @@ export class IdleFeed implements NavFeed {
     }
     const { settings, inputs } = navigationOf(run);
     const spec = contentSpecs(content, run.seed)[0];
-    const course = this.courses.get(spec, settings.params);
     const count = agents ? run.neat.populationSize : 0;
-    const env = new NavigationEnv({ course, params: settings.params, inputs, controller: builtinNavigationController });
-    env.reset(
-      Array.from({ length: count }, () => IDLE_BRAIN),
+    this.lineUp(
+      spec,
+      settings.params,
+      inputs,
       Array.from({ length: count }, (_, i) => mixSeed(run.seed, content.generation, i)),
       // The slots training hands out this generation, so the first live frame finds everyone where they stood.
       formationSlots(count, startSlotSeed(run.seed, content.generation)),
+    );
+  }
+
+  /**
+   * Rebuilds for a Sandbox lineup: its course with each runner on the spot
+   * the replay starts it from, so the hand over to the replay is seamless.
+   * Null shows nothing at all.
+   */
+  syncLineup(lineup: SandboxLineup | null): void {
+    if (lineup === this.builtLineup) return;
+    this.builtLineup = lineup;
+    this.epoch++;
+    if (!lineup) {
+      this.course = null;
+      this.curr = null;
+      this.count = 0;
+      return;
+    }
+    this.lineUp(lineup.spec, lineup.params, lineup.inputs, lineup.seeds, lineup.slots);
+    this.leaderless = lineup.seeds.length === 0;
+  }
+
+  /** Stands one agent per seed on its slot of the course, at tick 0, and reads them out as a frame. */
+  private lineUp(spec: CourseSpec, params: NavigationParams, inputs: NavigationInputConfig, seeds: number[], slots: number[]): void {
+    const course = this.courses.get(spec, params);
+    const count = seeds.length;
+    const env = new NavigationEnv({ course, params, inputs, controller: builtinNavigationController });
+    env.reset(
+      seeds.map(() => IDLE_BRAIN),
+      seeds,
+      slots,
     );
     this.curr = new Float32Array(Math.max(1, count) * NAVIGATION_SNAPSHOT.stride);
     env.snapshot(this.curr);

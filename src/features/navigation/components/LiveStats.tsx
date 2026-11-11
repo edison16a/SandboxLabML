@@ -23,7 +23,7 @@ interface Live {
 
 const NONE: Live = { watching: false, level: 0, running: 0, finished: 0, died: 0, total: 0, best: 0 };
 
-/** Counts the live population four times a second, so the chips never redraw per frame. */
+/** Counts the runners on screen four times a second, so the chips never redraw per frame. */
 function useLive(feeds: LabFeeds | null): Live {
   const [live, setLive] = useState<Live>(NONE);
   useEffect(() => {
@@ -31,14 +31,12 @@ function useLive(feeds: LabFeeds | null): Live {
     const id = setInterval(() => {
       const s = useNavigationLab.getState();
       const level = feeds.level(s);
-      // Read from the stream itself: it holds its latest buffer until the next frame, which the renderer's copy may not.
-      // In the Sandbox the runners on screen are the replay's.
-      const sandbox = s.mode === 'sandbox';
-      const stream = sandbox ? feeds.ghosts.stream : feeds.population.stream;
-      const buf = stream.curr?.buffer;
-      if (!(sandbox ? feeds.ghosts.hasFrame : feeds.showsPopulation(s)) || !buf) return setLive((l) => (l.watching || l.level !== level ? { ...NONE, level } : l));
-      const next: Live = { watching: true, level, running: 0, finished: 0, died: 0, total: stream.count, best: 0 };
-      for (let i = 0; i < stream.count; i++) {
+      // The live population in training; in the Sandbox its own runners, standing or replayed.
+      const frame = feeds.counted(s);
+      if (!frame) return setLive((l) => (l.watching || l.level !== level ? { ...NONE, level } : l));
+      const { buffer: buf, count } = frame;
+      const next: Live = { watching: true, level, running: 0, finished: 0, died: 0, total: count, best: 0 };
+      for (let i = 0; i < count; i++) {
         const status = buf[i * STRIDE + SNAP_STATUS];
         if (status === NAV_RUNNING) next.running++;
         else if (status === NAV_FINISHED) next.finished++;
@@ -57,7 +55,9 @@ const percent = (v: number | undefined) => (v === undefined || !Number.isFinite(
 /**
  * Generation, level, and how the runners are doing, top left of the
  * viewport. While a generation plays: running, finished, died and the
- * best progress on screen. Otherwise the latest generation's shares.
+ * best progress on screen. Otherwise the latest generation's shares, but
+ * never in the Sandbox, whose runners are not training's: there the
+ * counts wait as dashes.
  */
 export function LiveStats({ feeds }: { feeds: LabFeeds | null }) {
   const live = useLive(feeds);
@@ -65,19 +65,21 @@ export function LiveStats({ feeds }: { feeds: LabFeeds | null }) {
   const sandbox = useNavigationLab((s) => s.mode === 'sandbox');
   const last = useNavigationLab((s) => s.records[s.records.length - 1]);
   const level = NAV_LEVELS[live.level] ?? NAV_LEVELS[0];
+  // A Sandbox course goes by its own name, such as one the user drew.
+  const name = useNavigationLab((s) => (s.mode === 'sandbox' ? s.sandbox.lineup?.spec.name : undefined)) ?? level.name;
   return (
     <div className="pointer-events-none flex flex-wrap gap-1.5">
       {!sandbox && <HudChip label="Generation" value={gen + 1} tour="hud-generation" />}
       {/* Keyed on the level, so a level up pops the chip in afresh. */}
-      <div key={level.level} className="animate-pop-in">
-        <HudChip label="Level" value={level.level} note={level.name} tour="hud-level" />
+      <div key={`${level.level}:${name}`} className="animate-pop-in">
+        <HudChip label="Level" value={level.level} note={name} tour="hud-level" />
       </div>
-      {live.watching ? (
+      {live.watching || sandbox ? (
         <>
-          <HudChip label="Running" value={`${live.running} / ${live.total}`} />
-          <HudChip label="Finished" value={live.finished} />
-          <HudChip label="Died" value={live.died} />
-          <HudChip label="Best progress" value={percent(live.best)} />
+          <HudChip label="Running" value={live.watching ? `${live.running} / ${live.total}` : '-'} />
+          <HudChip label="Finished" value={live.watching ? live.finished : '-'} />
+          <HudChip label="Died" value={live.watching ? live.died : '-'} />
+          <HudChip label="Best progress" value={live.watching ? percent(live.best) : '-'} />
         </>
       ) : (
         <>

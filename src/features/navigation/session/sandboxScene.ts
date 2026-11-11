@@ -14,7 +14,7 @@ import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { GhostSpec } from '@/workers/replay/ghostPlayer';
 import { ghostSpecs } from '@/features/lab/session/ghostSelection';
-import { MAX_RUNNERS, type FieldEntry, type NavSandbox, type SandboxCourse } from '../state/sandboxState';
+import { MAX_RUNNERS, type FieldEntry, type NavSandbox, type SandboxCourse, type SandboxLineup } from '../state/sandboxState';
 
 /** The course a Sandbox pick stands for. A saved course that is gone falls back to level 1. */
 export function sandboxCourseSpec(pick: SandboxCourse, saved: readonly CourseSpec[]): CourseSpec {
@@ -89,4 +89,18 @@ export function sandboxScene(run: RunConfig, records: GenerationRecord[], s: Nav
     ...(lesion.length && { lesion }),
   };
   return { setup, specs, generations: specs.map((r) => r.generation), inputs };
+}
+
+/** The lineup a scene puts on screen, or the bare course when nobody is lined up. */
+export function sandboxLineup(run: RunConfig, s: NavSandbox, scene: SandboxScene | null): SandboxLineup {
+  const spec = scene?.setup.courses[0] ?? sandboxCourseSpec(s.course, s.saved);
+  const own = navigationOf(run);
+  return {
+    spec,
+    key: JSON.stringify(spec),
+    params: scene?.setup.params ?? own.settings.params,
+    inputs: scene?.setup.inputs ?? own.inputs,
+    seeds: scene?.specs.map((g) => g.seed) ?? [],
+    slots: scene?.specs.map((g) => g.slot ?? 0) ?? [],
+  };
 }
