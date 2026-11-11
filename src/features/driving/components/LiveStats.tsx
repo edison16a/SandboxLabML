@@ -7,6 +7,7 @@ import { DRIVING_SNAPSHOT, LF_RAN_RED, LF_WRONG_WAY, SNAP } from '@/engine/drivi
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
 import { cn } from '@/ui/cn';
 import { isWatchSpeed } from '@/workers/shared/protocol';
+import { viewportHeld } from '@/features/lab/state/labState';
 import { useDrivingLab } from '../state/labStore';
 
 const STRIDE = DRIVING_SNAPSHOT.stride;
@@ -86,7 +87,9 @@ function SandboxStats({ live, level }: { live: Live; level: number }) {
 
 function TrainingStats({ live, shown }: { live: Live; shown: 'population' | 'ghosts' }) {
   const gen = useDrivingLab((s) => s.liveGeneration);
-  const level = useDrivingLab((s) => (shown === 'ghosts' ? (s.ghostContent ?? s.content) : s.content)?.level);
+  // Ghosts stand still under Max, so their level would go stale while training climbs: then the chip reads training's own.
+  const onGhosts = useDrivingLab((s) => shown === 'ghosts' && !viewportHeld(s) && s.ghostContent !== null);
+  const level = useDrivingLab((s) => (onGhosts ? s.ghostContent : s.content)?.level);
   const trip = useDrivingLab((s) => s.trip);
   const trips = useDrivingLab((s) => s.trips);
   const last = useDrivingLab((s) => s.records[s.records.length - 1]);
@@ -94,7 +97,7 @@ function TrainingStats({ live, shown }: { live: Live; shown: 'population' | 'gho
   return (
     <div className="pointer-events-none flex flex-wrap gap-1.5">
       <Chip label="Generation" value={gen + 1} tour="hud-generation" />
-      {level !== undefined && <Chip label="Level" value={`${level} ${drivingLevel(level).name}`} tour="hud-level" />}
+      {level !== undefined && <Chip label="Level" value={`${level} ${drivingLevel(level).name}`} tour="hud-level" title={onGhosts ? 'The level the champions on screen drive' : 'The level training is on'} />}
       {trips > 1 && live.total > 0 && <Chip label="Trip" value={`${trip + 1} of ${trips}`} />}
       {watching && live.total > 0 && <Chip label="Driving" value={`${live.driving} / ${live.total}`} />}
       {watching && live.total > 0 && <Chip label="Arrived" value={percent(live.arrived / live.total)} />}
