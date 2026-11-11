@@ -50,13 +50,15 @@ function oncomingClear(f: Fleet, lane: number): boolean {
     const d = len - f.s[j];
     if (d < ONCOMING_LOOK && elements[f.nxt[j]].turn !== -1 && (f.v[j] > 0.5 || d < 10)) return false;
   }
-  for (const c of elements[o].next) if (elements[c].turn !== -1 && f.head[c] >= 0) return false;
+  const next = elements[o].next;
+  for (let k = 0; k < next.length; k++) if (elements[next[k]].turn !== -1 && f.head[next[k]] >= 0) return false;
   return true;
 }
 
 /** No car from the crossing street is still inside the intersection. */
 function boxClear(f: Fleet, node: number, axis: number): boolean {
-  for (const c of f.nodeConnectors[node]) if (f.head[c] >= 0 && axisOf(f.city.elements[c].dir) !== axis) return false;
+  const list = f.nodeConnectors[node];
+  for (let k = 0; k < list.length; k++) if (f.head[list[k]] >= 0 && axisOf(f.city.elements[list[k]].dir) !== axis) return false;
   return true;
 }
 
@@ -112,10 +114,16 @@ export function trafficAccel(f: Fleet, i: number, ctx: TrafficContext): number {
       if (light === LIGHT_RED || (light === LIGHT_YELLOW && canStop)) stop = Math.min(stop, standing(front, STOP_MARGIN));
       else if ((turn.turn === -1 && !oncomingClear(f, e.id)) || (front < 14 && !boxClear(f, node.id, axis))) stop = Math.min(stop, standing(front, STOP_MARGIN));
     }
-    for (const c of turn.crossings) if (ctx.busy[c.crosswalk]) stop = Math.min(stop, standing(front + c.s0, 1.2));
+    for (let k = 0; k < turn.crossings.length; k++) {
+      const c = turn.crossings[k];
+      if (ctx.busy[c.crosswalk]) stop = Math.min(stop, standing(front + c.s0, 1.2));
+    }
   } else {
     v0 = Math.min(v0, f.turnSpeed[e.id]);
-    for (const c of e.crossings) if (ctx.busy[c.crosswalk] && c.s0 - s - half > 0.5) stop = Math.min(stop, standing(c.s0 - s - half, 1.2));
+    for (let k = 0; k < e.crossings.length; k++) {
+      const c = e.crossings[k];
+      if (ctx.busy[c.crosswalk] && c.s0 - s - half > 0.5) stop = Math.min(stop, standing(c.s0 - s - half, 1.2));
+    }
   }
   for (let k = 0; k < ctx.jayCount; k++) {
     const rx = ctx.jayX[k] - f.px[i];

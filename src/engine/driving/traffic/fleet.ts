@@ -88,11 +88,11 @@ export class Fleet {
     const e = this.city.elements[element];
     if (e.kind === ELEMENT_CONNECTOR) return e.next[0];
     let total = 0;
-    for (const c of e.next) total += weight(this.city.elements[c].turn);
+    for (let k = 0; k < e.next.length; k++) total += weight(this.city.elements[e.next[k]].turn);
     let pick = rng.next() * total;
-    for (const c of e.next) {
-      pick -= weight(this.city.elements[c].turn);
-      if (pick <= 0) return c;
+    for (let k = 0; k < e.next.length; k++) {
+      pick -= weight(this.city.elements[e.next[k]].turn);
+      if (pick <= 0) return e.next[k];
     }
     return e.next[e.next.length - 1];
   }

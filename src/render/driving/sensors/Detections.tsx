@@ -111,7 +111,7 @@ export function Detections() {
     label.sprite.visible = bKind >= 0;
     if (bKind < 0) return;
     label.sprite.position.set(bx, by, bz);
-    label.set(`${Math.round(best)} m`, bKind === HIT_PED ? SENSOR_CSS.person : SENSOR_CSS.car);
+    label.setMeters(Math.round(best), bKind === HIT_PED ? SENSOR_CSS.person : SENSOR_CSS.car);
   }, FRAME_PRIORITY.overlay);
 
   return (

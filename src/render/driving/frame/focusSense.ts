@@ -29,7 +29,9 @@ export interface FocusSense {
   near: Nearby;
   pose: RoutePose;
   lidar: Lidar | null;
-  lidarKey: string;
+  /** The beam layout the lidar was built for, so a new layout rebuilds it. */
+  lidarCount: number;
+  lidarFov: number;
 }
 
 export function focusSense(): FocusSense {
@@ -45,7 +47,8 @@ export function focusSense(): FocusSense {
     near: new Nearby(),
     pose: { x: 0, y: 0, heading: 0, speed: 0, progress: 0, index: 0, half: SUV_SIZE.length / 2 },
     lidar: null,
-    lidarKey: '',
+    lidarCount: -1,
+    lidarFov: -1,
   };
 }
 
@@ -57,11 +60,11 @@ const proj = projection();
  * Returns the route sample it found.
  */
 export function senseFocus(sense: FocusSense, city: City, route: Route | null, world: WorldState, inputs: DrivingInputConfig, x: number, y: number, heading: number, speed: number, hint: number): number {
-  const key = `${inputs.lidar.count}:${inputs.lidar.fov}`;
-  if (!sense.lidar || sense.lidarKey !== key) {
+  if (!sense.lidar || sense.lidarCount !== inputs.lidar.count || sense.lidarFov !== inputs.lidar.fov) {
     const angles = lidarAngles(Math.min(MAX_BEAMS, inputs.lidar.count), inputs.lidar.fov);
     sense.lidar = new Lidar(angles);
-    sense.lidarKey = key;
+    sense.lidarCount = inputs.lidar.count;
+    sense.lidarFov = inputs.lidar.fov;
     sense.angles.set(angles);
     sense.beams = angles.length;
     // A new beam layout means the stop line memory belongs to another setup.

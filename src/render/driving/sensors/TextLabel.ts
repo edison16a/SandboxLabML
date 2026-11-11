@@ -11,7 +11,7 @@ export class TextLabel {
   private readonly canvas: HTMLCanvasElement;
   private readonly texture: THREE.CanvasTexture;
   private readonly material: THREE.SpriteMaterial;
-  private text = '';
+  private meters = -1;
   private color = '';
 
   constructor() {
@@ -27,10 +27,12 @@ export class TextLabel {
     this.sprite.visible = false;
   }
 
-  set(text: string, color: string): void {
-    if (text === this.text && color === this.color) return;
-    this.text = text;
+  /** Shows a whole number of meters; the text is only built when the number or color changes. */
+  setMeters(meters: number, color: string): void {
+    if (meters === this.meters && color === this.color) return;
+    this.meters = meters;
     this.color = color;
+    const text = `${meters} m`;
     const g = this.canvas.getContext('2d');
     if (!g) return;
     const w = this.canvas.width;
