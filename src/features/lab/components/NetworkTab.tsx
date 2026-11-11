@@ -33,7 +33,10 @@ export function NetworkTab() {
   const poleGen = useLab((s) => (s.mode === 'sandbox' ? s.ghostGenerations[s.ghostGenerations.length - 1] : undefined));
   const followGen = focus.kind === 'ghost' ? focus.generation : (poleGen ?? records.length - 1);
   const gen = pinned ?? followGen;
-  const record = records.find((r) => r.generation === gen) ?? records[records.length - 1];
+  const outside = useLab((s) => (s.mode === 'sandbox' ? (s.sandboxBrain ?? null) : null));
+  const stored = records.find((r) => r.generation === gen) ?? records[records.length - 1];
+  // A brain the Sandbox drives from outside the run is shown on its own, without the growth slider.
+  const record = outside ? { genome: outside.genome, generation: -1 } : stored;
   const schema = useRunSchema();
   const labels = useMemo(() => schema.map((s) => s.label), [schema]);
   const outputLabels = useMemo(() => module.outputs.map((o) => o.label), [module]);
@@ -79,7 +82,8 @@ export function NetworkTab() {
           lesioned={lesioned}
         />
       </div>
-      <div className="flex flex-col gap-2 border-t border-border px-4 py-3">
+      {outside && <div className="border-t border-border px-4 py-3 text-[12px] text-muted">{outside.label}</div>}
+      <div className={outside ? 'hidden' : 'flex flex-col gap-2 border-t border-border px-4 py-3'}>
         <div className="flex items-center justify-between text-[12px] text-muted">
           <span>
             Generation <span className="font-mono text-fg">{record.generation + 1}</span> champion

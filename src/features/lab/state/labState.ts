@@ -1,4 +1,5 @@
 import type { StoreApi } from 'zustand';
+import type { Genome } from '@/engine/neat/types';
 import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { TrainingStatus } from '@/workers/coordinator/events';
@@ -53,6 +54,13 @@ export interface LabState {
    * out, followsGhost works it out from the focus and the mode.
    */
   inspectStream?: 'population' | 'ghosts';
+  /**
+   * A brain the Sandbox drives that is not one of the open run's champions,
+   * such as a shipped trained model: the run config it was trained under
+   * (its inputs label the inputs tab and the network) and its genome (the
+   * network tab draws it). Only read while the Sandbox is open.
+   */
+  sandboxBrain?: { run: RunConfig; genome: Genome; label: string } | null;
 }
 
 /** A lab store as the shared code sees it. A lab's own store is a superset, so it can stand in. */
