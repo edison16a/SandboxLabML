@@ -72,7 +72,9 @@ test.describe('Driving Sandbox', () => {
     await openLab(page);
     const panel = await openSandbox(page);
     await expect(panel.getByText('The trained model could not be loaded.')).toBeVisible({ timeout: 60_000 });
-    await expect(panel.getByRole('switch', { name: 'Drive the trained model' })).toBeDisabled();
+    const model = panel.getByRole('switch', { name: 'Drive the trained model' });
+    await expect(model).toBeDisabled();
+    await expect(model).not.toBeChecked();
     await expect(panel.getByText('Nothing to drive yet')).toBeVisible();
   });
 

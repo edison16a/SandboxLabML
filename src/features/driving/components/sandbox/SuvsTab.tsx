@@ -32,7 +32,8 @@ function rowColors(field: readonly FieldEntry[]): Map<number, string> {
 function TrainedModelCard({ cap }: { cap: number }) {
   const trained = useDrivingLab((s) => s.trained);
   const failed = useDrivingLab((s) => s.trainedLoad === 'failed');
-  const on = useDrivingLab((s) => s.sandbox?.model ?? false);
+  // The switch only reads as on once a model is there to drive.
+  const on = useDrivingLab((s) => (s.sandbox?.model ?? false) && s.trained !== null);
   const copies = useDrivingLab((s) => s.sandbox?.modelCopies ?? 1);
   const controls = () => drivingSession().sandbox;
   return (

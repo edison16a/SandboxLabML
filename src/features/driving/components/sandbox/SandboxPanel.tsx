@@ -40,7 +40,7 @@ export function SandboxPanel() {
  * and on the Trip tab when the run's own champions do.
  */
 function OpenSandboxPanel() {
-  const suvs = useDrivingLab((s) => (s.sandbox?.model ? s.sandbox.modelCopies : (s.sandbox?.field.reduce((n, e) => n + e.copies, 0) ?? 0)));
+  const suvs = useDrivingLab((s) => (s.sandbox?.model ? (s.trained ? s.sandbox.modelCopies : 0) : (s.sandbox?.field.reduce((n, e) => n + e.copies, 0) ?? 0)));
   const [tab, setTab] = useState<SandboxTab>(() => (useDrivingLab.getState().sandbox?.model ? 'suvs' : 'trip'));
   const [open, setOpen] = useState(startsOpen);
 
