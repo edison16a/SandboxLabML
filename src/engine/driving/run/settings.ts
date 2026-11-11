@@ -25,11 +25,13 @@ export interface DrivingSettings {
 }
 
 /**
- * Two trips per generation: a brain then has to handle a turn and a
- * straight run in the same generation, so the safe share swings less with
- * the luck of one route and the curriculum moves on real skill.
+ * Three trips per generation: a brain then has to handle turns and
+ * straight runs in the same generation, so its score swings less with the
+ * luck of one route and the curriculum moves on real skill. Headless runs
+ * reached traffic lights in about the same number of generations with two,
+ * and needed a third fewer generations for people with three.
  */
-export const DEFAULT_DRIVING_SETTINGS: DrivingSettings = { city: DEFAULT_CITY_ID, level: MIN_LEVEL, auto: true, trips: 2 };
+export const DEFAULT_DRIVING_SETTINGS: DrivingSettings = { city: DEFAULT_CITY_ID, level: MIN_LEVEL, auto: true, trips: 3 };
 
 export function clampLevel(level: number): number {
   return Math.min(MAX_LEVEL, Math.max(MIN_LEVEL, Math.round(Number.isFinite(level) ? level : MIN_LEVEL)));
