@@ -1,35 +1,48 @@
 import { BODY, WHEEL } from '../dimensions';
-import { profile, smooth } from './curve';
+import { between, profile, smooth } from './curve';
+import { deg, key, type Key } from './section';
 
 /**
  * The SUV's body, written as profiles along its length (x, nose at
- * +2.45). A cross section at any x is seven key points from under the sill
- * up and over to the centerline, each a crease:
+ * +2.45). A cross section at any x is seven keys from under the sill up
+ * and over to the centerline:
  *
- * 0 under the sill, 1 top of the gloss black rocker, 2 the door's
- * character line, 3 the shoulder (widest over the rear haunches), 4 the
- * belt line where the glass or the hood begins, 5 halfway across the
- * hood or deck, 6 the centerline.
+ * 0 under the sill, 1 top of the gloss black rocker, 2 the lower door
+ * sculpt, 3 the shoulder (widest, swelling over the rear haunches), 4 the
+ * belt where the glass sits, which ahead of the windshield is the fender
+ * peak, 5 the edge of the hood's valley, 6 the centerline.
+ *
+ * The spans between keys are smooth curves. Only the rocker and the door
+ * sculpt are creases; the shoulder rolls over in one clean radius.
  */
-const halfWidth = profile([[-2.45, 0.8], [-2.38, 0.89], [-2.2, 0.96], [-1.95, 0.992], [-1.45, 1.0], [-0.95, 0.968], [-0.3, 0.946], [0.5, 0.946], [1.1, 0.962], [1.48, 0.972], [1.9, 0.955], [2.2, 0.915], [2.38, 0.85], [2.45, 0.78]]);
-const shoulderY = profile([[-2.45, 1.03], [-2.0, 1.07], [-1.45, 1.07], [-0.7, 1.02], [0.4, 1.0], [1.3, 1.015], [1.9, 0.995], [2.3, 0.945], [2.45, 0.895]]);
-const beltY = profile([[-2.45, 1.13], [-2.3, 1.16], [-2.0, 1.155], [-1.5, 1.14], [-0.8, 1.115], [0.2, 1.095], [1.05, 1.08], [1.5, 1.08], [1.9, 1.06], [2.2, 1.025], [2.38, 0.98], [2.45, 0.955]]);
-/** How far the belt line sits in from the shoulder: the cabin tucks in, the hood edge less so. */
-const beltInset = profile([[-2.45, 0.13], [-2.0, 0.155], [-1.45, 0.165], [-0.9, 0.135], [0.6, 0.115], [1.2, 0.1], [2.45, 0.085]]);
-const creaseY = profile([[-2.45, 0.84], [-1.4, 0.81], [0.6, 0.77], [2.45, 0.74]]);
+const halfWidth = profile([[-2.45, 0.85], [-2.36, 0.93], [-2.2, 0.975], [-1.9, 0.996], [-1.42, 1.0], [-1.0, 0.988], [-0.55, 0.962], [0.0, 0.955], [0.6, 0.958], [1.1, 0.976], [1.48, 0.985], [1.9, 0.973], [2.2, 0.938], [2.38, 0.88], [2.45, 0.845]]);
+const shoulderY = profile([[-2.45, 0.99], [-2.2, 0.962], [-1.9, 0.942], [-1.42, 0.936], [-0.6, 0.912], [0.6, 0.9], [1.48, 0.91], [2.1, 0.915], [2.45, 0.925]]);
+/** The lower door sculpt: low at the front door, rising toward the rear haunch. */
+const creaseY = profile([[-2.45, 0.6], [-1.42, 0.655], [-0.95, 0.645], [1.0, 0.575], [1.48, 0.57], [2.45, 0.55]]);
+/** The belt line, which carries on ahead of the windshield as the fender peak and drops toward the headlights. */
+const beltY = profile([[-2.45, 1.18], [-2.3, 1.19], [-1.8, 1.176], [-1.0, 1.14], [0.0, 1.11], [1.0, 1.1], [1.5, 1.092], [2.0, 1.076], [2.3, 1.055], [2.45, 1.035]]);
+/** How far the belt sits in from the shoulder: the tumblehome shelf, widest over the haunches and the front fenders. */
+const beltInset = profile([[-2.45, 0.17], [-2.2, 0.2], [-1.42, 0.205], [-0.8, 0.18], [0.0, 0.166], [0.9, 0.172], [1.5, 0.21], [2.2, 0.2], [2.45, 0.155]]);
 
 export const NOSE = BODY.nose;
 export const TAIL = BODY.tail;
 
 /** Height of the bottom edge: an SUV's ground clearance, climbing past the wheels for the approach and departure angles. */
 function sillY(x: number): number {
-  return 0.335 + 0.05 * smooth((x - 2.0) / 0.45) + 0.09 * smooth((-x - 1.95) / 0.5);
+  return 0.375 + 0.045 * smooth((x - 2.0) / 0.45) + 0.08 * smooth((-x - 1.95) / 0.5);
+}
+
+function rockerY(x: number): number {
+  return 0.48 + 0.035 * smooth((x - 1.95) / 0.45) + 0.06 * smooth((-x - 1.9) / 0.5);
+}
+
+/** How deep the hood's valley sits below the fender peaks; negative domes the short rear deck instead. */
+function valley(x: number): number {
+  return 0.04 * smooth((x - 0.3) / 0.4) - 0.03 * smooth((-x - 2.2) / 0.15);
 }
 
 export interface Section {
-  keys: Array<[number, number]>;
-  /** Outward bow of each band between consecutive keys, m. */
-  bulge: number[];
+  keys: Key[];
 }
 
 /** The belt line at x as (z, y): where the cabin's glass sits on the body. */
@@ -37,35 +50,40 @@ export function beltAt(x: number): [number, number] {
   return [halfWidth(x) - beltInset(x), beltY(x)];
 }
 
+/** Height of the body's top at the centerline: the hood's valley floor, or the rear deck. */
+export function deckY(x: number): number {
+  return beltY(x) - valley(x) + 0.006;
+}
+
 export function sectionAt(x: number): Section {
   const w = halfWidth(x);
   const [bz, by] = beltAt(x);
-  // The rear deck domes a little toward the middle. The hood dips between raised fender peaks, and flattens into the nose.
-  const dome = (0.03 - 0.052 * smooth((x - 0.95) / 0.35)) * (1 - smooth((x - 2.2) / 0.25));
-  const keys: Array<[number, number]> = [
-    [w - 0.075, sillY(x)],
-    [w - 0.03, 0.44 + 0.05 * smooth((x - 2.0) / 0.4)],
-    [w - 0.006, creaseY(x)],
-    [w, shoulderY(x)],
-    [bz, by],
-    [bz * 0.5, by + dome * 0.7],
-    [0, by + dome],
+  const v = valley(x);
+  // The sculpt only dishes the doors between the arches; it fades out over the fenders.
+  const c = between(x, -0.95, 1.05, 0.3);
+  // Along the cabin the shoulder ends on a shelf under the glass; on the hood it crests flat at the fender peak.
+  const crest = deg(72 + 18 * smooth((x - 0.85) / 0.3) + 8 * smooth((-x - 2.3) / 0.12));
+  const keys: Key[] = [
+    key(w - 0.085, sillY(x), deg(-75)),
+    key(w - 0.04, rockerY(x), deg(-22), deg(-8 + 7 * c)),
+    key(w - 0.012, creaseY(x), deg(-8 - 10 * c), deg(-6)),
+    key(w, shoulderY(x), deg(1)),
+    key(bz, by, crest),
+    key(bz * 0.36, by - v, deg(90)),
+    key(0, by - v + 0.006, deg(90)),
   ];
-  const ends = 1 - 0.7 * smooth((Math.abs(x) - 2.2) / 0.25);
-  // The lower door is dished and the band above it bows out: the light catches a crease between them.
-  const bulge = [0.006, -0.005, 0.03, 0.012, 0.01, 0.004].map((b) => b * ends);
-  return { keys, bulge };
+  return { keys };
 }
 
 /**
- * Round wheel arches, cut close round the tire (its radius plus 4 cm) so
+ * Round wheel arches, cut close round the tire (its radius plus 4.5 cm) so
  * the big wheels fill them. Over each wheel the side skin stops at a circle
  * round the wheel center; below the center the opening runs straight down
  * to the sill.
  */
-export const ARCH = { radius: WHEEL.radius + 0.042, centerY: WHEEL.radius };
+export const ARCH = { radius: WHEEL.radius + 0.045, centerY: WHEEL.radius };
 export const AXLES = [BODY.axleFront, BODY.axleRear];
-/** Bands low enough to meet the wheels: the cladding, the lower door and the band up to the shoulder. */
+/** Bands low enough to meet the wheels: the rocker, the lower door and the side up to the shoulder. */
 export const ARCHED_BANDS = 3;
 
 /** Lowest height the side skin may reach at x: the arch line over a wheel, or -1 between them. */
