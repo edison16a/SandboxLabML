@@ -85,11 +85,3 @@ export function addWindows(bin: PartBin, detail: Detail): void {
   bin.add('metal', sideStrip(DLO.point, DLO.front - 0.01, (x) => Math.max(low(x), high(x) - s(x)), high, 0.002, detail, 1));
   bin.add('metal', sideStrip(DLO.point, DLO.front - 0.01, low, (x) => Math.min(high(x), low(x) + s(x)), 0.002, detail, 1));
 }
-
-/** A panoramic glass roof set into the paint in a slim black frame, the view the chase camera sees most. */
-export function addSunroof(bin: PartBin, detail: Detail): void {
-  const rows = (x0: number, x1: number, t0: number, lift: number): Vec3[][] =>
-    cabinStations(x0, x1, detail).map((x) => Array.from({ length: 5 }, (_, j) => onCabin(x, 2, t0 + ((1 - t0) * j) / 4, lift)));
-  bin.add('trim', bothSides(gridGeometry(rows(-1.0, -0.14, 0.27, 0.002))));
-  bin.add('glass', bothSides(gridGeometry(rows(-0.98, -0.16, 0.3, 0.004))));
-}
