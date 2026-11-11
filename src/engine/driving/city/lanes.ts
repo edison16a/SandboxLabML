@@ -1,6 +1,7 @@
 import { PathBuilder, quarterTurn } from '../geometry/builder';
 import type { Path } from '../geometry/path';
 import {
+  BEND_OUTER_RADIUS,
   CROSSWALK_FAR,
   CROSSWALK_NEAR,
   DIR_X,
@@ -82,6 +83,12 @@ function crossingSpan(path: Path, node: CityNode, arm: Dir): [number, number] | 
   return s0 < 0 ? null : [s0, s1];
 }
 
+/** Radius of a turn through a node: right turns hug the curb, left turns sweep wide, except round a plain bend. */
+function turnRadius(node: CityNode, turn: -1 | 1): number {
+  if (turn === 1) return RIGHT_TURN_RADIUS;
+  return node.armCount === 2 ? BEND_OUTER_RADIUS : LEFT_TURN_RADIUS;
+}
+
 /**
  * Turn connectors through every intersection: from each lane arriving at a
  * node into each lane leaving it, except a U turn back the way it came.
@@ -105,7 +112,7 @@ export function buildConnectors(nodes: CityNode[], lanes: RoadElement[], crosswa
         const start = a.path.n - 1;
         const builder = new PathBuilder(TURN_STEP);
         if (turn === 0) builder.moveTo(a.path.x[start], a.path.y[start]).lineTo(b.path.x[0], b.path.y[0]);
-        else quarterTurn(builder, a.path.x[start], a.path.y[start], (a.dir * Math.PI) / 2, b.path.x[0], b.path.y[0], (b.dir * Math.PI) / 2, turn === 1 ? RIGHT_TURN_RADIUS : LEFT_TURN_RADIUS);
+        else quarterTurn(builder, a.path.x[start], a.path.y[start], (a.dir * Math.PI) / 2, b.path.x[0], b.path.y[0], (b.dir * Math.PI) / 2, turnRadius(node, turn));
         const path = builder.build();
         const crossings: CrossingSpan[] = [];
         for (const arm of [opposite(a.dir), b.dir]) {

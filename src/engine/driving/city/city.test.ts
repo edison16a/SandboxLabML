@@ -46,6 +46,16 @@ describe('city generation', () => {
     }
   });
 
+  it('keeps the two lanes round a corner bend a lane apart', () => {
+    const city = buildCity(BUILT_IN_CITIES[0]);
+    for (const node of city.nodes.filter((n) => n.armCount === 2)) {
+      const [a, b] = city.elements.filter((e) => e.kind === ELEMENT_CONNECTOR && e.from === node.id);
+      let closest = Infinity;
+      for (let i = 0; i < a.path.n; i++) for (let j = 0; j < b.path.n; j++) closest = Math.min(closest, Math.hypot(a.path.x[i] - b.path.x[j], a.path.y[i] - b.path.y[j]));
+      expect(closest).toBeGreaterThan(LANE_OFFSET * 2 - 0.2);
+    }
+  });
+
   it('rejects specs the layout cannot fit', () => {
     expect(specProblems({ ...BUILT_IN_CITIES[0], columns: [30, 80] })).not.toEqual([]);
     expect(specProblems({ ...BUILT_IN_CITIES[0], rows: [80] })).not.toEqual([]);

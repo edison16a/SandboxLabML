@@ -25,6 +25,8 @@ export const WALK_LINE = ROAD_HALF + SIDEWALK / 2;
 /** Turn radii through an intersection, chosen to hug the curb (right) and sweep wide (left). */
 export const RIGHT_TURN_RADIUS = CURB_RADIUS + LANE_OFFSET;
 export const LEFT_TURN_RADIUS = STOP_LINE + LANE_OFFSET;
+/** At a plain corner bend the outer lane turns about the same center as the inner one, a lane width out, so the two never touch. */
+export const BEND_OUTER_RADIUS = RIGHT_TURN_RADIUS + LANE_WIDTH;
 
 /** Speed limits, m/s: 50 km/h in town, 30 km/h in slow zones. */
 export const TOWN_LIMIT = 13.9;
