@@ -47,6 +47,19 @@ describe('runs and trash', () => {
     expect(await loadHistory(config.id)).toHaveLength(0);
   });
 
+  it('hides runs of an env this build does not have, but still purges them', async () => {
+    const { config } = await trainedRun(1);
+    // A run saved by a build that had an env this one lacks, such as one removed since.
+    const gone = { ...config, id: 'gone', env: 'retired' as never };
+    await createRun(gone);
+    expect((await listRuns()).map((r) => r.id)).toEqual([config.id]);
+    await trashRun('gone');
+    expect(await listTrash()).toHaveLength(0);
+    expect(await purgeTrash(Date.now() + 8 * 24 * 3600 * 1000)).toBe(1);
+    expect(await getRun('gone')).toBeUndefined();
+    await expect(importRun(JSON.stringify({ ...(await exportRun(config.id)), config: gone }))).rejects.toThrow('incomplete');
+  });
+
   it('keeps only the newest three checkpoints', async () => {
     const { config, trainer } = await trainedRun(1);
     for (let g = 1; g <= 5; g++) await saveCheckpoint(config.id, g * 10, trainer.toState());

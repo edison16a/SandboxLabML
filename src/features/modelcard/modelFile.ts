@@ -1,4 +1,4 @@
-import { engineVersionOf } from '@/engine/core/version';
+import { engineVersionOf } from '@/engine/env/registry';
 import { topologicalOrder } from '@/engine/neat/network';
 import { bytesToBase64, encodeGenome } from '@/engine/neat/serialize';
 import type { Activation, Genome, NodeKind } from '@/engine/neat/types';

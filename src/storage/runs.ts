@@ -1,3 +1,4 @@
+import { isKnownEnv } from '@/engine/env/registry';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { db, type RunRow } from './db';
 
@@ -25,15 +26,25 @@ export function getRun(id: string): Promise<RunRow | undefined> {
   return db().runs.get(id);
 }
 
-/** Active runs, newest first. Trashed runs are listed separately. */
+/**
+ * Active runs, newest first. Trashed runs are listed separately. Runs of
+ * an env this build does not have stay stored but are left out, so a
+ * removed env never breaks the lists.
+ */
 export async function listRuns(): Promise<RunRow[]> {
   const rows = await db().runs.orderBy('updatedAt').reverse().toArray();
-  return rows.filter((r) => !r.deletedAt);
+  return rows.filter((r) => !r.deletedAt && isKnownEnv(r.env));
 }
 
-export async function listTrash(): Promise<RunRow[]> {
+/** Every trashed run, newest first, including ones of envs this build does not have. */
+async function allTrash(): Promise<RunRow[]> {
   const rows = await db().runs.toArray();
   return rows.filter((r) => r.deletedAt).sort((a, b) => (b.deletedAt ?? 0) - (a.deletedAt ?? 0));
+}
+
+/** Trashed runs the Runs page can show and restore. */
+export async function listTrash(): Promise<RunRow[]> {
+  return (await allTrash()).filter((r) => isKnownEnv(r.env));
 }
 
 export async function updateRun(id: string, patch: Partial<RunRow>): Promise<void> {
@@ -70,13 +81,13 @@ export async function destroyRun(id: string): Promise<void> {
 
 /** Removes trashed runs older than the undo window. Called once on load. */
 export async function purgeTrash(now = Date.now()): Promise<number> {
-  const old = (await listTrash()).filter((r) => (r.deletedAt ?? now) < now - TRASH_DAYS * DAY);
+  const old = (await allTrash()).filter((r) => (r.deletedAt ?? now) < now - TRASH_DAYS * DAY);
   for (const r of old) await destroyRun(r.id);
   return old.length;
 }
 
 export async function emptyTrash(): Promise<void> {
-  for (const r of await listTrash()) await destroyRun(r.id);
+  for (const r of await allTrash()) await destroyRun(r.id);
 }
 
 /** Wipes every table. The UI asks for typed confirmation first. */

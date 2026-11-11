@@ -1,3 +1,4 @@
+import { HIDESEEK_ENGINE_VERSION } from '../core/version';
 import { racingModule } from '../racing/module';
 import type { AnyEpisodeModule } from './episode';
 import type { EnvId } from './types';
@@ -24,6 +25,20 @@ export function requireEpisodeModule(env: string): AnyEpisodeModule {
 
 export function isEpisodeEnv(env: string): env is EnvId {
   return modules.has(env);
+}
+
+/**
+ * Envs whose runs this build can open: every episode env, plus Hide and
+ * Seek, which trains two teams its own way. Stored runs of any other env
+ * (one a later build removed) are hidden rather than opened.
+ */
+export function isKnownEnv(env: string): env is EnvId {
+  return env === 'hideseek' || modules.has(env);
+}
+
+/** The engine version a run of `env` is stamped with and checked against. */
+export function engineVersionOf(env: EnvId): number {
+  return env === 'hideseek' ? HIDESEEK_ENGINE_VERSION : requireEpisodeModule(env).engineVersion;
 }
 
 /** Ids of every registered env, in registration order. */

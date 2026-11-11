@@ -1,4 +1,4 @@
-import { engineVersionOf } from '@/engine/core/version';
+import { engineVersionOf, isKnownEnv } from '@/engine/env/registry';
 import { base64ToBytes, bytesToBase64 } from '@/engine/neat/serialize';
 import { newRunId, type RunConfig } from '@/engine/training/runConfig';
 import { db, type GenerationRow, type HideSeekGenerationRow } from './db';
@@ -56,7 +56,7 @@ export async function importRun(text: string): Promise<RunConfig> {
   }
   if (parsed?.format !== EXPORT_FORMAT || parsed.version !== 1) throw new ImportError('This is not a SandboxLab run file.');
   const c = parsed.config;
-  if (!c || (c.env !== 'racing' && c.env !== 'hideseek') || !c.blueprint || !Array.isArray(c.scripts)) {
+  if (!c || typeof c.env !== 'string' || !isKnownEnv(c.env) || !c.blueprint || !Array.isArray(c.scripts)) {
     throw new ImportError('The run config in this file is incomplete.');
   }
   for (const s of c.scripts) if (typeof s.source !== 'string') throw new ImportError('A script in this file is not text.');
