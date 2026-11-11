@@ -2,6 +2,8 @@ import { engineVersionOf, isKnownEnv } from '@/engine/env/registry';
 import { base64ToBytes, bytesToBase64 } from '@/engine/neat/serialize';
 import { newRunId, type RunConfig } from '@/engine/training/runConfig';
 import { db, type GenerationRow, type HideSeekGenerationRow } from './db';
+import { fromRow } from './generations';
+import { foldSummary } from './runBest';
 import { createRun, getRun } from './runs';
 
 export const EXPORT_FORMAT = 'sandboxlab-run';
@@ -81,8 +83,9 @@ export async function importRun(text: string): Promise<RunConfig> {
       bytes: JSON.stringify(parsed.checkpoint.state).length,
     });
   }
-  const best = rows.reduce((b, r) => Math.max(b, r.champion.fitness), 0);
-  await d.runs.update(config.id, { generation: Math.max(rows.length, hsRows.length), bestFitness: best });
+  const created = await d.runs.get(config.id);
+  const summary = created ? foldSummary(created, [...rows].sort((a, b) => a.generation - b.generation).map(fromRow)) : {};
+  await d.runs.update(config.id, { ...summary, generation: Math.max(rows.length, hsRows.length) });
   return config;
 }
 

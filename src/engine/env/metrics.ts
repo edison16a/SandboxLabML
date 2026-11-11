@@ -23,6 +23,13 @@ export interface MetricSpec {
    * always chart, since the champion table does not show them.
    */
   chart?: boolean;
+  /** The one metric a run card on the Runs page shows. Left out everywhere, the first champion metric. */
+  summary?: boolean;
+}
+
+/** The metric a run card shows: the one marked summary, else the first champion metric. */
+export function summaryMetric(specs: readonly MetricSpec[]): MetricSpec | undefined {
+  return specs.find((m) => m.summary) ?? specs.find((m) => m.source === 'champion');
 }
 
 /** The metrics the Progress tab charts: every generation metric, and champion metrics that ask for it. */

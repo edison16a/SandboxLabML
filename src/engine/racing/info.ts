@@ -11,7 +11,7 @@ import { RACING_SNAPSHOT } from './snapshot';
 
 const RACING_METRICS: readonly MetricSpec[] = [
   { key: 'distance', label: 'Distance', unit: 'm', source: 'champion', better: 'higher', format: (v) => `${Math.round(v)} m` },
-  { key: 'bestLapTime', label: 'Best lap', unit: 's', source: 'champion', better: 'lower', missing: 0, format: (v) => (Number.isFinite(v) ? `${v.toFixed(2)} s` : '-') },
+  { key: 'bestLapTime', label: 'Best lap', unit: 's', source: 'champion', better: 'lower', missing: 0, summary: true, format: (v) => (Number.isFinite(v) ? `${v.toFixed(2)} s` : '-') },
 ];
 
 /** The Racing parts of a run config, or a throw for a run of another env. */

@@ -18,6 +18,8 @@ export interface RunRow {
   bestFitness: number;
   bestDistance: number;
   bestLapTime: number;
+  /** Best value of each env metric so far, in the direction it prefers, keyed like the env's metrics. */
+  best?: Record<string, number>;
   benchmark?: number;
   /** Hide and Seek only: share of seek time the newest hiders stayed hidden from current seekers, 0 to 1. */
   hiddenShare?: number;

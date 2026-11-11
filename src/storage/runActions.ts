@@ -6,7 +6,8 @@ import type { EpisodeTrainerState } from '@/engine/training/episodeTrainer';
 import { newRunId, runShape, scriptAt, type RunConfig } from '@/engine/training/runConfig';
 import { saveCheckpoint } from './checkpoints';
 import { db } from './db';
-import { loadChampion } from './generations';
+import { fromRow, loadChampion } from './generations';
+import { foldSummary } from './runBest';
 import { createRun, getRun, trashRun } from './runs';
 
 /** A fresh copy of a run's config with a new identity. */
@@ -65,8 +66,9 @@ export async function rewindRun(runId: string, checkpointGeneration: number): Pr
   await createRun(config);
   await d.generations.bulkPut(gens.map((g) => ({ ...g, runId: config.id })));
   await d.checkpoints.put({ ...cp, runId: config.id });
-  const best = gens.reduce((b, g) => Math.max(b, g.champion.fitness), 0);
-  await d.runs.update(config.id, { generation: checkpointGeneration, bestFitness: best });
+  const created = await d.runs.get(config.id);
+  const summary = created ? foldSummary(created, [...gens].sort((a, b) => a.generation - b.generation).map(fromRow)) : {};
+  await d.runs.update(config.id, { ...summary, generation: checkpointGeneration });
   await trashRun(runId);
   return config;
 }

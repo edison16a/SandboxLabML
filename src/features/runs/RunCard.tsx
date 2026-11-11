@@ -2,13 +2,15 @@
 
 import Link from 'next/link';
 import { Copy, Download, GitBranch, MoreHorizontal, Pencil, RotateCcw, Trash2, Undo2 } from 'lucide-react';
-import { isEpisodeEnv } from '@/engine/env/registry';
+import { summaryMetric } from '@/engine/env/metrics';
+import { episodeInfo } from '@/engine/env/registry';
 import { formatBytes } from '@/engine/neat/metrics';
 import { TrackThumb } from '@/features/racing/components/TrackThumb';
 import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
 import { Menu } from '@/ui/primitives/Menu';
 import { labOf, labPath } from '@/features/shell/labs';
+import { runBest } from '@/storage/runBest';
 import { timeAgo } from './format';
 import type { RunSummary } from './useRuns';
 
@@ -33,7 +35,11 @@ export function RunCard({ summary, onAction }: { summary: RunSummary; onAction: 
   const racing = row.env === 'racing';
   const hideseek = row.env === 'hideseek';
   // Branching and rewinding rebuild a single population from stored champions and checkpoints.
-  const episode = isEpisodeEnv(row.env);
+  const info = episodeInfo(row.env);
+  const episode = info !== undefined;
+  // The env's own headline number, such as Racing's best lap or the share of routes driven.
+  const headline = info && summaryMetric(info.metrics);
+  const best = headline ? runBest(row, headline) : NaN;
   const track = row.config.racing?.track;
   const lab = labOf(row.env);
   const Icon = lab?.icon;
@@ -58,7 +64,7 @@ export function RunCard({ summary, onAction }: { summary: RunSummary; onAction: 
         <div className="grid grid-cols-3 gap-x-6 gap-y-2 sm:grid-cols-6">
           <Metric label="Generations" value={row.generation} />
           <Metric label={hideseek ? 'Hider best' : 'Best fitness'} value={row.bestFitness.toFixed(1)} />
-          {racing && <Metric label="Best lap" value={row.bestLapTime > 0 ? `${row.bestLapTime.toFixed(2)} s` : '-'} />}
+          {headline && <Metric label={headline.label} value={Number.isFinite(best) ? headline.format(best) : '-'} />}
           {hideseek && <Metric label="Hidden" value={row.hiddenShare !== undefined ? `${Math.round(row.hiddenShare * 100)}%` : '-'} />}
           <Metric label="Benchmark" value={row.benchmark !== undefined ? row.benchmark.toFixed(0) : '-'} />
           <Metric label="Parameters" value={model ? model.parameters : '-'} />

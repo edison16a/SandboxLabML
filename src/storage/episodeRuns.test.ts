@@ -1,6 +1,8 @@
 import 'fake-indexeddb/auto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { summaryMetric } from '@/engine/env/metrics';
 import { registerEpisodeModule } from '@/engine/env/registry';
+import { racingInfo } from '@/engine/racing/info';
 import { TOY_BLUEPRINT, toyModule } from '@/engine/env/tests/toyEnv';
 import { RACING_BLUEPRINTS } from '@/engine/blueprints/presets';
 import type { Blueprint } from '@/engine/blueprints/types';
@@ -8,10 +10,12 @@ import { EpisodeTrainer, type EpisodeTrainerState } from '@/engine/training/epis
 import { toyConfig, toyGeneration, toyTrainer } from '@/engine/env/tests/toyRun';
 import { latestCheckpoint, saveCheckpoint } from './checkpoints';
 import { forkRun } from './forkRun';
-import { SandboxDb, setDb } from './db';
+import { SandboxDb, setDb, type RunRow } from './db';
+import { exportRun, importRun } from './exportImport';
+import { runBest } from './runBest';
 import { loadHistory, saveGeneration } from './generations';
 import { branchRun } from './runActions';
-import { createRun } from './runs';
+import { createRun, getRun } from './runs';
 
 let unregister: () => void;
 beforeAll(() => {
@@ -43,6 +47,26 @@ describe('runs of a registry env', () => {
     const branch = await branchRun(config.id, later!.generation);
     const cp = await latestCheckpoint(branch.id);
     expect((cp?.state as { content: unknown }).content).toEqual(later!.content);
+  });
+
+  it('keep the best of every env metric on the run, and an import restores it', async () => {
+    const config = await storedRun(6);
+    const history = await loadHistory(config.id);
+    const row = (await getRun(config.id))!;
+    const [reached, best] = toyModule.metrics;
+    expect(runBest(row, best)).toBe(Math.max(...history.map((r) => r.champion.metrics!.best)));
+    expect(runBest(row, reached)).toBe(Math.max(...history.map((r) => r.metrics!.reachedShare)));
+    expect(summaryMetric(toyModule.metrics)).toBe(best);
+    const copy = await importRun(JSON.stringify(await exportRun(config.id)));
+    expect((await getRun(copy.id))?.best).toEqual(row.best);
+  });
+
+  it('read the best lap of Racing rows saved before the metric map', () => {
+    const lap = racingInfo.metrics.find((m) => m.summary)!;
+    const old = { bestLapTime: 31.25, bestDistance: 900 } as RunRow;
+    expect(runBest(old, lap)).toBe(31.25);
+    expect(runBest({ ...old, bestLapTime: 0 }, lap)).toBeNaN();
+    expect(runBest(old, racingInfo.metrics[0])).toBe(900);
   });
 
   it('grow a brain onto a blueprint with more sensors and keep training', async () => {

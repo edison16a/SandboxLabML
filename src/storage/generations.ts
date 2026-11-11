@@ -1,8 +1,11 @@
 import { decodeGenome, encodeGenome } from '@/engine/neat/serialize';
 import type { Genome } from '@/engine/neat/types';
-import type { GenerationRecord, RacingChampionRecord } from '@/engine/training/records';
-import { db, type GenerationRow, type RunRow } from './db';
+import type { GenerationRecord } from '@/engine/training/records';
+import { db, type GenerationRow } from './db';
+import { summaryAfter } from './runBest';
 import { updateRun } from './runs';
+
+export { summaryAfter } from './runBest';
 
 export function toRow(r: GenerationRecord): GenerationRow {
   return {
@@ -24,21 +27,6 @@ export function toRow(r: GenerationRecord): GenerationRow {
 
 export function fromRow(row: GenerationRow): GenerationRecord {
   return { ...row, genome: decodeGenome(row.genome) };
-}
-
-/**
- * The run summary after one more generation. Distance and lap time are
- * Racing's champion fields; other envs leave them where they were.
- */
-export function summaryAfter(run: RunRow, r: GenerationRecord): Partial<RunRow> {
-  const { distance = 0, bestLapTime = 0 } = r.champion as Partial<RacingChampionRecord>;
-  return {
-    generation: r.generation + 1,
-    bestFitness: Math.max(run.bestFitness, r.champion.fitness),
-    bestDistance: Math.max(run.bestDistance, distance),
-    bestLapTime: bestLapTime > 0 ? (run.bestLapTime > 0 ? Math.min(run.bestLapTime, bestLapTime) : bestLapTime) : run.bestLapTime,
-    benchmark: r.benchmark ?? run.benchmark,
-  };
 }
 
 /** Saves a finished generation and refreshes the run's summary on the Runs page. */
