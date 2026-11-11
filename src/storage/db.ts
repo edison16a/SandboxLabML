@@ -148,6 +148,14 @@ export interface SandboxRoomRow {
   updatedAt: number;
 }
 
+/** A Navigation course the user drew in the Sandbox editor. `spec` is a CourseSpec as plain data, cleaned on read. */
+export interface CourseRow {
+  id: string;
+  spec: unknown;
+  createdAt: number;
+  updatedAt: number;
+}
+
 /**
  * The only IndexedDB code in the app. Everything else goes through the
  * repository functions in this folder.
@@ -165,6 +173,7 @@ export class SandboxDb extends Dexie {
   hsGenerations!: Table<HideSeekGenerationRow, [string, number]>;
   tracks!: Table<TrackRow, string>;
   sandboxRooms!: Table<SandboxRoomRow, string>;
+  courses!: Table<CourseRow, string>;
 
   constructor(name = 'sandboxlab') {
     super(name);
@@ -180,9 +189,10 @@ export class SandboxDb extends Dexie {
       settings: 'key',
     });
     this.version(2).stores({ hsGenerations: '[runId+generation], runId' });
-    // Versions 3 and 4 only add tables, so existing rows carry over untouched.
+    // Versions 3 to 5 only add tables, so existing rows carry over untouched.
     this.version(3).stores({ tracks: 'id, updatedAt' });
     this.version(4).stores({ sandboxRooms: 'id, createdAt' });
+    this.version(5).stores({ courses: 'id, createdAt' });
   }
 }
 
