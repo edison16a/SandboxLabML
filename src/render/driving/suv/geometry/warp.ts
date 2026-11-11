@@ -1,3 +1,4 @@
+import { BODY } from '../dimensions';
 import { smooth } from './curve';
 import type { Vec3 } from './grid';
 
@@ -13,7 +14,22 @@ import type { Vec3 } from './grid';
 export function warp(p: Vec3): Vec3 {
   const [x, y, z] = p;
   let dx = 0;
-  if (x > 2.05) dx -= smooth((x - 2.05) / 0.4) * (0.11 * smooth((y - 0.6) / 0.44) ** 1.3 + 0.03 * smooth((0.45 - y) / 0.12));
+  if (x > RAKE.from) dx -= smooth((x - RAKE.from) / (BODY.nose - RAKE.from)) * (rake(y) + 0.035 * smooth((0.46 - y) / 0.13));
   if (x < -2.05) dx += smooth((-x - 2.05) / 0.4) * (0.035 * smooth((y - 0.62) / 0.5) + 0.05 * smooth((0.52 - y) / 0.15));
   return [x + dx, y, z];
+}
+
+/** The nose rake: the face leans back `lean` m by the height `top`, starting upright at `base`. Eased in from `from` along the car. */
+const RAKE = { from: 1.85, base: 0.48, top: 0.98, lean: 0.22 };
+
+/**
+ * How far the nose leans back at height y. It grows with the square of the
+ * height, so the face is upright at the bumper and leans more and more
+ * toward the hood, a convex curve with no flat spot or kink. Above the top
+ * it carries on at the same slope.
+ */
+function rake(y: number): number {
+  const t = (y - RAKE.base) / (RAKE.top - RAKE.base);
+  if (t <= 0) return 0;
+  return RAKE.lean * (t <= 1 ? t * t : 2 * t - 1);
 }
