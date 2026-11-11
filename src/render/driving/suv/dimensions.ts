@@ -19,11 +19,12 @@ export const BODY = {
   /**
    * Half track: wheel centers either side of the centerline. The body is
    * wider over the rear wheels, so the rear track is wider too and each
-   * tire sits a little inside its own fender.
+   * tire sits a little inside its own fender. `track` is their mean, for
+   * how the body rolls on its springs.
    */
-  track: 0.82,
+  track: 0.81,
   trackFront: 0.792,
-  trackRear: 0.82,
+  trackRear: 0.828,
 };
 
 /** The four wheel centers (x, z), front pair first, so steering can pick them out. */

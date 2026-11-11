@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WHEEL } from '../dimensions';
+import { BODY, WHEEL } from '../dimensions';
 import { buildBody } from './assemble';
 import { DLO } from './windows';
 import { DETAIL, type Slot } from './parts';
@@ -85,6 +85,15 @@ describe('SUV silhouette', () => {
       const gap = archFloor(axle) - 2 * WHEEL.radius;
       expect(gap).toBeGreaterThan(0.04);
       expect(gap).toBeLessThan(0.06);
+    }
+  });
+
+  it('tucks each tire 1 to 2 cm inside the body side', () => {
+    const outer = (track: number) => track + WHEEL.width / 2 + 0.008;
+    for (const [x, track] of [[BODY.axleFront, BODY.trackFront], [BODY.axleRear, BODY.trackRear]]) {
+      const inset = halfWidth(x) - outer(track);
+      expect(inset).toBeGreaterThan(0.01);
+      expect(inset).toBeLessThan(0.02);
     }
   });
 
