@@ -1,6 +1,7 @@
 import { ELEMENT_LANE } from '../city/types';
 import { axisOf, LIGHT_RED, LIGHT_YELLOW, lightState } from '../signals/plan';
 import type { Fleet } from './fleet';
+import { boxClear, exitHasRoom, leftTurnAcross, oncomingClear } from './junction';
 import { findLead, type Lead } from './leads';
 
 /** Intelligent driver model constants: comfortable acceleration and braking, standstill gap, time headway. */
@@ -13,8 +14,6 @@ const FIRM_BRAKE = 6;
 const TURN_BRAKE = 1.6;
 /** How far before a line a car comes to rest, m. */
 const STOP_MARGIN = 0.8;
-/** How far down the oncoming lane a left turner looks for traffic, m. */
-const ONCOMING_LOOK = 45;
 
 /** Reused result of the lead search. */
 const lead: Lead = { gap: Infinity, dv: 0 };
@@ -46,33 +45,17 @@ function standing(dist: number, margin: number): number {
   return dist + IDM.gap - margin;
 }
 
-/** No oncoming car close enough to cut across: a left turner may go. */
-function oncomingClear(f: Fleet, lane: number): boolean {
-  const o = f.oncoming[lane];
-  if (o < 0) return true;
-  const elements = f.city.elements;
-  const len = elements[o].path.length;
-  for (let j = f.head[o]; j >= 0; j = f.link[j]) {
-    const d = len - f.s[j];
-    if (d < ONCOMING_LOOK && elements[f.nxt[j]].turn !== -1 && (f.v[j] > 0.5 || d < 10)) return false;
-  }
-  const next = elements[o].next;
-  for (let k = 0; k < next.length; k++) if (elements[next[k]].turn !== -1 && f.head[next[k]] >= 0) return false;
-  return true;
-}
-
-/** No car from the crossing street is still inside the intersection. */
-function boxClear(f: Fleet, node: number, axis: number): boolean {
-  const list = f.nodeConnectors[node];
-  for (let k = 0; k < list.length; k++) if (f.head[list[k]] >= 0 && axisOf(f.city.elements[list[k]].dir) !== axis) return false;
-  return true;
+/** The junction ahead can be entered now: no cross traffic in it, no left turner cutting across, and room at the exit. */
+function junctionFree(f: Fleet, lane: number, turn: number, node: number, axis: number, len: number): boolean {
+  const e = f.city.elements[turn];
+  return boxClear(f, node, axis) && (e.turn === -1 || !leftTurnAcross(f, lane)) && exitHasRoom(f, e.toLane, len);
 }
 
 /**
  * How hard car i wants to accelerate this tick. It follows the car ahead
  * (IDM), eases off for turns, and treats a red light, a busy crossing, a
- * person in the road, an oncoming car (when turning left) or a car still
- * crossing the intersection as a standing obstacle at the line.
+ * person in the road, an oncoming car (when turning left), a car still
+ * crossing the intersection or a full exit as a standing obstacle at the line.
  */
 export function trafficAccel(f: Fleet, i: number, ctx: TrafficContext): number {
   const elements = f.city.elements;
@@ -96,7 +79,7 @@ export function trafficAccel(f: Fleet, i: number, ctx: TrafficContext): number {
       // A car crawling or standing at the line can always stop, so it never starts a turn on yellow.
       const canStop = v < 2 || front > (v * v) / (2 * YELLOW_BRAKE) + 1;
       if (light === LIGHT_RED || (light === LIGHT_YELLOW && canStop)) stop = Math.min(stop, standing(front, STOP_MARGIN));
-      else if ((turn.turn === -1 && !oncomingClear(f, e.id)) || (front < 14 && !boxClear(f, node.id, axis))) stop = Math.min(stop, standing(front, STOP_MARGIN));
+      else if ((turn.turn === -1 && !oncomingClear(f, e.id)) || (front < 14 && !junctionFree(f, e.id, turn.id, node.id, axis, f.len[i]))) stop = Math.min(stop, standing(front, STOP_MARGIN));
     }
     for (let k = 0; k < turn.crossings.length; k++) {
       const c = turn.crossings[k];
