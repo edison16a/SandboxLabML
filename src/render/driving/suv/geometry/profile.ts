@@ -84,6 +84,8 @@ export function sectionAt(x: number): Section {
   // Along the cabin the shoulder ends on a shelf under the glass; on the hood it crests flat at the fender peak.
   // Both changes are stretched over 0.4 m or more and done before the hood begins, so they never ripple the paint.
   const crest = deg(72 + 18 * smooth((x - 0.45) / 0.55) + 8 * smooth((-x - 2.0) / 0.4));
+  // On the hood the peak is a soft crease, so a line of light runs along each fender from the A pillar to the lamp.
+  const crease = deg(7) * smooth((x - 0.9) / 0.45);
   // The valley falls from the peak to a floor on the centerline like half a cosine wave: flat at both ends, one U, no ridge.
   const fall = Math.atan((Math.PI / 2) * Math.sin(0.45 * Math.PI) * (v / Math.max(bz, 0.2)));
   const keys: Key[] = [
@@ -91,7 +93,7 @@ export function sectionAt(x: number): Section {
     key(w - 0.045, rockerY(x), deg(-22), deg(-8 + 9 * c)),
     key(w - 0.012, creaseY(x), deg(-8 - 16 * c), deg(-5)),
     key(w, shoulderY(x), deg(1)),
-    key(bz, by, crest),
+    key(bz, by, crest, crest + crease),
     key(bz * 0.45, by - v + v * 0.5 * (1 - Math.cos(0.45 * Math.PI)), deg(90) + fall),
     key(0, by - v, deg(90)),
   ];
