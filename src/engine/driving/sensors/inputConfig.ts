@@ -1,9 +1,10 @@
 /**
  * Which inputs a driving brain gets, by group. Chosen when a run is created
  * and frozen afterwards, because input nodes and innovation numbers depend
- * on it.
+ * on it. A type rather than an interface, so a Driving blueprint can hold
+ * it where the generic layer expects a plain record of sensor groups.
  */
-export interface DrivingInputConfig {
+export type DrivingInputConfig = {
   /** Lidar beams around the car: distance to the first thing each one hits. */
   lidar: {
     count: number;
@@ -14,7 +15,7 @@ export interface DrivingInputConfig {
   };
   /** One more input per beam saying what it hit: a curb or building, a car, or a person. */
   lidarKinds: boolean;
-  /** Offset from the lane center, heading error, the bearing to the lane just ahead and the curve ahead at two distances. */
+  /** Offset from the lane center, heading error, the bearing to the lane just ahead and how sharp the road bends at two distances. */
   lane: boolean;
   /** Next maneuver, how far until it starts (the stop line at a signal) and distance to the destination. */
   route: boolean;
@@ -28,7 +29,7 @@ export interface DrivingInputConfig {
   speed: boolean;
   /** Gaussian sensor noise as a fraction of each input's range, 0 to 0.1. */
   noise: number;
-}
+};
 
 export const DRIVING_INPUT_GROUPS = ['lane', 'route', 'light', 'carAhead', 'pedestrian', 'speed'] as const;
 export type DrivingInputGroup = (typeof DRIVING_INPUT_GROUPS)[number];

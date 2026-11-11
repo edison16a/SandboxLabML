@@ -27,8 +27,9 @@ export function writeObservation(l: DrivingLearner, cfg: DrivingInputConfig, car
     out[n++] = clamp(l.lateral / LANE_WIDTH, -1, 1);
     out[n++] = clamp(l.headingError / (Math.PI / 2), -1, 1);
     out[n++] = clamp(l.aim / (Math.PI / 2), -1, 1);
-    out[n++] = clamp(l.curveNear / CURVE_SCALE, -1, 1);
-    out[n++] = clamp(l.curveFar / CURVE_SCALE, -1, 1);
+    // How sharp, not which way: aim already says which way, and a brain that slows for a bend must do so for both.
+    out[n++] = Math.min(1, Math.abs(l.curveNear) / CURVE_SCALE);
+    out[n++] = Math.min(1, Math.abs(l.curveFar) / CURVE_SCALE);
   }
   if (cfg.route) {
     out[n++] = l.nextTurn;

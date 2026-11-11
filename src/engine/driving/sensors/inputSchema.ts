@@ -55,8 +55,9 @@ export function drivingInputSchema(cfg: DrivingInputConfig, car: CarParams, cust
     specs.push(scalar('laneOffset', 'Lane offset', 'm', 3.5));
     specs.push(scalar('headingError', 'Heading error', 'rad', Math.PI / 2));
     specs.push(scalar('aim', 'Path ahead', 'rad', Math.PI / 2));
-    specs.push(scalar('curveNear', `Curve at ${CURVE_NEAR} m`, '1/m', CURVE_SCALE));
-    specs.push(scalar('curveFar', `Curve at ${CURVE_FAR} m`, '1/m', CURVE_SCALE));
+    // Unsigned: how sharp the bend is, whichever way it turns.
+    specs.push(scalar('curveNear', `Bend at ${CURVE_NEAR} m`, '1/m', CURVE_SCALE));
+    specs.push(scalar('curveFar', `Bend at ${CURVE_FAR} m`, '1/m', CURVE_SCALE));
   }
   if (cfg.route) {
     specs.push(scalar('nextTurn', 'Next turn', '', 1));
