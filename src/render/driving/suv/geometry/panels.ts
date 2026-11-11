@@ -56,20 +56,3 @@ export function capDisc(end: 1 | -1, cz: number, cy: number, r: number, lift: nu
   const g = gridGeometry(end > 0 ? grid : grid.reverse());
   return mirror ? bothSides(g) : g;
 }
-
-/**
- * A blade standing proud of the nose or tail face: a strip across from -z
- * to z whose cross section steps out from the face to `depth` and back, so
- * it catches light along its top edge and casts a line of shadow below.
- */
-export function capBlade(end: 1 | -1, z: (y: number) => number, y0: number, y1: number, depth: number, cols = 8): THREE.BufferGeometry {
-  const profile: Array<[number, number]> = [[y0, 0.002], [y0, depth], [y1, depth], [y1, 0.002]];
-  const grid: Vec3[][] = [];
-  for (let i = 0; i <= cols; i++) {
-    grid.push(profile.map(([y, lift]) => {
-      const half = z(y);
-      return onCap(end, -half + (2 * half * i) / cols, y, lift);
-    }));
-  }
-  return gridGeometry(end > 0 ? grid.reverse() : grid);
-}
