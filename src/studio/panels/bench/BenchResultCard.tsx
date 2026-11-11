@@ -1,6 +1,7 @@
 import { radarValues } from '@/engine/bench/radar';
 import type { BenchReferences, BenchResult } from '@/engine/bench/types';
 import { Stat } from '@/ui/primitives/Panel';
+import { DrivingDetails } from './DrivingDetails';
 import { HideSeekDetails } from './HideSeekDetails';
 import { bandAt, percentileIn } from './percentile';
 import { Radar } from './Radar';
@@ -76,6 +77,7 @@ export function BenchResultCard({ result, references, generation }: Props) {
         </section>
       )}
       {result.env === 'hideseek' && <HideSeekDetails result={result} references={references} />}
+      {result.env === 'driving' && <DrivingDetails result={result} />}
       <Radar axes={radarValues(result.env, result.radar)} />
     </div>
   );
