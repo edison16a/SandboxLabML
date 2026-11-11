@@ -48,8 +48,12 @@ export function cabinBand(x: number, band: number, steps: number): Pt[] {
   // The rail shrinks away where the side band closes up, at the A pillar's foot and the end of the sail.
   const r = Math.min(1, Math.max(0, (edge[1] - by) / 0.12));
   const rail: Pt = [edge[0] + RAIL.out * r, edge[1] - RAIL.down * r];
-  if (band === 0) return span(key(bz, by, TUMBLE), key(rail[0], rail[1], TUMBLE + deg(4)), steps);
-  if (band === 1) return span(key(rail[0], rail[1], TUMBLE + deg(4)), key(edge[0], edge[1], deg(70)), steps);
+  // Toward the tail the narrow roof drops to the wide belt and the side band lies almost flat, like a sail.
+  // There it leans with its own chord; held at the glass's lean it would ripple up, across and up again.
+  const chord = Math.atan2(bz - rail[0], rail[1] - by);
+  const lean = TUMBLE + Math.max(0, chord - TUMBLE - deg(4));
+  if (band === 0) return span(key(bz, by, lean), key(rail[0], rail[1], lean + deg(4)), steps);
+  if (band === 1) return span(key(rail[0], rail[1], lean + deg(4)), key(edge[0], edge[1], Math.max(deg(70), lean + deg(4))), steps);
   const roof = toCenter(edge, centerY(x), steps);
   const f = fade(x);
   if (f <= 0) return roof;
@@ -70,6 +74,8 @@ interface Range {
   /** Width kept beside a window in the roof band, m: the A pillars and the sails beside the rear glass. */
   pillar?: number;
   pillarSlot?: Slot;
+  /** The painted deck behind the rear glass: side band, rail and roof as one grid, so they shade as one. */
+  deck?: boolean;
 }
 
 /**
@@ -81,7 +87,7 @@ interface Range {
  * built in windows.ts, where the window graphic is drawn.
  */
 const RANGES: Range[] = [
-  { from: CABIN.rear, to: CABIN.glassRear, rail: 'paint', top: 'paint' },
+  { from: CABIN.rear, to: CABIN.glassRear, rail: 'paint', top: 'paint', deck: true },
   { from: CABIN.glassRear, to: CABIN.roofRear, rail: 'trim', top: 'glass', pillar: 0.19, pillarSlot: 'trim' },
   { from: CABIN.roofRear, to: CABIN.header, rail: 'trim', top: 'paint' },
   { from: CABIN.header, to: CABIN.front, rail: 'trim', top: 'glass', pillar: 0.07, pillarSlot: 'trim' },
@@ -96,9 +102,15 @@ export function cabinStations(x0: number, x1: number, detail: Detail): number[] 
 export function addCabin(bin: PartBin, detail: Detail): void {
   for (const r of RANGES) {
     const xs = cabinStations(r.from, r.to, detail);
+    const steps = detail.cabin[1];
+    if (r.deck) {
+      // Belt to centerline in one row per station: the side band and the rail have shrunk to almost nothing here.
+      const deck = xs.map((x) => [...cabinBand(x, 0, detail.cabin[0]), ...cabinBand(x, 1, 2).slice(1), ...cabinBand(x, 2, steps).slice(1)].map(([z, y]) => warp([x, y, z])));
+      bin.add(r.top, bothSides(gridGeometry(deck)));
+      continue;
+    }
     const rail = xs.map((x) => cabinBand(x, 1, 2).map(([z, y]) => warp([x, y, z])));
     bin.add(r.rail, bothSides(gridGeometry(rail)));
-    const steps = detail.cabin[1];
     const rows = xs.map((x) => cabinBand(x, 2, steps).map(([z, y]) => warp([x, y, z])));
     if (!r.pillar) {
       bin.add(r.top, bothSides(gridGeometry(rows)));
