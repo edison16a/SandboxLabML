@@ -59,14 +59,14 @@ function mirrorParts(detail: Detail): { cap: THREE.BufferGeometry; arm: THREE.Bu
     if (px < -0.2) px = -0.2;
     if (py < -0.55) py = -0.55;
     const out = pz * 0.5 + 0.5;
-    p.setXYZ(i, px * (0.05 + 0.03 * out), py * (0.04 + 0.016 * out), pz * 0.112);
+    p.setXYZ(i, px * (0.045 + 0.026 * out), py * (0.034 + 0.013 * out), pz * 0.096);
   }
   cap.computeVertexNormals();
-  const center: Vec3 = [x - 0.03, by + 0.07, bz + 0.17];
+  const center: Vec3 = [x - 0.03, by + 0.062, bz + 0.15];
   cap.rotateZ(-0.05).translate(...center);
-  const arm = stalk([x - 0.01, by + 0.012, bz - 0.01], [center[0] + 0.005, center[1] - 0.02, center[2] - 0.07], detail.fine ? 12 : 6);
-  const back = center[0] - 0.2 * 0.07 - 0.002;
-  const glass = new THREE.CircleGeometry(1, s).scale(0.085, 0.034, 1).rotateY(-Math.PI / 2).translate(back, center[1] + 0.004, center[2] + 0.008);
+  const arm = stalk([x - 0.01, by + 0.012, bz - 0.01], [center[0] + 0.005, center[1] - 0.018, center[2] - 0.06], detail.fine ? 12 : 6);
+  const back = center[0] - 0.2 * 0.06 - 0.002;
+  const glass = new THREE.CircleGeometry(1, s).scale(0.073, 0.029, 1).rotateY(-Math.PI / 2).translate(back, center[1] + 0.004, center[2] + 0.008);
   return { cap: bothSides(cap), arm: bothSides(arm), glass: bothSides(glass) };
 }
 
