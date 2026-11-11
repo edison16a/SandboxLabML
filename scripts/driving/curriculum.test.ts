@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { trainDriving } from './curriculumRun';
 
 /** Generations a default run gets to master empty streets and move on to traffic lights. */
-const BUDGET = 80;
+const BUDGET = 60;
 
 /**
  * The automatic curriculum must actually move: a default run that never
