@@ -18,9 +18,9 @@ export interface DrivingLevel {
 export const DRIVING_LEVELS: readonly DrivingLevel[] = [
   { id: 1, name: 'Empty streets', signals: false, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0 },
   { id: 2, name: 'Traffic lights', signals: true, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0 },
-  { id: 3, name: 'Pedestrians', signals: true, pedestrians: 44, traffic: 0, jaywalk: 0, lateCross: 0 },
-  { id: 4, name: 'Traffic', signals: true, pedestrians: 52, traffic: 26, jaywalk: 0, lateCross: 0.1 },
-  { id: 5, name: 'Rush hour', signals: true, pedestrians: 84, traffic: 42, jaywalk: 0.5, lateCross: 0.3 },
+  { id: 3, name: 'Pedestrians', signals: true, pedestrians: 60, traffic: 0, jaywalk: 0, lateCross: 0 },
+  { id: 4, name: 'Traffic', signals: true, pedestrians: 76, traffic: 28, jaywalk: 0, lateCross: 0.1 },
+  { id: 5, name: 'Rush hour', signals: true, pedestrians: 120, traffic: 44, jaywalk: 0.5, lateCross: 0.3 },
 ];
 
 export const MIN_LEVEL = 1;

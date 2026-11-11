@@ -9,7 +9,7 @@ import { Crowd, CURB_GAP, STRIDE } from './crowd';
 import { jaywalkTarget, reachedCrossing, ringCrossings, type RingCrossings } from './paths';
 
 /** Chance that someone reaching a crossing takes it rather than walking on. */
-const TAKE_CROSSING = 0.45;
+const TAKE_CROSSING = 0.6;
 /** How fast people drift back to their side of the sidewalk, m/s. */
 const DRIFT = 0.5;
 
