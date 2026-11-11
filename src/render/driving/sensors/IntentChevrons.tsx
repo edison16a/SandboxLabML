@@ -7,7 +7,7 @@ import { SUV_SIZE } from '@/engine/driving/car/params';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { FRAME_PRIORITY } from '../frame/FrameDriver';
 import { useDrivingScene } from '../frame/sceneContext';
-import { chevronGeometry, predictPath, type Prediction } from './intentPath';
+import { chevronGeometry, predictPath, type PredictFrom, type Prediction } from './intentPath';
 import { SENSOR } from './palette';
 
 /** Chevrons drawn, and the road distance between them, m. */
@@ -18,6 +18,13 @@ const FIRST = SUV_SIZE.length / 2 + SUV_SIZE.length;
 /** Brightness of the nearest and the furthest chevron. */
 const NEAR_ALPHA = 1;
 const FAR_ALPHA = 0.45;
+/**
+ * Time constant the steering and pedal are eased with before the forecast,
+ * s. A brain corrects its steering a little every tick; forecast from the
+ * raw wheel the arrows would swing with each correction, eased they glide
+ * along the line the car is really taking.
+ */
+const EASE = 0.28;
 
 /**
  * Where the followed SUV will be over the next few seconds if it keeps
@@ -45,8 +52,10 @@ export function IntentChevrons() {
     };
   }, []);
   const tmp = useMemo(() => ({ m: new THREE.Matrix4(), q: new THREE.Quaternion(), p: new THREE.Vector3(), s: new THREE.Vector3(1, 1, 1), c: new THREE.Color(), up: new THREE.Vector3(0, 1, 0), path: { count: 0, x: new Float64Array(COUNT), y: new Float64Array(COUNT), heading: new Float64Array(COUNT) } as Prediction }), []);
+  /** The eased controls the forecast runs on, and which car and episode they belong to. */
+  const eased = useMemo(() => ({ from: { pos: { x: 0, z: 0 }, yaw: 0, speed: 0, steer: 0, pedal: 0 } as PredictFrom, focus: -1, epoch: -1 }), []);
 
-  useFrame(() => {
+  useFrame((_, dt) => {
     const g = core.current;
     const b = back.current;
     if (!g || !b) return;
@@ -55,8 +64,23 @@ export function IntentChevrons() {
       b.count = 0;
       return;
     }
-    const pedal = frame.pedal;
-    predictPath(frame, car, FIRST, SPACING, COUNT, tmp.path);
+    const e = eased.from;
+    if (eased.focus !== frame.focus || eased.epoch !== frame.epoch) {
+      // Another car or a fresh start: begin from its own controls, not a glide from the last car's.
+      eased.focus = frame.focus;
+      eased.epoch = frame.epoch;
+      e.steer = frame.steer;
+      e.pedal = frame.pedal;
+    }
+    const k = 1 - Math.exp(-Math.min(dt, 0.25) / EASE);
+    e.steer += (frame.steer - e.steer) * k;
+    e.pedal += (frame.pedal - e.pedal) * k;
+    e.pos.x = frame.pos.x;
+    e.pos.z = frame.pos.z;
+    e.yaw = frame.yaw;
+    e.speed = frame.speed;
+    const pedal = e.pedal;
+    predictPath(e, car, FIRST, SPACING, COUNT, tmp.path);
     const color = pedal > 0.08 ? SENSOR.accelerate : pedal < -0.08 ? SENSOR.brake : SENSOR.coast;
     const n = tmp.path.count;
     for (let k = 0; k < n; k++) {
