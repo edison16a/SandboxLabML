@@ -55,6 +55,18 @@ describe('spikes', () => {
   });
 });
 
+describe('hazard distances', () => {
+  it('read how close the agent is to spikes and movers', () => {
+    const course = room([
+      { kind: 'spikes', x: 3, z: 0, hx: 0.5, hz: 0.5 },
+      { kind: 'mover', hx: 0.5, hz: 0.5, height: 1, ax: -3, az: 0, bx: -3, bz: 0.001, period: 10, phase: 0 },
+    ]);
+    const { a } = runOne(course, 0, 0, hold(0), 1);
+    expect(a.spikeDistance).toBeCloseTo(3 - 0.5 - R, 2);
+    expect(a.moverDistance).toBeCloseTo(3 - 0.5 - R, 2);
+  });
+});
+
 describe('movers', () => {
   const mover = (z0: number, z1: number, period = 3, phase = 0): MoverSpec => ({ kind: 'mover', hx: 0.6, hz: 0.8, height: 1, ax: 0, az: z0, bx: 0, bz: z1, period, phase });
 
@@ -106,10 +118,13 @@ describe('ends of a run', () => {
     expect(env.done).toBe(true);
   });
 
-  it('times out, and the built in reward stops a run that makes no progress', () => {
+  it('times out, and stops a run that makes no progress', () => {
     const course = room([]);
-    const out = runOne(course, 0, 0, hold(0), 2000);
-    expect(out.a.stopReason).toBe('time');
+    const env = new NavigationEnv({ course, params: { ...params, stuckSeconds: Infinity }, inputs: STANDARD_NAVIGATION_INPUTS, controller: hold(0.05) });
+    env.reset([idle], [1]);
+    while (!env.done) env.step();
+    expect(env.agents[0].stopReason).toBe('time');
+    expect(env.agents[0].time).toBeCloseTo(course.timeLimit, 6);
     const stuck = runOne(course, 0, 0, builtinNavigationController, 2000);
     expect(stuck.a.status).toBe(NAV_STOPPED);
     expect(stuck.a.stopReason).toBe('stuck');

@@ -6,7 +6,7 @@ import { moverPosition } from './course/movers';
 import { driveAgent, onSpikes, shoveAgent } from './kinematics/body';
 import type { CollisionWorld } from './kinematics/slide';
 import type { NavigationParams } from './params';
-import { leaderOf, updateProgress } from './progress';
+import { leaderOf, updateNearby, updateProgress } from './progress';
 import { resultOf, type NavigationResult } from './result';
 import type { NavigationInputConfig } from './sensors/inputConfig';
 import { navigationInputSchema, type NavigationCustomSensor } from './sensors/inputSchema';
@@ -123,6 +123,7 @@ export class NavigationEnv {
       a.diedNow = death !== null;
       a.finishedNow = !death && a.x >= this.course.finishX;
       this.marks[i] = updateProgress(a, this.course, this.marks[i], params.dt);
+      updateNearby(a, this.course, this.movers, params.agent.radius);
       this.observe(i);
       this.brains[i].activate(this.obs[i], io.brain);
       io.action[0] = 0;
@@ -137,6 +138,7 @@ export class NavigationEnv {
       else if (death) stopAgent(a, death);
       else if (io.stop) stopAgent(a, io.stop);
       else if (a.time >= this.maxTime - 1e-9) stopAgent(a, 'time');
+      else if (a.noProgress >= params.stuckSeconds) stopAgent(a, 'stuck');
       if (a.status !== NAV_RUNNING) this.active--;
     }
     this.tick++;

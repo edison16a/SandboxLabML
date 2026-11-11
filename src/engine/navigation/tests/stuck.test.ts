@@ -60,7 +60,7 @@ describe('agents never get stuck in walls', () => {
     it(`fuzzes random controls on ${spec.id} without ever overlapping a solid`, () => {
       const course = buildCourse(spec, params);
       // No time limit and no stuck rule: agents wander for a long while, pushing into everything.
-      const env = new NavigationEnv({ course, params, inputs: STANDARD_NAVIGATION_INPUTS, controller: randomController(7), maxTime: 1e9 });
+      const env = new NavigationEnv({ course, params: { ...params, stuckSeconds: Infinity }, inputs: STANDARD_NAVIGATION_INPUTS, controller: randomController(7), maxTime: 1e9 });
       const n = 24;
       env.reset(Array.from({ length: n }, () => idle), Array.from({ length: n }, (_, i) => i + 1));
       const solids = course.solidData;

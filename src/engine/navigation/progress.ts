@@ -1,6 +1,7 @@
 import { clamp } from '../core/math';
-import { NAV_FINISHED, NAV_RUNNING, type NavAgent } from './agent';
+import { NAV_FINISHED, NAV_RUNNING, NEAR_CAP, type NavAgent } from './agent';
 import type { Course } from './course/build';
+import { rectDistance } from './course/field';
 import { sampleDistance } from './course/fieldSample';
 
 /** Progress an agent must gain to reset its stuck timer, m of walking distance. */
@@ -43,4 +44,22 @@ export function leaderOf(agents: readonly NavAgent[], maxTime: number): number {
     }
   }
   return best;
+}
+
+/**
+ * How close the agent's edge is to the nearest spike pad and the nearest
+ * mover (packed as x, z, hx, hz where they stand now), m. Read by scripts.
+ */
+export function updateNearby(a: NavAgent, course: Course, movers: Float64Array, radius: number): void {
+  let spikes = NEAR_CAP;
+  for (let k = 0; k < course.spikes.length; k++) spikes = Math.min(spikes, rectDistance(a.x, a.z, course.spikes[k]) - radius);
+  let mover = NEAR_CAP;
+  for (let k = 0; k < course.movers.length; k++) {
+    const o = k * 4;
+    const dx = Math.max(0, Math.abs(a.x - movers[o]) - movers[o + 2]);
+    const dz = Math.max(0, Math.abs(a.z - movers[o + 1]) - movers[o + 3]);
+    mover = Math.min(mover, Math.hypot(dx, dz) - radius);
+  }
+  a.spikeDistance = Math.max(0, spikes);
+  a.moverDistance = Math.max(0, mover);
 }

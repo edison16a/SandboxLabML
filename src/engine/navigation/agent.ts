@@ -17,6 +17,9 @@ export const FLAG_CRUSHED = 8;
 export const FLAG_TIMEOUT = 16;
 export const FLAG_STUCK = 32;
 
+/** The farthest the hazard distances read, m: anything further is simply far. */
+export const NEAR_CAP = 20;
+
 /** What a ray hit, as stored per ray. */
 export const RAY_NONE = 0;
 export const RAY_SOLID = 1;
@@ -55,6 +58,9 @@ export interface NavAgent {
   timeLimit: number;
   /** Seconds since bestProgress last grew. */
   noProgress: number;
+  /** Distance from the agent's edge to the nearest spike pad and to the nearest mover, m, capped at NEAR_CAP. Scripts can shape rewards on them. */
+  spikeDistance: number;
+  moverDistance: number;
   /** Events of the latest tick. */
   touching: boolean;
   pushed: boolean;
@@ -108,6 +114,8 @@ export function createNavAgent(index: number, course: Course, params: Navigation
     time: 0,
     timeLimit,
     noProgress: 0,
+    spikeDistance: NEAR_CAP,
+    moverDistance: NEAR_CAP,
     touching: false,
     pushed: false,
     finishedNow: false,

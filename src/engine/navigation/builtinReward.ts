@@ -10,8 +10,6 @@ export const TIME_BONUS = 10;
 export const DEATH_PENALTY = 3;
 /** Taken away each tick spent standing still (under 0.3 m/s), so waiting has a small price. */
 export const IDLE_PENALTY = 0.005;
-/** Seconds without getting closer before the run ends as stuck. */
-export const STUCK_SECONDS = 4;
 
 /**
  * The reward used when a run has no script. It runs as plain TypeScript,
@@ -23,10 +21,10 @@ export const STUCK_SECONDS = 4;
  *   reward +10 + 10 * (1 - agent.time / agent.timeLimit) when agent.finishedNow
  *   reward -3 when agent.diedNow
  *   reward -0.005 when agent.speed < 0.3
- *   stop "stuck" when agent.noProgress > 4 s
  *
  * Progress is the share of the start's walking distance, so the whole run
- * is worth 10, a finish 10 to 20, and a death undoes part of the way.
+ * is worth 10, a finish 10 to 20, and a death undoes part of the way. Runs
+ * that stop getting closer end as stuck by the env's own rule.
  */
 export const builtinNavigationController: AgentController<NavAgent> = {
   customSensorCount: 0,
@@ -39,6 +37,5 @@ export const builtinNavigationController: AgentController<NavAgent> = {
     if (a.diedNow) r -= DEATH_PENALTY;
     if (Math.abs(a.speed) < 0.3) r -= IDLE_PENALTY;
     io.reward = r;
-    if (a.noProgress > STUCK_SECONDS) io.stop = 'stuck';
   },
 };
