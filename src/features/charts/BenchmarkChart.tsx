@@ -7,6 +7,7 @@ import { loadReferences } from '@/engine/bench/references';
 import type { BenchReferences } from '@/engine/bench/types';
 import { episodeInfo } from '@/engine/env/registry';
 import type { EnvId } from '@/engine/env/types';
+import { runColumn } from './benchmarkGaps';
 import { axis, generationAxis, UPlotChart } from './UPlotChart';
 
 const TIER_COLORS = { beginner: '#5d6779', intermediate: '#8a94a7', advanced: '#ff9f43' } as const;
@@ -53,7 +54,7 @@ export function BenchmarkChart({ env = 'racing', records, height = 160 }: Props)
       series.push({ label: t.tier, stroke: TIER_COLORS[t.tier], width: 1.25, dash: [4, 3], points: { show: false } });
       bands.push({ series: [base, base + 1], fill: `${TIER_COLORS[t.tier]}22` });
     });
-    series.push({ label: 'This run', stroke: '#4c9aff', width: 2, points: { show: true, size: 5, fill: '#4c9aff' }, spanGaps: true });
+    series.push({ label: 'This run', stroke: '#4c9aff', width: 2, points: { show: true, size: 5, fill: '#4c9aff' } });
     return {
       legend: { show: false },
       scales: { x: { time: false }, y: { range: [0, 100] } },
@@ -69,13 +70,13 @@ export function BenchmarkChart({ env = 'racing', records, height = 160 }: Props)
     tiers.forEach((t) => t.curve.forEach((p) => gens.add(p.generation)));
     points.forEach((r) => gens.add(r.generation));
     const xs = [...gens].sort((a, b) => a - b);
-    const cols: Array<Array<number | null>> = [];
+    const cols: Array<Array<number | null | undefined>> = [];
     tiers.forEach((t) => {
       const at = new Map(t.curve.map((p) => [p.generation, p]));
-      cols.push(xs.map((g) => at.get(g)?.p75 ?? null), xs.map((g) => at.get(g)?.p25 ?? null), xs.map((g) => at.get(g)?.median ?? null));
+      // Undefined where a tier has no checkpoint, so its line joins across the run's own generations.
+      cols.push(xs.map((g) => at.get(g)?.p75), xs.map((g) => at.get(g)?.p25), xs.map((g) => at.get(g)?.median));
     });
-    const mine = new Map(points.map((r) => [r.generation, r.benchmark ?? null]));
-    cols.push(xs.map((g) => mine.get(g) ?? null));
+    cols.push(runColumn(xs, points));
     return [xs.map((g) => g + 1), ...cols] as uPlot.AlignedData;
   }, [tiers, points]);
 
