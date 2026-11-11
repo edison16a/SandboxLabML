@@ -70,8 +70,7 @@ export class PreviewSim implements NavFeed {
     const spec = named ?? generateCourse(level, mixSeed(seed, this.round));
     const course = buildCourse(spec, params);
     this.course = course;
-    const env: NavigationEnv = new NavigationEnv({ course, params, inputs: STANDARD_NAVIGATION_INPUTS, controller: crowdController(course, params, () => env.agents) });
-    this.env = env;
+    this.env = new NavigationEnv({ course, params, inputs: STANDARD_NAVIGATION_INPUTS, controller: crowdController(course, params) });
     this.env.reset(
       Array.from({ length: agents }, () => IDLE_BRAIN),
       Array.from({ length: agents }, (_, i) => mixSeed(seed, this.round, i)),

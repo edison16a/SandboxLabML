@@ -26,11 +26,9 @@ export interface NavigatorSkill {
   /** Sway frequency and phase, from its seed, so a crowd does not sway in step. */
   swayRate: number;
   swayPhase: number;
-  /** Seconds it waits before setting off, so a crowd leaves the pad in a stream rather than a block. */
-  delay: number;
 }
 
-export const PERFECT_NAVIGATOR: NavigatorSkill = { pace: 1, wobble: 0, shortcut: 0, careful: true, swayRate: 0, swayPhase: 0, delay: 0 };
+export const PERFECT_NAVIGATOR: NavigatorSkill = { pace: 1, wobble: 0, shortcut: 0, careful: true, swayRate: 0, swayPhase: 0 };
 
 /** A crowd member's skill from its seed: most walk well, a few are clumsy or reckless. */
 export function crowdSkill(seed: number): NavigatorSkill {
@@ -43,20 +41,10 @@ export function crowdSkill(seed: number): NavigatorSkill {
     careful: !r.chance(0.18),
     swayRate: r.range(0.6, 1.6),
     swayPhase: r.range(0, Math.PI * 2),
-    delay: r.range(0, 1.6) ** 1.5,
   };
 }
 
 const flow = { x: 0, z: 0 };
-
-/** An extra pull on the navigator's heading, added to the path hint, and a share of its pace: how a crowd keeps out of each other's way. */
-export interface Steer {
-  x: number;
-  z: number;
-  pace: number;
-}
-
-const NO_STEER: Steer = { x: 0, z: 0, pace: 1 };
 
 /**
  * Writes move and turn (each -1 to 1) for an agent following the path
@@ -64,22 +52,18 @@ const NO_STEER: Steer = { x: 0, z: 0, pace: 1 };
  * first safe plan of three (go on, wait, back off), so it dashes through
  * a gap only when the mover will not get there first.
  */
-export function navigate(a: NavAgent, course: Course, params: NavigationParams, skill: NavigatorSkill, out: Float64Array, steer: Steer = NO_STEER): void {
+export function navigate(a: NavAgent, course: Course, params: NavigationParams, skill: NavigatorSkill, out: Float64Array): void {
   sampleFlow(course.field, a.x, a.z, flow);
-  let dx = flow.x + skill.shortcut + steer.x;
-  let dz = flow.z + steer.z;
+  let dx = flow.x + skill.shortcut;
+  let dz = flow.z;
   const len = Math.hypot(dx, dz);
   dx /= len;
   dz /= len;
   const sway = skill.wobble * Math.sin(a.time * skill.swayRate * 2 * Math.PI + skill.swayPhase);
   const bearing = wrapAngle(Math.atan2(-dz, dx) - a.yaw + sway);
   out[1] = clamp(bearing * 3, -1, 1);
-  if (a.time < skill.delay) {
-    out[0] = 0;
-    return;
-  }
   const turning = Math.abs(bearing);
-  let move = (turning > 1.3 ? 0.15 : turning > 0.6 ? 0.6 * skill.pace : skill.pace) * steer.pace;
+  let move = turning > 1.3 ? 0.15 : turning > 0.6 ? 0.6 * skill.pace : skill.pace;
   if (skill.careful && course.movers.length > 0) {
     const speed = params.agent.maxSpeed * move;
     const r = params.agent.radius;
