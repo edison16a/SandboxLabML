@@ -48,7 +48,7 @@ export const NAMED_COURSES: ReadonlyArray<CourseSpec & { heldOut?: boolean }> = 
     level: 5,
     length: 40,
     width: W,
-    obstacles: [wall(-8, -7, -3), wall(-8, 2, 7), slider(-8, -2.12, 1.12, 0.8, 2.8, 0), slider(0, -2.6, 2.6, 0.9, 4.2, 0.5), wall(8, -7, 1), wall(8, 6, 7), slider(8, 1.88, 5.12, 0.8, 2.8, 0.25)],
+    obstacles: [wall(-8, -7, -3), wall(-8, 2, 7), slider(-8, -2.12, 1.12, 0.8, 2.8, 0), slider(0, -2.6, 2.6, 0.9, 4.2, 0.5), wall(8, -7, 0), wall(8, 5, 7), slider(8, 0.88, 4.12, 0.8, 2.8, 0.25)],
   },
   {
     id: 'gauntlet',

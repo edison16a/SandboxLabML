@@ -5,6 +5,7 @@ import { generateCourse } from '../course/generate';
 import { NAV_LEVELS } from '../course/levels';
 import { MOVER_SPEED_LIMIT, moverSweep, moverTopSpeed } from '../course/movers';
 import { NAMED_COURSES } from '../course/presets';
+import { MIN_STUB } from '../course/sections';
 import { MAX_MOVERS, type CourseSpec, type MoverSpec, type Rect } from '../course/types';
 import { generationCourses, nextLevel } from '../curriculum';
 import { navigationWorldSize, WORLD_HEADER } from '../snapshot';
@@ -40,6 +41,21 @@ describe('generated courses', () => {
       for (const k of expected[lv.level] ?? []) expect(kinds.has(k)).toBe(true);
     });
   }
+
+  it('leave no short wall stubs and keep every number on the 5 cm grid', () => {
+    const onGrid = (v: number) => Math.abs(v * 20 - Math.round(v * 20)) < 1e-6;
+    const specs: CourseSpec[] = [...NAMED_COURSES];
+    for (const level of [3, 4, 5, 6]) for (let seed = 1; seed <= 60; seed++) specs.push(generateCourse(level, seed));
+    for (const spec of specs) {
+      for (const o of spec.obstacles) {
+        if (o.kind === 'wall') expect(o.hz * 2).toBeGreaterThanOrEqual(MIN_STUB - 1e-6);
+        // Hand made courses may stop a mover a few cm from a wall; generated ones stay on the grid.
+        if (!spec.id.startsWith('level-')) continue;
+        const numbers = o.kind === 'mover' ? [o.ax, o.az, o.bx, o.bz, o.hx, o.hz] : [o.x, o.z, o.hx, o.hz];
+        for (const v of numbers) expect(onGrid(v)).toBe(true);
+      }
+    }
+  });
 
   it('are the same for the same seed and differ across seeds', () => {
     expect(generateCourse(6, 42)).toEqual(generateCourse(6, 42));

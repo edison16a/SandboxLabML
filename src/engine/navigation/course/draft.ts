@@ -74,7 +74,7 @@ export class CourseDraft {
   }
 }
 
-/** Rounds to 5 cm, so generated courses read as tidy numbers in a saved run. */
-export function snap(v: number): number {
-  return Math.round(v * 20) / 20;
+/** Rounds to 5 cm (or to 1 / `per` m), so generated courses read as tidy numbers in a saved run. */
+export function snap(v: number, per = 20): number {
+  return Math.round(v * per) / per;
 }

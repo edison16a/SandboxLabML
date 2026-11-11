@@ -14,6 +14,24 @@ const BLOCK_SIZES: ReadonlyArray<readonly [number, number]> = [
 export const MIN_GAP = 1.7;
 /** Tries per piece before a section gives up on it. */
 const TRIES = 40;
+/** Shortest wall left between an opening and a side wall, m. A shorter piece reads as a mistake, so the opening runs to the wall instead. */
+export const MIN_STUB = 1.2;
+
+/**
+ * Moves an opening [lo, hi] across a room of half width `half` so the wall
+ * left on each side is either none or at least MIN_STUB: a short stub
+ * shifts the opening onto the side wall, a longer one shifts it away.
+ * Its width is kept and its edges are snapped to 10 cm, so the wall
+ * pieces either side have tidy 5 cm centers and sizes.
+ */
+export function settleOpening(lo: number, hi: number, half: number): [number, number] {
+  let shift = 0;
+  const left = lo + half;
+  const right = half - hi;
+  if (left > 1e-9 && left < MIN_STUB) shift = left < MIN_STUB / 2 ? -left : MIN_STUB - left;
+  else if (right > 1e-9 && right < MIN_STUB) shift = right < MIN_STUB / 2 ? right : right - MIN_STUB;
+  return [snap(Math.max(-half, lo + shift), 10), snap(Math.min(half, hi + shift), 10)];
+}
 
 /** One big crate across the middle of the room at about x, so the straight line is blocked. */
 export function bigBlock(d: CourseDraft, x: number): void {
@@ -54,8 +72,8 @@ export function spikeRow(d: CourseDraft, x: number): void {
     const right = center + lane / 2;
     // Spikes stop short of the side walls by a step on one side, so there are two ways round when that side is wide.
     const edgeGap = d.rng.chance(0.5) ? 0.2 : MIN_GAP;
-    if (left + half > 0.6) pads.push({ x: x, z: snap((-half + edgeGap + left) / 2), hx: depth, hz: snap((left - (-half + edgeGap)) / 2) });
-    if (half - right > 0.6) pads.push({ x: x, z: snap((right + half - 0.2) / 2), hx: depth, hz: snap((half - 0.2 - right) / 2) });
+    if (left + half > 0.6) pads.push({ x: snap(x), z: snap((-half + edgeGap + left) / 2), hx: depth, hz: snap((left - (-half + edgeGap)) / 2) });
+    if (half - right > 0.6) pads.push({ x: snap(x), z: snap((right + half - 0.2) / 2), hx: depth, hz: snap((half - 0.2 - right) / 2) });
     if (pads.length === 0 || pads.some((p) => p.hz < 0.3 || !d.fits(p, 0.6, true))) continue;
     for (const p of pads) d.add({ kind: 'spikes', ...p }, p);
     return;
@@ -81,7 +99,7 @@ export function wallWithGaps(d: CourseDraft, x: number, gaps: number): void {
     for (let g = 0; g < gaps; g++) {
       const w = d.rng.range(MIN_GAP, MIN_GAP + 0.7);
       const c = d.rng.range(-half + w / 2 + 0.3, half - w / 2 - 0.3);
-      openings.push([c - w / 2, c + w / 2]);
+      openings.push(settleOpening(c - w / 2, c + w / 2, half));
     }
     openings.sort((a, b) => a[0] - b[0]);
     if (openings.some((o, i) => i > 0 && o[0] - openings[i - 1][1] < 3)) continue;
@@ -118,15 +136,14 @@ export function moverGate(d: CourseDraft, x: number, withWall: boolean): void {
     const hx = 0.6;
     const open = withWall ? d.rng.range(4.4, 5.4) : d.rng.range(4.5, 7.5);
     const c = d.rng.range(-half + open / 2 + 0.4, half - open / 2 - 0.4);
-    const az = snap(c - open / 2 + hz + (withWall ? 0.08 : 0));
-    const bz = snap(c + open / 2 - hz - (withWall ? 0.08 : 0));
+    const [lo, hi] = withWall ? settleOpening(c - open / 2, c + open / 2, half) : [c - open / 2, c + open / 2];
+    const az = snap(lo + hz + (withWall ? 0.08 : 0));
+    const bz = snap(hi - hz - (withWall ? 0.08 : 0));
     const flip = d.rng.chance(0.5);
     const m: MoverSpec = { kind: 'mover', hx, hz, height: 1, ax: snap(x), az: flip ? bz : az, bx: snap(x), bz: flip ? az : bz, period: moverPeriod(d, bz - az), phase: snap(d.rng.next()) };
     const sweep: Rect = { x: snap(x), z: (az + bz) / 2, hx, hz: (bz - az) / 2 + hz };
     const walls: Rect[] = [];
     if (withWall) {
-      const lo = c - open / 2;
-      const hi = c + open / 2;
       if (lo + half > 0.05) walls.push({ x: snap(x), z: snap((-half + lo) / 2), hx: INNER_WALL / 2, hz: snap((lo + half) / 2) });
       if (half - hi > 0.05) walls.push({ x: snap(x), z: snap((hi + half) / 2), hx: INNER_WALL / 2, hz: snap((half - hi) / 2) });
     }
