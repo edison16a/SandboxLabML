@@ -10,10 +10,10 @@ import type { Detail, PartBin } from './parts';
  * under the rear quarter window. Inside it the pillars are gloss black,
  * so the glass reads as one band and the painted roof seems to float.
  */
-export const DLO = { front: CABIN.front, kick: -0.95, drop: -1.18, point: -1.88 };
+export const DLO = { front: CABIN.front, kick: -1.6, drop: -1.48, point: -2.0 };
 /** Pillar and divider spans along the car, m. */
-const B_PILLAR = { from: -0.29, to: -0.18 };
-const DIVIDER = { from: -0.96, to: -0.92 };
+const B_PILLAR = { from: -0.5, to: -0.4 };
+const DIVIDER = { from: -1.5, to: -1.46 };
 /** The bright surround's width and the glass's margin inside the graphic, m. */
 const SURROUND = 0.012;
 const MARGIN = 0.017;
@@ -28,7 +28,7 @@ function sideHeight(x: number): number {
 
 /** Height of the graphic's lower edge above the belt, m: level along the doors, kicking up under the quarter window. */
 function lowM(x: number): number {
-  return 0.11 * smooth((DLO.kick - x) / (DLO.kick - DLO.point)) ** 1.2;
+  return 0.05 * smooth((DLO.kick - x) / (DLO.kick - DLO.point)) ** 1.2;
 }
 
 /** The graphic's edges at x as shares of the side band: its lower edge and its upper edge, which meet at the rear point. */
@@ -90,6 +90,6 @@ export function addWindows(bin: PartBin, detail: Detail): void {
 export function addSunroof(bin: PartBin, detail: Detail): void {
   const rows = (x0: number, x1: number, t0: number, lift: number): Vec3[][] =>
     cabinStations(x0, x1, detail).map((x) => Array.from({ length: 5 }, (_, j) => onCabin(x, 2, t0 + ((1 - t0) * j) / 4, lift)));
-  bin.add('trim', bothSides(gridGeometry(rows(-0.88, 0.05, 0.27, 0.002))));
-  bin.add('glass', bothSides(gridGeometry(rows(-0.86, 0.03, 0.3, 0.004))));
+  bin.add('trim', bothSides(gridGeometry(rows(-1.0, -0.14, 0.27, 0.002))));
+  bin.add('glass', bothSides(gridGeometry(rows(-0.98, -0.16, 0.3, 0.004))));
 }

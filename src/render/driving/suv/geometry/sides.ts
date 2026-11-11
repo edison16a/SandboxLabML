@@ -17,7 +17,7 @@ function bodyStrip(band: number, t0: number, t1: number, x0: number, x1: number,
 /** A shut line: a dark hairline down the side at x, from the rocker up to the belt. */
 function shutLine(x: number): THREE.BufferGeometry {
   const pts: Vec3[] = [];
-  for (const band of [1, 2, 3]) for (let k = band === 1 ? 0 : 1; k <= 6; k++) pts.push(onBody(x, band, k / 6, 0.0015));
+  for (const band of [1, 2, 3, 4]) for (let k = band === 1 ? 0 : 1; k <= 6; k++) pts.push(onBody(x, band, k / 6, 0.0015));
   const rows = [pts.map(([px, py, pz]) => [px - 0.0035, py, pz] as Vec3), pts.map(([px, py, pz]) => [px + 0.0035, py, pz] as Vec3)];
   return bothSides(gridGeometry(rows));
 }
@@ -46,7 +46,7 @@ function stalk(root: Vec3, tip: Vec3, n: number): THREE.BufferGeometry {
  * on the left and mirrored.
  */
 function mirrorParts(detail: Detail): { cap: THREE.BufferGeometry; arm: THREE.BufferGeometry; glass: THREE.BufferGeometry } {
-  const x = 0.8;
+  const x = 0.74;
   const [bz, by] = beltAt(x);
   const s = detail.fine ? 22 : detail.brakes ? 8 : 6;
   const cap = new THREE.SphereGeometry(1, s, Math.max(5, Math.round(s * 0.6)));
@@ -84,6 +84,6 @@ export function addSides(bin: PartBin, detail: Detail): void {
   }
   // Dark mirror glass: a chrome disc would read as a bright button from the chase camera.
   bin.add('glass', m.glass);
-  for (const x of [1.0, -0.235, -0.955]) bin.add('liner', shutLine(x));
-  for (const x of [0.2, -0.68]) bin.add('trim', bodyStrip(3, 0.2, 0.3, x, x + 0.18, 0.003, 4));
+  for (const x of [0.99, -0.43, -0.99]) bin.add('liner', shutLine(x));
+  for (const x of [0.12, -0.9]) bin.add('trim', bodyStrip(2, 0.86, 0.9, x, x + 0.17, 0.003, 4));
 }

@@ -18,7 +18,7 @@ export interface SuvMaterials {
 }
 
 /** How strongly each slot mirrors the environment: paint and glass glossy, tires and liners dull. */
-const REFLECT: Partial<Record<Slot, number>> = { paint: 1.05, glass: 1.05, trim: 0.9, clad: 0.35, grille: 0.45, metal: 1, rim: 0.9, face: 1, caliper: 0.8, disc: 0.5, tire: 0.35, liner: 0.25, tail: 0.6 };
+const REFLECT: Partial<Record<Slot, number>> = { paint: 0.9, glass: 1.05, trim: 0.9, clad: 0.35, grille: 0.45, metal: 1, rim: 0.9, face: 1, caliper: 0.8, disc: 0.5, tire: 0.35, liner: 0.25, tail: 0.6 };
 
 /**
  * Tail lamp glow at rest and under braking. The lamps skip tone mapping,
@@ -46,11 +46,12 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
   const high = d === 'high';
   const textures: THREE.Texture[] = [];
   const keep = <T extends THREE.Texture>(t: T) => (textures.push(t), t);
-  // A low base roughness and metalness keep the color deep on the hood and roof: the sharp clear coat carries the reflection.
-  const paint = new THREE.MeshPhysicalMaterial({ color: PARKED_PAINT, metalness: 0.3, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.025 });
+  // A satin base with little metal keeps the color deep on the hood and roof at any angle; the sharp clear coat
+  // on top carries the reflections, so the paint reads glossy without a milky sheen. The flake is only a hint.
+  const paint = new THREE.MeshPhysicalMaterial({ color: PARKED_PAINT, metalness: 0.12, roughness: 0.34, clearcoat: 1, clearcoatRoughness: 0.02 });
   if (d !== 'low') {
-    paint.normalMap = keep(repeat(flakeNormalMap(high ? 512 : 256), high ? 10 : 6));
-    paint.normalScale.set(0.3, 0.3);
+    paint.normalMap = keep(repeat(flakeNormalMap(high ? 512 : 256), high ? 14 : 8));
+    paint.normalScale.set(0.08, 0.08);
   }
   const mesh = <T extends THREE.Texture>(t: T) => keep(repeat(t, 14, 14 * HONEYCOMB_ASPECT));
   const grille = new THREE.MeshStandardMaterial({ map: mesh(honeycombColor(128)), normalMap: d === 'low' ? null : mesh(honeycombNormal(128)), roughness: 0.4, metalness: 0.4 });

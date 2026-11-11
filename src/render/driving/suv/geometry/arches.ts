@@ -7,9 +7,9 @@ import { warp } from './warp';
 
 /**
  * The inner wall of each wheel well. At full lock the front tire's inner
- * edge swings in to about 0.48 m, so the wall sits inboard of that.
+ * edge swings in to about 0.42 m, so the wall sits inboard of that.
  */
-export const WELL_Z = 0.45;
+export const WELL_Z = 0.4;
 const FLOOR_Y = 0.22;
 const UNDER_SKIN = 0.012;
 
@@ -26,7 +26,7 @@ function skinZ(x: number, y: number): number {
   return sectionAt(x).keys[0].z;
 }
 
-/** The skin height at (x, z) on the shoulder and belt bands, so the liner never pokes through the paint. */
+/** The skin height at (x, z) on the bands above the side, so the liner never pokes through the paint. */
 function underSkin(x: number, z: number, y: number): number {
   let skin = Infinity;
   const bands = sectionAt(x).keys.length - 1;
@@ -42,8 +42,17 @@ function underSkin(x: number, z: number, y: number): number {
 }
 
 /**
- * Wheel wells: a gloss black trim rolled over each arch edge, a liner over the
- * tire, an inner wall and floor plates. The arches sit close round the
+ * Across the arch's edge, as (out along the arch's radius, in toward the
+ * car) offsets from the skin's cut: the paint rolls over a tight radius
+ * into the opening, so the arch has a crisp body colored edge, then a
+ * slim gloss black trim ring 2.4 cm wide faces out a little deeper.
+ */
+const LIP: Array<[number, number]> = [[0, 0], [-0.003, -0.002], [-0.006, -0.006], [-0.008, -0.012]];
+const TRIM: Array<[number, number]> = [[-0.008, -0.012], [-0.009, -0.014], [-0.03, -0.016], [-0.033, -0.019], [-0.034, -0.032]];
+
+/**
+ * Wheel wells: the rolled edge and trim round each arch, a liner over the
+ * tire, an inner wall and floor plates. The arches sit 5 cm clear of the
  * tires, so the wheels fill them as on a performance SUV.
  */
 export function addArches(bin: PartBin, detail: Detail): void {
@@ -51,8 +60,7 @@ export function addArches(bin: PartBin, detail: Detail): void {
   for (const axle of AXLES) {
     const xs = Array.from({ length: n + 1 }, (_, i) => axle - Math.cos((Math.PI * i) / n) * (ARCH.radius - 0.001));
     const cuts = xs.map((x) => archCut(x) ?? ([0.95, archFloor(x)] as [number, number]));
-    // A slim gloss black trim rolls over the arch edge and stands a few millimeters proud, so the arch reads as a crisp ring.
-    // Below the hub the opening drops straight to the sill, and the trim follows it down on both sides.
+    // Below the hub the opening drops straight to the sill, and the edge follows it down on both sides.
     const legs = Math.max(2, Math.round(n / 5));
     const leg = (x: number, out: number) =>
       Array.from({ length: legs }, (_, k) => {
@@ -65,15 +73,16 @@ export function addArches(bin: PartBin, detail: Detail): void {
       return { x, z, y, ux: (x - axle) / r, uy: (y - ARCH.centerY) / r };
     });
     const edge = [...leg(xs[0], -1), ...ring, ...leg(xs[n], 1).reverse()];
-    const lip = edge.map(({ x, z, y, ux, uy }) => {
-      const pt = (out: number, lift: number): Vec3 => warp([x + ux * out, y + uy * out, z + lift]);
-      return [pt(-0.014, -0.024), pt(-0.004, 0.005), pt(0.008, 0.011), pt(0.024, 0.007), pt(0.036, 0.0)];
-    });
-    bin.add('trim', bothSides(gridGeometry(lip)));
+    const across = (profile: Array<[number, number]>) =>
+      edge.map(({ x, z, y, ux, uy }) => profile.map(([out, inward]) => warp([x + ux * out, y + uy * out, z + inward])));
+    // The far population skips the rolled edge and keeps only the trim's face and its turn inward.
+    if (detail.brakes) bin.add('paint', bothSides(gridGeometry(across(LIP))));
+    const trim = across(detail.brakes ? TRIM : [TRIM[0], TRIM[2], TRIM[4]]);
+    bin.add('trim', bothSides(gridGeometry(trim)));
     const liner = xs.map((x, i) => {
       const [z, y] = cuts[i];
-      const mid = Math.min(Math.max(sectionAt(x).keys[4].z - 0.02, WELL_Z + 0.01), z - 0.05);
-      return [warp([x, underSkin(x, WELL_Z, y - 0.02), WELL_Z]), warp([x, underSkin(x, mid, y - 0.018), mid]), warp([x, y - 0.03, z - 0.03])];
+      const mid = Math.min(Math.max(sectionAt(x).keys[5].z - 0.02, WELL_Z + 0.01), z - 0.05);
+      return [warp([x, underSkin(x, WELL_Z, y - 0.02), WELL_Z]), warp([x, underSkin(x, mid, y - 0.024), mid]), trim[legs + i][trim[0].length - 1]];
     });
     bin.add('liner', bothSides(gridGeometry(liner)));
     const wall: Vec3[] = [...xs.map((x, i) => warp([x, underSkin(x, WELL_Z, cuts[i][1] - 0.02), WELL_Z])), warp([xs[n], FLOOR_Y, WELL_Z]), warp([xs[0], FLOOR_Y, WELL_Z])];
@@ -83,12 +92,12 @@ export function addArches(bin: PartBin, detail: Detail): void {
 
 /** Flat dark floor plates under the body, which only show from low angles but give the hollow shell a bottom. */
 export function addUnderbody(bin: PartBin): void {
-  const plate = (x0: number, x1: number, z0: number, z1: number) => new THREE.PlaneGeometry(x1 - x0, z1 - z0).rotateX(Math.PI / 2).translate((x0 + x1) / 2, FLOOR_Y, (z0 + z1) / 2);
+  const plate = (x0: number, x1: number, half: number, y = FLOOR_Y) => new THREE.PlaneGeometry(x1 - x0, 2 * half).rotateX(Math.PI / 2).translate((x0 + x1) / 2, y, 0);
+  // Each plate stops short of the sill line at its narrowest station, so it never shows past the sill trim.
+  const inside = (...xs: number[]) => Math.min(...xs.map((x) => sectionAt(x).keys[0].z)) - 0.02;
   const [front, rear] = AXLES;
-  // The side plates stop short of the sill line, so they never show past the rockers.
-  const side = Math.min(...[0, front + ARCH.radius, rear - ARCH.radius, 2.15, -2.15].map((x) => sectionAt(x).keys[0].z)) - 0.02;
-  bin.add('liner', plate(-2.15, 2.15, -WELL_Z, WELL_Z));
-  bin.add('liner', bothSides(plate(rear + ARCH.radius, front - ARCH.radius, WELL_Z, side)));
-  bin.add('liner', bothSides(plate(front + ARCH.radius, 2.15, WELL_Z, side)));
-  bin.add('liner', bothSides(plate(-2.15, rear - ARCH.radius, WELL_Z, side)));
+  const [f0, f1, r0, r1] = [front - ARCH.radius, front + ARCH.radius, rear - ARCH.radius, rear + ARCH.radius];
+  bin.add('liner', plate(r1, f0, inside(r1, 0, f0)), plate(f0, f1, WELL_Z), plate(r0, r1, WELL_Z));
+  // Ahead of and behind the wheels the floor rises with the sill, so it never hangs below the bumpers.
+  bin.add('liner', plate(f1, 2.2, inside(2.2), sillY(2.2) + 0.012), plate(-2.12, r0, inside(-2.12), sillY(-2.12) + 0.012));
 }

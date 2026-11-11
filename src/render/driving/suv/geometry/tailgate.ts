@@ -1,5 +1,5 @@
 import type * as THREE from 'three';
-import { onCap } from './body';
+import { onCap } from './cap';
 import { bothSides, gridGeometry, type Vec3 } from './grid';
 import type { Detail, PartBin } from './parts';
 import { capFill, facing, rounded } from './recess';
@@ -7,12 +7,12 @@ import { tailBand } from './rear';
 import type { Pt } from './section';
 
 /**
- * The tailgate's outline on the tail face, m: it opens from the bumper
- * line up to the light band, between two vertical cuts. The plate area
- * sits in its lower half.
+ * The tailgate's outline on the tail face, m: it opens from just over the
+ * bumper's top crease up to the light band, between two upright cuts.
+ * The plate sits below it, recessed into the bumper.
  */
-const GATE = { side: 0.6, bottom: 0.715, corner: 0.06 };
-const PLATE: Pt[] = [[-0.26, 0.75], [0.26, 0.75], [0.26, 0.88], [-0.26, 0.88]];
+const GATE = { side: 0.6, bottom: 0.905, corner: 0.05 };
+const PLATE: Pt[] = [[-0.27, 0.625], [0.27, 0.625], [0.27, 0.765], [-0.27, 0.765]];
 
 /** A dark hairline along a path on the tail face, `width` m wide, so a panel gap reads as a real cut. */
 function cut(path: Pt[], width: number): THREE.BufferGeometry {
@@ -31,7 +31,7 @@ function gatePath(steps: number): Pt[] {
   const { side, bottom, corner } = GATE;
   const top = tailBand(side).lo - 0.004;
   const path: Pt[] = [];
-  for (let i = 0; i <= 4; i++) path.push([side, top + (bottom + corner - top) * (i / 4)]);
+  for (let i = 0; i <= 3; i++) path.push([side, top + (bottom + corner - top) * (i / 3)]);
   for (let i = 1; i <= steps; i++) {
     const a = (Math.PI / 2) * (i / steps);
     path.push([side - corner + Math.cos(a) * corner, bottom + corner - Math.sin(a) * corner]);
@@ -42,9 +42,9 @@ function gatePath(steps: number): Pt[] {
 
 /**
  * The tailgate: a shut line that separates it from the bumper below and
- * the body at each side, and a gloss black plate area set into its lower
- * half. With the shoulder fold above, the bumper and the tailgate read as
- * two volumes instead of one blank slab.
+ * the body at each side, and a gloss black plate area set into the
+ * bumper under it. With the bumper's crease, the bumper and the tailgate
+ * read as two volumes instead of one blank slab.
  */
 export function addTailgate(bin: PartBin, detail: Detail): void {
   if (detail.fine || detail.brakes) bin.add('liner', bothSides(cut(gatePath(detail.fine ? 6 : 3), 0.0045)));

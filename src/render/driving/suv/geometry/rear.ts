@@ -1,53 +1,53 @@
-import { faceEdge, faceTop, onCap } from './body';
+import { faceEdge, faceTop, onCap } from './cap';
+import { smooth } from './curve';
 import { gridGeometry, type Vec3 } from './grid';
-import type { Detail, PartBin } from './parts';
 import { at, capDisc, capPanel, capSpan } from './panels';
+import type { Detail, PartBin } from './parts';
 import { sillY, TAIL } from './profile';
 import type { Pt } from './section';
 import { addTailgate } from './tailgate';
 
-/** The tail's light band: its half width, and how far its two edges sit under the face's top edge, m. */
-const BAND = { half: 0.755, hi: 0.072, lo: 0.13 };
-
 /**
- * The light band's lower and upper edge at z, both measured down from
- * the face's top edge, so the band keeps its height as it follows the
- * deck across and the shoulder down into each corner. Every lamp inside
- * it is placed at a share of this height, so none can leave the band.
+ * The tail's light band in the face's unrolled coordinates: level across
+ * the tailgate at 1.0 to 1.05 m, easing a little lower as it wraps 10 cm
+ * round each corner under the shoulder. `half` is how far it reaches.
  */
-export function tailBand(z: number): { lo: number; hi: number } {
-  const top = faceTop(-1, z);
-  return { lo: top - BAND.lo, hi: top - BAND.hi };
+export const BAND = { half: 0.83, lo: 0.993, hi: 1.046 };
+
+/** The light band's lower and upper edge at s. */
+export function tailBand(s: number): { lo: number; hi: number } {
+  const k = smooth((Math.abs(s) - 0.52) / 0.3);
+  return { lo: BAND.lo - 0.012 * k, hi: BAND.hi - 0.022 * k };
 }
 
-/** A point in the band at z, a share `v` of its height up from its lower edge. */
-function inBand(z: number, v: number): Pt {
-  const { lo, hi } = tailBand(z);
-  return [z, lo + (hi - lo) * v];
+/** A point in the band at s, a share `v` of its height up from its lower edge. */
+function inBand(s: number, v: number): Pt {
+  const { lo, hi } = tailBand(s);
+  return [s, lo + (hi - lo) * v];
 }
 
-/** A strip in the band from z0 to z1 between shares v0 and v1, lifted off the face. */
-function bandStrip(z0: number, z1: number, v0: number, v1: number, lift: number, cols: number, mirror = true) {
-  const z = (u: number) => z0 + (z1 - z0) * u;
-  return capSpan(-1, (u) => inBand(z(u), v0), (u) => inBand(z(u), v1), lift, cols, 1, mirror);
+/** A strip in the band from s0 to s1 between shares v0 and v1, lifted off the face. */
+function bandStrip(s0: number, s1: number, v0: number, v1: number, lift: number, cols: number, mirror = true) {
+  const s = (u: number) => s0 + (s1 - s0) * u;
+  return capSpan(-1, (u) => inBand(s(u), v0), (u) => inBand(s(u), v1), lift, cols, 1, mirror);
 }
 
 /**
  * The lights: a gloss black band across the top of the tailgate carrying
- * a slim full width light bar, which grows into a lamp at each corner
- * where the band follows the tail's rounded shoulder down.
+ * a slim full width light bar, which grows into a lamp at each corner as
+ * the band wraps round onto the fender.
  */
 function addLights(bin: PartBin, detail: Detail): void {
-  const c = detail.fine ? 14 : detail.brakes ? 6 : 4;
-  bin.add('trim', bandStrip(-BAND.half, BAND.half, 0, 1, 0.004, c * 3, false));
+  const c = detail.fine ? 16 : detail.brakes ? 7 : 4;
+  bin.add('trim', bandStrip(-BAND.half, BAND.half, 0, 1, 0.004, c * 4, false));
   // The corner lamp: a smoked lens filling most of the band toward each corner.
-  bin.add('glass', bandStrip(0.5, BAND.half - 0.012, 0.12, 0.88, 0.006, c));
+  bin.add('glass', bandStrip(0.52, BAND.half - 0.014, 0.12, 0.88, 0.006, c));
   // The bar parts in the middle for the app's own mark, lit like the bar, and runs out over the lens.
-  bin.add('tail', bandStrip(0.036, BAND.half - 0.016, 0.36, 0.54, 0.008, c * 2));
-  bin.add('tail', bandStrip(0.54, BAND.half - 0.03, 0.66, 0.76, 0.008, c));
-  if (detail.brakes) addEmblem(bin, inBand(0, 0.45)[1], detail.fine ? 14 : 8);
-  // Slim reflectors at the bumper corners, just over the diffuser.
-  bin.add('tail', capPanel(-1, at(0.64), at(0.74), 0.662, 0.673, 0.005, 2, 1));
+  bin.add('tail', bandStrip(0.036, BAND.half - 0.02, 0.4, 0.58, 0.008, c * 3));
+  bin.add('tail', bandStrip(0.56, BAND.half - 0.034, 0.68, 0.78, 0.008, c));
+  if (detail.brakes) addEmblem(bin, inBand(0, 0.49)[1], detail.fine ? 14 : 8);
+  // Slim reflectors low on the bumper's corners.
+  bin.add('tail', capPanel(-1, at(0.66), at(0.8), 0.6, 0.612, 0.004, 4, 1));
 }
 
 /**
@@ -62,49 +62,50 @@ function addEmblem(bin: PartBin, cy: number, seg: number): void {
     const [a, b] = [atoms[i], atoms[i + 1]];
     const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
     const n: Pt = [(-(b[1] - a[1]) / len) * (w / 2), ((b[0] - a[0]) / len) * (w / 2)];
-    const at = (u: number, s: number): Pt => [a[0] + (b[0] - a[0]) * u + n[0] * s, a[1] + (b[1] - a[1]) * u + n[1] * s];
-    bin.add('tail', capSpan(-1, (u) => at(u, -1), (u) => at(u, 1), 0.008, 2, 1, false));
+    const p = (u: number, s: number): Pt => [a[0] + (b[0] - a[0]) * u + n[0] * s, a[1] + (b[1] - a[1]) * u + n[1] * s];
+    bin.add('tail', capSpan(-1, (u) => p(u, -1), (u) => p(u, 1), 0.008, 2, 1, false));
   }
   atoms.forEach(([z, y], i) => bin.add('tail', capDisc(-1, z, y, i === 1 ? 0.0085 : 0.0072, 0.009, seg, false)));
 }
 
-/** A lip spoiler along the top of the tail, where the roofline ends: it kicks up and back. */
+/** A lip spoiler along the top of the tail, where the roofline ends: it kicks up and stands out 3 cm. */
 function addSpoiler(bin: PartBin, detail: Detail): void {
-  const n = detail.fine ? 24 : detail.brakes ? 8 : 6;
+  const n = detail.fine ? 28 : detail.brakes ? 10 : 6;
+  const half = 0.6;
   const rows: Vec3[][] = [];
   for (let i = 0; i <= n; i++) {
-    const z = -0.66 + (1.32 * i) / n;
+    const z = -half + (2 * half * i) / n;
     const top = faceTop(-1, z);
-    const rise = 1 - (z / 0.66) ** 4;
-    rows.push([onCap(-1, z, top - 0.04, 0.002), onCap(-1, z, top - 0.004 + 0.008 * rise, 0.03 + 0.022 * rise), onCap(-1, z, top + 0.006 + 0.008 * rise, 0.025 + 0.022 * rise), onCap(-1, z, top + 0.004, -0.02)]);
+    const k = 1 - (z / half) ** 6;
+    rows.push([onCap(-1, z, top - 0.045, 0.002), onCap(-1, z, top - 0.008 + 0.006 * k, 0.014 + 0.016 * k), onCap(-1, z, top + 0.004 + 0.006 * k, 0.012 + 0.018 * k), onCap(-1, z, top + 0.004, -0.02)]);
   }
   bin.add('paint', gridGeometry(rows));
 }
 
 /**
  * The diffuser: a gloss black panel across the bottom of the bumper with
- * satin fins in the middle and a pair of oval tailpipes set into it on
+ * satin fins in the middle and a pair of wide tailpipes set into it on
  * each side. It fills the face down to its lowest edge and keeps inside
  * the face's own edge at every height.
  */
 function addDiffuser(bin: PartBin, detail: Detail): void {
   const c = detail.fine ? 10 : detail.brakes ? 4 : 2;
   const y0 = sillY(TAIL);
-  const top = 0.6;
-  const half = (y: number) => faceEdge(-1, y) - 0.025;
+  const top = 0.53;
+  const half = (y: number) => faceEdge(-1, y) - 0.02;
   bin.add('trim', capPanel(-1, (y) => -half(y), half, y0, top, 0.004, c * 2, detail.fine ? 9 : 5, false));
   bin.add('metal', capPanel(-1, (y) => -half(y), half, top + 0.003, top + 0.008, 0.006, c * 2, 1, false));
   if (detail.fine) {
-    for (const z of [-0.2, -0.1, 0, 0.1, 0.2]) bin.add('clad', capPanel(-1, at(z - 0.006), at(z + 0.006), y0 + 0.012, top - 0.035, 0.014, 1, 1, false));
+    for (const z of [-0.18, -0.09, 0, 0.09, 0.18]) bin.add('clad', capPanel(-1, at(z - 0.006), at(z + 0.006), y0 + 0.012, top - 0.035, 0.014, 1, 1, false));
   }
   const seg = detail.fine ? 22 : detail.brakes ? 10 : 6;
-  for (const z of [0.4, 0.555]) {
-    bin.add('metal', capDisc(-1, z, 0.48, 0.064, 0.009, seg, true, 0.52));
-    bin.add('liner', capDisc(-1, z, 0.48, 0.052, 0.011, seg, true, 0.46));
+  for (const z of [0.4, 0.545]) {
+    bin.add('metal', capDisc(-1, z, 0.44, 0.064, 0.009, seg, true, 0.5));
+    bin.add('liner', capDisc(-1, z, 0.44, 0.052, 0.011, seg, true, 0.44));
   }
 }
 
-/** The whole tail: lights, spoiler, tailgate and diffuser, laid on the warped face. */
+/** The whole tail: lights, spoiler, tailgate and diffuser, laid on the bent face. */
 export function addRear(bin: PartBin, detail: Detail): void {
   addLights(bin, detail);
   addSpoiler(bin, detail);

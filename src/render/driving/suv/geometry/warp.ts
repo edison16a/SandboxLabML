@@ -1,62 +1,60 @@
-import { BODY } from '../dimensions';
-import { smooth } from './curve';
+import { hinge, smooth } from './curve';
+import { NOSE, TAIL } from './ends';
 import type { Vec3 } from './grid';
 
 /**
  * A final bend applied to every point on the body. Sections are easiest
- * to draw upright, but a real nose rakes back toward the hood and a real
- * tail leans in toward the hatch. The corners themselves are rounded in
- * the sections (see endRound). Running the body, its faces and every
- * lamp through the same bend keeps them glued together. Every ramp eases
- * in and out, so the bend never puts a slope break (and a line of light)
- * into the paint.
+ * to draw upright and the end faces flat, but a real nose leans back
+ * above a forward fold and tucks under below it, and a real tail leans in
+ * from its bumper up to the roof's lip. Running the body, its faces and
+ * every lamp through the same bend keeps them glued together. The bend
+ * only moves points along x, near the ends, and every ramp eases in and
+ * out, so it never puts a slope break (and a line of light) into the paint.
  */
 export function warp(p: Vec3): Vec3 {
   const [x, y, z] = p;
   let dx = 0;
-  if (x > RAKE.from) dx -= smooth((x - RAKE.from) / (BODY.nose - RAKE.from)) * (rake(y) + 0.035 * smooth((0.46 - y) / 0.13));
-  if (x < -2.05) dx += smooth((-x - 2.05) / 0.4) * (0.035 * smooth((y - 0.62) / 0.5) + fold(y) + 0.045 * smooth((0.55 - y) / 0.2));
+  if (x > NOSE_BEND.from) dx += smooth((x - NOSE_BEND.from) / (NOSE - NOSE_BEND.from)) * (noseLean(y) + noseBow(z));
+  if (x < TAIL_BEND.from) dx -= smooth((TAIL_BEND.from - x) / (TAIL_BEND.from - TAIL)) * tailLean(y);
   return [x + dx, y, z];
 }
 
-/** The nose rake: the face leans back `lean` m by the height `top`, starting upright at `base`. Eased in from `from` along the car. */
-const RAKE = { from: 1.85, base: 0.48, top: 0.98, lean: 0.22 };
-
 /**
- * How far the nose leans back at height y. It grows with the square of the
- * height, so the face is upright at the bumper and leans more and more
- * toward the hood, a convex curve with no flat spot or kink. Above the top
- * it carries on at the same slope.
+ * The nose in side view: the face leans back 14 degrees from a soft fold
+ * at `apex` up to the hood's edge at `top`, and below the fold the bumper
+ * tucks back toward the lip at `under` m per m. The bend starts behind
+ * the front wheel arch, so the arch stays round.
  */
-function rake(y: number): number {
-  const t = (y - RAKE.base) / (RAKE.top - RAKE.base);
-  if (t <= 0) return 0;
-  return RAKE.lean * (t <= 1 ? t * t : 2 * t - 1);
+const NOSE_BEND = { from: 1.96, top: 0.9, apex: 0.567, lean: 0.25, under: 0.55, edge: 0.02, fold: 0.045 };
+
+/** How far the nose face sits ahead of its upright station at height y, m. */
+export function noseLean(y: number): number {
+  const b = NOSE_BEND;
+  return b.lean * hinge(b.top - y, b.edge) - (b.lean + b.under) * hinge(b.apex - y, b.fold);
 }
 
 /**
- * The tail's shoulder fold: the side's shoulder carried round the tail as
- * a soft horizontal crease. Above `at` the face leans in toward the hatch
- * at `slope`; the lean switches on over `onset` m, which draws the crease,
- * and off again `off` m higher, so the deck and the cabin are not bent.
+ * The nose in plan view: the face bows forward a little at the middle, so
+ * it reads taut and alive instead of flat, and the hood's edge follows it
+ * in a gentle arc. It fades out before the corners.
  */
-const FOLD = { at: 1.045, onset: 0.018, slope: 0.32, off: 0.17 };
+export const NOSE_BOW = 0.025;
 
-/** The fold's lean, integrated once from its slope in 1 mm steps. */
-const FOLD_LEAN = (() => {
-  const out = [0];
-  for (let i = 1; i <= 260; i++) {
-    const d = (i - 0.5) / 1000;
-    out.push(out[i - 1] + (FOLD.slope * smooth(d / FOLD.onset) * smooth((FOLD.off - d) / 0.05)) / 1000);
-  }
-  return out;
-})();
+function noseBow(z: number): number {
+  const t = Math.min(1, (z / 0.97) ** 2);
+  return NOSE_BOW * (1 - t) * (1 - t);
+}
 
-/** How far the tail leans in at height y from the fold, read from the table. */
-function fold(y: number): number {
-  const d = (y - FOLD.at) * 1000;
-  if (d <= 0) return 0;
-  if (d >= FOLD_LEAN.length - 1) return FOLD_LEAN[FOLD_LEAN.length - 1];
-  const i = Math.floor(d);
-  return FOLD_LEAN[i] + (FOLD_LEAN[i + 1] - FOLD_LEAN[i]) * (d - i);
+/**
+ * The tail in side view: from the roof's lip at `lip` the tailgate leans
+ * out and down to the bumper's top at `bumper`, the bumper stands upright,
+ * and below `diffuser` it tucks back in to the diffuser's floor. Above the
+ * lip nothing moves, so the roofline is exactly the cabin's.
+ */
+const TAIL_BEND = { from: -1.9, lip: 1.22, bumper: 0.885, diffuser: 0.55, gate: 0.444, tuck: 0.66 };
+
+/** How far the tail sits behind its upright station at height y, m. */
+export function tailLean(y: number): number {
+  const b = TAIL_BEND;
+  return b.gate * (hinge(b.lip - y, 0.02) - hinge(b.bumper - y, 0.03)) - b.tuck * hinge(b.diffuser - y, 0.05);
 }
