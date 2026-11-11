@@ -38,7 +38,7 @@ export interface Course {
 export const FIELD_CELL = 0.25;
 /** Extra clearance the field keeps from solids and from spikes on top of the agent radius, m. The path hint keeps clear by that much. */
 export const SOLID_CLEARANCE = 0.12;
-export const SPIKE_CLEARANCE = 0.3;
+export const SPIKE_CLEARANCE = 0.45;
 
 /** The four outer walls round a room of the spec's size. */
 export function outerWalls(spec: Pick<CourseSpec, 'length' | 'width'>): Rect[] {

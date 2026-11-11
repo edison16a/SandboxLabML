@@ -13,7 +13,7 @@ const BLOCK_SIZES: ReadonlyArray<readonly [number, number]> = [
 /** Narrowest walkable gap a level makes, m: two agent widths. */
 export const MIN_GAP = 1.7;
 /** Tries per piece before a section gives up on it. */
-const TRIES = 40;
+export const TRIES = 40;
 /** Shortest wall left between an opening and a side wall, m. A shorter piece reads as a mistake, so the opening runs to the wall instead. */
 export const MIN_STUB = 1.2;
 
@@ -51,42 +51,6 @@ export function blockField(d: CourseDraft, x0: number, x1: number, count: number
     const r: Rect = { x: snap(d.rng.range(x0 + hx, x1 - hx)), z: snap(d.rng.range(-d.width / 2 + hz, d.width / 2 - hz)), hx, hz };
     if (!d.fits(r, gap)) continue;
     d.add({ kind: 'block', ...r, height: hx === hz && hx > 0.6 ? 1.2 : 1 }, r);
-    placed++;
-  }
-}
-
-/**
- * A row of spike pads across the room at about x. Pads cover most of the
- * width, one sitting on the straight line, and leave at least one gap of
- * MIN_GAP or more, so the row must be steered through, not walked over.
- */
-export function spikeRow(d: CourseDraft, x: number): void {
-  const half = d.width / 2;
-  const depth = snap(d.rng.range(0.6, 1.1));
-  for (let t = 0; t < TRIES; t++) {
-    // One open lane, the rest spikes, split into one or two pads either side.
-    const lane = d.rng.range(MIN_GAP + 0.3, MIN_GAP + 1.4);
-    const center = d.rng.range(-half + lane / 2 + 1.2, half - lane / 2 - 1.2);
-    const pads: Rect[] = [];
-    const left = center - lane / 2;
-    const right = center + lane / 2;
-    // Spikes stop short of the side walls by a step on one side, so there are two ways round when that side is wide.
-    const edgeGap = d.rng.chance(0.5) ? 0.2 : MIN_GAP;
-    if (left + half > 0.6) pads.push({ x: snap(x), z: snap((-half + edgeGap + left) / 2), hx: depth, hz: snap((left - (-half + edgeGap)) / 2) });
-    if (half - right > 0.6) pads.push({ x: snap(x), z: snap((right + half - 0.2) / 2), hx: depth, hz: snap((half - 0.2 - right) / 2) });
-    if (pads.length === 0 || pads.some((p) => p.hz < 0.3 || !d.fits(p, 0.6, true))) continue;
-    for (const p of pads) d.add({ kind: 'spikes', ...p }, p);
-    return;
-  }
-}
-
-/** A few small spike pads scattered between x0 and x1, as traps among other pieces. */
-export function spikeField(d: CourseDraft, x0: number, x1: number, count: number): void {
-  let placed = 0;
-  for (let t = 0; t < count * TRIES && placed < count; t++) {
-    const r: Rect = { x: snap(d.rng.range(x0 + 0.8, x1 - 0.8)), z: snap(d.rng.range(-d.width / 2 + 1, d.width / 2 - 1)), hx: snap(d.rng.range(0.5, 0.9)), hz: snap(d.rng.range(0.5, 1.4)) };
-    if (!d.fits(r, MIN_GAP)) continue;
-    d.add({ kind: 'spikes', ...r }, r);
     placed++;
   }
 }

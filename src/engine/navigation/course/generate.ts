@@ -3,7 +3,8 @@ import { DEFAULT_NAVIGATION_PARAMS, type NavigationParams } from '../params';
 import { buildCourse, isSolvable } from './build';
 import { CourseDraft } from './draft';
 import { NAV_LEVELS } from './levels';
-import { bigBlock, blockField, moverGate, spikeField, spikeRow, wallWithGaps } from './sections';
+import { bigBlock, blockField, moverGate, wallWithGaps } from './sections';
+import { spikeField, spikeIsland, spikeRow } from './spikeSections';
 import type { CourseSpec } from './types';
 
 /** Width of every generated course, m. */
@@ -24,8 +25,13 @@ function furnish(d: CourseDraft, level: number): void {
       return blockField(d, a, b, r.int(3) + 7, 1.1);
     }
     case 3: {
+      // Spikes come in gently: islands to pass either side of, and between them a row with one wide lane.
+      // Full rows wait for the gauntlet.
       const zones = d.zones(3);
-      for (const [a, b] of zones) spikeRow(d, (a + b) / 2 + r.range(-0.6, 0.6));
+      const mid = ([a, b]: [number, number]) => (a + b) / 2 + r.range(-0.6, 0.6);
+      spikeIsland(d, mid(zones[0]));
+      spikeRow(d, mid(zones[1]), true);
+      spikeIsland(d, mid(zones[2]));
       for (const [a, b] of zones) blockField(d, a, b, 1, 1.4);
       return;
     }
