@@ -26,6 +26,7 @@ import { LabFeeds } from '../viewport/labFeeds';
 import { NavigationViewport } from '../viewport/NavigationViewport';
 import { LabToolbar } from './LabToolbar';
 import { NewRunDialog } from './NewRunDialog';
+import { SandboxPanel } from './sandbox/SandboxPanel';
 import { ViewportHud } from './ViewportHud';
 
 /** The Navigation lab: the shared lab parts bound to the Navigation store and session, around the course. */
@@ -69,6 +70,7 @@ function NavigationLabBody() {
           <LoadingCover loading={!feeds || !sceneReady} label={feeds ? 'Building the course' : 'Starting the lab'} />
           {feeds && <ViewportHud feeds={feeds} />}
           <InputsCard />
+          <SandboxPanel />
         </div>
         <LabToolbar onNewRun={openNewRun} />
       </div>

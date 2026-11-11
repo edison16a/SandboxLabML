@@ -3,6 +3,7 @@
 import { Video } from 'lucide-react';
 import { CameraSelect, FocusChip, HeldNote, InputsToggle, ViewSwitch } from '@/features/lab/components/ViewportControls';
 import type { LabFeeds } from '../viewport/labFeeds';
+import { useNavigationLab } from '../state/labStore';
 import { GhostMenu } from './GhostMenu';
 import { LiveStats } from './LiveStats';
 
@@ -16,6 +17,7 @@ export const NAVIGATION_CAMERAS = [
 
 /** Controls and stats layered over the viewport, laid out like every lab's. */
 export function ViewportHud({ feeds }: { feeds: LabFeeds | null }) {
+  const sandbox = useNavigationLab((s) => s.mode === 'sandbox');
   return (
     <>
       {/* Stats and controls share one row; on a phone the controls become one row across the top that scrolls sideways, with the stats below. */}
@@ -34,9 +36,12 @@ export function ViewportHud({ feeds }: { feeds: LabFeeds | null }) {
         </div>
       </div>
       <HeldNote />
-      <div className="pointer-events-none absolute right-3 bottom-3 hidden items-center gap-1 rounded-md bg-black/40 px-2 py-1 text-[11px] text-white/70 md:flex">
-        <Video className="size-3" /> Click a runner to follow it
-      </div>
+      {/* The Sandbox panel takes this corner. */}
+      {!sandbox && (
+        <div className="pointer-events-none absolute right-3 bottom-3 hidden items-center gap-1 rounded-md bg-black/40 px-2 py-1 text-[11px] text-white/70 md:flex">
+          <Video className="size-3" /> Click a runner to follow it
+        </div>
+      )}
     </>
   );
 }

@@ -150,6 +150,14 @@ export const NAVIGATION_TOUR: Tour = {
       body: 'Overlay and Both replay earlier champions as ghosts on the same course. The gap between them is what training bought.',
     },
     {
+      id: 'sandbox',
+      chapter: MOVE,
+      target: '[data-tour="sandbox"]',
+      prefer: ['top'],
+      title: 'Run them anywhere',
+      body: 'The Sandbox puts your champions on any course, even one you draw. It can also play a model trained with each preset. Nothing learns there.',
+    },
+    {
       id: 'studio',
       chapter: YOURS,
       target: '[data-tour="nav-studio"]',
