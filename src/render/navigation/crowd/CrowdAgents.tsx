@@ -13,6 +13,7 @@ import { POSE_PRIORITY, useNavScene } from '../frame/sceneContext';
 import { blendAgent, STRIDE } from '../frame/snapshotRead';
 import { NAV_COLORS } from '../palette';
 import { hidesChampion } from './clearance';
+import { crushAlongForward } from './crushAxis';
 import { crowdFadeMaterial, crowdFadeShadowMaterial, crowdSolidMaterial, instanceFloats } from './crowdMaterials';
 import { createStopPose, stopPose } from './stopPose';
 
@@ -21,6 +22,8 @@ export const MAX_AGENTS = 320;
 const BODY = new THREE.Color(NAV_COLORS.runner).lerp(new THREE.Color(NAV_COLORS.crowdGrey), 0.3);
 const GREY = new THREE.Color(NAV_COLORS.dormant);
 const FLASH = new THREE.Color(NAV_COLORS.senseSpikes);
+/** A crush flashes amber, like the mover that did it and its ring. */
+const CRUSH_FLASH = new THREE.Color(NAV_COLORS.senseMover);
 /** Crowd members closer than this to the champion, or in front of it toward the camera (see hidesChampion), fade back, m, so the one the view follows never hides in the pack. */
 const CLEAR_RADIUS = 0.85;
 const CLEAR_RADIUS_ENDED = 1.6;
@@ -116,9 +119,11 @@ export function CrowdAgents() {
       t.e.set(0, t.pose.yaw + st.spin, -(run * 0.14 + st.tip));
       t.q.setFromEuler(t.e);
       t.p.set(t.pose.x, bob + st.lift, t.pose.z);
-      t.s.set(st.spread, st.squash, st.spread);
+      // A crushed one flattens along the push: its own forward axis or the one across it, whichever is nearer.
+      const thinForward = st.thin < 1 && frame.course !== null && crushAlongForward(frame.course, frame.movers, t.pose.x, t.pose.z, t.pose.yaw + st.spin);
+      t.s.set(st.spread * (thinForward ? st.thin : 1), st.squash, st.spread * (thinForward ? 1 : st.thin));
       t.m.compose(t.p, t.q, t.s);
-      t.c.copy(BODY).lerp(GREY, st.grey).lerp(FLASH, st.flash * 0.55);
+      t.c.copy(BODY).lerp(GREY, st.grey).lerp(st.thin < 1 ? CRUSH_FLASH : FLASH, st.flash * 0.55);
       const amp = st.tip !== 0 || st.squash < 1 || st.airborne ? 0 : Math.min(0.6, speed * 0.22);
       if (alpha >= 0.99) {
         ms.setMatrixAt(ns, t.m);

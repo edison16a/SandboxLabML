@@ -9,6 +9,7 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { POSE_PRIORITY, useNavScene } from '../frame/sceneContext';
 import { STRIDE } from '../frame/snapshotRead';
 import { NAV_COLORS } from '../palette';
+import { nearestMoverTop } from './crushAxis';
 
 /** Seconds the ring takes to spread and fade, and how wide it gets, m. */
 const LENGTH = 0.9;
@@ -17,9 +18,10 @@ const SPIKES = new THREE.Color(NAV_COLORS.senseSpikes).multiplyScalar(1.3);
 const MOVER = new THREE.Color(NAV_COLORS.senseMover).multiplyScalar(1.3);
 
 /**
- * A quick ring that spreads over the floor from where the followed runner
- * dies, red on spikes and amber under a mover, so the moment reads even in
- * a busy pack. Simulation time, like the fall it marks.
+ * A quick ring that spreads from where the followed runner dies: over the
+ * floor in red on spikes, and in amber at the top of the crate on a crush,
+ * so the moment reads even in a busy pack or behind the mover. Simulation
+ * time, like the fall it marks.
  */
 export function DeathFlash() {
   const { frame } = useNavScene();
@@ -42,8 +44,11 @@ export function DeathFlash() {
       if (curr[o + SNAP_STATUS] === NAV_DIED && frame.time - curr[o + SNAP_STOP_TIME] < 0.3) {
         state.who = i;
         state.at = curr[o + SNAP_STOP_TIME];
-        material.color.copy(curr[o + SNAP_FLAGS] & FLAG_CRUSHED ? MOVER : SPIKES);
-        r.position.set(frame.leaderPose.x, 0.025, frame.leaderPose.z);
+        const crushed = (curr[o + SNAP_FLAGS] & FLAG_CRUSHED) !== 0;
+        material.color.copy(crushed ? MOVER : SPIKES);
+        // A crush happens beside a crate as tall as the runner's middle, so its ring spreads at the crate's top, where it shows.
+        const { x, z } = frame.leaderPose;
+        r.position.set(x, crushed && frame.course ? nearestMoverTop(frame.course, frame.movers, x, z) + 0.04 : 0.025, z);
       }
     }
     // Timed from the episode clock, so it plays out with the fall and holds when the run is paused.

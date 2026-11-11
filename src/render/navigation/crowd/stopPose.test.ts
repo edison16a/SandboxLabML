@@ -7,7 +7,7 @@ describe('how a run ends on screen', () => {
 
   it('leaves a runner as it is', () => {
     stopPose(NAV_RUNNING, 0, 5, p);
-    expect(p).toMatchObject({ tip: 0, squash: 1, spread: 1, lift: 0, spin: 0, alpha: 1, grey: 0, airborne: false, flash: 0 });
+    expect(p).toMatchObject({ tip: 0, squash: 1, spread: 1, thin: 1, lift: 0, spin: 0, alpha: 1, grey: 0, airborne: false, flash: 0 });
   });
 
   it('jolts a spiked runner up and drops it onto its back, then fades it, and never jerks', () => {
@@ -29,10 +29,11 @@ describe('how a run ends on screen', () => {
     expect(p.alpha).toBe(0);
   });
 
-  it('flattens a crushed runner at once', () => {
+  it('presses a crushed runner flat along the push at once, still standing tall', () => {
     stopPose(NAV_DIED, FLAG_CRUSHED, 0.2, p);
-    expect(p.squash).toBeLessThan(0.35);
-    expect(p.spread).toBeGreaterThan(1.3);
+    expect(p.thin * p.spread).toBeLessThan(0.4);
+    expect(p.spread).toBeGreaterThan(1.15);
+    expect(p.squash).toBeGreaterThan(0.85);
     expect(p.tip).toBe(0);
   });
 

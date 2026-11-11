@@ -14,12 +14,14 @@ import { XRAY_LAYER } from '@/render/hideseek/grid/scratch';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { POSE_PRIORITY, useNavScene } from '../frame/sceneContext';
 import { NAV_COLORS } from '../palette';
+import { crushAlongForward } from './crushAxis';
 import { createStopPose, type StopPose } from './stopPose';
 
 /** The ring color, pushed past 1 so bloom catches it where it runs. */
 const RING = new THREE.Color(NAV_COLORS.championRing).multiplyScalar(1.5);
 const GREY = new THREE.Color(NAV_COLORS.dormant);
 const FLASH = new THREE.Color(NAV_COLORS.senseSpikes);
+const CRUSH_FLASH = new THREE.Color(NAV_COLORS.senseMover);
 
 export interface NavCharacterProps {
   /** Fills in where it is and what it does, and how its run ended (`stop`). Return false to hide it. */
@@ -79,11 +81,12 @@ export function NavCharacter({ read, detail, shadows, blob }: NavCharacterProps)
     const pose = state.motion.update(d, dt, clock.elapsedTime, dt > 0 ? Math.min(8, frame.simDt / dt) : 0);
     g.position.set(d.x, st.lift, d.z);
     g.rotation.set(0, d.yaw + st.spin, -st.tip, 'YXZ');
-    g.scale.set(st.spread, st.squash, st.spread);
+    const thinForward = st.thin < 1 && frame.course !== null && crushAlongForward(frame.course, frame.movers, d.x, d.z, d.yaw + st.spin);
+    g.scale.set(st.spread * (thinForward ? st.thin : 1), st.squash, st.spread * (thinForward ? 1 : st.thin));
     rig.poser.apply(pose);
     mats.apply(pose, st.lift, clock.elapsedTime);
     if (st.grey > 0) mats.body.color.lerp(GREY, st.grey);
-    if (st.flash > 0) mats.body.color.lerp(FLASH, st.flash * 0.55);
+    if (st.flash > 0) mats.body.color.lerp(st.thin < 1 ? CRUSH_FLASH : FLASH, st.flash * 0.55);
     if (shadow.current) {
       shadow.current.visible = blob && Math.abs(st.tip) < 0.3;
       shadow.current.position.y = -st.lift;

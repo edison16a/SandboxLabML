@@ -12,6 +12,8 @@ export interface StopPose {
   /** Height scale, and width scale across the floor. */
   squash: number;
   spread: number;
+  /** Extra scale along the axis a mover pushed it, on top of spread: under 1 flattens it against the wall. See crushAxis. */
+  thin: number;
   /** Raised off the floor, m. */
   lift: number;
   /** Extra turn about its own axis, rad. */
@@ -45,6 +47,7 @@ function reset(out: StopPose): StopPose {
   out.tip = 0;
   out.squash = 1;
   out.spread = 1;
+  out.thin = 1;
   out.lift = 0;
   out.spin = 0;
   out.alpha = 1;
@@ -64,10 +67,11 @@ export function stopPose(status: number, flags: number, age: number, out: StopPo
   if (status === NAV_RUNNING) return out;
   const a = Math.max(0, age);
   if (status === NAV_DIED && flags & FLAG_CRUSHED) {
-    // Flattened in a blink, then it fades.
+    // Pressed flat against the wall in a blink, along the push, so it still stands clear above the mover; then it fades.
     const k = smooth(0, 0.12, a);
-    out.squash = 1 - 0.72 * k;
-    out.spread = 1 + 0.36 * k;
+    out.thin = 1 - 0.72 * k;
+    out.spread = 1 + 0.22 * k;
+    out.squash = 1 - 0.1 * k;
     out.flash = Math.max(0, 1 - a / 0.45);
     out.grey = 0.5 * smooth(0, 0.4, a);
     out.alpha = 1 - smooth(FADE_START.crushed, FADE_START.crushed + FADE_LENGTH.crushed, a);
