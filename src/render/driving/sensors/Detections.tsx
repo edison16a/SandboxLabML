@@ -40,22 +40,25 @@ function bracketBox(lines: FatLines, cx: number, cz: number, h: number, hl: numb
   }
 }
 
-/** Distance from the followed SUV's front bumper to a thing of half length `half` at (x, z), roughly. */
-function clearance(fx: number, fz: number, x: number, z: number, half: number): number {
-  return Math.max(0, Math.hypot(x - fx, z - fz) - BODY.length / 2 - half);
+/** Distance from the SUV's middle to its own outline along a beam at angle `a` to its heading, m. */
+function bodyEdge(a: number): number {
+  const c = Math.abs(Math.cos(a));
+  const s = Math.abs(Math.sin(a));
+  return Math.min(c > 1e-6 ? BODY.length / 2 / c : Infinity, s > 1e-6 ? BODY.width / 2 / s : Infinity);
 }
 
 /**
  * What the followed SUV currently senses, boxed: corner brackets round
  * every car its lidar touches and the car ahead it tracks (amber), and
- * round every person (magenta). The nearest one gets a small distance
- * label. Brighter boxes are the ones its dedicated sensors report.
+ * round every person (magenta). The nearest one gets a small label with
+ * the gap to it, measured from the SUV's own outline along the beam that
+ * found it. Brighter boxes are the ones its dedicated sensors report.
  */
 export function Detections() {
   const { frame } = useDrivingScene();
   const lines = useDisposable(() => new FatLines(MAX_BOXES * 24, 2.2), []);
   const label = useDisposable(() => new TextLabel(), []);
-  const marks = useMemo(() => ({ cars: new Uint8Array(MAX_TRAFFIC), peds: new Uint8Array(MAX_PEDS) }), []);
+  const marks = useMemo(() => ({ cars: new Uint8Array(MAX_TRAFFIC), peds: new Uint8Array(MAX_PEDS), carGap: new Float32Array(MAX_TRAFFIC), pedGap: new Float32Array(MAX_PEDS) }), []);
 
   useFrame(({ size }) => {
     const s = frame.sense;
@@ -69,12 +72,30 @@ export function Detections() {
     if (s.valid && world && frame.focus >= 0) {
       marks.cars.fill(0);
       marks.peds.fill(0);
+      marks.carGap.fill(Infinity);
+      marks.pedGap.fill(Infinity);
+      // The gap to each thing: the shortest beam that hit it, less the SUV's own body along that beam.
       for (let i = 0; i < s.beams; i++) {
-        if (s.kind[i] === HIT_CAR && s.hit[i] >= 0) marks.cars[s.hit[i]] = 1;
-        if (s.kind[i] === HIT_PED && s.hit[i] >= 0) marks.peds[s.hit[i]] = 1;
+        const j = s.hit[i];
+        if (j < 0) continue;
+        const gap = Math.max(0, s.dist[i] - bodyEdge(s.angles[i]));
+        if (s.kind[i] === HIT_CAR) {
+          marks.cars[j] = 1;
+          marks.carGap[j] = Math.min(marks.carGap[j], gap);
+        } else if (s.kind[i] === HIT_PED) {
+          marks.peds[j] = 1;
+          marks.pedGap[j] = Math.min(marks.pedGap[j], gap);
+        }
       }
-      if (s.perception.car >= 0) marks.cars[s.perception.car] = 2;
-      if (s.perception.ped >= 0) marks.peds[s.perception.ped] = 2;
+      const p = s.perception;
+      if (p.car >= 0) {
+        marks.cars[p.car] = 2;
+        marks.carGap[p.car] = Math.min(marks.carGap[p.car], p.gap);
+      }
+      if (p.ped >= 0) {
+        marks.peds[p.ped] = 2;
+        marks.pedGap[p.ped] = Math.min(marks.pedGap[p.ped], p.pedDistance);
+      }
       let boxes = 0;
       for (let i = 0; i < world.carCount && boxes < MAX_BOXES; i++) {
         if (!marks.cars[i]) continue;
@@ -82,7 +103,7 @@ export function Detections() {
         const z = -world.carY[i];
         bracketBox(lines, x, z, world.carHeading[i], world.carLength[i] / 2 + 0.12, world.carWidth[i] / 2 + 0.12, 0.05, 1.55, SENSOR.car, marks.cars[i] === 2 ? 0.95 : 0.55);
         boxes++;
-        const d = clearance(frame.pos.x, frame.pos.z, x, z, world.carLength[i] / 2);
+        const d = marks.carGap[i];
         if (d < best) {
           best = d;
           bx = x;
@@ -97,7 +118,7 @@ export function Detections() {
         const z = -world.pedY[i];
         bracketBox(lines, x, z, world.pedHeading[i], 0.32, 0.32, 0.12, 1.95, SENSOR.person, marks.peds[i] === 2 ? 1.0 : 0.6);
         boxes++;
-        const d = clearance(frame.pos.x, frame.pos.z, x, z, 0.3);
+        const d = marks.pedGap[i];
         if (d < best) {
           best = d;
           bx = x;
