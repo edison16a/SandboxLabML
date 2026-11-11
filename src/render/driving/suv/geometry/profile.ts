@@ -98,13 +98,24 @@ export function archFloor(x: number): number {
 }
 
 /**
+ * Outside each arch's end the side skin runs on full height. Stations
+ * there step out from the arch's own tight ones in growing gaps, so the
+ * spacing blends into the even run instead of jumping from millimeters
+ * to centimeters, which would show as a line in the reflections.
+ */
+const ARCH_EXIT = [0.0005, 0.004, 0.011, 0.022, 0.038];
+
+/**
  * Stations where sections are taken: even spacing, plus dense stations
  * over each arch so its curve stays round and round each end's curl.
  */
 export function stations(count: number, archSteps: number): number[] {
   const xs: number[] = [];
+  // The far population keeps only the first step out of each arch: it has no stations to spare.
+  const exits = archSteps >= 10 ? ARCH_EXIT : ARCH_EXIT.slice(0, 1);
+  const margin = exits.length > 1 ? exits[exits.length - 1] + 0.02 : 0.01;
   // Over an arch or an end only its own stations are used: mixing two spacings there streaks the reflections.
-  const overArch = (x: number) => AXLES.some((a) => Math.abs(x - a) < ARCH.radius + 0.01);
+  const overArch = (x: number) => AXLES.some((a) => Math.abs(x - a) < ARCH.radius + margin);
   const atEnd = (x: number) => x > NOSE - ROUND.nose.plan - 0.01 || x < TAIL + ROUND.tail.plan + 0.01;
   for (let i = 0; i <= count; i++) {
     const x = TAIL + ((NOSE - TAIL) * i) / count;
@@ -122,7 +133,7 @@ export function stations(count: number, archSteps: number): number[] {
       const a = Math.PI * (i / archSteps);
       xs.push(axle - Math.cos(a) * (ARCH.radius - 0.0005));
     }
-    xs.push(axle - ARCH.radius - 0.0005, axle + ARCH.radius + 0.0005);
+    for (const d of exits) xs.push(axle - ARCH.radius - d, axle + ARCH.radius + d);
   }
   xs.sort((a, b) => a - b);
   return xs.filter((x, i) => i === 0 || x - xs[i - 1] > 0.0003);
