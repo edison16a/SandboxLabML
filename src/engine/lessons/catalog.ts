@@ -1,3 +1,10 @@
+import driving01 from '@content/lessons/driving/01-first-trip.json';
+import driving02 from '@content/lessons/driving/02-arrive.json';
+import driving03 from '@content/lessons/driving/03-red-lights.json';
+import driving04 from '@content/lessons/driving/04-senses.json';
+import driving05 from '@content/lessons/driving/05-curriculum.json';
+import driving06 from '@content/lessons/driving/06-debug.json';
+import driving07 from '@content/lessons/driving/07-built-in-reward.json';
 import hideseek01 from '@content/lessons/hideseek/01-points-for-hiding.json';
 import hideseek02 from '@content/lessons/hideseek/02-seeker-goal.json';
 import hideseek03 from '@content/lessons/hideseek/03-boxes.json';
@@ -16,6 +23,7 @@ import type { Lesson } from './types';
 
 const RACING = [lesson01, lesson02, lesson03, lesson04, lesson05, lesson06, lesson07];
 const HIDESEEK = [hideseek01, hideseek02, hideseek03, hideseek04, hideseek05, hideseek06];
+const DRIVING = [driving01, driving02, driving03, driving04, driving05, driving06, driving07];
 
 /**
  * Every lesson, in course order. Content lives in content/lessons/<course>/
@@ -23,7 +31,7 @@ const HIDESEEK = [hideseek01, hideseek02, hideseek03, hideseek04, hideseek05, hi
  * JSON imports are typed loosely (strings where the contract has unions),
  * so they are cast here and checked by validateLesson in the tests.
  */
-export const LESSONS: Lesson[] = [...RACING, ...HIDESEEK] as Lesson[];
+export const LESSONS: Lesson[] = [...RACING, ...HIDESEEK, ...DRIVING] as Lesson[];
 
 export function lessonsFor(course: EnvId): Lesson[] {
   return LESSONS.filter((l) => l.course === course).sort((a, b) => a.order - b.order);

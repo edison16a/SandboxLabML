@@ -1,0 +1,87 @@
+{
+  "id": "driving-05-curriculum",
+  "course": "driving",
+  "order": 5,
+  "title": "Climb the levels",
+  "summary": "Let the population move up from empty streets on its own, fairly, in more than one city.",
+  "minutes": 8,
+  "steps": [
+    {
+      "id": "one-level-at-a-time",
+      "title": "One level at a time",
+      "body": "Rush hour is far too hard to learn from scratch. A curriculum starts easy and moves on once the population is ready, like a driving school.\n\n`autoLevel(share: 20%)` moves up a level once a fifth of the best brains' trips arrive safely, averaged over a few generations. Press Check to train 25 generations and see the highest level they reach.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Curriculum\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Standing at a red light close to its line pays a little.\n  reward +0.005 when light.red and light.distance < 25 m and car.speed < 1 m/s\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Add the automatic curriculum here.\n}\n",
+      "highlight": {
+        "lines": [
+          30
+        ]
+      },
+      "check": {
+        "kind": "metricAbove",
+        "generations": 25,
+        "metric": "level",
+        "value": 1,
+        "message": "Training should reach level 2."
+      },
+      "hints": [
+        "The call goes inside each generation.",
+        "Write autoLevel(share: 20%)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Curriculum\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Standing at a red light close to its line pays a little.\n  reward +0.005 when light.red and light.distance < 25 m and car.speed < 1 m/s\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Move up a level once a fifth of the best brains' trips arrive safely.\n  autoLevel(share: 20%)\n}\n"
+    },
+    {
+      "id": "more-than-one-trip",
+      "title": "More than one trip",
+      "body": "One trip a generation is a lottery. A brain that happened to get an easy route looks better than it is, and the curriculum can move on by luck.\n\n`routesPerGeneration` has every brain drive the same few trips one after another and adds up its fitness. Ask for 2. More trips are fairer but each generation takes longer.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Curriculum\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Standing at a red light close to its line pays a little.\n  reward +0.005 when light.red and light.distance < 25 m and car.speed < 1 m/s\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Move up a level once a fifth of the best brains' trips arrive safely.\n  autoLevel(share: 20%)\n  // Ask for more trips here.\n}\n",
+      "highlight": {
+        "lines": [
+          32
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "call",
+            "scope": "generation",
+            "callee": "routesPerGeneration"
+          }
+        ],
+        "message": "Call routesPerGeneration in the each generation block."
+      },
+      "hints": [
+        "The call takes a count of trips.",
+        "Write routesPerGeneration(count: 2)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Curriculum\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Standing at a red light close to its line pays a little.\n  reward +0.005 when light.red and light.distance < 25 m and car.speed < 1 m/s\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Move up a level once a fifth of the best brains' trips arrive safely.\n  autoLevel(share: 20%)\n  // Every brain drives two trips, and its fitness adds them up.\n  routesPerGeneration(count: 2)\n}\n"
+    },
+    {
+      "id": "new-streets",
+      "title": "New streets",
+      "body": "A brain that only ever drives Midtown learns Midtown by heart. The benchmark drives two cities training never uses, so that habit costs it there.\n\n`randomCity(seed: generation)` sends the next generation to a city built from the generation number, and `useCity` brings it back. Alternate them with `generation % 2`, which is 1 on odd generations and 0 on even ones.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Curriculum\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Standing at a red light close to its line pays a little.\n  reward +0.005 when light.red and light.distance < 25 m and car.speed < 1 m/s\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Move up a level once a fifth of the best brains' trips arrive safely.\n  autoLevel(share: 20%)\n  // Every brain drives two trips, and its fitness adds them up.\n  routesPerGeneration(count: 2)\n  // Mix in new cities here.\n}\n",
+      "highlight": {
+        "lines": [
+          34
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "call",
+            "scope": "generation",
+            "callee": "randomCity"
+          }
+        ],
+        "message": "Call randomCity in the each generation block."
+      },
+      "hints": [
+        "An if block runs its lines only when its condition holds: if generation % 2 == 1 { ... }.",
+        "Inside if generation % 2 == 1, write randomCity(seed: generation). Inside if generation % 2 == 0, write useCity(id: \"midtown\")."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Curriculum\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Standing at a red light close to its line pays a little.\n  reward +0.005 when light.red and light.distance < 25 m and car.speed < 1 m/s\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Move up a level once a fifth of the best brains' trips arrive safely.\n  autoLevel(share: 20%)\n  // Every brain drives two trips, and its fitness adds them up.\n  routesPerGeneration(count: 2)\n  // Every other generation drives a new city made from a seed.\n  if generation % 2 == 1 {\n    randomCity(seed: generation)\n  }\n  if generation % 2 == 0 {\n    useCity(id: \"midtown\")\n  }\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "id": "driving-03-red-lights",
+  "course": "driving",
+  "order": 3,
+  "title": "Stop at red lights",
+  "summary": "Switch the lights on, make running a red cost something and make waiting pay.",
+  "minutes": 7,
+  "steps": [
+    {
+      "id": "switch-the-lights-on",
+      "title": "Switch the lights on",
+      "body": "So far the streets were empty and the lights were off. The `each generation` block at the bottom runs once between generations and can change what the next one drives.\n\nCall `useLevel(level: 2)` there. Level 2 is the first with traffic lights. The test drive stays on empty streets, so you can still compare scores.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Red lights\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Switch the traffic lights on here.\n}\n",
+      "highlight": {
+        "lines": [
+          24
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "call",
+            "scope": "generation",
+            "callee": "useLevel"
+          }
+        ],
+        "message": "Call useLevel(level: 2) in the each generation block."
+      },
+      "hints": [
+        "The call goes inside each generation, in place of the comment.",
+        "Write useLevel(level: 2)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Red lights\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Level 2 adds traffic lights to the empty streets.\n  useLevel(level: 2)\n}\n"
+    },
+    {
+      "id": "a-cost-for-red",
+      "title": "A cost for red",
+      "body": "`rules.ranRedLight` is true on the tick the SUV enters a junction on red. Running a red light is dangerous, so it should cost points.\n\nTake 2 points away when it happens. A minus sign in front of the number makes a reward a cost.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Red lights\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Add a cost for running a red light here.\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Level 2 adds traffic lights to the empty streets.\n  useLevel(level: 2)\n}\n",
+      "highlight": {
+        "lines": [
+          17
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "reward",
+            "scope": "tick",
+            "uses": [
+              "rules.ranRedLight"
+            ]
+          }
+        ],
+        "message": "Add a reward inside each tick that uses rules.ranRedLight."
+      },
+      "hints": [
+        "A cost is a reward with a minus sign: reward -points when condition.",
+        "Write reward -2 when rules.ranRedLight."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Red lights\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Level 2 adds traffic lights to the empty streets.\n  useLevel(level: 2)\n}\n"
+    },
+    {
+      "id": "end-the-trip-at-red",
+      "title": "End the trip at a red light",
+      "body": "A cost on its own is easy to outweigh. A brain that runs every red gets further along the route and still scores well.\n\nEnding the trip there takes away all the progress it would have made after, which is a lesson every brain learns fast. Add a stop rule for `rules.ranRedLight`.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Red lights\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // End the trip on a red light run here.\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Level 2 adds traffic lights to the empty streets.\n  useLevel(level: 2)\n}\n",
+      "highlight": {
+        "lines": [
+          20
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "stop",
+            "scope": "tick",
+            "uses": [
+              "rules.ranRedLight"
+            ]
+          }
+        ],
+        "message": "Add a stop rule that uses rules.ranRedLight."
+      },
+      "hints": [
+        "Stop rules look like stop \"reason\" when condition.",
+        "Write stop \"redlight\" when rules.ranRedLight."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Red lights\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Level 2 adds traffic lights to the empty streets.\n  useLevel(level: 2)\n}\n"
+    },
+    {
+      "id": "pay-for-waiting",
+      "title": "Make waiting pay",
+      "body": "Waiting at a red earns nothing, while driving on earns progress. Until a brain has learned that running reds ends its trip, waiting looks like the worse choice.\n\nA tiny reward for standing at a red light close to its line makes braking pay at once. `light.red` is true while the next light is red, and `light.distance` is how far its stop line is.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Red lights\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Add a reward for waiting at a red light here.\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Level 2 adds traffic lights to the empty streets.\n  useLevel(level: 2)\n}\n",
+      "highlight": {
+        "lines": [
+          17
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "reward",
+            "scope": "tick",
+            "uses": [
+              "light.red"
+            ]
+          }
+        ],
+        "message": "Add a reward inside each tick that uses light.red."
+      },
+      "hints": [
+        "Combine three conditions with and: the light is red, it is close, and the SUV has stopped.",
+        "Write reward +0.005 when light.red and light.distance < 25 m and car.speed < 1 m/s."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Red lights\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Standing at a red light close to its line pays a little.\n  reward +0.005 when light.red and light.distance < 25 m and car.speed < 1 m/s\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n\n// This block runs once per generation, after every SUV has stopped.\neach generation {\n  // Level 2 adds traffic lights to the empty streets.\n  useLevel(level: 2)\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "id": "driving-02-arrive",
+  "course": "driving",
+  "order": 2,
+  "title": "Arrive at the destination",
+  "summary": "A prize for arriving, and why a prize on its own teaches nothing.",
+  "minutes": 6,
+  "steps": [
+    {
+      "id": "a-prize-for-arriving",
+      "title": "A prize for arriving",
+      "body": "Progress pays a little all the way. Arriving should pay the most, because getting there is the whole point of the trip.\n\nGive 10 points when `car.arrived` is true. On empty streets the SUV arrives once its middle is inside the destination zone and it is under the speed limit. The test driver arrives, so its score should pass 10.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Arrive\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // Add a prize for arriving here.\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n",
+      "highlight": {
+        "lines": [
+          15
+        ]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "totalReward",
+        "op": ">",
+        "value": 10,
+        "message": "The test drive should score more than 10 points."
+      },
+      "hints": [
+        "car.arrived is true on the tick the SUV arrives.",
+        "Replace the comment with reward +10 when car.arrived."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Arrive\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n"
+    },
+    {
+      "id": "rewards-that-come-too-late",
+      "title": "Rewards that come too late",
+      "body": "Press Check. It trains 40 SUVs for 15 generations and reports the most of the route a generation covered.\n\nThis script only pays for arriving. Untrained brains almost never arrive, so they all score 0, and evolution cannot tell a brain that drove 200 m from one that never moved. A reward that almost never happens is called a sparse reward.\n\nPay for progress as well, so every meter counts.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Arrive\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // Add a reward for progress here.\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n",
+      "highlight": {
+        "lines": [
+          13
+        ]
+      },
+      "check": {
+        "kind": "metricAbove",
+        "generations": 15,
+        "metric": "completion",
+        "value": 0.3,
+        "message": "Training should cover more than 30% of the route."
+      },
+      "hints": [
+        "route.gain is the new ground covered this tick.",
+        "Add reward +0.02 * route.gain above the prize."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Arrive\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n"
+    },
+    {
+      "id": "read-the-chart",
+      "title": "Read the score",
+      "body": "Fitness adds up every reward of a trip. With 0.02 points a meter, a 220 m trip pays about 4.4 for the drive and 10 for arriving, so arriving is worth more than all the driving before it.\n\nThat is on purpose: a brain that drives well but never stops in the zone should lose to one that does. Make the progress reward a little bigger, 0.03 a meter, and see the test drive score rise.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Arrive\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n",
+      "highlight": {
+        "lines": [
+          14
+        ]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "totalReward",
+        "op": ">",
+        "value": 16,
+        "message": "The test drive should score more than 16 points."
+      },
+      "hints": [
+        "Change the number in front of route.gain.",
+        "Write reward +0.03 * route.gain."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Arrive\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.03 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n"
+    }
+  ]
+}

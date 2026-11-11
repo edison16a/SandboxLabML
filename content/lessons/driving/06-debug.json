@@ -1,0 +1,75 @@
+{
+  "id": "driving-06-debug",
+  "course": "driving",
+  "order": 6,
+  "title": "Find the bug",
+  "summary": "Three scripts that look right and train nothing. Find out why with the tools in the Studio.",
+  "minutes": 7,
+  "steps": [
+    {
+      "id": "every-trip-ends-at-once",
+      "title": "Every trip ends at once",
+      "body": "This script compiles, but a run trained with it learns nothing. Press Check: the test drive ends almost as soon as it starts.\n\nEvery SUV starts standing still, so a stop rule for being slow ends every trip on its first tick. Use `car.noProgress` instead. It only counts time spent still without a good reason, like a red light or a person crossing.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Debug\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // End the trip of a brain that is going too slowly.\n  stop \"slow\" when car.speed < 2 m/s\n}\n",
+      "highlight": {
+        "lines": [
+          21
+        ]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "ticks",
+        "op": ">",
+        "value": 300,
+        "message": "The test drive should last more than 10 seconds."
+      },
+      "hints": [
+        "The Test run tab shows which rule stopped the drive.",
+        "Replace the slow rule with stop \"stuck\" when car.noProgress > 8 s."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Debug\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n"
+    },
+    {
+      "id": "a-rule-that-never-fires",
+      "title": "A rule that never fires",
+      "body": "The Problems tab has a warning for this one. The SUV tops out at 20 m/s, so a cost for going over 30 m/s never applies and brains never hear about speeding.\n\n`rules.speeding` is true while the SUV is over the speed limit where it is, which is what the line meant to say.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Debug\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n  // A small cost for speeding.\n  reward -0.005 when car.speed > 30 m/s\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n",
+      "highlight": {
+        "lines": [
+          20
+        ]
+      },
+      "check": {
+        "kind": "compiles",
+        "noWarnings": true,
+        "message": "The script should compile without warnings."
+      },
+      "hints": [
+        "Hover the underlined condition to read the warning.",
+        "Write reward -0.005 when rules.speeding."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Debug\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n  // A small cost for speeding.\n  reward -0.005 when rules.speeding\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n"
+    },
+    {
+      "id": "one-reward-drowns-the-rest",
+      "title": "One reward drowns the rest",
+      "body": "Another warning. The arrival prize is so much bigger than every other reward that the others barely count: brains learn to chase the prize and nothing about getting there.\n\nKeep the biggest reward within about a hundred times the next biggest. Bring the prize back to 10.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Debug\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +1000 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n  // A small cost for speeding.\n  reward -0.005 when rules.speeding\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n",
+      "highlight": {
+        "lines": [
+          16
+        ]
+      },
+      "check": {
+        "kind": "compiles",
+        "noWarnings": true,
+        "message": "The script should compile without warnings."
+      },
+      "hints": [
+        "The Problems tab points at the line with the prize.",
+        "Write reward +10 when car.arrived."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Debug\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n  // A small cost for speeding.\n  reward -0.005 when rules.speeding\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n"
+    }
+  ]
+}

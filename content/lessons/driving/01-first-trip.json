@@ -1,0 +1,93 @@
+{
+  "id": "driving-01-first-trip",
+  "course": "driving",
+  "order": 1,
+  "title": "Hand over the wheel",
+  "summary": "Let a brain drive the SUV, pay it for progress and stop the ones that park.",
+  "minutes": 5,
+  "steps": [
+    {
+      "id": "hand-over-the-wheel",
+      "title": "Hand the wheel to the brain",
+      "body": "The brain named on line 6 is a small neural network. It reads its inputs and answers with two numbers: `brain.steer` and `brain.pedal`.\n\nPass them to `drive` so the brain controls the SUV. Its first weights are random, so it drives badly. Training is how it gets better.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First trip\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Hand the wheel to the brain here.\n  drive(steer: 0, pedal: 0)\n}\n",
+      "highlight": {
+        "lines": [
+          11
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "call",
+            "scope": "tick",
+            "callee": "drive",
+            "uses": [
+              "brain.steer",
+              "brain.pedal"
+            ]
+          }
+        ],
+        "message": "Call drive with brain.steer and brain.pedal."
+      },
+      "hints": [
+        "Swap the two zeros for what the brain says.",
+        "Write drive(steer: brain.steer, pedal: brain.pedal)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First trip\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n}\n"
+    },
+    {
+      "id": "points-for-progress",
+      "title": "Points for progress",
+      "body": "Training is evolution. Every SUV gets a score called fitness, the sum of its rewards, and the brains with the best fitness become the parents of the next generation.\n\nNothing is rewarded yet, so every SUV scores 0. Reward `route.gain`, the new ground the SUV covers along its route each tick. The check drives one trip with a fixed test driver.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First trip\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // Add a reward for progress here.\n}\n",
+      "highlight": {
+        "lines": [
+          13
+        ]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "totalReward",
+        "op": ">",
+        "value": 0,
+        "message": "The test drive should score some points."
+      },
+      "hints": [
+        "A reward line looks like this: reward +points * value.",
+        "Replace the comment with reward +0.02 * route.gain."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First trip\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n}\n"
+    },
+    {
+      "id": "stop-the-parked",
+      "title": "Stop the ones that park",
+      "body": "Some brains find out that standing still is safe. A trip that goes nowhere wastes the whole generation, so end it.\n\n`car.noProgress` counts the seconds without new ground. Waiting at a red light, behind a car or for a person does not count. End the trip once it passes 8 seconds.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First trip\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n\n  // End the trip of a brain that parks here.\n}\n",
+      "highlight": {
+        "lines": [
+          16
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "stop",
+            "scope": "tick",
+            "uses": [
+              "car.noProgress"
+            ]
+          }
+        ],
+        "message": "Add a stop rule that uses car.noProgress."
+      },
+      "hints": [
+        "A stop rule looks like this: stop \"reason\" when condition.",
+        "Add stop \"stuck\" when car.noProgress > 8 s."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First trip\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n"
+    }
+  ]
+}

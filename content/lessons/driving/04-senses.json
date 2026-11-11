@@ -1,0 +1,91 @@
+{
+  "id": "driving-04-senses",
+  "course": "driving",
+  "order": 4,
+  "title": "Give the brain a sense",
+  "summary": "Add an input of your own, then use what the SUV senses to shape its habits.",
+  "minutes": 7,
+  "steps": [
+    {
+      "id": "a-sense-of-your-own",
+      "title": "A sense of your own",
+      "body": "The brain only knows its inputs: lidar beams, the lane, the route, the light, the car ahead, people and its speed. A `sensor` line adds one more input, after the built in ones.\n\nGive it a name, a label, a range and a value. Brains work best with inputs between 0 and 1, so the range tells the app how to squeeze the value. Add a sensor for how many seconds behind the car ahead the SUV is, from 0 s to 10 s. A sensor changes the shape of the brain, so a run already training starts a new branch.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Senses\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// Add a sensor here.\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n",
+      "highlight": {
+        "lines": [
+          8
+        ]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "inputs",
+        "op": "==",
+        "value": 26,
+        "message": "The brain should have 26 inputs: the standard 25 and your sensor."
+      },
+      "hints": [
+        "The pattern is sensor name \"Label\" in low .. high = value.",
+        "Write sensor gapTime \"Seconds behind the car ahead\" in 0 s .. 10 s = min(carAhead.gap / max(car.speed, 1 m/s), 10 s)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Senses\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// Seconds behind the car ahead: a safe gap in town is about two.\nsensor gapTime \"Seconds behind the car ahead\" in 0 s .. 10 s = min(carAhead.gap / max(car.speed, 1 m/s), 10 s)\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n"
+    },
+    {
+      "id": "keep-your-distance",
+      "title": "Keep your distance",
+      "body": "Sensors are also there for rewards. `lidar.min` is the shortest lidar beam, the distance to whatever is closest: a curb, a building, a car or a person.\n\nA crash ends the trip, but it comes too late to teach much. A small cost for coming within 1.5 m of anything teaches brains to keep clear before it happens.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Senses\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// Seconds behind the car ahead: a safe gap in town is about two.\nsensor gapTime \"Seconds behind the car ahead\" in 0 s .. 10 s = min(carAhead.gap / max(car.speed, 1 m/s), 10 s)\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n  // Add a cost for coming too close to anything here.\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n",
+      "highlight": {
+        "lines": [
+          22
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "reward",
+            "scope": "tick",
+            "uses": [
+              "lidar.min"
+            ]
+          }
+        ],
+        "message": "Add a reward inside each tick that uses lidar.min."
+      },
+      "hints": [
+        "Write a cost that applies when lidar.min is small.",
+        "Write reward -0.01 when lidar.min < 1.5 m."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Senses\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// Seconds behind the car ahead: a safe gap in town is about two.\nsensor gapTime \"Seconds behind the car ahead\" in 0 s .. 10 s = min(carAhead.gap / max(car.speed, 1 m/s), 10 s)\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n  // Coming within 1.5 m of a curb, a car or a person costs a little every tick.\n  reward -0.01 when lidar.min < 1.5 m\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n"
+    },
+    {
+      "id": "a-safe-gap",
+      "title": "A safe gap",
+      "body": "Other cars drive from level 4 on. `carAhead.seen` is true while a car is ahead in the lane, and `carAhead.gap` is the bumper to bumper gap.\n\nA safe gap grows with speed. Multiplying a time by `car.speed` turns it into meters, so `1.5 s * car.speed` is the distance the SUV covers in a second and a half.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Senses\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// Seconds behind the car ahead: a safe gap in town is about two.\nsensor gapTime \"Seconds behind the car ahead\" in 0 s .. 10 s = min(carAhead.gap / max(car.speed, 1 m/s), 10 s)\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n  // Coming within 1.5 m of a curb, a car or a person costs a little every tick.\n  reward -0.01 when lidar.min < 1.5 m\n  // Add a cost for following too close here.\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n",
+      "highlight": {
+        "lines": [
+          24
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "reward",
+            "scope": "tick",
+            "uses": [
+              "carAhead.gap"
+            ]
+          }
+        ],
+        "message": "Add a reward inside each tick that uses carAhead.gap."
+      },
+      "hints": [
+        "Only charge it while a car is ahead: carAhead.seen and something about the gap.",
+        "Write reward -0.01 when carAhead.seen and carAhead.gap < 1.5 s * car.speed."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Senses\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// Seconds behind the car ahead: a safe gap in town is about two.\nsensor gapTime \"Seconds behind the car ahead\" in 0 s .. 10 s = min(carAhead.gap / max(car.speed, 1 m/s), 10 s)\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n  // Coming within 1.5 m of a curb, a car or a person costs a little every tick.\n  reward -0.01 when lidar.min < 1.5 m\n  // Following closer than a second and a half costs a little too.\n  reward -0.01 when carAhead.seen and carAhead.gap < 1.5 s * car.speed\n\n  // And it ends the trip, like a crash.\n  stop \"redlight\" when rules.ranRedLight\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n"
+    }
+  ]
+}
