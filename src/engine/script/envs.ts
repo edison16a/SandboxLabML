@@ -1,4 +1,5 @@
 import type { EnvId } from '../env/types';
+import { DRIVING_PRESETS } from './presets/driving';
 import { HIDESEEK_PRESETS } from './presets/hideseek';
 import { RACING_PRESETS } from './presets/racing';
 import type { ScriptPreset } from './presets/types';
@@ -76,7 +77,7 @@ const table: ScriptEnv[] = [
   {
     env: 'driving',
     slice: DRIVING_SLICE,
-    presets: [],
+    presets: DRIVING_PRESETS,
     builtin: 'Progress, a bonus for arriving, and small costs for breaking rules.',
     starter: [
       'script "My script" for driving v1',
