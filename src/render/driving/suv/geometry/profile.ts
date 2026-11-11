@@ -33,7 +33,7 @@ export const TAIL = BODY.tail;
  * while the top drops by `roll`, so the hood rolls down into the face.
  * The face then meets the body with no crease anywhere round its edge.
  */
-export const ROUND = { nose: { plan: 0.22, roll: 0.06 }, tail: { plan: 0.18, roll: 0.025 } };
+export const ROUND = { nose: { plan: 0.18, roll: 0.06 }, tail: { plan: 0.18, roll: 0.025 } };
 
 /** How far the end rounding pulls the section at x in (plan) and down (roll), m. */
 export function endRound(x: number): { inset: number; drop: number } {
