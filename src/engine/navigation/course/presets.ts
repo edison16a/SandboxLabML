@@ -104,3 +104,15 @@ export const NAMED_COURSES: ReadonlyArray<CourseSpec & { heldOut?: boolean }> = 
 export function namedCourse(id: string): CourseSpec | undefined {
   return NAMED_COURSES.find((c) => c.id === id);
 }
+
+/** The named courses a run may train on: all but the benchmark's held out rooms. */
+export const TRAINING_COURSES = NAMED_COURSES.filter((c) => !c.heldOut);
+
+/**
+ * A named course a run may train on, or undefined for a held out one (or
+ * an unknown id). Every way a course gets into training goes through
+ * here: the New run dialog, a run's settings and a script's useCourse.
+ */
+export function trainingCourse(id: string): CourseSpec | undefined {
+  return TRAINING_COURSES.find((c) => c.id === id);
+}

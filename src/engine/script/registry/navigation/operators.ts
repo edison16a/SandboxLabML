@@ -1,7 +1,7 @@
 import { NAV_DIRECTIVE, RANDOM_COURSE } from '../../../navigation/pipeline/content';
 import { NAV_METRIC } from '../../../navigation/pipeline/metricSpecs';
 import { MAX_COURSES, MIN_COURSES } from '../../../navigation/pipeline/settings';
-import { NAMED_COURSES } from '../../../navigation/course/presets';
+import { TRAINING_COURSES } from '../../../navigation/course/presets';
 import { TOP_LEVEL } from '../../../navigation/course/levels';
 import { clampTo, entry, param, req } from '../define';
 import { metricSensor, setEnvDirective } from '../envHelpers';
@@ -58,7 +58,7 @@ export const NAVIGATION_GENERATION_ENTRIES: RegistryEntry[] = [
   operator(
     {
       name: 'useCourse',
-      params: [param('id', 'string', '', 'A named course, or "random" for fresh courses of the level.', { choices: [...NAMED_COURSES.map((c) => c.id), RANDOM_COURSE] })],
+      params: [param('id', 'string', '', 'A named course, or "random" for fresh courses of the level.', { choices: [...TRAINING_COURSES.map((c) => c.id), RANDOM_COURSE] })],
       summary: 'Trains the next generation on one named course.',
       description: 'Every brain runs the same hand made course until the script picks another. One fixed course trains fast but teaches the room, not navigation, so "random" goes back to fresh courses.',
       example: 'useCourse(id: "zigzag")',

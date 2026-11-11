@@ -1,5 +1,5 @@
 import type { RunConfig } from '../../training/runConfig';
-import { namedCourse } from '../course/presets';
+import { trainingCourse } from '../course/presets';
 import { TOP_LEVEL } from '../course/levels';
 import { DEFAULT_NAVIGATION_PARAMS, type NavigationParams } from '../params';
 import type { NavigationInputConfig } from '../sensors/inputConfig';
@@ -29,7 +29,8 @@ export interface NavigationSettings {
 
 /** The settings a new run gets unless the New run dialog says otherwise. */
 export function navigationSettings(patch: Partial<NavigationSettings> = {}): NavigationSettings {
-  const course = patch.course && namedCourse(patch.course) ? patch.course : null;
+  // A held out benchmark room never becomes a run's course.
+  const course = patch.course && trainingCourse(patch.course) ? patch.course : null;
   return {
     startLevel: clampLevel(patch.startLevel ?? 0),
     autoLevel: patch.autoLevel ?? true,

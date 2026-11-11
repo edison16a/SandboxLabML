@@ -4,6 +4,7 @@ import { loadEpisodeModule, requireEpisodeInfo } from '../../env/registry';
 import { Network } from '../../neat/network';
 import { EpisodeTrainer, trainingControllerSeed } from '../../training/episodeTrainer';
 import { createEpisodeRunConfig } from '../../training/newRun';
+import { compileScript } from '../../script/compiler';
 import { builtinHost } from '../../training/scriptHost';
 import { navigationModule } from '../module';
 import { NAVIGATION_BLUEPRINTS } from '../pipeline/blueprints';
@@ -96,6 +97,21 @@ describe('navigation in the generic pipeline', () => {
     expect(named.course).toBe('zigzag');
     expect(navigationModule.createSetup({ config, content: named, scriptSource: null }).courses.map((c) => c.id)).toEqual(['zigzag']);
     expect(nextNavigationContent({ config, content: named, generation: 5, directives: asked({ [NAV_DIRECTIVE.course]: RANDOM_COURSE }), results: good, metrics: {} }).content.course).toBeNull();
+  });
+
+  it('never trains on the benchmark held out rooms, whoever asks', () => {
+    const config = run();
+    const content = navigationModule.initialContent(config) as NavigationContent;
+    const asked = (course: string) => ({ plan: {}, env: { [NAV_DIRECTIVE.course]: course } }) as never;
+    for (const id of ['clockwork', 'switchback']) {
+      expect(nextNavigationContent({ config, content, generation: 0, directives: asked(id), results: [result(1, 0)], metrics: {} }).content.course).toBeNull();
+      expect(navigationSettings({ course: id }).course).toBeNull();
+    }
+    expect(navigationSettings({ course: 'zigzag' }).course).toBe('zigzag');
+    const script = 'script "Leak" for navigation v1\nbrain navigation-starter\neach tick {\n  act(move: brain.move, turn: brain.turn)\n}\neach generation {\n  useCourse(id: "clockwork")\n}\n';
+    const r = compileScript(script);
+    expect(r.script).toBeNull();
+    expect(r.diagnostics.map((d) => d.message).join(' ')).toMatch(/Choose one of|Did you mean/);
   });
 
   it('stays put on a fixed level until a script asks with autoLevel', () => {

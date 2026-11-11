@@ -3,15 +3,12 @@
 import { useMemo } from 'react';
 import { NAV_LEVELS } from '@/engine/navigation/course/levels';
 import { generateCourse } from '@/engine/navigation/course/generate';
-import { NAMED_COURSES } from '@/engine/navigation/course/presets';
+import { TRAINING_COURSES } from '@/engine/navigation/course/presets';
 import { cn } from '@/ui/cn';
 import { Field } from '@/ui/primitives/Field';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Switch } from '@/ui/primitives/Switch';
 import { CourseThumb } from './CourseThumb';
-
-/** Named courses a run may train on. The held out ones stay unseen, for the benchmark. */
-const TRAINING_COURSES = NAMED_COURSES.filter((c) => !c.heldOut);
 
 export interface CourseChoice {
   /** A named course id, or null for fresh generated courses each generation. */

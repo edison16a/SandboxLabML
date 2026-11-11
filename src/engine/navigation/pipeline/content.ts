@@ -1,7 +1,7 @@
 import type { ContentStep } from '../../env/episode';
 import type { RunConfig } from '../../training/runConfig';
 import { advanceCurriculum, ELITE_BAR, eliteFinishShare, startCurriculum, type CurriculumState } from '../curriculum';
-import { namedCourse } from '../course/presets';
+import { namedCourse, trainingCourse } from '../course/presets';
 import type { NavigationRunResult } from './runResult';
 import { clampCourses, clampLevel, navigationOf } from './settings';
 
@@ -79,7 +79,8 @@ export function nextNavigationContent(step: ContentStep<NavigationContent, Navig
   let course = content.course;
   const wanted = asked[NAV_DIRECTIVE.course];
   if (wanted === RANDOM_COURSE) course = null;
-  else if (typeof wanted === 'string' && namedCourse(wanted)) course = wanted;
+  // The benchmark's held out rooms are refused, so no script can train on them.
+  else if (typeof wanted === 'string' && trainingCourse(wanted)) course = wanted;
   const count = asked[NAV_DIRECTIVE.courses];
   const courses = typeof count === 'number' ? clampCourses(count) : content.courses;
   const next: NavigationContent = { generation: step.generation + 1, curriculum, auto: content.auto, course, courses };
