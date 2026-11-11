@@ -1,6 +1,7 @@
 import { createCar, type CarState } from '../car/dynamics';
 import type { Route } from '../route/route';
 import { perception, type Perception } from '../sensors/perception';
+import { MAX_PEDS, MAX_TRAFFIC } from '../world/state';
 
 export const STATUS_DRIVING = 0;
 export const STATUS_CRASHED = 1;
@@ -90,6 +91,9 @@ export interface DrivingLearner {
   lineStop: number;
   crashX: number;
   crashY: number;
+  /** Cars and people the SUV overlaps right now, a bit per world index, so a contact is judged only on the tick it begins. */
+  carContacts: Uint32Array;
+  pedContacts: Uint32Array;
 }
 
 /**
@@ -150,6 +154,8 @@ export function createLearner(index: number, route: Route, rays: number, seed = 
     lineStop: -1,
     crashX: 0,
     crashY: 0,
+    carContacts: new Uint32Array(Math.ceil(MAX_TRAFFIC / 32)),
+    pedContacts: new Uint32Array(Math.ceil(MAX_PEDS / 32)),
   };
 }
 

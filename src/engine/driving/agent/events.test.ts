@@ -61,6 +61,24 @@ function addCar(w: WorldState, s: number, lateral = 0): void {
 
 const mid = route.startS + 4;
 
+/** Moves a learner to route arc length s at a speed, facing along the route. */
+function moveTo(l: DrivingLearner, s: number, speed: number): void {
+  const p = route.path.sample(s, pathPoint());
+  l.car.x = p.x;
+  l.car.y = p.y;
+  l.car.heading = Math.atan2(p.ty, p.tx);
+  l.car.speed = speed;
+}
+
+/** Moves world car i to route arc length s at a speed, facing along the route, plus an extra turn. */
+function moveCar(w: WorldState, i: number, s: number, speed: number, lateral = 0, turn = 0): void {
+  const p = route.path.sample(s, pathPoint());
+  w.carX[i] = p.x - p.ty * lateral;
+  w.carY[i] = p.y + p.tx * lateral;
+  w.carHeading[i] = Math.atan2(p.ty, p.tx) + turn;
+  w.carSpeed[i] = speed;
+}
+
 describe('collisions', () => {
   it('counts driving into a car ahead as a crash, and a car rolling into the back as none', () => {
     const ahead = world();
@@ -73,6 +91,39 @@ describe('collisions', () => {
     expect(check(learnerAt(mid, 0, 0), ahead).crashed).toBe(false);
   });
 
+  it('never blames a crawling learner for traffic that drives through it from behind', () => {
+    const w = world();
+    addCar(w, mid - 7);
+    const l = learnerAt(mid, 0, 1);
+    for (let t = 0; t < 60; t++) {
+      moveTo(l, mid + t / 30, 1);
+      moveCar(w, 0, mid - 7 + (t * 10) / 30, 10);
+      expect(check(l, w).crashed).toBe(false);
+    }
+  });
+
+  it('never blames a waiting learner for a turning car that sweeps into its side', () => {
+    const w = world();
+    addCar(w, mid);
+    const l = learnerAt(mid, 0, 0.6);
+    for (let t = 0; t < 40; t++) {
+      // The car comes in from the left at an angle, across the nose of an SUV creeping at a walking pace.
+      moveCar(w, 0, mid + 2, 6, 6 - (t * 6) / 30, -2.1);
+      moveTo(l, mid, 0.6);
+      expect(check(l, w).crashed).toBe(false);
+    }
+  });
+
+  it('keeps an overlap that began the other way harmless until it ends', () => {
+    const w = world();
+    addCar(w, mid - 4.5);
+    const l = learnerAt(mid, 0, 0);
+    check(l, w);
+    // The SUV now pulls away while still touching the car that rolled into it.
+    moveTo(l, mid + 0.2, 3);
+    expect(check(l, w).crashed).toBe(false);
+  });
+
   it('detects hitting a person in front of the bumper', () => {
     const w = world();
     const p = route.path.sample(mid + 2.4, pathPoint());
@@ -81,6 +132,19 @@ describe('collisions', () => {
     w.pedY[0] = p.y;
     expect(check(learnerAt(mid), w).hitPedestrian).toBe(true);
     expect(check(learnerAt(mid - 6), w).hitPedestrian).toBe(false);
+  });
+
+  it('does not blame the learner for a person who walks into its flank', () => {
+    const w = world();
+    const p = route.path.sample(mid - 0.9, pathPoint());
+    w.pedCount = 1;
+    // Beside the rear door, stepping in from the right.
+    w.pedX[0] = p.x + p.ty * 1.25;
+    w.pedY[0] = p.y - p.tx * 1.25;
+    const l = learnerAt(mid, 0, 6);
+    expect(check(l, w).hitPedestrian).toBe(false);
+    moveTo(l, mid + 0.2, 6);
+    expect(check(l, w).hitPedestrian).toBe(false);
   });
 
   it('notices wheels over the curb', () => {
