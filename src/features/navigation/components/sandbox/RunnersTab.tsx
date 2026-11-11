@@ -22,7 +22,16 @@ function FieldEditor() {
   const records = useNavigationLab((s) => s.records);
   const [chosen, setChosen] = useState<number | null>(null);
   const control = () => navigationSession().sandbox;
-  if (!records.length) return <p className="rounded-md border border-dashed border-white/15 p-3 text-[12px] text-white/60">Train a generation first, or try a trained model.</p>;
+  if (!records.length) {
+    return (
+      <div className="flex flex-col items-start gap-2 rounded-md border border-dashed border-white/15 p-3 text-[12px] text-white/60">
+        <p>This run has no champions yet. Train a generation first, or watch a runner that came trained with the app.</p>
+        <Button size="sm" variant="secondary" className={glassButton} onClick={() => control()?.configure({ source: 'model' })}>
+          Try a trained model
+        </Button>
+      </div>
+    );
+  }
   const total = fieldSize(field);
   const first = records[0].generation;
   const newest = records[records.length - 1].generation;
