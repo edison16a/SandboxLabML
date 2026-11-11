@@ -16,6 +16,7 @@ import { DrivingProbe } from './frame/DrivingProbe';
 import { FocusReporter } from './frame/FocusReporter';
 import { FrameDriver } from './frame/FrameDriver';
 import { createFrame, DrivingSceneContext, type DrivingView } from './frame/sceneContext';
+import type { ObservedInputs } from './frame/observed';
 import type { FrameSource } from './frame/source';
 import { CityEffects } from './post/CityEffects';
 import { TIERS, type DrivingTier } from './quality';
@@ -39,6 +40,8 @@ export interface DrivingCanvasProps {
   onPick?: (index: number) => void;
   /** Told once the city has drawn, so a loading cover can lift. */
   onReady?: (ready: boolean) => void;
+  /** The followed SUV's inputs as the workers stream them, so the lidar drawn is the lidar its brain read. */
+  observed?: ObservedInputs | null;
   children?: React.ReactNode;
 }
 
@@ -49,12 +52,12 @@ const always = () => true;
  * change a training result, so quality and effects scale freely. The lab
  * and the preview both draw through this.
  */
-export function DrivingCanvas({ city, route, car, inputs, population, world, tier, view, activity = 'live', ghosts, onFocus, onPick, onReady, children }: DrivingCanvasProps) {
+export function DrivingCanvas({ city, route, car, inputs, population, world, tier, view, activity = 'live', ghosts, onFocus, onPick, onReady, observed = null, children }: DrivingCanvasProps) {
   const look = TIERS[tier];
   const loop = useFrameLoop(activity);
   const frame = useMemo(() => createFrame(), []);
   const target = useRef(new THREE.Vector3());
-  const value = useMemo(() => ({ city, route, car, inputs, population, world, tier, view, frame }), [city, route, car, inputs, population, world, tier, view, frame]);
+  const value = useMemo(() => ({ city, route, car, inputs, population, world, tier, view, frame, observed }), [city, route, car, inputs, population, world, tier, view, frame, observed]);
   const ready = useCallback((v: boolean) => onReady?.(v), [onReady]);
   return (
     <Canvas

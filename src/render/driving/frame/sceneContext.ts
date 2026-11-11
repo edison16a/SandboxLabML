@@ -9,6 +9,7 @@ import type { DrivingTier } from '../quality';
 import { tickMotion, type TickMotion } from '../motion/tickMotion';
 import type { FrameSource } from './source';
 import { focusSense, type FocusSense } from './focusSense';
+import type { ObservedInputs } from './observed';
 
 /** Camera views. One key cycles them in this order. */
 export const DRIVING_CAMERAS = ['chase', 'orbit', 'corner', 'top', 'free'] as const;
@@ -90,6 +91,8 @@ export interface DrivingSceneValue {
   tier: DrivingTier;
   view: DrivingView;
   frame: DrivingFrame;
+  /** The followed SUV's inputs as streamed, when the lab has them; the overlay draws its lidar from them. */
+  observed: ObservedInputs | null;
 }
 
 export const DrivingSceneContext = createContext<DrivingSceneValue | null>(null);

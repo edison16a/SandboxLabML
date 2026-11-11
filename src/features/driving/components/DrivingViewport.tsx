@@ -12,6 +12,7 @@ import { DrivingCanvas } from '@/render/driving/DrivingCanvas';
 import type { DrivingView } from '@/render/driving/frame/sceneContext';
 import { isWatchSpeed } from '@/workers/shared/protocol';
 import type { WorkerPool } from '@/workers/client/workerPool';
+import { useObservedInputs } from '../hooks/useObservedInputs';
 import { usePopulationContent, useTripOnScreen } from '../hooks/useStreamContent';
 import { StreamFrames } from '../session/frames';
 import { focusIndex, pickedFocus, shownStream } from '../session/shown';
@@ -53,6 +54,7 @@ export function DrivingViewport({ streams, onReady, ultra = false }: Props) {
   frames.over.match = frames.population;
   const over = shown === 'population' && viewMode === 'both' ? frames.over : null;
   useTripOnScreen(main);
+  const observed = useObservedInputs(main.stream);
 
   const popContent = usePopulationContent(streams.population);
   const content = shown === 'population' ? popContent : (ghostContent ?? popContent);
@@ -95,6 +97,7 @@ export function DrivingViewport({ streams, onReady, ultra = false }: Props) {
       onFocus={onFocus}
       onPick={onPick}
       onReady={onReady}
+      observed={observed}
     />
   );
 }

@@ -7,6 +7,7 @@ import { blendField, blendPose, type Pose } from '@/render/shared/interpolate';
 import { readTickMotion } from '../motion/tickMotion';
 import { simToWorld } from '../space';
 import { senseFocus } from './focusSense';
+import { applyObserved } from './observed';
 import { pickLeader } from './leader';
 import { useDrivingScene } from './sceneContext';
 import { WorldBlend } from './worldBlend';
@@ -23,7 +24,7 @@ export const FRAME_PRIORITY = { driver: -100, camera: -50, overlay: -10 } as con
  * and runs its sensors on the blended world for the overlay.
  */
 export function FrameDriver() {
-  const { city, route, car, inputs, population, world, view, frame } = useDrivingScene();
+  const { city, route, car, inputs, population, world, view, frame, observed } = useDrivingScene();
   const blendWorld = useMemo(() => new WorldBlend(city.signals.length), [city]);
   const seen = useMemo(() => ({ epoch: Number.NaN, focus: -2, motionFocus: -1, pose: { x: 0, y: 0, heading: 0 } as Pose }), []);
 
@@ -78,7 +79,11 @@ export function FrameDriver() {
       frame.motionTick = tick;
       seen.motionFocus = focus;
     }
-    if (frame.world) frame.routeIndex = senseFocus(frame.sense, city, route, frame.world, inputs, pose.x, pose.y, pose.heading, frame.speed, frame.routeIndex);
+    if (frame.world) {
+      frame.routeIndex = senseFocus(frame.sense, city, route, frame.world, inputs, pose.x, pose.y, pose.heading, frame.speed, frame.routeIndex);
+      // Where the workers stream this SUV's inputs, the beams are the ones its brain read.
+      applyObserved(frame.sense, observed, focus, population.prev?.tick ?? -1, tick, a);
+    }
   }, FRAME_PRIORITY.driver);
   return null;
 }
