@@ -20,12 +20,12 @@ export function addFront(bin: PartBin, detail: Detail): void {
     bin.add('led', capPanel(1, at(z), at(z + 0.036), 0.818, 0.848, 0.009, 1, 1));
   }
   // The grille: wider at the foot, with a gloss surround standing just proud of it.
-  bin.add('trim', capPanel(1, (y) => -(0.54 - (y - 0.4) * 0.12), (y) => 0.54 - (y - 0.4) * 0.12, 0.385, 0.755, 0.003, c * 2, 3, false));
-  bin.add('grille', capPanel(1, (y) => -(0.515 - (y - 0.4) * 0.12), (y) => 0.515 - (y - 0.4) * 0.12, 0.405, 0.735, 0.006, c * 2, 3, false));
+  bin.add('trim', capPanel(1, (y) => -(0.49 - (y - 0.4) * 0.1), (y) => 0.49 - (y - 0.4) * 0.1, 0.405, 0.725, 0.003, c * 2, 3, false));
+  bin.add('grille', capPanel(1, (y) => -(0.468 - (y - 0.4) * 0.1), (y) => 0.468 - (y - 0.4) * 0.1, 0.425, 0.705, 0.006, c * 2, 3, false));
   // Corner intakes and the dark lip under everything.
-  bin.add('clad', capPanel(1, at(0.575), at(0.73), 0.41, 0.66, 0.003, c, 2));
-  bin.add('grille', capPanel(1, at(0.595), at(0.71), 0.43, 0.64, 0.006, c, 2));
-  bin.add('clad', capPanel(1, at(-0.68), at(0.68), 0.345, 0.39, 0.004, c * 2, 1, false));
+  bin.add('clad', capPanel(1, at(0.585), at(0.725), 0.43, 0.615, 0.003, c, 2));
+  bin.add('grille', capPanel(1, at(0.6), at(0.71), 0.445, 0.6, 0.006, c, 2));
+  bin.add('clad', capPanel(1, at(-0.66), at(0.66), 0.345, 0.375, 0.004, c * 2, 1, false));
 }
 
 /**

@@ -48,7 +48,7 @@ export function addArches(bin: PartBin, detail: Detail): void {
       const ux = dx / r;
       const uy = (y - ARCH.centerY) / r;
       const pt = (out: number, lift: number): Vec3 => warp([x + ux * out, y + uy * out, z + lift]);
-      return [pt(-0.02, -0.03), pt(0, 0.022), pt(0.035, 0.03), pt(0.075, 0.016), pt(0.09, 0.0)];
+      return [pt(-0.02, -0.03), pt(0, 0.026), pt(0.04, 0.036), pt(0.085, 0.02), pt(0.105, 0.0)];
     });
     bin.add('clad', bothSides(gridGeometry(flare)));
     const liner = xs.map((x, i) => {

@@ -12,10 +12,10 @@ import { profile, smooth } from './curve';
  * hood or deck, 6 the centerline.
  */
 const halfWidth = profile([[-2.45, 0.8], [-2.38, 0.89], [-2.2, 0.96], [-1.95, 0.992], [-1.45, 1.0], [-0.95, 0.968], [-0.3, 0.946], [0.5, 0.946], [1.1, 0.962], [1.48, 0.972], [1.9, 0.955], [2.2, 0.915], [2.38, 0.85], [2.45, 0.78]]);
-const shoulderY = profile([[-2.45, 1.0], [-2.0, 1.04], [-1.45, 1.03], [-0.7, 0.99], [0.4, 0.975], [1.3, 0.98], [1.9, 0.96], [2.3, 0.92], [2.45, 0.87]]);
-const beltY = profile([[-2.45, 1.1], [-2.3, 1.125], [-2.0, 1.12], [-1.5, 1.105], [-0.8, 1.08], [0.2, 1.06], [1.05, 1.045], [1.6, 1.035], [2.1, 1.01], [2.35, 0.97], [2.45, 0.93]]);
+const shoulderY = profile([[-2.45, 1.0], [-2.0, 1.035], [-1.45, 1.035], [-0.7, 0.985], [0.4, 0.97], [1.3, 0.985], [1.9, 0.965], [2.3, 0.92], [2.45, 0.87]]);
+const beltY = profile([[-2.45, 1.1], [-2.3, 1.125], [-2.0, 1.12], [-1.5, 1.105], [-0.8, 1.08], [0.2, 1.06], [1.05, 1.05], [1.5, 1.052], [1.9, 1.035], [2.2, 1.0], [2.38, 0.955], [2.45, 0.93]]);
 /** How far the belt line sits in from the shoulder: the cabin tucks in, the hood edge less so. */
-const beltInset = profile([[-2.45, 0.12], [-2.0, 0.13], [-1.2, 0.125], [0.6, 0.115], [1.2, 0.095], [2.45, 0.08]]);
+const beltInset = profile([[-2.45, 0.13], [-2.0, 0.155], [-1.45, 0.165], [-0.9, 0.135], [0.6, 0.115], [1.2, 0.1], [2.45, 0.085]]);
 const creaseY = profile([[-2.45, 0.8], [-1.4, 0.78], [0.6, 0.75], [2.45, 0.72]]);
 
 export const NOSE = BODY.nose;
@@ -40,8 +40,8 @@ export function beltAt(x: number): [number, number] {
 export function sectionAt(x: number): Section {
   const w = halfWidth(x);
   const [bz, by] = beltAt(x);
-  // The hood and the rear deck dome a little toward the middle; near the nose the dome flattens into the front.
-  const dome = 0.032 * (1 - smooth((x - 2.2) / 0.25));
+  // The rear deck domes a little toward the middle. The hood dips between raised fender peaks, and flattens into the nose.
+  const dome = (0.03 - 0.052 * smooth((x - 0.95) / 0.35)) * (1 - smooth((x - 2.2) / 0.25));
   const keys: Array<[number, number]> = [
     [w - 0.075, sillY(x)],
     [w - 0.028, 0.5 + 0.05 * smooth((x - 2.0) / 0.4)],
@@ -52,7 +52,8 @@ export function sectionAt(x: number): Section {
     [0, by + dome],
   ];
   const ends = 1 - 0.7 * smooth((Math.abs(x) - 2.2) / 0.25);
-  const bulge = [0.006, 0.01, 0.022, 0.016, 0.012, 0.004].map((b) => b * ends);
+  // The lower door is dished and the band above it bows out: the light catches a crease between them.
+  const bulge = [0.006, -0.005, 0.03, 0.012, 0.01, 0.004].map((b) => b * ends);
   return { keys, bulge };
 }
 
@@ -61,7 +62,7 @@ export function sectionAt(x: number): Section {
  * round the wheel center; inside it, below the center, the opening runs
  * straight down to the sill.
  */
-export const ARCH = { radius: 0.47, centerY: WHEEL.radius };
+export const ARCH = { radius: 0.445, centerY: WHEEL.radius };
 export const AXLES = [BODY.axleFront, BODY.axleRear];
 /** Bands low enough to meet the wheels: the cladding, the lower door and the band up to the shoulder. */
 export const ARCHED_BANDS = 3;
