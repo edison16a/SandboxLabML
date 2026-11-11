@@ -9,6 +9,7 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { FRAME_PRIORITY } from '../frame/FrameDriver';
 import { useDrivingScene } from '../frame/sceneContext';
 import { BODY } from '../suv/dimensions';
+import { overlapsFocus } from '../traffic/focusOverlap';
 import { FatLines } from './fatLines';
 import { SENSOR, SENSOR_CSS } from './palette';
 import { TextLabel } from './TextLabel';
@@ -98,7 +99,8 @@ export function Detections() {
       }
       let boxes = 0;
       for (let i = 0; i < world.carCount && boxes < MAX_BOXES; i++) {
-        if (!marks.cars[i]) continue;
+        // A car overlapping the SUV drove into it and is drawn as a ghost: it is no detection.
+        if (!marks.cars[i] || overlapsFocus(world, i, frame.pos.x, -frame.pos.z, frame.yaw)) continue;
         const x = world.carX[i];
         const z = -world.carY[i];
         bracketBox(lines, x, z, world.carHeading[i], world.carLength[i] / 2 + 0.12, world.carWidth[i] / 2 + 0.12, 0.05, 1.55, SENSOR.car, marks.cars[i] === 2 ? 0.95 : 0.55);
