@@ -5,6 +5,7 @@ import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { EpisodeSession } from '@/features/lab/session/EpisodeSession';
 import type { WorkerPool } from '@/workers/client/workerPool';
+import { isWatchSpeed, WATCH_SPEEDS } from '@/workers/shared/protocol';
 import { openedNavigationState, useNavigationLab, type NavigationLabState } from '../state/labStore';
 import { GhostPacing } from './ghostPacing';
 
@@ -21,6 +22,10 @@ export class NavigationSession extends EpisodeSession<NavigationLabState> {
 
   constructor() {
     super('navigation', useNavigationLab);
+    // Switching to the ghosts alone while a generation plays brings a replay back at once, looping (see playGhosts).
+    useNavigationLab.subscribe((s, prev) => {
+      if (s.view === 'overlay' && prev.view !== 'overlay' && s.status === 'running' && s.mode === 'train' && isWatchSpeed(s.speed)) void this.playGhosts(WATCH_SPEEDS[s.speed], true);
+    });
   }
 
   override async init(): Promise<WorkerPool> {
@@ -50,6 +55,15 @@ export class NavigationSession extends EpisodeSession<NavigationLabState> {
     const setup = super.ghostSetup(run, generations) as NavigationSetup;
     const shown: NavigationSetup = { ...setup, courses: setup.courses.slice(0, 1) };
     return shown;
+  }
+
+  /**
+   * A champion's run is over long before a generation's slowest runner,
+   * so with only the ghosts on screen the replay loops rather than leave
+   * an empty room until the next generation starts it again.
+   */
+  protected override async playGhosts(speed: number, loop: boolean): Promise<void> {
+    await super.playGhosts(speed, loop || this.store.view === 'overlay');
   }
 
   override async refreshGhosts(force = false): Promise<void> {

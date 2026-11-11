@@ -65,7 +65,10 @@ export function LiveStats({ feeds }: { feeds: LabFeeds | null }) {
   return (
     <div className="pointer-events-none flex flex-wrap gap-1.5">
       <HudChip label="Generation" value={gen + 1} tour="hud-generation" />
-      <HudChip label="Level" value={level.level} note={level.name} tour="hud-level" />
+      {/* Keyed on the level, so a level up pops the chip in afresh. */}
+      <div key={level.level} className="animate-pop-in">
+        <HudChip label="Level" value={level.level} note={level.name} tour="hud-level" />
+      </div>
       {live.watching ? (
         <>
           <HudChip label="Running" value={`${live.running} / ${live.total}`} />
