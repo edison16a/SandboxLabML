@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { isOnRoad } from '@/engine/driving/city/surface';
 import type { City } from '@/engine/driving/city/types';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CURB_HEIGHT } from '../ground/slabs';
+import { wallAwnings } from './awnings';
 import type { BuildingSpec } from './layout';
 
 /** Facade codes in aFacade.w: what a face is. */
@@ -60,7 +62,7 @@ function facesStreet(city: City, x: number, y: number, nx: number, ny: number): 
  * A box from h0 to h1 over a footprint: four walls and, when `roof`, a lid.
  * Walls run counterclockwise seen from above so their normals face out.
  */
-function box(f: Faces, city: City, s: BuildingSpec, x0: number, x1: number, y0: number, y1: number, h0: number, h1: number, kind: number, roof: boolean): void {
+function box(f: Faces, city: City, s: BuildingSpec, x0: number, x1: number, y0: number, y1: number, h0: number, h1: number, kind: number, roof: boolean, awnings: THREE.BufferGeometry[] = []): void {
   const corners: Array<[number, number]> = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
   for (let i = 0; i < 4; i++) {
     const [ax, ay] = corners[i];
@@ -70,6 +72,7 @@ function box(f: Faces, city: City, s: BuildingSpec, x0: number, x1: number, y0: 
     const ny = -(bx - ax) / len;
     const face = kind === FACE_WALL && s.shops && h0 <= CURB_HEIGHT + 0.01 && facesStreet(city, (ax + bx) / 2, (ay + by) / 2, nx, ny) ? FACE_SHOPS : kind;
     const n = new THREE.Vector3(nx, 0, -ny);
+    if (face === FACE_SHOPS) wallAwnings(awnings, ax, ay, bx, by, nx, ny, s.seed);
     f.quad(v(ax, ay, h0), v(bx, by, h0), v(bx, by, h1), v(ax, ay, h1), n, [0, h0, len, h0, len, h1, 0, h1], [s.style, s.seed, len, face], h1);
   }
   if (roof) f.quad(v(x0, y0, h1), v(x1, y0, h1), v(x1, y1, h1), v(x0, y1, h1), new THREE.Vector3(0, 1, 0), [x0, y0, x1, y0, x1, y1, x0, y1], [s.style, s.seed, x1 - x0, FACE_ROOF], h1);
@@ -86,22 +89,26 @@ function parapet(f: Faces, city: City, s: BuildingSpec, x0: number, x1: number, 
 }
 
 /**
- * Every building as faces for the facade shader. A tall building on a
- * podium steps back above it; near buildings get a parapet round the roof.
+ * Every building as faces for the facade shader, plus fabric awnings over
+ * some shop windows. A tall building on a podium steps back above it;
+ * near buildings get a parapet round the roof.
  */
-export function buildingGeometry(city: City, buildings: BuildingSpec[]): THREE.BufferGeometry {
+export function buildingGeometry(city: City, buildings: BuildingSpec[]): { walls: THREE.BufferGeometry; awnings: THREE.BufferGeometry } {
   const f = new Faces();
+  const awnings: THREE.BufferGeometry[] = [];
   const base = CURB_HEIGHT;
   for (const s of buildings) {
     if (s.podium > 0) {
-      box(f, city, s, s.x0, s.x1, s.y0, s.y1, base, s.podium, FACE_WALL, true);
+      box(f, city, s, s.x0, s.x1, s.y0, s.y1, base, s.podium, FACE_WALL, true, awnings);
       const inset = Math.min(5, (s.x1 - s.x0) / 4, (s.y1 - s.y0) / 4);
       box(f, city, s, s.x0 + inset, s.x1 - inset, s.y0 + inset, s.y1 - inset, s.podium, s.height, FACE_WALL, true);
       parapet(f, city, s, s.x0 + inset, s.x1 - inset, s.y0 + inset, s.y1 - inset, s.height);
     } else {
-      box(f, city, s, s.x0, s.x1, s.y0, s.y1, s.far ? 0 : base, s.height, FACE_WALL, true);
+      box(f, city, s, s.x0, s.x1, s.y0, s.y1, s.far ? 0 : base, s.height, FACE_WALL, true, awnings);
       if (!s.far) parapet(f, city, s, s.x0, s.x1, s.y0, s.y1, s.height);
     }
   }
-  return f.build();
+  const merged = awnings.length ? (mergeGeometries(awnings) as THREE.BufferGeometry) : new THREE.BufferGeometry();
+  awnings.forEach((g) => g.dispose());
+  return { walls: f.build(), awnings: merged };
 }

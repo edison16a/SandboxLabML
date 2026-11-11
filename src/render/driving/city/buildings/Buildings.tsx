@@ -40,20 +40,23 @@ function lawnGeometry(courtyards: Courtyard[]): THREE.BufferGeometry {
 export function Buildings({ city, tier, shadows }: { city: City; tier: DrivingTier; shadows: boolean }) {
   const geo = useDisposable(() => {
     const { buildings, courtyards } = layoutBuildings(city);
-    const parts = { walls: buildingGeometry(city, buildings), roofs: rooftopGeometry(buildings), lawns: lawnGeometry(courtyards) };
+    const { walls, awnings } = buildingGeometry(city, buildings);
+    const parts = { walls, awnings, roofs: rooftopGeometry(buildings), lawns: lawnGeometry(courtyards) };
     return { ...parts, dispose: () => Object.values(parts).forEach((g) => g.dispose()) };
   }, [city]);
   const mat = useDisposable(() => {
     const facade = createFacadeMaterial(tier);
     const plant = withHaze(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0.15 }));
     const lawn = withHaze(new THREE.MeshStandardMaterial({ color: '#4d6b34', roughness: 0.95 }));
-    return { facade, plant, lawn, dispose: () => [facade, plant, lawn].forEach((m) => m.dispose()) };
+    const fabric = withHaze(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide }));
+    return { facade, plant, lawn, fabric, dispose: () => [facade, plant, lawn, fabric].forEach((m) => m.dispose()) };
   }, [tier]);
   return (
     <group>
       <mesh geometry={geo.walls} material={mat.facade} castShadow={shadows} receiveShadow={shadows} />
       <mesh geometry={geo.roofs} material={mat.plant} castShadow={shadows} receiveShadow={shadows} />
       <mesh geometry={geo.lawns} material={mat.lawn} receiveShadow={shadows} />
+      <mesh geometry={geo.awnings} material={mat.fabric} castShadow={shadows} receiveShadow={shadows} />
     </group>
   );
 }

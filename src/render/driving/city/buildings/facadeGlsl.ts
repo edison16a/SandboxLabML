@@ -85,14 +85,16 @@ Facade facadeAt(vec2 uv, vec2 duv, vec4 f, float wallTop, float detail) {
     float sign = aaBox(lu, 0.06, 0.94, w) * aaBox(uv.y, 3.55, 4.15, hy);
     vec3 signCol = mix(vec3(0.08, 0.1, 0.12), mix(vec3(0.42, 0.14, 0.1), vec3(0.12, 0.26, 0.22), step(0.5, h)), step(0.35, h));
     vec3 pilaster = style > 0.5 && style < 1.5 ? vec3(0.2, 0.19, 0.18) : wall * 0.8;
-    // Inside: a lit shop floor fading up into a darker ceiling, a few shelves as soft bands.
-    float shelf = 0.75 + 0.25 * step(0.5, fract(uv.y * 1.6 + h));
-    vec3 inside = mix(vec3(0.42, 0.33, 0.24), vec3(0.08, 0.07, 0.06), smoothstep(0.6, 3.3, uv.y)) * shelf;
-    o.albedo = mix(mix(pilaster * dirt, signCol, sign), mix(glass, inside, 0.45), win);
+    // Inside: a warm back wall, a few dark shelving units at their own spots, a bright ceiling light strip.
+    float rack = step(0.55, cityHash(vec2(floor(lu * 7.0) + bay * 13.0, seed * 31.0))) * aaBox(uv.y, 0.45, 2.1, hy);
+    float strip = aaBox(uv.y, 3.05, 3.2, hy);
+    vec3 wall2 = mix(vec3(0.5, 0.4, 0.3), vec3(0.36, 0.38, 0.4), step(0.6, h));
+    vec3 inside = mix(wall2, vec3(0.06, 0.055, 0.05), rack * 0.8) * mix(1.0, 0.55, smoothstep(2.2, 3.0, uv.y));
+    o.albedo = mix(mix(pilaster * dirt, signCol, sign), mix(glass, inside, 0.5), win);
     o.rough = mix(mix(0.7, 0.45, sign), 0.05, win);
-    o.metal = mix(0.0, 0.55, win);
+    o.metal = mix(0.0, 0.5, win);
     float lit = step(h, 0.8) * win;
-    o.emit = vec3(1.0, 0.8, 0.56) * lit * (0.12 + 0.12 * fract(h * 13.0)) * smoothstep(3.4, 0.8, uv.y) * shelf;
+    o.emit = (vec3(1.0, 0.82, 0.6) * (0.1 + 0.08 * fract(h * 13.0)) * (1.0 - rack * 0.7) + vec3(1.0, 0.95, 0.85) * strip * 0.5) * lit;
     return o;
   }
   // Upper floors: a grid of windows, the bays sized to fit the wall exactly.
