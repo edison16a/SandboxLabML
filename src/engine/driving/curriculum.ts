@@ -1,54 +1,59 @@
 import { MAX_LEVEL, MIN_LEVEL } from './levels';
 
-/** Generations the curriculum averages over before moving up. */
-export const ADVANCE_WINDOW = 5;
+/** Generations whose safe share is averaged before moving up. */
+export const ADVANCE_WINDOW = 3;
 /** Move up once the safe share averaged over ADVANCE_WINDOW generations reaches this. */
-export const ADVANCE_SHARE = 0.1;
-/** Move back down when the safe share averaged over DEMOTE_WINDOW generations at a level stays under this. */
-export const DEMOTE_WINDOW = 40;
-export const DEMOTE_SHARE = 0.01;
-/** After moving down, generations to practise before the curriculum may move up again. */
-export const DEMOTE_REST = 15;
+export const ADVANCE_SHARE = 0.5;
+/** Generations a level is played at least, so a new level is never skipped on one lucky start. */
+export const MIN_GENERATIONS = 3;
+/** The bars a script's autoLevel may ask for. */
+export const MIN_BAR = 0.02;
+export const MAX_BAR = 1;
 
 /**
- * Where the automatic curriculum stands. Plain data, so a run can store it
- * and a worker or a resumed run picks it up as it was.
+ * Where the automatic curriculum stands. Plain data and small, so every
+ * generation record can keep it and a resumed run or a branch picks it up
+ * exactly as it was.
  */
 export interface Curriculum {
   level: number;
-  /** Safe share (0 to 1) of each generation played at this level, oldest first, at most DEMOTE_WINDOW kept. */
-  shares: number[];
-  /** Generations left before it may move up again, after moving down. */
-  rest: number;
+  /** Generations played at this level so far. */
+  generations: number;
+  /** Safe share (0 to 1) of the latest generations at this level, oldest first, at most ADVANCE_WINDOW kept. */
+  recent: number[];
+  /** The share that moves it up: ADVANCE_SHARE, or what a script's autoLevel asked for. */
+  bar: number;
 }
 
-export function startCurriculum(level = MIN_LEVEL): Curriculum {
-  return { level: Math.min(MAX_LEVEL, Math.max(MIN_LEVEL, level)), shares: [], rest: 0 };
+function clampBar(bar: number): number {
+  return Math.min(MAX_BAR, Math.max(MIN_BAR, Number.isFinite(bar) ? bar : ADVANCE_SHARE));
 }
 
-function meanOfLast(values: number[], n: number): number {
-  let sum = 0;
-  for (let i = values.length - n; i < values.length; i++) sum += values[i];
-  return sum / n;
+export function startCurriculum(level = MIN_LEVEL, bar = ADVANCE_SHARE): Curriculum {
+  return { level: Math.min(MAX_LEVEL, Math.max(MIN_LEVEL, Math.round(level))), generations: 0, recent: [], bar: clampBar(bar) };
+}
+
+/** The same curriculum with another bar, keeping what it measured so far. */
+export function withBar(c: Curriculum, bar: number): Curriculum {
+  const next = clampBar(bar);
+  return next === c.bar ? c : { ...c, bar: next };
 }
 
 /**
- * Records one generation's safe arrivals (arrived with no crash, no person
- * hit and no red light run) and returns where the curriculum stands for the
- * next generation. It moves on an average over several generations, because
- * a new trip every generation makes a single count swing with the luck of
- * the route. It moves back down when a level proves too hard to make any
- * progress on, then rests a while before trying again.
+ * Records one generation's safe share (drives that arrived with no crash,
+ * no person hit and no red light run, out of every drive) and returns where
+ * the curriculum stands for the next generation, as a new object. It moves
+ * on an average over a few generations, because a new route every
+ * generation makes one count swing with the luck of the route. It never
+ * moves back down: a level that is hard just takes longer, and a level
+ * that bounces up and down tells a newcomer nothing.
  */
-export function advanceCurriculum(c: Curriculum, safeArrivals: number, population: number): Curriculum {
-  const share = population > 0 ? safeArrivals / population : 0;
-  const shares = [...c.shares, share].slice(-DEMOTE_WINDOW);
-  const rest = Math.max(0, c.rest - 1);
-  if (c.level < MAX_LEVEL && rest === 0 && shares.length >= ADVANCE_WINDOW && meanOfLast(shares, ADVANCE_WINDOW) >= ADVANCE_SHARE) {
-    return { level: c.level + 1, shares: [], rest: 0 };
+export function advanceCurriculum(c: Curriculum, share: number): Curriculum {
+  const recent = [...c.recent, Number.isFinite(share) ? share : 0].slice(-ADVANCE_WINDOW);
+  const generations = c.generations + 1;
+  const mean = recent.reduce((a, b) => a + b, 0) / recent.length;
+  if (c.level < MAX_LEVEL && generations >= MIN_GENERATIONS && recent.length >= ADVANCE_WINDOW && mean >= c.bar) {
+    return { level: c.level + 1, generations: 0, recent: [], bar: c.bar };
   }
-  if (c.level > MIN_LEVEL && shares.length >= DEMOTE_WINDOW && meanOfLast(shares, DEMOTE_WINDOW) < DEMOTE_SHARE) {
-    return { level: c.level - 1, shares: [], rest: DEMOTE_REST };
-  }
-  return { level: c.level, shares, rest };
+  return { level: c.level, generations, recent, bar: c.bar };
 }

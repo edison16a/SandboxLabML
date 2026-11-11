@@ -1,43 +1,48 @@
 import { describe, expect, it } from 'vitest';
-import { ADVANCE_SHARE, ADVANCE_WINDOW, advanceCurriculum, DEMOTE_REST, DEMOTE_WINDOW, startCurriculum, type Curriculum } from './curriculum';
+import { ADVANCE_SHARE, ADVANCE_WINDOW, advanceCurriculum, MIN_GENERATIONS, startCurriculum, withBar, type Curriculum } from './curriculum';
 import { cityFor } from './city/buildCity';
 import { builtInCity, DEFAULT_CITY_ID } from './city/presets';
 import { DRIVING_LEVELS, MAX_LEVEL } from './levels';
 import { buildRoute } from './route/route';
 import { createDrivingSetup } from './setup';
 
-/** Feeds the curriculum one safe count per generation out of 100. */
-function feed(c: Curriculum, safe: number[]): Curriculum {
-  return safe.reduce((cur, n) => advanceCurriculum(cur, n, 100), c);
+/** Feeds the curriculum one safe share per generation. */
+function feed(c: Curriculum, shares: number[]): Curriculum {
+  return shares.reduce((cur, share) => advanceCurriculum(cur, share), c);
 }
 
 describe('automatic curriculum', () => {
   it('moves up on the average over several generations, not one lucky route', () => {
-    const lucky = feed(startCurriculum(1), [40]);
+    const lucky = feed(startCurriculum(1), [1]);
     expect(lucky.level).toBe(1);
-    const steady = feed(startCurriculum(1), Array(ADVANCE_WINDOW).fill(ADVANCE_SHARE * 100));
+    const steady = feed(startCurriculum(1), Array(Math.max(ADVANCE_WINDOW, MIN_GENERATIONS)).fill(ADVANCE_SHARE));
     expect(steady.level).toBe(2);
-    expect(steady.shares).toEqual([]);
+    expect(steady.recent).toEqual([]);
+    expect(steady.generations).toBe(0);
   });
 
   it('holds while the average stays under the bar', () => {
-    const c = feed(startCurriculum(1), [20, 0, 0, 10, 0, 15, 0]);
+    const c = feed(startCurriculum(1), [0.9, 0, 0, 0.3, 0, 0.6, 0]);
     expect(c.level).toBe(1);
+    expect(c.generations).toBe(7);
+    expect(c.recent.length).toBe(ADVANCE_WINDOW);
   });
 
-  it('moves back down when a level stays out of reach, then rests before trying again', () => {
-    const down = feed(startCurriculum(3), Array(DEMOTE_WINDOW).fill(0));
-    expect(down.level).toBe(2);
-    expect(down.rest).toBe(DEMOTE_REST);
-    const resting = feed(down, Array(ADVANCE_WINDOW).fill(50));
-    expect(resting.level).toBe(2);
-    const back = feed(resting, Array(DEMOTE_REST - ADVANCE_WINDOW).fill(50));
-    expect(back.level).toBe(3);
+  it('never moves back down, however hard a level is', () => {
+    expect(feed(startCurriculum(3), Array(200).fill(0)).level).toBe(3);
+  });
+
+  it('takes a bar from a script and keeps what it measured', () => {
+    const c = feed(startCurriculum(1), [0.2, 0.2]);
+    const lower = withBar(c, 0.1);
+    expect(lower.bar).toBe(0.1);
+    expect(lower.recent).toEqual(c.recent);
+    expect(feed(lower, [0.2]).level).toBe(2);
   });
 
   it('never leaves the level range', () => {
-    expect(feed(startCurriculum(1), Array(DEMOTE_WINDOW * 2).fill(0)).level).toBe(1);
-    expect(feed(startCurriculum(MAX_LEVEL), Array(ADVANCE_WINDOW * 2).fill(100)).level).toBe(MAX_LEVEL);
+    expect(startCurriculum(0).level).toBe(1);
+    expect(feed(startCurriculum(MAX_LEVEL), Array(ADVANCE_WINDOW * 4).fill(1)).level).toBe(MAX_LEVEL);
   });
 });
 

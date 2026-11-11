@@ -1,68 +1,76 @@
-import { mixSeed } from '../../src/engine/core/rng';
-import {
-  advanceCurriculum,
-  builtinDrivingController,
-  builtInInputCount,
-  createDrivingSetup,
-  DRIVING_NEAT,
-  drivingEnvOptions,
-  evaluateDriving,
-  STANDARD_DRIVING_INPUTS,
-  startCurriculum,
-  SUV,
-  type Curriculum,
-} from '../../src/engine/driving';
-import { Network } from '../../src/engine/neat/network';
-import { Population } from '../../src/engine/neat/population';
+import { DEFAULT_DRIVING_BLUEPRINT } from '../../src/engine/driving/blueprints';
+import { drivingModule } from '../../src/engine/driving/module';
+import type { DrivingContent } from '../../src/engine/driving/run/content';
+import type { DrivingRunResult } from '../../src/engine/driving/run/results';
+import { DEFAULT_DRIVING_SETTINGS, type DrivingSettings } from '../../src/engine/driving/run/settings';
+import { loadEpisodeModule } from '../../src/engine/env/registry';
+import { EpisodeTrainer } from '../../src/engine/training/episodeTrainer';
+import { createEpisodeRunConfig } from '../../src/engine/training/newRun';
+import { EpisodeSim } from '../../src/workers/sim/episodeSim';
 
-/** One generation of a headless Driving run, as the log and the test see it. */
-export interface CurriculumGeneration {
+/** One generation of a headless Driving run, as the log and the tests see it. */
+export interface DrivingGeneration {
   generation: number;
   level: number;
-  safe: number;
+  /** The env's generation metrics, as the record stores them. */
+  metrics: Record<string, number>;
+  bestFitness: number;
+  /** Why drives ended, counted over every brain and trip. */
   reasons: Record<string, number>;
-  next: Curriculum;
+  wallMs: number;
+  next: DrivingContent;
 }
 
-export interface CurriculumRunOptions {
+export interface DrivingRunOptions {
   seed: number;
   generations: number;
   population?: number;
+  settings?: Partial<DrivingSettings>;
+  /** How many sim workers the population is split over, as Turbo and Max do. */
+  workers?: number;
   /** Stop early once the curriculum reaches this level. */
   until?: number;
-  onGeneration?: (g: CurriculumGeneration) => void;
+  onGeneration?: (g: DrivingGeneration) => void;
 }
 
 /**
- * Trains a Driving population the way a default run without a script does:
- * the standard inputs, direct tanh wiring, the Driving NEAT settings, the
- * built in reward, a new trip every generation and the automatic
- * curriculum. Returns the generation at which each level was first played
- * (index 0 is level 1).
+ * Trains a Driving run headless through the same code the lab runs: a run
+ * config from createEpisodeRunConfig, the EpisodeTrainer the coordinator
+ * wraps, and the population split over EpisodeSim instances the way the
+ * coordinator splits it over sim workers in Turbo and Max. With no
+ * settings this is the lab's default run: the Standard brain, the built in
+ * reward and the automatic curriculum. Returns the generation at which
+ * each level was first played (index 0 is level 1).
  */
-export function trainWithCurriculum(opts: CurriculumRunOptions): number[] {
-  const inputs = STANDARD_DRIVING_INPUTS;
-  const pop = Population.create({ inputCount: builtInInputCount(inputs), outputCount: 2, activation: 'tanh', wiring: 'direct' }, opts.seed, { ...DRIVING_NEAT, populationSize: opts.population ?? 100 });
-  let cur = startCurriculum(1);
+export async function trainDriving(opts: DrivingRunOptions): Promise<number[]> {
+  await loadEpisodeModule('driving');
+  const config = createEpisodeRunConfig({
+    env: 'driving',
+    name: 'Headless',
+    seed: opts.seed,
+    blueprint: DEFAULT_DRIVING_BLUEPRINT,
+    populationSize: opts.population ?? 100,
+    settings: { ...DEFAULT_DRIVING_SETTINGS, ...opts.settings },
+  });
+  const trainer = new EpisodeTrainer(drivingModule, config);
+  const sims = Array.from({ length: opts.workers ?? 3 }, () => new EpisodeSim());
   const reached = [0];
-  for (let gen = 0; gen < opts.generations; gen++) {
-    const setup = createDrivingSetup({ level: cur.level, seed: mixSeed(opts.seed, gen) });
-    const env = drivingEnvOptions(setup, SUV, inputs, builtinDrivingController);
-    const results = evaluateDriving(
-      pop.genomes.map((g) => new Network(g)),
-      env,
-      pop.genomes.map((g) => g.id),
-    );
-    results.forEach((r, i) => (pop.genomes[i].fitness = r.fitness));
-    const safe = results.filter((r) => r.safe).length;
+  for (let k = 0; k < opts.generations; k++) {
+    const started = performance.now();
+    const setup = trainer.setup();
+    const genomes = trainer.genomes;
+    const seeds = trainer.seeds();
+    const chunk = Math.ceil(genomes.length / sims.length);
+    const parts = await Promise.all(sims.map((sim, i) => sim.evaluate('driving', setup, genomes.slice(i * chunk, (i + 1) * chunk), seeds.slice(i * chunk, (i + 1) * chunk), trainer.generation)));
+    const results = parts.flat() as DrivingRunResult[];
+    const level = trainer.content.level;
+    const record = trainer.complete(results, performance.now() - started);
     const reasons: Record<string, number> = {};
-    for (const r of results) reasons[r.stopReason ?? 'none'] = (reasons[r.stopReason ?? 'none'] ?? 0) + 1;
-    const next = advanceCurriculum(cur, safe, results.length);
-    opts.onGeneration?.({ generation: gen, level: cur.level, safe, reasons, next });
-    if (next.level > cur.level && reached[next.level - 1] === undefined) reached[next.level - 1] = gen + 1;
-    cur = next;
-    if (opts.until && cur.level >= opts.until) break;
-    pop.advance();
+    for (const r of results) for (const leg of r.legs) reasons[leg.stopReason ?? 'none'] = (reasons[leg.stopReason ?? 'none'] ?? 0) + 1;
+    const next = trainer.content;
+    opts.onGeneration?.({ generation: record.generation, level, metrics: record.metrics ?? {}, bestFitness: record.stats.best, reasons, wallMs: record.wallMs, next });
+    if (next.level > level && reached[next.level - 1] === undefined) reached[next.level - 1] = record.generation + 1;
+    if (opts.until && next.level >= opts.until) break;
   }
   return reached;
 }

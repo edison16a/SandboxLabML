@@ -1,4 +1,5 @@
 import { HIDESEEK_ENGINE_VERSION } from '../core/version';
+import { drivingInfo } from '../driving/info';
 import { racingInfo } from '../racing/info';
 import type { AnyEpisodeModule, EpisodeEnvInfo } from './episode';
 import type { EnvId } from './types';
@@ -13,7 +14,10 @@ import type { EnvId } from './types';
  * loads on demand through `loadEpisodeModule`, so a page that only lists
  * runs or checks scripts never ships an env's engine.
  */
-const infos = new Map<string, EpisodeEnvInfo>([[racingInfo.id, racingInfo]]);
+const infos = new Map<string, EpisodeEnvInfo>([
+  [racingInfo.id, racingInfo],
+  [drivingInfo.id, drivingInfo],
+]);
 
 const loaded = new Map<string, AnyEpisodeModule>();
 const loading = new Map<string, Promise<AnyEpisodeModule>>();
