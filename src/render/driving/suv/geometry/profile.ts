@@ -57,7 +57,7 @@ function rockerY(x: number): number {
 
 /** How deep the hood's valley sits below the fender peaks; negative domes the short rear deck instead. */
 function valley(x: number): number {
-  return 0.04 * smooth((x - 0.3) / 0.4) + 0.045 * smooth((x - 1.6) / 0.85) - 0.03 * smooth((-x - 2.2) / 0.15);
+  return 0.04 * smooth((x - 0.3) / 0.4) + 0.045 * smooth((x - 1.6) / 0.85) - 0.03 * smooth((-x - 1.95) / 0.4);
 }
 
 export interface Section {
@@ -72,7 +72,7 @@ export function beltAt(x: number): [number, number] {
 
 /** Height of the body's top at the centerline: the hood's valley floor, or the rear deck. */
 export function deckY(x: number): number {
-  return beltY(x) - valley(x) + 0.006 - endRound(x).drop;
+  return beltY(x) - valley(x) - endRound(x).drop;
 }
 
 export function sectionAt(x: number): Section {
@@ -82,15 +82,18 @@ export function sectionAt(x: number): Section {
   // The sculpt only dishes the doors between the arches; it fades out over the fenders.
   const c = between(x, -0.95, 1.05, 0.3);
   // Along the cabin the shoulder ends on a shelf under the glass; on the hood it crests flat at the fender peak.
-  const crest = deg(72 + 18 * smooth((x - 0.85) / 0.3) + 8 * smooth((-x - 2.3) / 0.12));
+  // Both changes are stretched over 0.4 m or more and done before the hood begins, so they never ripple the paint.
+  const crest = deg(72 + 18 * smooth((x - 0.45) / 0.55) + 8 * smooth((-x - 2.0) / 0.4));
+  // The valley falls from the peak to a floor on the centerline like half a cosine wave: flat at both ends, one U, no ridge.
+  const fall = Math.atan((Math.PI / 2) * Math.sin(0.45 * Math.PI) * (v / Math.max(bz, 0.2)));
   const keys: Key[] = [
     key(w - 0.085, sillY(x), deg(-75)),
     key(w - 0.045, rockerY(x), deg(-22), deg(-8 + 9 * c)),
     key(w - 0.012, creaseY(x), deg(-8 - 16 * c), deg(-5)),
     key(w, shoulderY(x), deg(1)),
     key(bz, by, crest),
-    key(bz * 0.36, by - v, deg(90)),
-    key(0, by - v + 0.006, deg(90)),
+    key(bz * 0.45, by - v + v * 0.5 * (1 - Math.cos(0.45 * Math.PI)), deg(90) + fall),
+    key(0, by - v, deg(90)),
   ];
   return { keys };
 }
