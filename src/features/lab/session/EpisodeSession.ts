@@ -6,18 +6,14 @@ import type { EpisodeTrainerState } from '@/engine/training/episodeTrainer';
 import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { saveCheckpoint } from '@/storage/checkpoints';
-import { saveGeneration } from '@/storage/generations';
 import { createRun, getRun } from '@/storage/runs';
-import { WriteQueue } from '@/storage/writeQueue';
-import { toast } from '@/ui/toast/toastStore';
 import { createWorkerPool, type WorkerPool } from '@/workers/client/workerPool';
-import type { CoordinatorEvent } from '@/workers/coordinator/events';
 import { isWatchSpeed, WATCH_SPEEDS, type SpeedMode } from '@/workers/shared/protocol';
 import { openedLabState, viewportHeld, withRecords, type LabState, type LabStoreApi } from '../state/labState';
 import { maybeBenchmark } from './backgroundBench';
 import { ghostSpecs, selectGhosts } from './ghostSelection';
-import { RecordBatcher } from './recordBatcher';
 import { restoreHistory } from './restoreRun';
+import { SessionEvents } from './sessionEvents';
 
 /**
  * Main thread glue for a single population lab: owns the workers, saves
@@ -32,13 +28,23 @@ export class EpisodeSession<S extends LabState = LabState> {
   protected ghostKey = '';
   /** What the population trains on, from the coordinator. Null until the run loads. */
   protected content: unknown = null;
-  protected readonly writes = new WriteQueue();
-  private readonly batcher = new RecordBatcher((batch) => {
-    const next = withRecords(this.store.records, batch);
-    if (next) this.set(next as Partial<S>);
-    // Benchmark once the records are in the store, so each score has a row to land on.
-    if (this.pool) for (const r of batch) maybeBenchmark(this.pool, this.api as unknown as LabStoreApi, r);
-    void this.refreshGhosts();
+  /** Saves and batches what the coordinator sends (see sessionEvents.ts). */
+  protected readonly events = new SessionEvents({
+    lab: () => this.store,
+    set: (patch) => this.set(patch as Partial<S>),
+    deliver: (batch) => {
+      const next = withRecords(this.store.records, batch);
+      if (next) this.set(next as Partial<S>);
+      // Benchmark once the records are in the store, so each score has a row to land on.
+      if (this.pool) for (const r of batch) maybeBenchmark(this.pool, this.api as unknown as LabStoreApi, r);
+      void this.refreshGhosts();
+    },
+    content: (content) => {
+      this.content = content;
+      this.onContent(content);
+    },
+    refreshGhosts: (force) => void this.refreshGhosts(force),
+    playGhosts: (speed) => void this.playGhosts(speed, false),
   });
 
   constructor(
@@ -56,7 +62,7 @@ export class EpisodeSession<S extends LabState = LabState> {
 
   /** Starts the workers and loads the env's module, which the ghost setup needs on this thread. */
   async init(): Promise<WorkerPool> {
-    if (!this.ready) this.ready = Promise.all([createWorkerPool((e) => this.onEvent(e)), loadEpisodeModule(this.env)]).then(([p]) => (this.pool = p));
+    if (!this.ready) this.ready = Promise.all([createWorkerPool((e) => this.events.apply(e)), loadEpisodeModule(this.env)]).then(([p]) => (this.pool = p));
     return this.ready;
   }
 
@@ -80,7 +86,7 @@ export class EpisodeSession<S extends LabState = LabState> {
   protected async load(config: RunConfig, history: GenerationRecord[], state?: EpisodeTrainerState): Promise<void> {
     const pool = await this.init();
     await pool.coordinator.pause();
-    this.batcher.clear();
+    this.events.clear();
     pool.population.clear();
     pool.ghosts.clear();
     await pool.replay.stopGhosts();
@@ -138,7 +144,7 @@ export class EpisodeSession<S extends LabState = LabState> {
     const run = this.store.run;
     if (!pool || !run) return;
     const state = await pool.coordinator.checkpoint();
-    if (state) await this.writes.push(() => saveCheckpoint(run.id, state.population.generation, state));
+    if (state) await this.events.writes.push(() => saveCheckpoint(run.id, state.population.generation, state));
   }
 
   /** Leaves the Sandbox and brings the training ghosts back. Labs with a Sandbox reset their own fields too. */
@@ -191,40 +197,4 @@ export class EpisodeSession<S extends LabState = LabState> {
 
   /** The content changed (Racing: a script switched the track). Labs mirror it into their store. */
   protected onContent(_content: unknown): void {}
-
-  private onEvent(e: CoordinatorEvent): void {
-    const run = this.store.run;
-    switch (e.type) {
-      case 'status': {
-        this.batcher.flush();
-        const held = viewportHeld(this.store);
-        this.set({ status: e.status } as Partial<S>);
-        // Max held the ghosts while it trained. Once it stops, the viewport wakes and they come back.
-        if (held && !viewportHeld(this.store)) void this.refreshGhosts(true);
-        break;
-      }
-      case 'generation':
-        this.batcher.push(e.record);
-        void this.writes.push(() => saveGeneration(e.record));
-        break;
-      case 'checkpoint':
-        if (run) void this.writes.push(() => saveCheckpoint(run.id, e.generation, e.state));
-        break;
-      case 'content':
-        this.content = e.content;
-        this.onContent(e.content);
-        void this.refreshGhosts(true);
-        break;
-      case 'live-start':
-        this.set({ liveGeneration: e.generation } as Partial<S>);
-        if (this.store.mode === 'sandbox') break;
-        // Ghosts restart with every live generation so they race the new agents from the same start.
-        void this.playGhosts(e.speed, false);
-        break;
-      case 'error':
-        this.set({ status: 'error' } as Partial<S>);
-        toast.error('Training stopped', e.message);
-        break;
-    }
-  }
 }
