@@ -1,4 +1,5 @@
 import { faceEdge } from './cap';
+import { addPipes } from './exhaust';
 import { smooth } from './curve';
 import { at, capDisc, capPanel, capSpan } from './panels';
 import type { Detail, PartBin } from './parts';
@@ -46,8 +47,8 @@ function addLights(bin: PartBin, detail: Detail): void {
   bin.add('tail', bandStrip(0.036, BAND.half - 0.02, 0.38, 0.62, 0.008, c * 3));
   bin.add('tail', bandStrip(0.56, BAND.half - 0.034, 0.68, 0.78, 0.008, c));
   if (detail.brakes) addEmblem(bin, inBand(0, 0.49)[1], detail.fine ? 14 : 8);
-  // Slim reflectors low on the bumper's corners.
-  bin.add('tail', capPanel(-1, at(0.66), at(0.8), 0.6, 0.612, 0.004, 4, 1));
+  // Slim reflectors on the bumper's corners, under its crease.
+  bin.add('tail', capPanel(-1, at(0.66), at(0.8), 0.56, 0.572, 0.004, 4, 1));
 }
 
 /**
@@ -70,8 +71,8 @@ function addEmblem(bin: PartBin, cy: number, seg: number): void {
 
 /**
  * The diffuser: a gloss black panel across the bottom of the bumper with
- * satin fins in the middle and a pair of wide tailpipes set into it on
- * each side. It fills the face down to its lowest edge and keeps inside
+ * satin fins in the middle and a pair of tailpipes standing out of it on
+ * each side (exhaust.ts). It fills the face down to its lowest edge and keeps inside
  * the face's own edge at every height.
  */
 function addDiffuser(bin: PartBin, detail: Detail): void {
@@ -84,11 +85,7 @@ function addDiffuser(bin: PartBin, detail: Detail): void {
   if (detail.fine) {
     for (const z of [-0.18, -0.09, 0, 0.09, 0.18]) bin.add('clad', capPanel(-1, at(z - 0.006), at(z + 0.006), y0 + 0.012, top - 0.035, 0.014, 1, 1, false));
   }
-  const seg = detail.fine ? 22 : detail.brakes ? 10 : 6;
-  for (const z of [0.4, 0.545]) {
-    bin.add('metal', capDisc(-1, z, 0.44, 0.064, 0.009, seg, true, 0.5));
-    bin.add('liner', capDisc(-1, z, 0.44, 0.052, 0.011, seg, true, 0.44));
-  }
+  addPipes(bin, detail);
 }
 
 /** The whole tail: lights, spoiler, tailgate and diffuser, laid on the bent face. */
