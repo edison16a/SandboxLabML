@@ -6,9 +6,9 @@ import { merge } from './grid';
  * SUV draws one mesh per slot and the population SUV bakes each slot into
  * vertex colors and surface values.
  */
-export type Slot = 'paint' | 'glass' | 'trim' | 'clad' | 'grille' | 'led' | 'tail' | 'liner' | 'metal' | 'tire' | 'rim' | 'disc' | 'caliper';
+export type Slot = 'paint' | 'glass' | 'trim' | 'clad' | 'grille' | 'led' | 'tail' | 'liner' | 'metal' | 'tire' | 'rim' | 'face' | 'disc' | 'caliper';
 
-export const SLOTS: readonly Slot[] = ['paint', 'glass', 'trim', 'clad', 'grille', 'led', 'tail', 'liner', 'metal', 'tire', 'rim', 'disc', 'caliper'];
+export const SLOTS: readonly Slot[] = ['paint', 'glass', 'trim', 'clad', 'grille', 'led', 'tail', 'liner', 'metal', 'tire', 'rim', 'face', 'disc', 'caliper'];
 
 /**
  * How finely the SUV is built. The followed SUV and the population share

@@ -112,9 +112,11 @@ export function buildWheel(detail: Detail): Map<Slot, THREE.BufferGeometry> {
   const bin = new PartBin();
   const b = barrel(detail);
   bin.add('tire', tire(detail));
-  bin.add('rim', b.barrel, spokes(detail));
+  const sp = spokes(detail);
+  bin.add('rim', b.barrel, sp.sides);
+  bin.add('face', sp.faces);
   if (detail.brakes) {
-    bin.add('metal', b.lip);
+    bin.add('face', b.lip);
     const d = brakeDisc(detail);
     bin.add('disc', d.disc);
     bin.add('rim', d.bell);

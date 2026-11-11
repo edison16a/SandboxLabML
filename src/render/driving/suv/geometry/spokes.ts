@@ -59,8 +59,12 @@ function dish(g: THREE.BufferGeometry): THREE.BufferGeometry {
   return g;
 }
 
-/** The five double spokes of the SUV's 22 inch wheel, faces chamfered so their edges catch the light. */
-export function spokes(detail: Detail): THREE.BufferGeometry {
+/**
+ * The five double spokes of the SUV's 22 inch wheel, faces chamfered so
+ * their edges catch the light. The faces come back apart from the rest:
+ * they are machined bright while the sides and pockets stay dark.
+ */
+export function spokes(detail: Detail): { faces: THREE.BufferGeometry; sides: THREE.BufferGeometry } {
   const depth = detail.brakes ? 0.026 : 0.02;
   const bevel = detail.brakes ? 0.005 : 0;
   const one = new THREE.ExtrudeGeometry(yOutline(), { depth: depth - bevel * 2, bevelEnabled: bevel > 0, bevelSize: bevel, bevelThickness: bevel, bevelSegments: 1, steps: 1 });
@@ -68,5 +72,34 @@ export function spokes(detail: Detail): THREE.BufferGeometry {
   const flat = one.index ? one.toNonIndexed() : one;
   const parts: THREE.BufferGeometry[] = [];
   for (let i = 0; i < COUNT; i++) parts.push(flat.clone().rotateZ((i / COUNT) * Math.PI * 2));
-  return dish(merge(parts));
+  return splitFaces(dish(merge(parts)));
+}
+
+/** Splits flat shaded triangles into those facing out along +Z (the machined faces) and the rest. */
+function splitFaces(g: THREE.BufferGeometry): { faces: THREE.BufferGeometry; sides: THREE.BufferGeometry } {
+  const pos = g.attributes.position;
+  const nor = g.attributes.normal;
+  const out = { faces: [] as number[], sides: [] as number[] };
+  for (let t = 0; t < pos.count; t += 3) {
+    const nz = (nor.getZ(t) + nor.getZ(t + 1) + nor.getZ(t + 2)) / 3;
+    out[nz > 0.82 ? 'faces' : 'sides'].push(t, t + 1, t + 2);
+  }
+  const pick = (list: number[]) => {
+    const p = new Float32Array(list.length * 3);
+    const n = new Float32Array(list.length * 3);
+    list.forEach((v, i) => {
+      p.set([pos.getX(v), pos.getY(v), pos.getZ(v)], i * 3);
+      n.set([nor.getX(v), nor.getY(v), nor.getZ(v)], i * 3);
+    });
+    const part = new THREE.BufferGeometry();
+    part.setAttribute('position', new THREE.BufferAttribute(p, 3));
+    part.setAttribute('normal', new THREE.BufferAttribute(n, 3));
+    // Plain UVs, so the parts merge with the lathed rim pieces that carry them.
+    part.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(list.length * 2), 2));
+    return part;
+  };
+  const faces = pick(out.faces);
+  const sides = pick(out.sides);
+  g.dispose();
+  return { faces, sides };
 }
