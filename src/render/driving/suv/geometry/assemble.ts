@@ -31,7 +31,7 @@ export function buildBody(detail: Detail): Map<Slot, THREE.BufferGeometry> {
 
 /** How each slot looks on the population SUV: base color, roughness, metalness, glow and tint. */
 const LOOK: Record<Slot, { color: [number, number, number]; rough: number; metal: number; glow?: number; tint?: number }> = {
-  paint: { color: [1, 1, 1], rough: 0.35, metal: 0.3, tint: 1 },
+  paint: { color: [1, 1, 1], rough: 0.24, metal: 0.3, tint: 1 },
   glass: { color: [0.02, 0.025, 0.03], rough: 0.05, metal: 0.2 },
   trim: { color: [0.012, 0.012, 0.014], rough: 0.2, metal: 0.2 },
   clad: { color: [0.03, 0.031, 0.033], rough: 0.6, metal: 0 },
