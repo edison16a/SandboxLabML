@@ -1,3 +1,4 @@
+import { DRIVING_RADAR_AXES } from '../bench/driving/axes';
 import type { BlueprintIssue } from '../blueprints/types';
 import type { EpisodeEnvInfo } from '../env/episode';
 import { DRIVING_BLUEPRINTS } from './blueprints';
@@ -7,7 +8,7 @@ import { drivingInputsOf } from './run/inputs';
 import type { DrivingInputConfig } from './sensors/inputConfig';
 import { builtInInputCount, DRIVING_OUTPUTS, drivingInputSchema } from './sensors/inputSchema';
 import { DRIVING_SNAPSHOT } from './snapshotLayout';
-import { DRIVING_ENGINE_VERSION } from './version';
+import { DRIVING_BENCHMARK_VERSION, DRIVING_ENGINE_VERSION } from './version';
 
 /** Lidar layouts a Driving brain may use. */
 export const LIDAR_LIMITS = { minCount: 1, maxCount: 33, minRange: 10, maxRange: 80 } as const;
@@ -45,6 +46,15 @@ export const drivingInfo = {
   validateInputs: validateDrivingInputs,
   inputSchema: (config, custom = []) => drivingInputSchema(drivingInputsOf(config), SUV, [...custom]),
   physicsHash: (config) => physicsHash(SUV, { inputs: drivingInputsOf(config), engine: DRIVING_ENGINE_VERSION }),
+
+  bench: {
+    version: DRIVING_BENCHMARK_VERSION,
+    axes: DRIVING_RADAR_AXES,
+    hint: 'unseen cities, 0 to 100',
+    about: 'Every 5 generations, the champion drives sixteen trips in two cities it never trained in.',
+    // Loaded on first use: the exam brings the autopilot and the script compiler, which training without a script never needs.
+    run: async (config, genome, opts) => (await import('../bench/driving/runner')).benchmarkDriving(config, genome, opts),
+  },
 
   load: () => import('./module').then((m) => m.drivingModule),
 } satisfies EpisodeEnvInfo;
