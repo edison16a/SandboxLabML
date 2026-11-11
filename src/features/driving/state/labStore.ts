@@ -1,10 +1,14 @@
 import { create } from 'zustand';
 import type { DrivingContent } from '@/engine/driving/run/content';
+import type { DrivingInputConfig } from '@/engine/driving/sensors/inputConfig';
+import type { DrivingSetup } from '@/engine/driving/setup';
 import { DRIVING_ENGINE_VERSION } from '@/engine/driving/version';
 import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { labDefaults, openedLabState, type LabState } from '@/features/lab/state/labState';
 import type { DrivingCamera } from '@/render/driving/frame/sceneContext';
+import type { TrainedModel } from '../sandbox/model';
+import type { DrivingSandbox } from '../sandbox/state';
 
 /**
  * UI state for the Driving lab: the shared lab fields, plus what the city
@@ -22,6 +26,14 @@ export interface DrivingLabState extends LabState {
   trips: number;
   /** The SUV the viewport follows in the stream it shows, or -1. */
   followed: number;
+  /** What the Sandbox is set up to drive, kept while it is closed. Null until it first opens for the run. */
+  sandbox: DrivingSandbox | null;
+  sandboxPaused: boolean;
+  /** The trip the Sandbox replay drives and the inputs its SUVs sense, so the viewport builds those streets and that lidar. */
+  sandboxSetup: DrivingSetup | null;
+  sandboxInputs: DrivingInputConfig | null;
+  /** The shipped trained model, once loaded; null before, or when the build ships none. */
+  trained: TrainedModel | null;
   set: (patch: Partial<DrivingLabState>) => void;
 }
 
@@ -31,7 +43,7 @@ export interface DrivingLabState extends LabState {
  * sends the new run's content while it loads, before this lands.
  */
 export function openedRunState(run: RunConfig, records: GenerationRecord[], liveGeneration: number, leaving: DrivingLabState['mode'] = 'train'): Partial<DrivingLabState> {
-  return { ...openedLabState(run, records, liveGeneration, DRIVING_ENGINE_VERSION, leaving), trip: 0, trips: 1, followed: -1 };
+  return { ...openedLabState(run, records, liveGeneration, DRIVING_ENGINE_VERSION, leaving), trip: 0, trips: 1, followed: -1, sandbox: null, sandboxSetup: null, sandboxInputs: null, sandboxBrain: null };
 }
 
 export const useDrivingLab = create<DrivingLabState>((set) => ({
@@ -42,5 +54,10 @@ export const useDrivingLab = create<DrivingLabState>((set) => ({
   trip: 0,
   trips: 1,
   followed: -1,
+  sandbox: null,
+  sandboxPaused: false,
+  sandboxSetup: null,
+  sandboxInputs: null,
+  trained: null,
   set: (patch) => set(patch),
 }));

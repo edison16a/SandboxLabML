@@ -45,6 +45,8 @@ export function DrivingViewport({ streams, onReady, ultra = false }: Props) {
   const tier = useDrivingLab((s) => s.activeTier);
   const trip = useDrivingLab((s) => s.trip);
   const held = useDrivingLab(viewportHeld);
+  const sandboxSetup = useDrivingLab((s) => (s.mode === 'sandbox' ? s.sandboxSetup : null));
+  const sandboxInputs = useDrivingLab((s) => (s.mode === 'sandbox' ? s.sandboxInputs : null));
   const idle = useDrivingLab((s) => s.status !== 'running' && s.mode === 'train' && isWatchSpeed(s.speed) && s.status !== 'idle');
 
   const frames = useMemo(() => ({ population: new StreamFrames(streams.population), ghosts: new StreamFrames(streams.ghosts), over: new StreamFrames(streams.ghosts) }), [streams]);
@@ -58,14 +60,16 @@ export function DrivingViewport({ streams, onReady, ultra = false }: Props) {
 
   const popContent = usePopulationContent(streams.population);
   const content = shown === 'population' ? popContent : (ghostContent ?? popContent);
+  // The Sandbox drives a trip of its own, which the content cannot describe (a clicked destination, a longer start).
   const cityId = content?.city;
-  const city = useMemo(() => (cityId ? cityFor(cityOf(cityId)) : null), [cityId]);
-  const trips = useMemo(() => (content ? contentTrips(content) : []), [content]);
+  const sandboxCity = sandboxSetup?.city;
+  const city = useMemo(() => (sandboxCity ? cityFor(sandboxCity) : cityId ? cityFor(cityOf(cityId)) : null), [sandboxCity, cityId]);
+  const trips = useMemo(() => (sandboxSetup ? [sandboxSetup] : content ? contentTrips(content) : []), [sandboxSetup, content]);
   const route = useMemo(() => {
     const t = trips[Math.min(trip, trips.length - 1)];
     return t ? buildDrivingWorld(t).route : null;
   }, [trips, trip]);
-  const inputs = useMemo(() => (run ? drivingInputsOf(run) : null), [run]);
+  const inputs = useMemo(() => sandboxInputs ?? (run ? drivingInputsOf(run) : null), [sandboxInputs, run]);
 
   const view = useMemo<DrivingView>(
     () => ({ camera, sensors, focus: focusIndex(focus, shown, ghostGenerations), population: true, colors: shown === 'ghosts' ? 'age' : 'species' }),

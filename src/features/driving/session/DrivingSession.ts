@@ -3,6 +3,7 @@ import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { EpisodeSession } from '@/features/lab/session/EpisodeSession';
 import { isWatchSpeed } from '@/workers/shared/protocol';
+import { enterSandbox, sandboxControls, scheduleSandboxScene, type SandboxControls } from '../sandbox/scene';
 import { openedRunState, useDrivingLab, type DrivingLabState } from '../state/labStore';
 
 /**
@@ -17,7 +18,8 @@ export const TURBO_SCENE_MS = 25_000;
 /**
  * The Driving lab's session: the shared episode session, plus the content
  * the city on screen is built from (what training drives, and what the
- * ghost replay drives, which Turbo lets lag behind).
+ * ghost replay drives, which Turbo lets lag behind) and the Sandbox, where
+ * champions or the shipped trained model drive any trip.
  */
 export class DrivingSession extends EpisodeSession<DrivingLabState> {
   private sceneAt = -Infinity;
@@ -66,6 +68,26 @@ export class DrivingSession extends EpisodeSession<DrivingLabState> {
     if (turbo) this.sceneAt = performance.now();
     else this.sceneAt = -Infinity;
     await super.refreshGhosts(force);
+  }
+
+  /** Pauses training and opens the Sandbox, back to the trip and SUVs last set up there. */
+  async enterSandbox(): Promise<void> {
+    await enterSandbox(this, await this.init());
+  }
+
+  override async exitSandbox(): Promise<void> {
+    this.set({ sandboxSetup: null, sandboxInputs: null, sandboxBrain: null, sandboxPaused: false });
+    await super.exitSandbox();
+  }
+
+  /** Call after a lesion in the Sandbox. Trip and field changes go through `sandbox`. */
+  override sandboxChanged(): void {
+    if (this.pool) scheduleSandboxScene(this.pool);
+  }
+
+  /** Play, pause, restart, the trip and the SUVs of the Sandbox. Null until the workers are up. */
+  get sandbox(): SandboxControls | null {
+    return this.pool ? sandboxControls(this.pool) : null;
   }
 }
 

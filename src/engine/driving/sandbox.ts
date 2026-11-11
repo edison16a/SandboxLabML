@@ -82,3 +82,9 @@ export function nearestLanePoint(city: City, x: number, y: number, reach = 6): {
   }
   return best;
 }
+
+/** How many SUVs a Sandbox trip can line up at its start. */
+export function sandboxCapacity(trip: SandboxTrip): number {
+  const setup = sandboxSetup(trip, 1);
+  return startCapacity(cityFor(setup.city), setup.route);
+}
