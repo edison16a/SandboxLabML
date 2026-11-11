@@ -37,6 +37,10 @@ export class Fleet {
   readonly turnSpeed: Float64Array;
   /** Connectors through each node, to check whether an intersection is clear. */
   readonly nodeConnectors: number[][];
+  /** Connectors leading into each lane, to take turns where two turns merge into it. */
+  readonly intoLane: number[][];
+  /** Per connector: how far along it still shares road with the other turns out of the same lane, m. */
+  readonly shared: Float64Array;
   /** World pose of each car after the last tick. */
   readonly px: Float64Array;
   readonly py: Float64Array;
@@ -65,14 +69,17 @@ export class Fleet {
     this.py = new Float64Array(cap);
     this.ph = new Float64Array(cap);
     this.nodeConnectors = city.nodes.map(() => []);
+    this.intoLane = Array.from({ length: city.laneCount }, () => []);
     this.turnSpeed = new Float64Array(city.elements.length).fill(Infinity);
     for (const e of city.elements) {
       if (e.kind !== ELEMENT_CONNECTOR) continue;
       this.nodeConnectors[e.from].push(e.id);
+      this.intoLane[e.toLane].push(e.id);
       let k = 0;
       for (let i = 0; i < e.path.n; i++) k = Math.max(k, Math.abs(e.path.k[i]));
       if (e.turn !== 0) this.turnSpeed[e.id] = Math.sqrt(TURN_GRIP / Math.max(k, 1e-3));
     }
+    this.shared = sharedStretch(city);
     for (const lane of city.elements) {
       if (lane.kind !== ELEMENT_LANE) continue;
       for (const c of lane.next) {
@@ -122,6 +129,37 @@ export class Fleet {
       this.head[this.el[i]] = i;
     }
   }
+}
+
+/** Two paths closer than this, m, are close enough for cars on them to touch. */
+const TOUCH = 2.6;
+
+/**
+ * For each connector, the arc length up to which it stays within a car's
+ * width of another turn out of the same lane. Cars there share the road and
+ * must follow each other; past it they have gone their separate ways.
+ */
+function sharedStretch(city: City): Float64Array {
+  const out = new Float64Array(city.elements.length);
+  for (const lane of city.elements) {
+    if (lane.kind !== ELEMENT_LANE) continue;
+    for (const c of lane.next) {
+      const a = city.elements[c].path;
+      for (const d of lane.next) {
+        if (d === c) continue;
+        const b = city.elements[d].path;
+        for (let i = a.n - 1; i >= 0; i--) {
+          let near = false;
+          for (let j = 0; j < b.n && !near; j++) near = Math.hypot(a.x[i] - b.x[j], a.y[i] - b.y[j]) < TOUCH;
+          if (near) {
+            out[c] = Math.max(out[c], a.s[i]);
+            break;
+          }
+        }
+      }
+    }
+  }
+  return out;
 }
 
 function weight(turn: number): number {

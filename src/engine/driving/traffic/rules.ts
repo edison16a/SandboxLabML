@@ -1,6 +1,7 @@
 import { ELEMENT_LANE } from '../city/types';
 import { axisOf, LIGHT_RED, LIGHT_YELLOW, lightState } from '../signals/plan';
 import type { Fleet } from './fleet';
+import { findLead, type Lead } from './leads';
 
 /** Intelligent driver model constants: comfortable acceleration and braking, standstill gap, time headway. */
 export const IDM = { accel: 1.8, brake: 2.6, gap: 2.0, headway: 1.25 };
@@ -12,6 +13,9 @@ const TURN_BRAKE = 1.6;
 const STOP_MARGIN = 0.8;
 /** How far down the oncoming lane a left turner looks for traffic, m. */
 const ONCOMING_LOOK = 45;
+
+/** Reused result of the lead search. */
+const lead: Lead = { gap: Infinity, dv: 0 };
 
 /** What else is in the city that cars must respect this tick. */
 export interface TrafficContext {
@@ -75,30 +79,7 @@ export function trafficAccel(f: Fleet, i: number, ctx: TrafficContext): number {
   const v = f.v[i];
   const half = f.len[i] / 2;
   const toEnd = e.path.length - s;
-  let gap = Infinity;
-  let dv = 0;
-  // The car ahead: on this element, else on the next, else the one after.
-  let lead = -1;
-  let offset = -s;
-  for (let k = 0; k < 3; k++) {
-    const el = k === 0 ? f.el[i] : k === 1 ? f.nxt[i] : f.nxt2[i];
-    let best = Infinity;
-    for (let j = f.head[el]; j >= 0; j = f.link[j]) {
-      if (j === i) continue;
-      const ahead = offset + f.s[j];
-      if (ahead > 0 && ahead < best) {
-        best = ahead;
-        lead = j;
-      }
-    }
-    if (lead >= 0) {
-      gap = best - half - f.len[lead] / 2;
-      dv = v - f.v[lead];
-      break;
-    }
-    offset += elements[el].path.length;
-    if (offset > 80) break;
-  }
+  const { gap, dv } = findLead(f, i, lead);
   let a = idm(v, f.v0[i], gap, dv);
   let v0 = f.v0[i];
   let stop = Infinity;
