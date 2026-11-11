@@ -19,6 +19,7 @@ import { createStopPose, type StopPose } from './stopPose';
 /** The ring color, pushed past 1 so bloom catches it where it runs. */
 const RING = new THREE.Color(NAV_COLORS.championRing).multiplyScalar(1.5);
 const GREY = new THREE.Color(NAV_COLORS.dormant);
+const FLASH = new THREE.Color(NAV_COLORS.senseSpikes);
 
 export interface NavCharacterProps {
   /** Fills in where it is and what it does, and how its run ended (`stop`). Return false to hide it. */
@@ -81,13 +82,14 @@ export function NavCharacter({ read, detail, shadows, blob }: NavCharacterProps)
     rig.poser.apply(pose);
     mats.apply(pose, st.lift, clock.elapsedTime);
     if (st.grey > 0) mats.body.color.lerp(GREY, st.grey);
+    if (st.flash > 0) mats.body.color.lerp(FLASH, st.flash * 0.7);
     if (shadow.current) {
-      shadow.current.visible = blob && st.tip < 0.3;
+      shadow.current.visible = blob && Math.abs(st.tip) < 0.3;
       shadow.current.position.y = -st.lift;
     }
     if (ring.current) {
       // The ring stays flat on the floor whatever the body does, and dims once the run is over.
-      ring.current.visible = st.tip < 0.2 && st.squash > 0.9;
+      ring.current.visible = Math.abs(st.tip) < 0.2 && st.squash > 0.9;
       ring.current.position.y = -st.lift;
       ringMat.uniforms.uStrength.value = st.alpha * (st.grey > 0 ? 0.5 : 1);
       ringMat.uniforms.uTime.value = clock.elapsedTime;

@@ -11,8 +11,8 @@ import { STRIDE } from '../frame/snapshotRead';
 import { NAV_COLORS } from '../palette';
 
 /** Seconds the ring takes to spread and fade, and how wide it gets, m. */
-const LENGTH = 0.7;
-const REACH = 1.6;
+const LENGTH = 0.9;
+const REACH = 2.2;
 const SPIKES = new THREE.Color(NAV_COLORS.senseSpikes).multiplyScalar(1.3);
 const MOVER = new THREE.Color(NAV_COLORS.senseMover).multiplyScalar(1.3);
 
@@ -50,12 +50,12 @@ export function DeathFlash() {
     const k = Math.min(1, state.age / LENGTH);
     r.visible = k < 1;
     r.scale.setScalar(0.35 + k * REACH);
-    material.opacity = 0.85 * (1 - k) * (1 - k);
+    material.opacity = 0.95 * (1 - k) * (1 - k);
   }, POSE_PRIORITY);
 
   return (
     <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} material={material} visible={false} renderOrder={3} raycast={() => null}>
-      <ringGeometry args={[0.86, 1, 64]} />
+      <ringGeometry args={[0.8, 1, 64]} />
     </mesh>
   );
 }

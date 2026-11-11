@@ -40,4 +40,6 @@ export interface NavFeed {
   timeScale: number;
   /** The run's input config, for drawing the followed agent's sensors. Null hides them. */
   inputs: NavigationInputConfig | null;
+  /** An agent the view must follow (one the user picked), or null to follow the best. */
+  follow?: number | null;
 }

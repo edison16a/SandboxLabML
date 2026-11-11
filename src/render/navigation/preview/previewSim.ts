@@ -41,6 +41,7 @@ export class PreviewSim implements NavFeed {
   epoch = 0;
   timeScale = 1;
   inputs = STANDARD_NAVIGATION_INPUTS;
+  follow: number | null = null;
   paused = false;
   /** Pause by itself once the episode clock reaches this, s. For screenshots of a moment that needs a few frames of history. */
   until = Infinity;

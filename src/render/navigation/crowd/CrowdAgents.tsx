@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
+import { NAV_RUNNING } from '@/engine/navigation/agent';
 import { SNAP_FLAGS, SNAP_SPEED, SNAP_STATUS, SNAP_STOP_TIME } from '@/engine/navigation/snapshot';
 import { instancedCharacterGeometry } from '@/render/hideseek/characters/instancedCharacter';
 import { cadence } from '@/render/hideseek/characters/motion/gait';
@@ -18,8 +19,10 @@ import { createStopPose, stopPose } from './stopPose';
 export const MAX_AGENTS = 320;
 const BODY = new THREE.Color(NAV_COLORS.runner).lerp(new THREE.Color(NAV_COLORS.crowdGrey), 0.3);
 const GREY = new THREE.Color(NAV_COLORS.dormant);
+const FLASH = new THREE.Color(NAV_COLORS.senseSpikes);
 /** Crowd members closer than this to the champion fade back, m, so the one the view follows never hides in the pack. */
 const CLEAR_RADIUS = 0.85;
+const CLEAR_RADIUS_ENDED = 1.6;
 /** How far they fade, and how fast they fade out and back in, 1/s. */
 const CLEAR_ALPHA = 0.22;
 const CLEAR_OUT = 12;
@@ -82,6 +85,8 @@ export function CrowdAgents() {
     let ns = 0;
     let nf = 0;
     const count = Math.min(frame.count, MAX_AGENTS);
+    // Once the champion's run is over the pack clears a wider space, so its fall or its hop is seen whole.
+    const clearRadius = frame.leader >= 0 && curr[frame.leader * STRIDE + SNAP_STATUS] !== NAV_RUNNING ? CLEAR_RADIUS_ENDED : CLEAR_RADIUS;
     for (let i = 0; i < count; i++) {
       if (i === frame.leader) continue;
       const o = i * STRIDE;
@@ -90,7 +95,7 @@ export function CrowdAgents() {
       blendAgent(frame.prev, curr, i, frame.alpha, t.pose);
       // Eased per agent on wall time, so one walking past the champion melts away and back instead of popping.
       const lp = frame.leaderPose;
-      const near = frame.leader >= 0 && Math.abs(t.pose.x - lp.x) < CLEAR_RADIUS && Math.abs(t.pose.z - lp.z) < CLEAR_RADIUS && Math.hypot(t.pose.x - lp.x, t.pose.z - lp.z) < CLEAR_RADIUS;
+      const near = frame.leader >= 0 && Math.hypot(t.pose.x - lp.x, t.pose.z - lp.z) < clearRadius;
       const goal = near ? CLEAR_ALPHA : 1;
       t.clear[i] += (goal - t.clear[i]) * Math.min(1, (goal < t.clear[i] ? CLEAR_OUT : CLEAR_IN) * Math.min(dt, 0.1));
       const alpha = st.alpha * t.clear[i];
@@ -104,8 +109,8 @@ export function CrowdAgents() {
       t.p.set(t.pose.x, bob + st.lift, t.pose.z);
       t.s.set(st.spread, st.squash, st.spread);
       t.m.compose(t.p, t.q, t.s);
-      t.c.copy(BODY).lerp(GREY, st.grey);
-      const amp = st.tip > 0 || st.squash < 1 || st.airborne ? 0 : Math.min(0.6, speed * 0.22);
+      t.c.copy(BODY).lerp(GREY, st.grey).lerp(FLASH, st.flash * 0.7);
+      const amp = st.tip !== 0 || st.squash < 1 || st.airborne ? 0 : Math.min(0.6, speed * 0.22);
       if (alpha >= 0.99) {
         ms.setMatrixAt(ns, t.m);
         ms.setColorAt(ns, t.c);

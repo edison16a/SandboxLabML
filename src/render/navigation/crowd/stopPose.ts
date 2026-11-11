@@ -7,7 +7,7 @@ import { FLAG_CRUSHED, NAV_DIED, NAV_FINISHED, NAV_RUNNING } from '@/engine/navi
  * to the other never shows.
  */
 export interface StopPose {
-  /** Forward tip about the feet, rad. */
+  /** Tip about the feet, rad: positive falls forward, negative onto its back. */
   tip: number;
   /** Height scale, and width scale across the floor. */
   squash: number;
@@ -20,15 +20,20 @@ export interface StopPose {
   alpha: number;
   /** How far its color has gone grey, 0 to 1. */
   grey: number;
-  /** In the air in a celebratory hop. */
+  /** In the air: a celebratory hop, or the jolt off the spikes. */
   airborne: boolean;
+  /** A red flash on the body at the moment of death, 1 fading to 0. */
+  flash: number;
 }
 
-/** Seconds a fall takes to land, then the time the body lies before it fades, and the fade. */
-const FALL = 0.42;
+/** Seconds a fall takes to land (after the jolt starts it), then the time the body lies before it fades, and the fade. */
+const FALL = 0.5;
+/** The jolt off the spikes: how long it lasts and how high it throws the body, s and m. */
+const JOLT = 0.3;
+const JOLT_HEIGHT = 0.3;
 export const FADE_START = { died: 0.9, crushed: 0.5, finished: 1, stopped: 0.2 };
 const FADE_LENGTH = { died: 0.9, crushed: 0.8, finished: 0.8, stopped: 0.9 };
-/** A body lying on its front keeps its head out of the floor by this much at full tip, m. */
+/** A body lying flat keeps its head and back out of the floor by this much at full tip, m. */
 const LYING_LIFT = 0.34;
 
 function smooth(a: number, b: number, x: number): number {
@@ -45,6 +50,7 @@ function reset(out: StopPose): StopPose {
   out.alpha = 1;
   out.grey = 0;
   out.airborne = false;
+  out.flash = 0;
   return out;
 }
 
@@ -62,18 +68,22 @@ export function stopPose(status: number, flags: number, age: number, out: StopPo
     const k = smooth(0, 0.12, a);
     out.squash = 1 - 0.72 * k;
     out.spread = 1 + 0.36 * k;
+    out.flash = Math.max(0, 1 - a / 0.45);
     out.grey = 0.5 * smooth(0, 0.4, a);
     out.alpha = 1 - smooth(FADE_START.crushed, FADE_START.crushed + FADE_LENGTH.crushed, a);
     return out;
   }
   if (status === NAV_DIED) {
-    // Falls forward onto its front with a small bounce on landing.
+    // Jolted up off the spikes, then down onto its back with a small bounce, so from behind the view sees its face.
     const t = Math.min(1, a / FALL);
     const land = 1 - (1 - t) ** 3;
-    const bounce = a > FALL ? 0.09 * Math.sin((a - FALL) * 18) * Math.exp(-(a - FALL) * 7) : 0;
-    out.tip = (Math.PI / 2 - 0.1) * land - bounce;
-    out.lift = Math.sin(out.tip) * LYING_LIFT;
-    out.grey = 0.55 * smooth(0.2, 0.8, a);
+    const bounce = a > FALL ? 0.08 * Math.sin((a - FALL) * 18) * Math.exp(-(a - FALL) * 7) : 0;
+    out.tip = -((Math.PI / 2 - 0.12) * land - bounce);
+    const jolt = a < JOLT ? Math.sin((a / JOLT) * Math.PI) * JOLT_HEIGHT : 0;
+    out.lift = jolt + Math.sin(-out.tip) * LYING_LIFT;
+    out.airborne = jolt > 0.05;
+    out.flash = Math.max(0, 1 - a / 0.45);
+    out.grey = 0.55 * smooth(0.3, 0.9, a);
     out.alpha = 1 - smooth(FADE_START.died, FADE_START.died + FADE_LENGTH.died, a);
     return out;
   }

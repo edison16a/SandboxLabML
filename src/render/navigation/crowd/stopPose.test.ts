@@ -7,20 +7,24 @@ describe('how a run ends on screen', () => {
 
   it('leaves a runner as it is', () => {
     stopPose(NAV_RUNNING, 0, 5, p);
-    expect(p).toMatchObject({ tip: 0, squash: 1, spread: 1, lift: 0, spin: 0, alpha: 1, grey: 0, airborne: false });
+    expect(p).toMatchObject({ tip: 0, squash: 1, spread: 1, lift: 0, spin: 0, alpha: 1, grey: 0, airborne: false, flash: 0 });
   });
 
-  it('tips a spiked runner onto its front, then fades it, and never jerks', () => {
+  it('jolts a spiked runner up and drops it onto its back, then fades it, and never jerks', () => {
     let last = 0;
-    for (let a = 0; a <= 0.4; a += 0.02) {
+    for (let a = 0; a <= 0.5; a += 0.02) {
       stopPose(NAV_DIED, FLAG_SPIKED, a, p);
-      expect(p.tip).toBeGreaterThanOrEqual(last - 1e-9);
-      last = p.tip;
+      expect(Math.abs(p.tip)).toBeGreaterThanOrEqual(last - 1e-9);
+      last = Math.abs(p.tip);
     }
+    stopPose(NAV_DIED, FLAG_SPIKED, 0.15, p);
+    expect(p.airborne).toBe(true);
+    expect(p.flash).toBeGreaterThan(0.5);
     stopPose(NAV_DIED, FLAG_SPIKED, FADE_START.died - 0.01, p);
-    expect(p.tip).toBeGreaterThan(1.3);
+    expect(p.tip).toBeLessThan(-1.3);
     expect(p.lift).toBeGreaterThan(0.25);
     expect(p.alpha).toBe(1);
+    expect(p.flash).toBe(0);
     stopPose(NAV_DIED, FLAG_SPIKED, 3, p);
     expect(p.alpha).toBe(0);
   });

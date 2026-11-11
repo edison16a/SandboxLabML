@@ -24,7 +24,8 @@ function numberParam(v: string | null, fallback: number): number {
  * the lab exists: a crowd of scripted navigators runs one level on the
  * main thread, drawn by the real viewport. Address options: level, seed,
  * agents, course (a named course), camera, sensors=0, t (seconds to skip
- * ahead), until (seconds at which to stop), pause=1 and quality.
+ * ahead), until (seconds at which to stop), follow (an agent to follow
+ * instead of the best), pause=1 and quality.
  */
 export function NavigationPreview() {
   const params = useSearchParams();
@@ -39,6 +40,7 @@ export function NavigationPreview() {
     if (skip > 0) s.skip(skip);
     s.paused = params.get('pause') === '1';
     s.until = numberParam(params.get('until'), Infinity);
+    s.follow = params.get('follow') === null ? null : numberParam(params.get('follow'), -1);
     return s;
   }, [level, round, params]);
   const getFeed = useCallback(() => sim, [sim]);
