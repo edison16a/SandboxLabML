@@ -49,7 +49,7 @@ function TrainedModelCard({ cap }: { cap: number }) {
       {on && (
         <div className="flex items-center justify-between border-t border-white/10 pt-2 text-[12px] text-white/70">
           <span>Copies in line</span>
-          <CopiesStepper label="the trained model" value={Math.min(copies, cap)} max={cap} canRemove={false} keepOne onChange={(n) => controls()?.update({ modelCopies: Math.max(1, n) })} />
+          <CopiesStepper label="trained model" value={Math.min(copies, cap)} max={cap} canRemove={false} keepOne onChange={(n) => controls()?.update({ modelCopies: Math.max(1, n) })} />
         </div>
       )}
     </div>
