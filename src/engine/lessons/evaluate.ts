@@ -41,7 +41,7 @@ export async function evaluateCheck(check: LessonCheck, source: string, opts: Ev
       case 'testRun':
         if (p.env === 'racing') return testRunCheck(check, p);
         if (p.env === 'hideseek') return await (await hideSeekChecks()).hideSeekTestRunCheck(check, p, opts.signal);
-        return episodeTestRunCheck(check, p);
+        return await episodeTestRunCheck(check, p);
       case 'metricAbove':
         if (p.env === 'racing') return await metricAboveCheck(check, p, opts);
         if (p.env === 'hideseek') return await (await hideSeekChecks()).hideSeekMetricCheck(check, p, opts);

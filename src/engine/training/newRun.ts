@@ -1,5 +1,5 @@
 import type { Blueprint } from '../blueprints/types';
-import { requireEpisodeModule } from '../env/registry';
+import { requireEpisodeInfo } from '../env/registry';
 import type { EnvId } from '../env/types';
 import { neatConfig } from '../neat/config';
 import { newRunId, type RunConfig } from './runConfig';
@@ -22,7 +22,7 @@ export interface NewEpisodeRun<S extends Readonly<Record<string, unknown>> = Rea
  * the blueprint, the same way Racing builds its runs.
  */
 export function createEpisodeRunConfig(input: NewEpisodeRun): RunConfig {
-  const envModule = requireEpisodeModule(input.env);
+  const envModule = requireEpisodeInfo(input.env);
   if (input.blueprint.env !== input.env) throw new Error(`${input.blueprint.name} is a ${input.blueprint.env} brain, not a ${input.env} one.`);
   const bp = input.blueprint;
   const config: RunConfig = {

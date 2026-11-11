@@ -1,7 +1,7 @@
 import { mixSeed, Rng } from '@/engine/core/rng';
 import { Population } from '@/engine/neat/population';
 import { populationFromChampion, trackerFromGenomes } from '@/engine/training/branch';
-import { episodeModule } from '@/engine/env/registry';
+import { isEpisodeEnv, loadEpisodeModule } from '@/engine/env/registry';
 import type { EpisodeTrainerState } from '@/engine/training/episodeTrainer';
 import { newRunId, runShape, scriptAt, type RunConfig } from '@/engine/training/runConfig';
 import { saveCheckpoint } from './checkpoints';
@@ -34,7 +34,7 @@ export async function branchRun(runId: string, generation: number): Promise<RunC
   const template = { shape: runShape(config), inputs: champion.inputs, outputs: champion.outputs, biasId: champion.biasId, hidden: [] };
   const pop = Population.fromGenomes(genomes, template, trackerFromGenomes([champion]), seed, config.neat);
   await createRun(config);
-  const envModule = episodeModule(config.env);
+  const envModule = isEpisodeEnv(config.env) ? await loadEpisodeModule(config.env) : null;
   if (envModule) {
     const state: EpisodeTrainerState = {
       population: pop.toState(),

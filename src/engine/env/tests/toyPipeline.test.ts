@@ -5,7 +5,7 @@ import { EpisodeTrainer, trainingControllerSeed } from '../../training/episodeTr
 import { createEpisodeRunConfig } from '../../training/newRun';
 import { builtinHost } from '../../training/scriptHost';
 import { metricValue } from '../metrics';
-import { engineVersionOf, episodeModule, isKnownEnv, registerEpisodeModule } from '../registry';
+import { engineVersionOf, episodeInfo, isKnownEnv, registerEpisodeModule } from '../registry';
 import { TOY_BLUEPRINT, TOY_ENV, toyModule } from './toyEnv';
 
 let unregister: () => void;
@@ -31,7 +31,7 @@ function generation(t: EpisodeTrainer) {
 
 describe('a toy env through the generic pipeline', () => {
   it('registers, and the registry answers for it', () => {
-    expect(episodeModule(TOY_ENV)).toBe(toyModule);
+    expect(episodeInfo(TOY_ENV)).toBe(toyModule);
     expect(isKnownEnv(TOY_ENV)).toBe(true);
     expect(engineVersionOf(TOY_ENV)).toBe(7);
   });

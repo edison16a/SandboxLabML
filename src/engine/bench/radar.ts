@@ -1,4 +1,4 @@
-import { episodeModule } from '../env/registry';
+import { episodeInfo } from '../env/registry';
 import type { EnvId } from '../env/types';
 import { RACING_RADAR_AXES } from './racingAxes';
 import type { BenchRadar, HideSeekRadar, RacingRadar } from './types';
@@ -35,5 +35,5 @@ export function radarValues(env: EnvId, radar: BenchRadar): Array<RadarAxis & { 
 
 /** An env's radar axes: Hide and Seek's own, or the ones its env module's benchmark declares. */
 export function radarAxesOf(env: EnvId): ReadonlyArray<RadarAxis> {
-  return env === 'hideseek' ? RADAR_AXES.hideseek : (episodeModule(env)?.bench?.axes ?? []);
+  return env === 'hideseek' ? RADAR_AXES.hideseek : (episodeInfo(env)?.bench?.axes ?? []);
 }

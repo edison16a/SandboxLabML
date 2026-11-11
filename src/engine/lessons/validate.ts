@@ -1,7 +1,7 @@
-import { episodeModule, isKnownEnv } from '../env/registry';
+import { episodeInfo, isKnownEnv } from '../env/registry';
 import type { EnvId } from '../env/types';
 import { MAX_CHECK_GENERATIONS } from './checks/metricAbove';
-import { testRunMetricNames, trainingMetricNames } from './episode/run';
+import { testRunMetricNames, trainingMetricNames } from './episode/names';
 import { TEST_DRIVE_METRICS } from './checks/testRun';
 import { HIDESEEK_TRAINING_METRICS, MAX_HIDESEEK_CHECK_GENERATIONS, TEST_MATCH_METRICS } from './hideseek/metrics';
 import { scriptComments, styleProblems } from './style';
@@ -25,7 +25,7 @@ const MEASURES: Partial<Record<EnvId, Measures>> = {
 function measuresOf(course: EnvId): Measures | null {
   const fixed = MEASURES[course];
   if (fixed) return fixed;
-  const lessons = episodeModule(course)?.lessons;
+  const lessons = episodeInfo(course)?.lessons;
   if (!lessons) return null;
   return { testRunName: lessons.testRunName, testRun: testRunMetricNames(lessons), training: trainingMetricNames(course), maxGenerations: MAX_CHECK_GENERATIONS };
 }

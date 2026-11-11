@@ -37,12 +37,12 @@ function scene() {
 }
 
 describe('ghost player grid', () => {
-  it('draws one telemetry line per car, in stream order, with its grid slot', () => {
+  it('draws one telemetry line per car, in stream order, with its grid slot', async () => {
     const { setup, ghost } = scene();
     const field = new GhostPlayer(capture().sender);
-    field.setScene('racing', setup, [ghost(1, 3), ghost(2, 2), ghost(2, 1), ghost(2, 0)]);
+    await field.setScene('racing', setup, [ghost(1, 3), ghost(2, 2), ghost(2, 1), ghost(2, 0)]);
     const lone = new GhostPlayer(capture().sender);
-    lone.setScene('racing', setup, [ghost(2, 0)]);
+    await lone.setScene('racing', setup, [ghost(2, 0)]);
     const lines = field.telemetry();
     expect(lines.map((t) => [t.generation, t.slot])).toEqual([[1, 3], [2, 2], [2, 1], [2, 0]]);
     // The pole car drives exactly the lap it would drive alone, and back slots start behind the line.
@@ -58,7 +58,7 @@ describe('ghost player grid', () => {
     const { setup, ghost } = scene();
     const { sender, frames } = capture();
     const player = new GhostPlayer(sender);
-    player.setScene('racing', setup, [ghost(3, 2), ghost(3, 1), ghost(3, 0)]);
+    await player.setScene('racing', setup, [ghost(3, 2), ghost(3, 1), ghost(3, 0)]);
     player.play(1, false);
     // The first frame waits for a timer slice; poll rather than guess how long a busy machine takes.
     for (let waited = 0; frames.length === 0 && waited < 5000; waited += 20) await new Promise((r) => setTimeout(r, 20));
@@ -78,7 +78,7 @@ describe('ghost player warm up', () => {
     const { setup, ghost } = scene();
     const { sender, frames, ticks } = capture();
     const player = new GhostPlayer(sender);
-    player.setScene('racing', setup, [ghost(2, 0)]);
+    await player.setScene('racing', setup, [ghost(2, 0)]);
     const lap = player.telemetry()[0];
     const warmup = Math.min(40, lap.distance.length - 1);
     player.play(1, false, warmup);
@@ -94,12 +94,12 @@ describe('ghost player loop', () => {
   afterEach(() => vi.useRealTimers());
 
   /** One ghost that loops. Its first run goes flat out, so it ends within a few fake milliseconds and the 1200 ms gap starts. */
-  function finishedFirstRun() {
+  async function finishedFirstRun() {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
     const { setup, ghost } = scene();
     const out = capture();
     const player = new GhostPlayer(out.sender);
-    player.setScene('racing', setup, [ghost(4, 0)]);
+    await player.setScene('racing', setup, [ghost(4, 0)]);
     player.play(Infinity, true);
     vi.advanceTimersByTime(100);
     expect(out.starts.count).toBe(1);
@@ -107,16 +107,16 @@ describe('ghost player loop', () => {
     return { player, out, length: player.telemetry()[0].distance.length };
   }
 
-  it('cancels a loop restart still waiting out the gap when the replay stops', () => {
-    const { player, out } = finishedFirstRun();
+  it('cancels a loop restart still waiting out the gap when the replay stops', async () => {
+    const { player, out } = await finishedFirstRun();
     vi.advanceTimersByTime(500);
     player.stop();
     vi.advanceTimersByTime(5000);
     expect(out.starts.count).toBe(1);
   });
 
-  it('keeps a pause and a new speed pressed during the gap', () => {
-    const { player, out, length } = finishedFirstRun();
+  it('keeps a pause and a new speed pressed during the gap', async () => {
+    const { player, out, length } = await finishedFirstRun();
     vi.advanceTimersByTime(500);
     player.setPaused(true);
     player.setSpeed(2);

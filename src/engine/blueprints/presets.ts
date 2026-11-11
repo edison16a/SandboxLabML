@@ -1,4 +1,4 @@
-import { episodeEnvIds, requireEpisodeModule } from '../env/registry';
+import { episodeEnvIds, requireEpisodeInfo } from '../env/registry';
 import { STANDARD_HIDESEEK_INPUTS } from '../hideseek/inputConfig';
 import { BLUEPRINT_SCHEMA_VERSION, type Blueprint, type HideSeekBlueprint } from './types';
 
@@ -48,7 +48,7 @@ export const HIDESEEK_BLUEPRINTS: HideSeekBlueprint[] = [
 ];
 
 /** Every preset brain: each episode env's own, in registry order, then Hide and Seek's. */
-export const PRESET_BLUEPRINTS: Blueprint[] = [...episodeEnvIds().flatMap((env) => requireEpisodeModule(env).blueprints), ...HIDESEEK_BLUEPRINTS];
+export const PRESET_BLUEPRINTS: Blueprint[] = [...episodeEnvIds().flatMap((env) => requireEpisodeInfo(env).blueprints), ...HIDESEEK_BLUEPRINTS];
 
 export function findPresetBlueprint(id: string): Blueprint | undefined {
   return PRESET_BLUEPRINTS.find((b) => b.id === id);

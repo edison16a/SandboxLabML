@@ -37,11 +37,11 @@ function trainer() {
 }
 
 describe('episode sim with a toy env', () => {
-  it('gives the same results split into batches as in one', () => {
+  it('gives the same results split into batches as in one', async () => {
     const t = trainer();
     const sim = new EpisodeSim();
-    const whole = sim.evaluate(TOY_ENV, t.setup(), t.genomes, t.seeds(), 0);
-    const halves = [...sim.evaluate(TOY_ENV, t.setup(), t.genomes.slice(0, 6), t.seeds().slice(0, 6), 0), ...sim.evaluate(TOY_ENV, t.setup(), t.genomes.slice(6), t.seeds().slice(6), 0)];
+    const whole = await sim.evaluate(TOY_ENV, t.setup(), t.genomes, t.seeds(), 0);
+    const halves = [...(await sim.evaluate(TOY_ENV, t.setup(), t.genomes.slice(0, 6), t.seeds().slice(0, 6), 0)), ...(await sim.evaluate(TOY_ENV, t.setup(), t.genomes.slice(6), t.seeds().slice(6), 0))];
     expect(halves).toEqual(whole);
   });
 
@@ -50,7 +50,7 @@ describe('episode sim with a toy env', () => {
     const { sender, messages } = capture('population');
     sender.inspect = -1;
     const results = await new EpisodeSim().runLive({ env: TOY_ENV, setup: t.setup(), genomes: t.genomes, seeds: t.seeds(), generation: 0, speed: Infinity, tags: t.genomes.map(() => 0) }, sender);
-    expect(results).toEqual(new EpisodeSim().evaluate(TOY_ENV, t.setup(), t.genomes, t.seeds(), 0));
+    expect(results).toEqual(await new EpisodeSim().evaluate(TOY_ENV, t.setup(), t.genomes, t.seeds(), 0));
     const start = messages[0];
     expect(start).toMatchObject({ kind: 'start', count: 12, world: 2 });
     const frame = messages.find((m) => m.kind === 'frame');
@@ -70,12 +70,12 @@ describe('episode sim with a toy env', () => {
     expect(await live).toEqual([]);
   });
 
-  it('replays a champion as a ghost tick for tick, with the shared world', () => {
+  it('replays a champion as a ghost tick for tick, with the shared world', async () => {
     const t = trainer();
     const champion = t.genomes[3];
     const seed = t.seeds()[3];
     const player = new GhostPlayer(capture('ghosts').sender);
-    player.setScene(TOY_ENV, t.setup(), [{ generation: 0, genome: champion, seed, scriptSource: null }]);
+    await player.setScene(TOY_ENV, t.setup(), [{ generation: 0, genome: champion, seed, scriptSource: null }]);
     const [line] = player.telemetry();
     // Replayed alone, the champion walks exactly as it did among the whole population.
     const env = toyModule.createEnv(t.setup(), t.host(), 0);

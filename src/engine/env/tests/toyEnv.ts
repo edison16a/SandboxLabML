@@ -160,6 +160,7 @@ export const toyModule: EpisodeEnvModule<ToySetup, { level: number }, ToyResult,
     run: async () => null,
   },
   generationMetrics: (results) => ({ reachedShare: results.filter((r) => r.reached).length / results.length }),
+  load: async () => toyModule,
   telemetry: {
     sample: (env, i, out) => {
       const snap = new Float32Array(env.agentCount * 2);

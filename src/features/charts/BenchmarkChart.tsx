@@ -5,7 +5,7 @@ import type uPlot from 'uplot';
 // The narrow modules, not the bench index, so the lab bundles never pull in the exam engines.
 import { loadReferences } from '@/engine/bench/references';
 import type { BenchReferences } from '@/engine/bench/types';
-import { episodeModule } from '@/engine/env/registry';
+import { episodeInfo } from '@/engine/env/registry';
 import type { EnvId } from '@/engine/env/types';
 import { axis, generationAxis, UPlotChart } from './UPlotChart';
 
@@ -13,7 +13,7 @@ const TIER_COLORS = { beginner: '#5d6779', intermediate: '#8a94a7', advanced: '#
 
 /** What the chart says before the first benchmark lands: Hide and Seek's own line, or the env module's. */
 function emptyText(env: EnvId): string {
-  return env === 'hideseek' ? 'Every 10 generations, the champions play fixed reference teams.' : (episodeModule(env)?.bench?.about ?? '');
+  return env === 'hideseek' ? 'Every 10 generations, the champions play fixed reference teams.' : (episodeInfo(env)?.bench?.about ?? '');
 }
 
 /** Any record with a generation and, once benchmarked, its score. Racing and Hide and Seek records both fit. */

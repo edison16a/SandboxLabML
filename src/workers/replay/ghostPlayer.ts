@@ -1,6 +1,6 @@
 import { mixSeed } from '@/engine/core/rng';
 import type { AnyEpisodeModule, EpisodeEnv, EpisodeSetup } from '@/engine/env/episode';
-import { requireEpisodeModule } from '@/engine/env/registry';
+import { loadEpisodeModule } from '@/engine/env/registry';
 import { Network } from '@/engine/neat/network';
 import type { Genome } from '@/engine/neat/types';
 import { hostFor } from '@/engine/training/scriptHost';
@@ -42,14 +42,24 @@ export class GhostPlayer {
   /** Ticks every run skips before it is shown. See play. */
   private warmup = 0;
   private run = 0;
+  /** Counts setScene calls, so an older scene that finishes loading late is dropped. */
+  private scenes = 0;
 
   constructor(private readonly stream: StreamSender) {
     this.frames = new GhostFrames(stream);
   }
 
-  /** The env, its setup (Racing: the track to drive) and the champions to replay on it. */
-  setScene(env: string, setup: EpisodeSetup, ghosts: GhostSpec[]): void {
-    this.module = requireEpisodeModule(env);
+  /**
+   * The env, its setup (Racing: the track to drive) and the champions to
+   * replay on it. Loads the env's module first, so the scene only changes
+   * once the player can run it.
+   */
+  async setScene(env: string, setup: EpisodeSetup, ghosts: GhostSpec[]): Promise<void> {
+    const scene = ++this.scenes;
+    const envModule = await loadEpisodeModule(env);
+    // A later scene asked for while this one loaded wins.
+    if (scene !== this.scenes) return;
+    this.module = envModule;
     this.setup = setup;
     this.ghosts = ghosts;
   }

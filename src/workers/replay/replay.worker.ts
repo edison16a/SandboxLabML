@@ -33,8 +33,9 @@ const api = {
     ghosts = new GhostPlayer(new StreamSender(streamPort, 'ghosts'));
   },
   /** Champions of any episode env to replay on one setup (Racing: a track). */
-  setGhostScene(env: string, setup: EpisodeSetup, specs: GhostSpec[]) {
-    ghosts?.setScene(env, setup, specs);
+  /** Resolves once the env's module has loaded and the scene is in place. */
+  async setGhostScene(env: string, setup: EpisodeSetup, specs: GhostSpec[]) {
+    await ghosts?.setScene(env, setup, specs);
   },
   playGhosts(speed: number, loop: boolean, warmup?: number) {
     ghosts?.play(speed, loop, warmup);

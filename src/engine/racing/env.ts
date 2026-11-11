@@ -1,6 +1,6 @@
 import { Rng } from '../core/rng';
 import type { EpisodeEnv } from '../env/episode';
-import { makeTickIO, type AgentController, type CustomSensorSpec, type InputSpec, type SnapshotLayout } from '../env/types';
+import { makeTickIO, type AgentController, type CustomSensorSpec, type InputSpec } from '../env/types';
 import type { Network } from '../neat/network';
 import { stepCar } from './car/dynamics';
 import type { CarParams } from './car/params';
@@ -9,6 +9,7 @@ import { resultOf, type RacingResult } from './result';
 import { rayAngles, type RacingInputConfig } from './sensors/inputConfig';
 import { racingInputSchema } from './sensors/inputSchema';
 import { RacingObserver } from './sensors/observe';
+import { RACING_SNAPSHOT } from './snapshot';
 import type { Track } from './track/types';
 
 export interface RacingEnvOptions {
@@ -26,11 +27,7 @@ export interface RacingEnvOptions {
   lesion?: ReadonlyArray<readonly [index: number, value: number]>;
 }
 
-/** 8 floats per car. Shared by the population stream and the ghost stream. */
-export const RACING_SNAPSHOT: SnapshotLayout = {
-  stride: 8,
-  fields: ['x', 'y', 'heading', 'speed', 'steer', 'pedal', 'status', 'progress'],
-};
+export { RACING_SNAPSHOT };
 
 /**
  * Many independent cars on one track, stepped in lockstep. Cars never touch

@@ -8,16 +8,22 @@
  * agent gets its own brain, agents never touch each other, and an episode
  * runs every brain once. That is what makes a champion replay exactly when
  * it is re-simulated alone.
+ *
+ * An env comes in two halves. Its info (EpisodeEnvInfo) is light: names,
+ * layouts, metrics, brains and the input schema, which any page may read.
+ * Its module (EpisodeEnvModule) adds the simulation, which only workers,
+ * labs and headless code load, through the info's `load`.
  */
 import type { Blueprint, BlueprintIssue } from '../blueprints/types';
 import type { Network } from '../neat/network';
-import type { Genome, GenomeShape } from '../neat/types';
-import type { BenchOptions, BenchResult } from '../bench/types';
 import type { GenerationDirectives, ScriptHost } from '../training/scriptHost';
 import type { ChampionRecord } from '../training/records';
 import type { RunConfig } from '../training/runConfig';
+import type { EpisodeBench, EpisodeLessons, EpisodeLessonsInfo, GhostTrace } from './hooks';
 import type { MetricSpec } from './metrics';
 import type { CustomSensorSpec, EnvId, InputSpec, OutputSpec, SnapshotLayout } from './types';
+
+export type { EpisodeBench, EpisodeLessons, EpisodeLessonsInfo, GhostTrace } from './hooks';
 
 /** Per agent outcome of one episode. Envs add their own fields. */
 export interface EpisodeResult {
@@ -61,7 +67,12 @@ export interface EpisodeEnv<R extends EpisodeResult = EpisodeResult> {
   step(): void;
   /** Writes `snapshot.stride` floats per agent, in agent order, from `offset`. */
   writeSnapshot(out: Float32Array, offset?: number): void;
-  /** Writes `worldFloats` floats of shared world state from `offset`. Only called when worldFloats > 0. */
+  /**
+   * Writes `worldFloats` floats of shared world state from `offset`. Only
+   * called when worldFloats > 0. The world must follow only the setup and
+   * the tick, never the agents, since ghosts of several script versions
+   * share the world of whichever env is furthest along.
+   */
   writeWorld?(out: Float32Array, offset: number): void;
   /** The agent the camera should follow: the furthest along among those still running. */
   leaderIndex(): number;
@@ -96,26 +107,13 @@ export interface ContentStep<Content, R extends EpisodeResult> {
 /** The env's half of a champion record. Racing returns its distance and lap fields; newer envs return `{ metrics }`. */
 export type ChampionFields<C extends ChampionRecord> = Omit<C, 'genomeId' | 'fitness' | 'stopReason'>;
 
-/** The benchmark: held out content and a score from 0 to 100 that ignores the training reward. */
-export interface EpisodeBench {
-  version: number;
-  /** Radar axes in drawing order, clockwise from the top. */
-  axes: ReadonlyArray<{ key: string; label: string }>;
-  /** Shown beside the benchmark chart, e.g. "unseen tracks, 0 to 100". */
-  hint: string;
-  /** What the chart says before the first score lands, in one sentence. */
-  about: string;
-  run(config: RunConfig, genome: Genome, opts?: BenchOptions): Promise<BenchResult | null>;
-}
-
 /**
- * One single population environment. `Content` is what the population
- * trains on right now (Racing: the track; Driving: a city, level and route
- * seed; Navigation: a level and course seed). It is plain data, kept in
- * checkpoints, and changed by the script's generation block or by the
- * env's own curriculum.
+ * The light half of an env: what the main thread needs to label, list,
+ * chart and configure runs without the simulation. Keep its imports to
+ * layouts, schemas and blueprints, since every page that touches the
+ * registry ships it.
  */
-export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Content = unknown, R extends EpisodeResult = EpisodeResult, C extends ChampionRecord = ChampionRecord> {
+export interface EpisodeEnvInfo {
   readonly id: EnvId;
   /** Display name, e.g. "Racing". */
   readonly label: string;
@@ -125,7 +123,7 @@ export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Con
   /** Per agent layout of the population and ghost streams. */
   readonly snapshot: SnapshotLayout;
   readonly outputs: readonly OutputSpec[];
-  /** Generation stats the env records, in the order the lab shows them. */
+  /** Stats the env records per generation, in the order the lab shows them. */
   readonly metrics: readonly MetricSpec[];
 
   /** The preset brains, simplest first. The lab picks which one a new run starts on. */
@@ -139,6 +137,27 @@ export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Con
   /** Hash of the rules a run freezes (physics, sensors), stored as the run's physicsHash. */
   physicsHash(config: RunConfig): string;
 
+  /** The benchmark. Its `run` loads the exam on first use, so the info stays light. */
+  bench?: EpisodeBench;
+  /** What lessons can check, for the lesson validator and the Studio. The module adds the runtime half. */
+  lessons?: EpisodeLessonsInfo;
+
+  /**
+   * Loads the module, written as `() => import('./module').then((m) => m.myModule)`
+   * so the simulation lands in a chunk of its own.
+   */
+  load(): Promise<AnyEpisodeModule>;
+}
+
+/**
+ * One single population environment: its info plus the simulation.
+ * `Content` is what the population trains on right now (Racing: the track;
+ * Driving: a city, level and route seed; Navigation: a level and course
+ * seed). It is plain data, kept in checkpoints, and changed by the script's
+ * generation block or by the env's own curriculum.
+ */
+export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Content = unknown, R extends EpisodeResult = EpisodeResult, C extends ChampionRecord = ChampionRecord>
+  extends Omit<EpisodeEnvInfo, 'lessons'> {
   initialContent(config: RunConfig): Content;
   /** The content for the next generation, or null to keep it. `reset` means old scores no longer compare. */
   nextContent(step: ContentStep<Content, R>): { content: Content; reset: boolean } | null;
@@ -152,44 +171,8 @@ export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Con
   /** Stats over the whole generation, keyed like `metrics` with source 'generation'. */
   generationMetrics?(results: readonly R[], content: Content): Record<string, number>;
 
-  bench?: EpisodeBench;
   telemetry?: GhostTrace<R>;
   lessons?: EpisodeLessons<R>;
-}
-
-/**
- * Per tick numbers for a ghost's telemetry line (the speed strip and the
- * brake map). Optional: an env without it shows no telemetry.
- */
-export interface GhostTrace<R extends EpisodeResult> {
-  /** Writes [distance along the course in m, speed in m/s, brake from 0 to 1] for agent i after the latest tick. */
-  sample(env: EpisodeEnv<R>, i: number, out: Float64Array): void;
-  /** Where the agent's run ended in a crash, in world x and y, or null. */
-  crash(result: R): { x: number; y: number } | null;
-}
-
-/**
- * What Studio lessons can check on an env. Optional: an env without it
- * has no lessons yet. A test run is one headless episode of the script
- * with a fixed brain; a training check trains a small population briefly
- * and measures bestFitness, species and every key of the module's
- * `metrics`, at the best any generation reached.
- */
-export interface EpisodeLessons<R extends EpisodeResult> {
-  /** How a check names one test episode, such as "a test drive". */
-  testRunName: string;
-  /** What a test run measures besides totalReward, ticks and inputs. */
-  testRunMetrics: readonly string[];
-  /** The env numbers of one finished test episode, keyed like testRunMetrics. */
-  measure(result: R): Record<string, number>;
-  /** Brain a lesson script trains when it names none. */
-  brain: string;
-  /** Run settings for lesson checks. Short episodes keep a check to a few seconds. */
-  settings(): Readonly<Record<string, unknown>>;
-  /** The fixed hand set brain of every test run, so a test means the same thing for every brain shape. */
-  testBrain(shape: GenomeShape, schema: readonly InputSpec[]): Genome;
-  /** Wording of a measured value in a check outcome, such as (v) => `${v} m`. */
-  formats?: Readonly<Record<string, (value: number) => string>>;
 }
 
 /** Any registered module, with its type parameters erased for generic code. */

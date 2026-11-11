@@ -1,5 +1,5 @@
 import type { EpisodeEnv, EpisodeResult, EpisodeSetup } from '@/engine/env/episode';
-import { requireEpisodeModule } from '@/engine/env/registry';
+import { loadEpisodeModule, requireEpisodeModule } from '@/engine/env/registry';
 import { Network } from '@/engine/neat/network';
 import type { Genome } from '@/engine/neat/types';
 import { trainingControllerSeed } from '@/engine/training/episodeTrainer';
@@ -30,6 +30,8 @@ export class EpisodeSim {
   private live: Pacer | null = null;
   /** Settles the live run's promise with no results, so a coordinator waiting on a stopped run moves on. */
   private abandon: (() => void) | null = null;
+  /** Counts stops, so a live run that was stopped while its module loaded never starts. */
+  private liveRuns = 0;
 
   private hostFor(source: string | null): ScriptHost {
     if (!this.host || this.host.source !== source) this.host = { source, host: hostFor(source) };
@@ -45,15 +47,20 @@ export class EpisodeSim {
     return episode;
   }
 
-  evaluate(env: string, setup: EpisodeSetup, genomes: Genome[], seeds: number[], generation: number): EpisodeResult[] {
+  /** Loads the env's module on first use, so one worker serves whichever env its pool trains. */
+  async evaluate(env: string, setup: EpisodeSetup, genomes: Genome[], seeds: number[], generation: number): Promise<EpisodeResult[]> {
+    await loadEpisodeModule(env);
     const episode = this.create(env, setup, genomes, seeds, generation);
     while (!episode.done) episode.step();
     return episode.results();
   }
 
-  runLive(req: LiveEpisodeRequest, stream: StreamSender): Promise<EpisodeResult[]> {
+  async runLive(req: LiveEpisodeRequest, stream: StreamSender): Promise<EpisodeResult[]> {
     this.stopLive();
-    const envModule = requireEpisodeModule(req.env);
+    const run = this.liveRuns;
+    const envModule = await loadEpisodeModule(req.env);
+    // A stop that came in while the module loaded still counts.
+    if (run !== this.liveRuns) return [];
     const episode = this.create(req.env, req.setup, req.genomes, req.seeds, req.generation);
     const count = req.genomes.length;
     const stride = envModule.snapshot.stride;
@@ -96,6 +103,7 @@ export class EpisodeSim {
 
   /** Stops the live run. Its promise settles with no results, which the coordinator reads as "stopped part way". */
   stopLive(): void {
+    this.liveRuns++;
     this.live?.stop();
     this.live = null;
     const abandon = this.abandon;

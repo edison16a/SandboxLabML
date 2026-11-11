@@ -57,7 +57,7 @@ An env plugs in with its own modules and one entry per layer:
 
 | Layer | What the env provides | The one entry |
 | --- | --- | --- |
-| Engine | An `EpisodeEnvModule` (`src/engine/env/episode.ts`) and an env class that implements `EpisodeEnv` | Add the id to `EnvId` in `src/engine/env/types.ts` and the module to the map in `src/engine/env/registry.ts` |
+| Engine | An `EpisodeEnvInfo` and an `EpisodeEnvModule` (`src/engine/env/episode.ts`), and an env class that implements `EpisodeEnv` | Add the id to `EnvId` in `src/engine/env/types.ts` and the info to the map in `src/engine/env/registry.ts` |
 | Scripts | A registry slice (`src/engine/script/registry/<env>/`) and its preset scripts | A row in `SCRIPT_ENV_TABLE` (`src/engine/script/envs.ts`) |
 | Lessons | Lesson JSON under `content/lessons/<env>/` and the module's `lessons` hooks | The imports in `src/engine/lessons/catalog.ts` |
 | Shell | A route under `app/lab/` and the lab component | A row in `LABS` (`src/features/shell/labs.ts`) |
@@ -66,7 +66,7 @@ Everything else finds the env through those entries: the trainer, the sim and re
 
 **The env class** is stepped in lockstep at the module's `tickHz`. `reset(brains, seeds, slots)` starts an episode, `step()` advances every running agent, `done` says when all stopped and `results()` gives one result per agent with at least `fitness`, `time` and `stopReason`. `writeSnapshot` writes `snapshot.stride` floats per agent, and `writeWorld` writes `worldFloats` floats of state that is not per agent (lights, traffic, movers) right after them in the same frame. `leaderIndex`, `lastObservation`, `writeOutputs` and `writeRays` feed the camera and the inputs overlay. Steps, snapshots and world writes allocate nothing.
 
-**The module** describes the env to the pipeline:
+**The info and the module** describe the env to the pipeline. The info is the light half that any page may read: names, layouts, `metrics`, brains, the input schema, the `bench` (whose `run` loads its exam on first use) and what lessons measure. Keep its imports to layouts, schemas and blueprints. Its `load()` is a dynamic import of the module, which adds the simulation, so the Runs page and the Studio never ship an env's engine and a lab ships only its own. Workers, labs and headless code call `loadEpisodeModule(env)` before they simulate; `requireEpisodeModule(env)` then answers synchronously. A test keeps the registry's static graph free of every `module.ts`.
 
 * Brains: `blueprints` (preset brains, simplest first), `inputCount`, `inputSchema` (labels and scales, script sensors last), `outputs`, `validateInputs` and `physicsHash`.
 * Content: what the population trains on now, such as a track, a city and level, or a course level. `initialContent` reads the run, `nextContent` moves it on after each generation from the script's requests (`directives.env`, written by the env's registry operators) or the env's own curriculum, and `contentHash` names it on every record. Content is plain data and lives in checkpoints.

@@ -1,6 +1,6 @@
 import type { StoreApi } from 'zustand';
 import type { EpisodeSetup } from '@/engine/env/episode';
-import { requireEpisodeModule } from '@/engine/env/registry';
+import { loadEpisodeModule, requireEpisodeInfo, requireEpisodeModule } from '@/engine/env/registry';
 import type { EnvId } from '@/engine/env/types';
 import type { EpisodeTrainerState } from '@/engine/training/episodeTrainer';
 import type { GenerationRecord } from '@/engine/training/records';
@@ -54,8 +54,9 @@ export class EpisodeSession<S extends LabState = LabState> {
     this.api.setState(patch);
   }
 
+  /** Starts the workers and loads the env's module, which the ghost setup needs on this thread. */
   async init(): Promise<WorkerPool> {
-    if (!this.ready) this.ready = createWorkerPool((e) => this.onEvent(e)).then((p) => (this.pool = p));
+    if (!this.ready) this.ready = Promise.all([createWorkerPool((e) => this.onEvent(e)), loadEpisodeModule(this.env)]).then(([p]) => (this.pool = p));
     return this.ready;
   }
 
@@ -97,7 +98,7 @@ export class EpisodeSession<S extends LabState = LabState> {
 
   /** Store fields for a run that just opened. Labs add their own on top. */
   protected openedState(config: RunConfig, history: GenerationRecord[], generation: number): Partial<S> {
-    return openedLabState(config, history, generation, requireEpisodeModule(this.env).engineVersion, this.store.mode) as Partial<S>;
+    return openedLabState(config, history, generation, requireEpisodeInfo(this.env).engineVersion, this.store.mode) as Partial<S>;
   }
 
   async start(generations?: number): Promise<void> {

@@ -1,4 +1,4 @@
-import { episodeModule } from '../env/registry';
+import { episodeInfo } from '../env/registry';
 import type { Genome } from '../neat/types';
 import type { RunConfig } from '../training/runConfig';
 import { benchmarkHideSeek, type HideSeekBenchOptions } from './hideseek/runner';
@@ -26,6 +26,6 @@ const isPair = (m: BenchModel): m is HideSeekModel => 'hider' in m && 'seeker' i
  */
 export async function runBenchmark(config: RunConfig, model: BenchModel, opts: HideSeekBenchOptions = {}): Promise<BenchResult | null> {
   if (config.env === 'hideseek') return isPair(model) ? benchmarkHideSeek(config, model, opts) : null;
-  const bench = episodeModule(config.env)?.bench;
+  const bench = episodeInfo(config.env)?.bench;
   return bench && !isPair(model) ? bench.run(config, model, opts) : null;
 }

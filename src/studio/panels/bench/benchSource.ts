@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { BenchModel } from '@/engine/bench';
-import { episodeModule } from '@/engine/env/registry';
+import { episodeInfo } from '@/engine/env/registry';
 import type { RunRow } from '@/storage/db';
 import { listGenerationNumbers, listHideSeekGenerationNumbers } from '@/storage/generationIndex';
 import { loadChampion, setGenerationBenchmark } from '@/storage/generations';
@@ -20,7 +20,7 @@ export interface BenchSource {
 function benchable(r: RunRow): boolean {
   if (r.generation <= 0 || r.config.blueprint.env !== r.env) return false;
   if (r.env === 'hideseek') return true;
-  return !!episodeModule(r.env)?.bench && (r.env !== 'racing' || !!r.config.racing);
+  return !!episodeInfo(r.env)?.bench && (r.env !== 'racing' || !!r.config.racing);
 }
 
 /** Runs in IndexedDB that the Bench tab can score, newest first. */

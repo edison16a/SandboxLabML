@@ -1,4 +1,4 @@
-import { requireEpisodeModule } from '../env/registry';
+import { requireEpisodeInfo } from '../env/registry';
 import { HIDESEEK_OUTPUT_COUNT, hideSeekInputCount } from '../hideseek/inputConfig';
 import { MAX_HIDDEN_LAYERS } from '../neat/startShape';
 import type { GenomeShape } from '../neat/types';
@@ -6,11 +6,11 @@ import { MAX_INPUTS, MAX_OUTPUTS, type Blueprint, type BlueprintIssue, type Epis
 
 /** Number of brain inputs the blueprint produces before any script sensors. */
 export function blueprintInputCount(b: Blueprint): number {
-  return b.env === 'hideseek' ? hideSeekInputCount(b.inputs) : requireEpisodeModule(b.env).inputCount(b.inputs);
+  return b.env === 'hideseek' ? hideSeekInputCount(b.inputs) : requireEpisodeInfo(b.env).inputCount(b.inputs);
 }
 
 export function blueprintOutputCount(b: Blueprint): number {
-  return b.env === 'hideseek' ? HIDESEEK_OUTPUT_COUNT : requireEpisodeModule(b.env).outputs.length;
+  return b.env === 'hideseek' ? HIDESEEK_OUTPUT_COUNT : requireEpisodeInfo(b.env).outputs.length;
 }
 
 /** The genome shape a new run starts from, including script-defined sensors. */
@@ -44,7 +44,7 @@ export function validateBlueprint(b: Blueprint, customSensors = 0): BlueprintIss
     if (b.inputs.noise < 0 || b.inputs.noise > 0.1) issues.push({ field: 'noise', message: 'Noise must be between 0 and 10%.' });
   } else {
     const plugin: EpisodeBlueprint = b;
-    issues.push(...(requireEpisodeModule(plugin.env).validateInputs?.(plugin.inputs) ?? []));
+    issues.push(...(requireEpisodeInfo(plugin.env).validateInputs?.(plugin.inputs) ?? []));
   }
   if (b.wiring === 'hidden' && (!b.hiddenCount || b.hiddenCount < 1 || b.hiddenCount > 32)) {
     issues.push({ field: 'hiddenCount', message: 'Hidden layer needs 1 to 32 neurons.' });

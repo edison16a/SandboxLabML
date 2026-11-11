@@ -1,6 +1,6 @@
-import { startTestEpisode } from '@/engine/lessons/episode/run';
+import { loadTestEpisode, lessonsOf } from '@/engine/lessons/episode/run';
 import { prepareScript, type PreparedEpisode } from '@/engine/lessons/prepare';
-import { requireEpisodeModule } from '@/engine/env/registry';
+import { requireEpisodeInfo } from '@/engine/env/registry';
 
 /** Per tick columns of an episode test, as typed arrays so the worker hands them over without copying. */
 export interface EpisodeTickLog {
@@ -19,16 +19,16 @@ export type EpisodeTestResult =
  * driven by the env's fixed lesson test brain: the same episode a lesson's
  * test run check measures, logged tick by tick for the Studio.
  */
-export function runEpisodeTest(source: string): EpisodeTestResult {
+export async function runEpisodeTest(source: string): Promise<EpisodeTestResult> {
   const prepared = prepareScript(source);
   if (!prepared.ok) return { ok: false, message: prepared.message };
   if (prepared.value.env === 'racing' || prepared.value.env === 'hideseek') return { ok: false, message: 'This script has its own test run.' };
   const p: PreparedEpisode = prepared.value;
-  const envModule = requireEpisodeModule(p.env);
-  const lessons = envModule.lessons;
-  if (!lessons) return { ok: false, message: `${envModule.label} scripts cannot be test run yet.` };
-  if (!p.blueprint) return { ok: false, message: `Test runs need a ${envModule.label} brain, such as brain ${lessons.brain}.` };
-  const env = startTestEpisode({ ...p, blueprint: p.blueprint });
+  const envModule = requireEpisodeInfo(p.env);
+  if (!envModule.lessons) return { ok: false, message: `${envModule.label} scripts cannot be test run yet.` };
+  if (!p.blueprint) return { ok: false, message: `Test runs need a ${envModule.label} brain, such as brain ${envModule.lessons.brain}.` };
+  const env = await loadTestEpisode({ ...p, blueprint: p.blueprint });
+  const lessons = lessonsOf(p.env);
   const cap = Math.ceil(600 * envModule.tickHz);
   const time: number[] = [];
   const reward: number[] = [];

@@ -6,6 +6,7 @@ import type { EpisodeTrainerState } from '@/engine/training/episodeTrainer';
 import type { HideSeekTrainerState } from '@/engine/hideseek/trainer/types';
 import type { SpeedMode } from '../shared/protocol';
 import type { SimApi } from '../sim/sim.worker';
+import { loadEpisodeModule } from '@/engine/env/registry';
 import { EpisodeCoordinator } from './episodeCoordinator';
 import type { EventSink } from './events';
 import { HideSeekCoordinator } from './hideSeekCoordinator';
@@ -31,6 +32,8 @@ const api = {
   /** Opens a run of any registered episode env, from a checkpoint when there is one. */
   async load(config: RunConfig, state?: EpisodeTrainerState) {
     await episodes?.stop();
+    episodes = null;
+    await loadEpisodeModule(config.env);
     episodes = new EpisodeCoordinator(config, sims, (e) => emit(e), state);
     return episodes.generation;
   },

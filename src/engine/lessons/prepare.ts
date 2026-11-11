@@ -1,6 +1,6 @@
 import { findPresetBlueprint } from '../blueprints/presets';
 import type { EpisodeBlueprint, EpisodeEnvId, HideSeekBlueprint, RacingBlueprint } from '../blueprints/types';
-import { episodeModule } from '../env/registry';
+import { episodeInfo } from '../env/registry';
 import { Rng } from '../core/rng';
 import { BUILT_IN_TRACKS } from '../racing/track/presets';
 import type { TrackSpec } from '../racing/track/types';
@@ -90,7 +90,7 @@ export function prepareScript(source: string): PrepareResult {
   const base = { source, script, compiled };
   const env = script.header.env;
   if (env !== 'racing' && env !== 'hideseek') {
-    const lessons = episodeModule(env)?.lessons;
+    const lessons = episodeInfo(env)?.lessons;
     if (!lessons) return { ok: false, message: 'This lab has no lessons yet.' };
     const blueprint = lessonBlueprint(script, env, lessons.brain) as EpisodeBlueprint | null;
     return { ok: true, value: { ...base, env, blueprint } };

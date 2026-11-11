@@ -24,8 +24,8 @@ const api = {
   },
 
   /** One test episode of a script for an env added through the registry. */
-  episode(source: string): EpisodeTestResult {
-    const result = runEpisodeTest(source);
+  async episode(source: string): Promise<EpisodeTestResult> {
+    const result = await runEpisodeTest(source);
     if (!result.ok) return result;
     const { time, reward, total } = result.log;
     return Comlink.transfer(result, [time.buffer, reward.buffer, total.buffer] as ArrayBuffer[]);
