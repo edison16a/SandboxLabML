@@ -55,7 +55,7 @@ export function sectionAt(x: number): Section {
   // Along the cabin the shelf ends under the glass; on the hood it crests flat at the fender peak, and the tail's deck flattens too.
   const crest = deg(72 + 18 * onHood(x) + 8 * smooth((-x - 2.0) / 0.3));
   // On the hood the peak is a soft crease, so a line of light runs along each fender from the A pillar to the lamp.
-  const crease = deg(7) * smooth((x - 0.9) / 0.45);
+  const crease = deg(12) * smooth((x - 0.9) / 0.45);
   // The valley falls from the peak to a floor on the centerline like half a cosine wave: flat at both ends, one U, no ridge.
   const fall = Math.atan((Math.PI / 2) * Math.sin(0.45 * Math.PI) * (v / Math.max(bz, 0.2)));
   const keys: Key[] = [
