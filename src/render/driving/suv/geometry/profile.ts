@@ -15,8 +15,8 @@ import { deg, key, type Key } from './section';
  * The spans between keys are smooth curves. Only the rocker and the door
  * sculpt are creases; the shoulder rolls over in one clean radius.
  */
-const halfWidth = profile([[-2.45, 0.965], [-2.3, 0.979], [-1.9, 0.996], [-1.42, 1.0], [-1.0, 0.988], [-0.55, 0.962], [0.0, 0.955], [0.6, 0.958], [1.1, 0.976], [1.48, 0.985], [1.9, 0.975], [2.2, 0.956], [2.45, 0.94]]);
-const shoulderY = profile([[-2.45, 1.045], [-2.25, 1.005], [-1.9, 0.952], [-1.42, 0.936], [-0.6, 0.912], [0.6, 0.9], [1.48, 0.918], [1.95, 0.9], [2.25, 0.85], [2.45, 0.8]]);
+const halfWidth = profile([[-2.45, 0.962], [-2.3, 0.978], [-1.9, 0.997], [-1.42, 1.0], [-1.1, 0.99], [-0.85, 0.963], [-0.55, 0.947], [0.0, 0.944], [0.6, 0.945], [1.1, 0.958], [1.48, 0.966], [1.9, 0.958], [2.2, 0.945], [2.45, 0.935]]);
+const shoulderY = profile([[-2.45, 1.045], [-2.25, 1.008], [-1.9, 0.966], [-1.42, 0.954], [-0.9, 0.925], [-0.3, 0.905], [0.6, 0.9], [1.48, 0.918], [1.95, 0.9], [2.25, 0.85], [2.45, 0.8]]);
 /** The lower door sculpt: low at the front door, rising toward the rear haunch. */
 const creaseY = profile([[-2.45, 0.6], [-1.42, 0.655], [-0.95, 0.645], [1.0, 0.575], [1.48, 0.57], [2.45, 0.55]]);
 /** The belt line, which carries on ahead of the windshield as the fender peak and falls toward the nose, so the hood reads low and sporty. */
