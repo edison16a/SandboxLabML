@@ -17,6 +17,7 @@ import { perceive, type RoutePose } from './sensors/perception';
 import { resultOf, type DrivingResult } from './results';
 import { DRIVING_SNAPSHOT, writeLearner, writeWorld, WORLD_SIZE } from './snapshot';
 import { CityWorld } from './world/cityWorld';
+import { corridorOf, type Corridor } from './world/corridor';
 
 /** Anything that turns inputs into the two outputs: a NEAT network, or the autopilot for previews. */
 export interface DrivingBrain {
@@ -52,6 +53,8 @@ export class DrivingEnv {
   readonly world: CityWorld;
   readonly lidar: Lidar;
   readonly inputCount: number;
+  /** The streets around this trip, where the world puts most of its cars and people. */
+  readonly corridor: Corridor;
   learners: DrivingLearner[] = [];
   private brains: DrivingBrain[] = [];
   private obs: Float64Array[] = [];
@@ -68,6 +71,7 @@ export class DrivingEnv {
     this.world = new CityWorld(opts.city, opts.level);
     this.lidar = new Lidar(lidarAngles(opts.inputs.lidar.count, opts.inputs.lidar.fov));
     this.inputCount = drivingInputSchema(opts.inputs, opts.car, opts.customSensors).length;
+    this.corridor = corridorOf(opts.city, opts.route.elements, 30);
   }
 
   inputSchema(): InputSpec[] {
@@ -87,7 +91,7 @@ export class DrivingEnv {
     this.actions = brains.map(() => new Float64Array(2));
     this.noise = brains.map((_, i) => (inputs.noise > 0 ? new Rng(seeds[i] ?? i) : null));
     const first = route.elements[0];
-    this.world.reset(this.opts.worldSeed, { element: first, s0: route.startS - 30 - 7 * Math.max(0, ...slots), s1: route.startS + 35 });
+    this.world.reset(this.opts.worldSeed, { element: first, s0: route.startS - 30 - 7 * Math.max(0, ...slots), s1: route.startS + 35 }, this.corridor);
     this.tick = 0;
     this.active = brains.length;
     // Sense once before the first step, so the first decision sees the street it starts on.

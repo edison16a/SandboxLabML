@@ -6,6 +6,7 @@ import { axisOf, lightState, walkState } from '../signals/plan';
 import type { TrafficContext } from '../traffic/rules';
 import { markThreats } from '../traffic/threats';
 import { Traffic, type KeepClear } from '../traffic/traffic';
+import type { Corridor } from './corridor';
 import { createWorldState, type WorldState } from './state';
 
 /**
@@ -36,14 +37,18 @@ export class CityWorld {
     this.ctx = { time: 0, signalsOn: level.signals, signalOffsets: city.signalOffsets, busy: this.peds.busy, jayX: this.peds.jayX, jayY: this.peds.jayY, jayCount: 0 };
   }
 
-  /** Starts the episode's world from `seed`, keeping traffic off the learners' start. */
-  reset(seed: number, keep: KeepClear | null): void {
+  /**
+   * Starts the episode's world from `seed`, keeping traffic off the
+   * learners' start. A corridor (see corridorOf) puts most cars and people
+   * near the trip.
+   */
+  reset(seed: number, keep: KeepClear | null, corridor: Corridor | null = null): void {
     this.rng = new Rng(seed);
     this.keep = keep;
     this.state.time = 0;
     this.state.signalsOn = this.level.signals;
-    this.peds.reset(this.level.pedestrians, this.level, this.rng);
-    this.traffic.reset(this.level.traffic, this.rng, keep);
+    this.peds.reset(this.level.pedestrians, this.level, this.rng, corridor);
+    this.traffic.reset(this.level.traffic, this.rng, keep, corridor);
     this.ctx.time = 0;
     markThreats(this.traffic.fleet, this.ctx, this.threat);
     this.writeState();

@@ -4,6 +4,7 @@ import { pathPoint } from '../geometry/path';
 import { CAR_DIMENSIONS, CAR_KINDS, FLAG_BRAKE, FLAG_LEFT, FLAG_RIGHT, MAX_TRAFFIC, type WorldState } from '../world/state';
 import { Fleet } from './fleet';
 import { trafficAccel, type TrafficContext } from './rules';
+import { CORRIDOR_SHARE, type Corridor } from '../world/corridor';
 
 /** A stretch of lane kept clear of traffic at the start, where the learners line up. */
 export interface KeepClear {
@@ -29,6 +30,7 @@ export class Traffic {
   private readonly lanes: number[];
   private readonly pt = pathPoint();
   private readonly accel: Float64Array;
+  private corridor: Corridor | null = null;
 
   constructor(readonly city: City) {
     this.fleet = new Fleet(city, MAX_TRAFFIC);
@@ -36,9 +38,15 @@ export class Traffic {
     this.accel = new Float64Array(MAX_TRAFFIC);
   }
 
-  /** Clears the streets and places `count` cars at random, away from `keep`. */
-  reset(count: number, rng: Rng, keep: KeepClear | null): void {
+  /**
+   * Clears the streets and places `count` cars at random, away from `keep`.
+   * With a corridor, most go on lanes near the route; cars stuck in a jam
+   * are later put back on lanes away from it, where nobody watches them
+   * appear.
+   */
+  reset(count: number, rng: Rng, keep: KeepClear | null, corridor: Corridor | null = null): void {
     const f = this.fleet;
+    this.corridor = corridor && corridor.nearLanes.length > 0 ? corridor : null;
     f.count = 0;
     f.index();
     for (let tries = 0; f.count < Math.min(count, f.cap) && tries < count * 40; tries++) {
@@ -47,7 +55,7 @@ export class Traffic {
       f.kind[i] = kind;
       f.len[i] = CAR_DIMENSIONS[kind][0];
       f.wid[i] = CAR_DIMENSIONS[kind][1];
-      if (!this.spawn(i, rng, keep)) continue;
+      if (!this.spawn(i, rng, keep, this.corridor && rng.chance(CORRIDOR_SHARE) ? this.corridor.nearLanes : this.lanes)) continue;
       f.v0[i] = this.city.elements[f.el[i]].speedLimit * rng.range(0.82, 1.0);
       f.v[i] = f.v0[i] * rng.range(0.3, 0.9);
       f.count++;
@@ -56,10 +64,10 @@ export class Traffic {
     this.pose();
   }
 
-  /** Puts car i on a random lane with room around it. False if the pick was too crowded. */
-  private spawn(i: number, rng: Rng, keep: KeepClear | null): boolean {
+  /** Puts car i on a random lane from `lanes` with room around it. False if the pick was too crowded. */
+  private spawn(i: number, rng: Rng, keep: KeepClear | null, lanes: number[]): boolean {
     const f = this.fleet;
-    const lane = rng.pick(this.lanes);
+    const lane = rng.pick(lanes);
     const len = this.city.elements[lane].path.length;
     const s = rng.range(6, len - 6);
     if (keep && keep.element === lane && s > keep.s0 && s < keep.s1) return false;
@@ -87,7 +95,8 @@ export class Traffic {
     for (let i = 0; i < f.count; i++) {
       if (f.still[i] < STUCK) continue;
       f.index();
-      if (this.spawn(i, rng, keep)) f.v[i] = 0;
+      const far = this.corridor && this.corridor.farLanes.length > 0 ? this.corridor.farLanes : this.lanes;
+      if (this.spawn(i, rng, keep, far)) f.v[i] = 0;
       else f.still[i] = STUCK * 0.8;
     }
     this.pose();

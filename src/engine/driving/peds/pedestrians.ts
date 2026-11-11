@@ -6,6 +6,7 @@ import type { DrivingLevel } from '../levels';
 import { WALK_FLASHING, WALK_GO, walkState } from '../signals/plan';
 import { MAX_PEDS, PED_CROSS, PED_JAYWALK, PED_WAIT, PED_WALK, type WorldState } from '../world/state';
 import { Crowd, CURB_GAP, STRIDE } from './crowd';
+import { CORRIDOR_SHARE, type Corridor } from '../world/corridor';
 import { jaywalkTarget, reachedCrossing, ringCrossings, type RingCrossings } from './paths';
 
 /** Chance that someone reaching a crossing takes it rather than walking on. */
@@ -37,18 +38,21 @@ export class Pedestrians {
     this.points = ringCrossings(city);
   }
 
-  reset(count: number, level: DrivingLevel, rng: Rng): void {
+  /** Places `count` people on the sidewalks; with a corridor, most of them on the blocks along the route. */
+  reset(count: number, level: DrivingLevel, rng: Rng, corridor: Corridor | null = null): void {
     const c = this.crowd;
     c.count = Math.min(count, MAX_PEDS);
     const rings = this.city.rings;
-    const total = rings.reduce((a, r) => a + r.length, 0);
+    const all = rings.map((_, k) => k);
+    const near = corridor && corridor.nearRings.length > 0 ? corridor.nearRings : all;
     for (let i = 0; i < c.count; i++) {
-      // Spread people by sidewalk length, so the big outer loop gets its share.
-      let pick = rng.next() * total;
-      let r = 0;
-      while (r < rings.length - 1 && pick > rings[r].length) pick -= rings[r++].length;
-      c.ring[i] = r;
-      c.s[i] = pick;
+      // Spread people by sidewalk length, so a long loop gets its share.
+      const pool = rng.chance(CORRIDOR_SHARE) ? near : all;
+      let pick = rng.next() * pool.reduce((a, k) => a + rings[k].length, 0);
+      let n = 0;
+      while (n < pool.length - 1 && pick > rings[pool[n]].length) pick -= rings[pool[n++]].length;
+      c.ring[i] = pool[n];
+      c.s[i] = Math.min(pick, rings[pool[n]].length);
       c.dir[i] = rng.chance(0.5) ? 1 : -1;
       c.speed[i] = rng.range(1.1, 1.6);
       c.pref[i] = -c.dir[i] * 0.45 + rng.range(-0.35, 0.35);

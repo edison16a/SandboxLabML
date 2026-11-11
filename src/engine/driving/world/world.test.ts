@@ -6,6 +6,8 @@ import { ELEMENT_LANE } from '../city/types';
 import { drivingLevel } from '../levels';
 import { axisOf, LIGHT_RED, lightState, WALK_DONT, walkState } from '../signals/plan';
 import { CityWorld } from './cityWorld';
+import { corridorOf } from './corridor';
+import { pickRoute } from '../route/planner';
 import { PED_CROSS, PED_WAIT, PED_WALK } from './state';
 
 const city = buildCity(BUILT_IN_CITIES[0]);
@@ -95,5 +97,23 @@ describe('city world', () => {
     expect(entries).toBeGreaterThan(20);
     // Traffic flows: on average each car covers real ground.
     expect(moved / f.count).toBeGreaterThan(200);
+  });
+
+  it('puts most cars and people along the trip when given its corridor', () => {
+    const spec = pickRoute(city, 9);
+    const corridor = corridorOf(city, spec.elements, 30);
+    const w = new CityWorld(city, drivingLevel(5));
+    w.reset(4, null, corridor);
+    const f = w.traffic.fleet;
+    const near = new Set(corridor.nearLanes);
+    let cars = 0;
+    for (let i = 0; i < f.count; i++) if (near.has(f.el[i])) cars++;
+    expect(cars / f.count).toBeGreaterThan(0.6);
+    const rings = new Set(corridor.nearRings);
+    let people = 0;
+    for (let i = 0; i < w.peds.crowd.count; i++) if (rings.has(w.peds.crowd.ring[i])) people++;
+    expect(people / w.peds.crowd.count).toBeGreaterThan(0.6);
+    // The same counts as without one.
+    expect(f.count).toBe(drivingLevel(5).traffic);
   });
 });
