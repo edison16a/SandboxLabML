@@ -10,7 +10,8 @@ import { shownStream } from '../session/shown';
 import { useDrivingLab } from '../state/labStore';
 import { LiveStats } from './LiveStats';
 
-const CAMERAS = DRIVING_CAMERAS.map((value) => ({ value, label: cameraLabel(value) }));
+/** The camera names, short enough for the picker: the street corner camera is just Corner there. */
+const CAMERAS = DRIVING_CAMERAS.map((value) => ({ value, label: value === 'corner' ? 'Corner' : cameraLabel(value) }));
 
 /** Says what the picture shows while Turbo trains out of sight. */
 function TurboNote() {
