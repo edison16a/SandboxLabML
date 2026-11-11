@@ -30,7 +30,8 @@ export const DRIVING_LESSONS_INFO: EpisodeLessonsInfo = {
     offRoad: percent,
     redLights: percent,
     distance: (v) => `${Math.round(v)} m`,
-    redLightRuns: (v) => `${Math.round(v)} ${Math.round(v) === 1 ? 'red light' : 'red lights'}`,
+    // A bare count: the test run tile already says Red lights.
+    redLightRuns: (v) => String(Math.round(v)),
     time: (v) => `${v.toFixed(1)} s`,
     level: (v) => `level ${Math.round(v)}`,
   },
