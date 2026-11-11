@@ -111,7 +111,12 @@ test.describe('Navigation Sandbox', () => {
     await expect(dialog).toContainText('1 / 12 movers');
     await page.getByTestId('course-board').focus();
     await page.keyboard.press('c');
+    // Half a meter right of the middle, a crate would sit in the wall, so it is refused.
     await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Enter');
+    await expect(dialog.getByRole('status')).toContainText('overlap another');
+    await expect(dialog).toContainText('3 / 48 pieces');
+    await page.keyboard.press('Shift+ArrowRight');
     await page.keyboard.press('Enter');
     await expect(dialog).toContainText('4 / 48 pieces');
     await expect(dialog).toContainText('level 6');

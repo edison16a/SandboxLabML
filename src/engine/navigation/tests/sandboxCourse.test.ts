@@ -46,6 +46,28 @@ describe('the Sandbox course editor rules', () => {
     expect(addMover(s, [14, -3], [14, 3], 'slow').error).toMatch(/movers/);
   });
 
+  it('refuses pieces that would clip into each other, but lets walls meet', () => {
+    const walled = ok(addWall(room, [2, -7], [2, 3]));
+    // A crate on the wall, a crate on spikes, and spikes under a crate.
+    expect(placeBlock(walled, 2, 0, 'small').error).toMatch(/overlap another/);
+    const spiked = ok(addSpikes(walled, [6, -2], [8, 2]));
+    expect(placeBlock(spiked, 7, 0, 'big').error).toMatch(/overlap another/);
+    expect(addSpikes(ok(placeBlock(room, 0, 0, 'big')), [-0.5, -2], [0.5, 2]).error).toMatch(/overlap another/);
+    // Half a meter off, a 1 m crate still reaches into the 0.3 m wall; a meter off it is clear.
+    expect(placeBlock(walled, 2.5, 0, 'small').error).toMatch(/overlap another/);
+    expect(ok(placeBlock(walled, 3, 0, 'small')).obstacles).toHaveLength(2);
+    // A corner of two walls is one wall to the eye.
+    expect(ok(addWall(walled, [2, 3], [8, 3])).obstacles).toHaveLength(2);
+    // A mover whose path crosses the wall, or runs over spikes, is refused; one clear of both goes in.
+    expect(addMover(walled, [0, 0], [4, 0], 'slow').error).toMatch(/slide into/);
+    expect(addMover(spiked, [7, -5], [7, 5], 'slow').error).toMatch(/slide into/);
+    expect(ok(addMover(walled, [5, -4], [5, 4], 'slow')).obstacles).toHaveLength(2);
+    // Moving a crate onto the wall is refused too.
+    const crate = ok(placeBlock(walled, 4, 0, 'small'));
+    expect(moveObstacle(crate, 1, -2, 0).error).toMatch(/overlap another/);
+    expect(ok(moveObstacle(crate, 1, 1, 0)).obstacles[1]).toMatchObject({ x: 5, z: 0 });
+  });
+
   it('finds, moves and erases the piece under a point', () => {
     const s = ok(placeBlock(room, 2, 2, 'small'));
     expect(obstacleAt(s, 2.3, 2.3)).toBe(0);

@@ -36,15 +36,32 @@ export function obstacleAt(spec: CourseSpec, x: number, z: number): number {
   return -1;
 }
 
-/** Why a piece with this footprint cannot go in, or null when it can. */
-function refusal(spec: CourseSpec, r: Rect, mover: boolean, skip = -1): string | null {
+/** True when two rectangles share floor. Touching edges do not count, so pieces can stand flush. */
+function overlaps(a: Rect, b: Rect): boolean {
+  return Math.abs(a.x - b.x) < a.hx + b.hx - 1e-6 && Math.abs(a.z - b.z) < a.hz + b.hz - 1e-6;
+}
+
+/**
+ * Whether two pieces would clip into each other in 3D. Walls may meet
+ * walls (a corner or a T looks like one wall), but nothing else may share
+ * floor, and a mover's whole path counts as its floor.
+ */
+function clashes(a: ObstacleSpec, b: ObstacleSpec): boolean {
+  if (a.kind === 'wall' && b.kind === 'wall') return false;
+  return overlaps(footprint(a), footprint(b));
+}
+
+/** Why piece `o` cannot go in, or null when it can. `skip` is the index of the piece being moved, which it may not meet. */
+function refusal(spec: CourseSpec, o: ObstacleSpec, skip = -1): string | null {
+  const r = footprint(o);
   const hl = spec.length / 2;
   const hw = spec.width / 2;
   if (r.x - r.hx < -hl - 1e-9 || r.x + r.hx > hl + 1e-9 || r.z - r.hz < -hw - 1e-9 || r.z + r.hz > hw + 1e-9) return 'That reaches outside the room.';
   if (r.x - r.hx < courseLines(spec).start - 1e-9) return 'Keep the start zone clear. Runners line up there.';
   const others = spec.obstacles.filter((_, i) => i !== skip);
   if (others.length >= COURSE_LIMITS.obstacles) return `A course holds up to ${COURSE_LIMITS.obstacles} pieces.`;
-  if (mover && others.filter((o) => o.kind === 'mover').length >= COURSE_LIMITS.movers) return `A course holds up to ${COURSE_LIMITS.movers} movers.`;
+  if (o.kind === 'mover' && others.filter((p) => p.kind === 'mover').length >= COURSE_LIMITS.movers) return `A course holds up to ${COURSE_LIMITS.movers} movers.`;
+  if (others.some((p) => clashes(o, p))) return o.kind === 'mover' ? 'That mover would slide into another piece. Give its path more room.' : 'That piece would overlap another. Move or erase it first.';
   return null;
 }
 
@@ -54,7 +71,7 @@ function withObstacles(spec: CourseSpec, obstacles: ObstacleSpec[]): CourseSpec 
 }
 
 function add(spec: CourseSpec, o: ObstacleSpec): EditResult {
-  const error = refusal(spec, footprint(o), o.kind === 'mover');
+  const error = refusal(spec, o);
   return error ? { error } : { spec: withObstacles(spec, [...spec.obstacles, o]) };
 }
 
@@ -111,7 +128,7 @@ export function moveObstacle(spec: CourseSpec, i: number, dx: number, dz: number
   if (!o) return { error: 'Nothing to move there.' };
   const [sx, sz] = [snap(dx), snap(dz)];
   const moved: ObstacleSpec = o.kind === 'mover' ? { ...o, ax: o.ax + sx, bx: o.bx + sx, az: o.az + sz, bz: o.bz + sz } : { ...o, x: o.x + sx, z: o.z + sz };
-  const error = refusal(spec, footprint(moved), false, i);
+  const error = refusal(spec, moved, i);
   return error ? { error } : { spec: withObstacles(spec, spec.obstacles.map((p, k) => (k === i ? moved : p))) };
 }
 
@@ -131,6 +148,6 @@ export function setLength(spec: CourseSpec, length: number): CourseSpec {
   const resized = { ...spec, length, start: lines.start, finish: lines.finish };
   const kept = spec.obstacles
     .map((o): ObstacleSpec => (o.kind === 'mover' ? { ...o, ax: o.ax - d, bx: o.bx - d } : { ...o, x: o.x - d }))
-    .filter((o) => !refusal({ ...resized, obstacles: [] }, footprint(o), false));
+    .filter((o) => !refusal({ ...resized, obstacles: [] }, o));
   return withObstacles(resized, kept);
 }
