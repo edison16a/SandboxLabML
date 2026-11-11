@@ -77,7 +77,7 @@ const table: ScriptEnv[] = [
     env: 'navigation',
     slice: NAVIGATION_SLICE,
     presets: [],
-    builtin: 'New ground, a finish bonus with time to spare, and a cost for dying.',
+    builtin: 'New ground, a finish bonus with time to spare, and costs for dying or backing up.',
     starter: [
       'script "My script" for navigation v1',
       'brain navigation-standard',
