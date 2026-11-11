@@ -1,7 +1,7 @@
 import { profile, smooth, toCenter } from './curve';
 import { TAIL } from './ends';
-import { bothSides, gridGeometry, type Vec3 } from './grid';
-import type { Detail, PartBin, Slot } from './parts';
+import type { Vec3 } from './grid';
+import type { Detail } from './parts';
 import { beltAt, deckY, sectionAt } from './profile';
 import { along, deg, key, resample, span, type Pt } from './section';
 import { warp } from './warp';
@@ -66,63 +66,10 @@ export function cabinBand(x: number, band: number, steps: number): Pt[] {
   return roof.map(([z, y], i) => [z + (top[i][0] - base[i][0]) * f, y + (top[i][1] - base[i][1]) * f - tuck * Math.min(1, i / 2)]);
 }
 
-interface Range {
-  from: number;
-  to: number;
-  rail: Slot;
-  top: Slot;
-  /** Width kept beside a window in the roof band, m: the A pillars and the sails beside the rear glass. */
-  pillar?: number;
-  pillarSlot?: Slot;
-  /** The painted deck behind the rear glass: side band, rail and roof as one grid, so they shade as one. */
-  deck?: boolean;
-}
-
-/**
- * The roof is paint with glass set into it: the windshield between
- * gloss black A pillars, the rear window between gloss black pillars.
- * The rail is gloss black from the A pillar to the rear glass's end, so
- * the painted roof panel floats on one dark band. Behind the rear glass
- * the deck is all paint, ending in the lip spoiler. The side band is
- * built in windows.ts, where the window graphic is drawn.
- */
-const RANGES: Range[] = [
-  { from: CABIN.rear, to: CABIN.glassRear, rail: 'paint', top: 'paint', deck: true },
-  { from: CABIN.glassRear, to: CABIN.roofRear, rail: 'trim', top: 'glass', pillar: 0.19, pillarSlot: 'trim' },
-  { from: CABIN.roofRear, to: CABIN.header, rail: 'trim', top: 'paint' },
-  { from: CABIN.header, to: CABIN.front, rail: 'trim', top: 'glass', pillar: 0.07, pillarSlot: 'trim' },
-];
-
 /** Stations along the cabin from x0 to x1, about as dense as the body's. */
 export function cabinStations(x0: number, x1: number, detail: Detail): number[] {
   const n = Math.max(3, Math.round(((x1 - x0) / 4.9) * detail.stations * 1.1));
   return Array.from({ length: n + 1 }, (_, i) => x0 + ((x1 - x0) * i) / n);
-}
-
-export function addCabin(bin: PartBin, detail: Detail): void {
-  for (const r of RANGES) {
-    const xs = cabinStations(r.from, r.to, detail);
-    const steps = detail.cabin[1];
-    if (r.deck) {
-      // Belt to centerline in one row per station: the side band and the rail have shrunk to almost nothing here.
-      const deck = xs.map((x) => [...cabinBand(x, 0, detail.cabin[0]), ...cabinBand(x, 1, 2).slice(1), ...cabinBand(x, 2, steps).slice(1)].map(([z, y]) => warp([x, y, z])));
-      bin.add(r.top, bothSides(gridGeometry(deck)));
-      continue;
-    }
-    const rail = xs.map((x) => cabinBand(x, 1, 2).map(([z, y]) => warp([x, y, z])));
-    bin.add(r.rail, bothSides(gridGeometry(rail)));
-    const rows = xs.map((x) => cabinBand(x, 2, steps).map(([z, y]) => warp([x, y, z])));
-    if (!r.pillar) {
-      bin.add(r.top, bothSides(gridGeometry(rows)));
-      continue;
-    }
-    // Split each row a fixed width in from the edge, so the pillars keep their width as the roof narrows.
-    const split = xs.map((x) => Math.min(0.5, (r.pillar as number) / roofWidth(x)));
-    const part = (t0: (i: number) => number, t1: (i: number) => number, n: number) =>
-      xs.map((x, i) => Array.from({ length: n + 1 }, (_, j) => onCabin(x, 2, t0(i) + ((t1(i) - t0(i)) * j) / n)));
-    bin.add(r.pillarSlot as Slot, bothSides(gridGeometry(part(() => 0, (i) => split[i], 2))));
-    bin.add(r.top, bothSides(gridGeometry(part((i) => split[i], () => 1, steps))));
-  }
 }
 
 /** Length of the roof band at x from its edge to the centerline, m. */
