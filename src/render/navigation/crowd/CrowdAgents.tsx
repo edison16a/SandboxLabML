@@ -13,7 +13,7 @@ import { POSE_PRIORITY, useNavScene } from '../frame/sceneContext';
 import { blendAgent, STRIDE } from '../frame/snapshotRead';
 import { NAV_COLORS } from '../palette';
 import { hidesChampion } from './clearance';
-import { crowdFadeMaterial, crowdSolidMaterial, instanceFloats } from './crowdMaterials';
+import { crowdFadeMaterial, crowdFadeShadowMaterial, crowdSolidMaterial, instanceFloats } from './crowdMaterials';
 import { createStopPose, stopPose } from './stopPose';
 
 /** Most agents the crowd draws. */
@@ -45,7 +45,8 @@ function crowdMesh(fading: boolean) {
  * at the cadence of each one's real speed and they lean into a run. A run
  * that ends plays out on the spot (see stopPose): a fall onto the spikes,
  * a squash under a mover, a hop past the line, then a fade. Fading ones
- * move to a second small mesh with per instance opacity.
+ * move to a second small mesh with per instance opacity, whose shadows
+ * thin out with them.
  */
 export function CrowdAgents() {
   const { frame } = useNavScene();
@@ -55,6 +56,7 @@ export function CrowdAgents() {
   const b = useDisposable(() => crowdMesh(true), []);
   const solidMat = useDisposable(() => crowdSolidMaterial(), []);
   const fadeMat = useDisposable(() => crowdFadeMaterial(), []);
+  const fadeShadow = useDisposable(() => crowdFadeShadowMaterial(), []);
   const t = useMemo(
     () => ({
       pose: { x: 0, z: 0, yaw: 0 },
@@ -137,7 +139,8 @@ export function CrowdAgents() {
   return (
     <group>
       <instancedMesh ref={solid} args={[a.geometry, solidMat, MAX_AGENTS]} frustumCulled={false} castShadow receiveShadow />
-      <instancedMesh ref={fading} args={[b.geometry, fadeMat, MAX_AGENTS]} frustumCulled={false} renderOrder={2} />
+      {/* After the champion's own passes, so a ghost in front of it only tints it. */}
+      <instancedMesh ref={fading} args={[b.geometry, fadeMat, MAX_AGENTS]} frustumCulled={false} renderOrder={5} castShadow receiveShadow customDepthMaterial={fadeShadow} />
     </group>
   );
 }
