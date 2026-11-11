@@ -73,12 +73,13 @@ interface Range {
 
 /**
  * The roof is paint with glass set into it: the windshield between
- * gloss black A pillars, the rear window between painted sails. The side
- * band is built in windows.ts, where the window graphic is drawn.
+ * gloss black A pillars, the rear window between gloss black pillars, so
+ * the painted roof panel floats on a dark glasshouse. The side band is
+ * built in windows.ts, where the window graphic is drawn.
  */
 const RANGES: Range[] = [
-  { from: CABIN.rear, to: CABIN.glassRear, rail: 'paint', top: 'paint' },
-  { from: CABIN.glassRear, to: CABIN.roofRear, rail: 'paint', top: 'glass', pillar: 0.2, pillarSlot: 'paint' },
+  { from: CABIN.rear, to: CABIN.glassRear, rail: 'trim', top: 'paint' },
+  { from: CABIN.glassRear, to: CABIN.roofRear, rail: 'trim', top: 'glass', pillar: 0.2, pillarSlot: 'trim' },
   { from: CABIN.roofRear, to: CABIN.header, rail: 'paint', top: 'paint' },
   { from: CABIN.header, to: CABIN.front, rail: 'trim', top: 'glass', pillar: 0.07, pillarSlot: 'trim' },
 ];

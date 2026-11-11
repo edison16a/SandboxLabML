@@ -54,17 +54,24 @@ const at = (v: number) => () => v;
 
 /**
  * The cabin's side band. Inside the graphic it is gloss black with three
- * windows laid on it; outside, behind and under the rear point, it is
- * paint: the sail of the C pillar, flowing into the haunch.
+ * windows laid on it. Above the graphic and behind its rear point the
+ * band stays gloss black up to the roof edge, a dark fin that sweeps
+ * down toward the deck and meets the black beside the rear glass, so
+ * only the painted roof panel reads, floating. Under the kick and the
+ * fin it is paint, flowing into the haunch.
  */
 export function addWindows(bin: PartBin, detail: Detail): void {
   const n = detail.cabin[0];
   const low = (x: number) => dloAt(x)[0];
   const high = (x: number) => dloAt(x)[1];
-  bin.add('paint', sideStrip(CABIN.rear, DLO.point, at(0), at(1), 0, detail, n));
+  // The fin's lower edge: from the graphic's rear point down to the belt where the cabin meets the deck.
+  const meet = low(DLO.point);
+  const fin = (x: number) => meet * smooth((x - CABIN.rear) / (DLO.point - CABIN.rear)) ** 0.8;
+  bin.add('paint', sideStrip(CABIN.rear, DLO.point, at(0), fin, 0, detail, Math.max(1, n - 3)));
+  bin.add('trim', sideStrip(CABIN.rear, DLO.point, fin, at(1), 0, detail, n));
   bin.add('trim', sideStrip(DLO.point, DLO.front, low, high, 0, detail, n));
   bin.add('paint', sideStrip(DLO.point, DLO.kick, at(0), low, 0, detail, 1));
-  bin.add('paint', sideStrip(DLO.point, DLO.drop, high, at(1), 0, detail, Math.max(1, n - 2)));
+  bin.add('trim', sideStrip(DLO.point, DLO.drop, high, at(1), 0, detail, Math.max(1, n - 2)));
   // The glass, a little proud of the black, inside a margin that leaves room for the surround.
   const m = (x: number) => MARGIN / sideHeight(x);
   const inLow = (x: number) => low(x) + m(x);
