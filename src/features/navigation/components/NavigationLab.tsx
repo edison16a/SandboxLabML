@@ -77,7 +77,7 @@ function NavigationLabBody() {
       {/* The props mirror the panel's classes below. 380 px keeps every tab visible, and with the viewport's 600 px it fits a 1024 px (lg) window. */}
       <ResizeHandle id="navigation" cssVar="--panel-w" pane="after" defaultSize={400} min={380} max={900} label="Resize the side panel" />
       <aside data-tour="panel" className="flex h-[70vh] min-h-0 w-full shrink-0 flex-col border-t border-border bg-surface lg:h-auto lg:w-[var(--panel-w,400px)] lg:min-w-[380px] lg:shrink lg:border-t-0 lg:border-l">
-        <SidePanel progress={<ProgressTab metrics={<CurriculumCharts />} />} inputs={<InputsTab allScope={false} />} />
+        <SidePanel progress={<ProgressTab metrics={<CurriculumCharts />} />} inputs={<InputsTab scopes={false} />} />
       </aside>
       <NewRunDialog open={newRun} onOpenChange={setNewRun} initialScript={pendingScript} />
       <Walkthrough tour={NAVIGATION_TOUR} ready={ready && sceneReady} />

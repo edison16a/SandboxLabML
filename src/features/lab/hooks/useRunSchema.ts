@@ -9,11 +9,13 @@ import { useLab, useLabContext } from '../LabContext';
 /**
  * The input schema of the open run, including the script's own sensors, so
  * the overlay, the inputs tab and the network labels line up with what the
- * brain actually receives.
+ * brain actually receives. In the Sandbox, a brain from outside the run
+ * (see LabState.sandboxBrain) brings its own.
  */
 export function useRunSchema(): InputSpec[] {
   const { module } = useLabContext();
-  const run = useLab((s) => s.run);
+  // A brain the Sandbox drives from outside the run brings its own inputs.
+  const run = useLab((s) => (s.mode === 'sandbox' && s.sandboxBrain ? s.sandboxBrain.run : s.run));
   const gen = useLab((s) => s.liveGeneration);
   const source = run ? (scriptAt(run, gen)?.source ?? null) : null;
   return useMemo(() => {
@@ -21,11 +23,4 @@ export function useRunSchema(): InputSpec[] {
     const custom = source ? (compileScript(source).script?.sensors ?? []) : [];
     return module.inputSchema(run, custom);
   }, [module, run, source]);
-}
-
-/** The inputs of the brain on screen: the lab's viewSchema while it sets one (a Sandbox model), else the run's. */
-export function useViewSchema(): InputSpec[] {
-  const run = useRunSchema();
-  const own = useLab((s) => s.viewSchema);
-  return own ?? run;
 }

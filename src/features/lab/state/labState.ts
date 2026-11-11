@@ -1,5 +1,5 @@
 import type { StoreApi } from 'zustand';
-import type { InputSpec } from '@/engine/env/types';
+import type { Genome } from '@/engine/neat/types';
 import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { TrainingStatus } from '@/workers/coordinator/events';
@@ -49,17 +49,18 @@ export interface LabState {
   /** Lesion test: input index mapped to the value it is forced to. Sandbox only. */
   lesions: Record<number, number>;
   /**
-   * Set by a lab whose viewport follows a ghost on its own, such as when
-   * the population is not on screen, so the inputs panels read the ghost
-   * stream. Left out, only a clicked ghost or the Sandbox does that.
+   * The stream the followed agent is in, for a lab whose viewport decides
+   * that itself (Driving follows past champions while Turbo trains). Left
+   * out, followsGhost works it out from the focus and the mode.
    */
-  viewFollowsGhost?: boolean;
+  inspectStream?: 'population' | 'ghosts';
   /**
-   * The inputs of the brains on screen, set by a lab whose Sandbox plays a
-   * brain that is not the run's (Navigation's shipped models), so the
-   * inputs panels label what that brain reads. Left out, they use the run's.
+   * A brain the Sandbox drives that is not one of the open run's champions,
+   * such as a shipped trained model: the run config it was trained under
+   * (its inputs label the inputs tab and the network) and its genome (the
+   * network tab draws it). Only read while the Sandbox is open.
    */
-  viewSchema?: InputSpec[] | null;
+  sandboxBrain?: { run: RunConfig; genome: Genome; label: string } | null;
 }
 
 /** A lab store as the shared code sees it. A lab's own store is a superset, so it can stand in. */
@@ -123,12 +124,13 @@ export function withRecords<R extends GenerationRecord>(records: R[], batch: R[]
 }
 
 /**
- * True when the followed agent is a ghost: the user clicked one, the lab
+ * True when the followed agent is a ghost: the user clicked one, or the lab
  * is in the Sandbox, where only ghosts move and the population stream sits
- * frozen on its last training frame, or the lab's viewport says so.
+ * frozen on its last training frame. A lab that sets inspectStream decides.
  */
-export function followsGhost(s: { focus: Focus; mode: 'train' | 'sandbox'; viewFollowsGhost?: boolean }): boolean {
-  return s.focus.kind === 'ghost' || s.mode === 'sandbox' || s.viewFollowsGhost === true;
+export function followsGhost(s: { focus: Focus; mode: 'train' | 'sandbox'; inspectStream?: 'population' | 'ghosts' }): boolean {
+  if (s.inspectStream) return s.inspectStream === 'ghosts';
+  return s.focus.kind === 'ghost' || s.mode === 'sandbox';
 }
 
 /**

@@ -41,7 +41,7 @@ export function NavigationViewport({ feeds, ultra, onReady }: Props) {
     [feeds],
   );
   // The Sandbox's runners come down the ghost stream, though the view draws them as its field.
-  const onFollow = useCallback((ghost: boolean, index: number) => useNavigationLab.getState().set({ followed: index, viewFollowsGhost: ghost || useNavigationLab.getState().mode === 'sandbox' }), []);
+  const onFollow = useCallback((ghost: boolean, index: number) => useNavigationLab.getState().set({ followed: index, inspectStream: ghost || useNavigationLab.getState().mode === 'sandbox' ? 'ghosts' : 'population' }), []);
   const drawTier: NavQualityTier = ultra && tier === 'high' ? 'ultra' : tier;
   return (
     <NavigationCanvas

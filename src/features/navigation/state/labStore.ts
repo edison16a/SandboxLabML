@@ -16,7 +16,7 @@ export interface NavigationLabState extends LabState {
   camera: NavCamera;
   /** The level, curriculum and course seeds training is on, from the coordinator. Null until the run loads. */
   content: NavigationContent | null;
-  /** The runner the viewport follows, in its own feed (see viewFollowsGhost), or -1. */
+  /** The runner the viewport follows, in its own stream (see inspectStream), or -1. */
   followed: number;
   /** The Sandbox setup. It outlives a run switch, except for the field, which belongs to one run. */
   sandbox: NavSandbox;
@@ -31,7 +31,7 @@ export interface NavigationLabState extends LabState {
  * load, and the coordinator sends the new one while the load is under way.
  */
 export function openedNavigationState(run: RunConfig, records: GenerationRecord[], generation: number, leaving: LabState['mode']): Partial<NavigationLabState> {
-  return { ...openedLabState(run, records, generation, NAVIGATION_ENGINE_VERSION, leaving), followed: -1, viewFollowsGhost: false };
+  return { ...openedLabState(run, records, generation, NAVIGATION_ENGINE_VERSION, leaving), followed: -1, inspectStream: 'population', sandboxBrain: null };
 }
 
 /** The Sandbox after a run switch: its course and model picks stay, its champions and paused state do not. */
@@ -44,7 +44,8 @@ export const useNavigationLab = create<NavigationLabState>((set) => ({
   camera: 'follow',
   content: null,
   followed: -1,
-  viewFollowsGhost: false,
+  inspectStream: 'population',
+  sandboxBrain: null,
   sandbox: SANDBOX_DEFAULTS,
 
   set: (patch) => set(patch),

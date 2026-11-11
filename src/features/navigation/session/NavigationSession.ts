@@ -49,7 +49,7 @@ export class NavigationSession extends EpisodeSession<NavigationLabState> {
 
   override async exitSandbox(): Promise<void> {
     this.store.setSandbox({ inputs: null, lineup: null, paused: false });
-    this.set({ viewSchema: null });
+    this.set({ sandboxBrain: null });
     await super.exitSandbox();
   }
 
@@ -64,7 +64,7 @@ export class NavigationSession extends EpisodeSession<NavigationLabState> {
   }
 
   protected override openedState(config: RunConfig, history: GenerationRecord[], generation: number): Partial<NavigationLabState> {
-    return { ...openedNavigationState(config, history, generation, this.store.mode), sandbox: openedSandbox(this.store.sandbox), viewSchema: null };
+    return { ...openedNavigationState(config, history, generation, this.store.mode), sandbox: openedSandbox(this.store.sandbox) };
   }
 
   protected override onContent(content: unknown): void {

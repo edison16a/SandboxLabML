@@ -1,6 +1,5 @@
 import { loadReferences } from '@/engine/bench/references';
 import type { CourseSpec } from '@/engine/navigation/course/types';
-import { navigationInputSchema } from '@/engine/navigation/sensors/inputSchema';
 import { deleteCourse, listCourses, saveCourse } from '@/storage/courses';
 import { toast } from '@/ui/toast/toastStore';
 import type { WorkerPool } from '@/workers/client/workerPool';
@@ -124,8 +123,8 @@ export class SandboxControl {
     const scene = sandboxScene(s.run, s.records, s.sandbox, s.lesions);
     // From here the viewport shows this course and no other, with the runners on their spots until the replay streams.
     s.setSandbox({ inputs: scene?.inputs ?? null, lineup: sandboxLineup(s.run, s.sandbox, scene) });
-    // A shipped model reads other inputs than the run's brain, and the inputs panels should label those.
-    s.set({ viewSchema: scene?.inputs ? navigationInputSchema(scene.inputs) : null });
+    // A shipped model reads other inputs than the run's brain, and the inputs and network panels should show it.
+    s.set({ sandboxBrain: scene?.brain ?? null });
     if (!scene) {
       await this.pool.replay.stopGhosts();
       this.pool.ghosts.clear();

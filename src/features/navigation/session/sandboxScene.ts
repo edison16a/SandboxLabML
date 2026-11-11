@@ -1,5 +1,3 @@
-import { findPresetBlueprint } from '@/engine/blueprints/presets';
-import type { ReferenceModel } from '@/engine/bench/types';
 import { generateCourse } from '@/engine/navigation/course/generate';
 import { namedCourse } from '@/engine/navigation/course/presets';
 import type { CourseSpec } from '@/engine/navigation/course/types';
@@ -8,12 +6,11 @@ import { navigationOf } from '@/engine/navigation/pipeline/settings';
 import { DEFAULT_NAVIGATION_PARAMS } from '@/engine/navigation/params';
 import type { NavigationInputConfig } from '@/engine/navigation/sensors/inputConfig';
 import { mixSeed } from '@/engine/core/rng';
-import { base64ToBytes, decodeGenome } from '@/engine/neat/serialize';
-import { findScriptPreset } from '@/engine/script/presets';
 import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { GhostSpec } from '@/workers/replay/ghostPlayer';
 import { ghostSpecs } from '@/features/lab/session/ghostSelection';
+import { modelRunners, type SandboxBrain } from './sandboxModel';
 import { MAX_RUNNERS, type FieldEntry, type NavSandbox, type SandboxCourse, type SandboxLineup } from '../state/sandboxState';
 
 /** The course a Sandbox pick stands for. A saved course that is gone falls back to level 1. */
@@ -30,6 +27,8 @@ export interface SandboxScene {
   generations: number[];
   /** The brains' inputs, when they differ from the run's. */
   inputs: NavigationInputConfig | null;
+  /** A shipped model on screen, as the inputs and network panels show it. Null for the run's own champions. */
+  brain: SandboxBrain | null;
 }
 
 /**
@@ -51,16 +50,6 @@ function fieldRunners(run: RunConfig, records: GenerationRecord[], field: readon
   return rows.flatMap((row) => Array.from({ length: row.copies }, (_, k) => ({ ...base.get(row.generation)!, seed: base.get(row.generation)!.seed + k * 7919, slot: first.get(row.generation)! + k })));
 }
 
-/** Copies of a shipped model as runners, with the brain inputs and script it trained with. Null when the model does not load. */
-function modelRunners(model: ReferenceModel, copies: number): { specs: GhostSpec[]; inputs: NavigationInputConfig } | null {
-  const blueprint = findPresetBlueprint(model.blueprint);
-  const preset = findScriptPreset(model.preset);
-  if (blueprint?.env !== 'navigation' || !preset) return null;
-  const genome = decodeGenome(base64ToBytes(model.genome));
-  const specs = Array.from({ length: copies }, (_, k) => ({ generation: 0, genome, seed: mixSeed(model.seed, k), scriptSource: preset.source, slot: k }));
-  return { specs, inputs: blueprint.inputs as NavigationInputConfig };
-}
-
 /**
  * The scene for the Sandbox as set up now: the picked course, the runners
  * from the run or a shipped model, and any lesioned inputs. Null when
@@ -72,12 +61,14 @@ export function sandboxScene(run: RunConfig, records: GenerationRecord[], s: Nav
   const own = navigationOf(run);
   let specs: GhostSpec[];
   let inputs: NavigationInputConfig | null = null;
+  let brain: SandboxBrain | null = null;
   if (s.source === 'model') {
     const model = s.models?.find((m) => m.tier === s.model) ?? s.models?.[0];
     const runners = model ? modelRunners(model, Math.min(MAX_RUNNERS, s.modelCopies)) : null;
     if (!runners) return null;
     specs = runners.specs;
     inputs = runners.inputs;
+    brain = runners.brain;
   } else specs = fieldRunners(run, records, s.field).filter((r) => (r.slot ?? 0) < MAX_RUNNERS);
   if (!specs.length) return null;
   const setup: NavigationSetup = {
@@ -88,7 +79,7 @@ export function sandboxScene(run: RunConfig, records: GenerationRecord[], s: Nav
     inputs: inputs ?? own.inputs,
     ...(lesion.length && { lesion }),
   };
-  return { setup, specs, generations: specs.map((r) => r.generation), inputs };
+  return { setup, specs, generations: specs.map((r) => r.generation), inputs, brain };
 }
 
 /** The lineup a scene puts on screen, or the bare course when nobody is lined up. */

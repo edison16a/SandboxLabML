@@ -2,19 +2,17 @@
 
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import type { ReferenceTier } from '@/engine/bench/types';
 import { cn } from '@/ui/cn';
 import { Loading } from '@/ui/feedback/Spinner';
 import { Button } from '@/ui/primitives/Button';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Slider } from '@/ui/primitives/Slider';
 import { navigationSession } from '../../session/NavigationSession';
+import { TIER_LABEL } from '../../session/sandboxModel';
 import { useNavigationLab } from '../../state/labStore';
 import { fieldSize, MAX_RUNNERS, setCopies } from '../../state/sandboxState';
 import { CopiesStepper } from './CopiesStepper';
 import { glassButton, pickable, sectionLabel } from './glass';
-
-const TIER_LABEL: Record<ReferenceTier, string> = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' };
 
 /** The run's champions on the grid: which generations run and how many copies of each. The newest takes the front row. */
 function FieldEditor() {

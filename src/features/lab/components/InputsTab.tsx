@@ -4,16 +4,16 @@ import { useCallback } from 'react';
 import { InputBars } from '@/features/inputs/InputBars';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Switch } from '@/ui/primitives/Switch';
-import { useViewSchema } from '../hooks/useRunSchema';
+import { useRunSchema } from '../hooks/useRunSchema';
 import { useLab, useLabContext, useLabSet } from '../LabContext';
 import { followsGhost } from '../state/labState';
 
 /**
  * Everything the followed agent senses right now, plus overlay settings.
- * `allScope` offers drawing every agent's rays; a lab that only draws the
- * followed agent's sensors turns it off.
+ * `scopes` offers drawing every agent's rays; a lab whose overlay only
+ * draws the followed agent turns it off.
  */
-export function InputsTab({ allScope = true }: { allScope?: boolean }) {
+export function InputsTab({ scopes = true }: { scopes?: boolean }) {
   const { module, session, agentNoun } = useLabContext();
   const run = useLab((s) => s.run);
   const overlay = useLab((s) => s.inputsOverlay);
@@ -30,7 +30,7 @@ export function InputsTab({ allScope = true }: { allScope?: boolean }) {
     set({ lesions: next });
     session.sandboxChanged();
   };
-  const schema = useViewSchema();
+  const schema = useRunSchema();
   const ghost = useLab(followsGhost);
   const read = useCallback(() => {
     const streams = session.streams;
@@ -45,7 +45,7 @@ export function InputsTab({ allScope = true }: { allScope?: boolean }) {
           Draw inputs in the viewport
           <Switch label="Inputs overlay" checked={overlay} onChange={(v) => set({ inputsOverlay: v })} />
         </label>
-        {allScope && (
+        {scopes && (
           <div className="flex items-center justify-between text-[13px]">
             <span className="text-muted">Show rays for</span>
             <Segmented

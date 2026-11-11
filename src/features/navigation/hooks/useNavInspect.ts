@@ -14,7 +14,7 @@ export function useNavInspect(ready: boolean) {
   const overlay = useNavigationLab((s) => s.inputsOverlay);
   const tab = useNavigationLab((s) => s.panelTab);
   const followed = useNavigationLab((s) => s.followed);
-  const ghost = useNavigationLab((s) => s.viewFollowsGhost === true);
+  const ghost = useNavigationLab((s) => s.inspectStream === 'ghosts');
   useEffect(() => {
     const streams = navigationSession().streams;
     if (!ready || !streams) return;
