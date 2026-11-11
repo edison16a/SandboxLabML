@@ -1,3 +1,4 @@
+import { isKnownEnv } from '../env/registry';
 import type { EnvId } from '../env/types';
 import type { BenchReferences, ReferenceBrain, ReferenceChampion, ReferenceCurve, ReferencePoint, ReferenceTier } from './types';
 
@@ -31,7 +32,7 @@ function isChampion(v: unknown): v is ReferenceChampion {
 export function parseReferences(data: unknown): BenchReferences | null {
   if (!isObj(data)) return null;
   const { env, benchmarkVersion, engineVersion, generatedAt, seeds, references } = data;
-  if ((env !== 'racing' && env !== 'hideseek') || !isNum(benchmarkVersion) || !isNum(engineVersion) || !isNum(seeds)) return null;
+  if (typeof env !== 'string' || !isKnownEnv(env) || !isNum(benchmarkVersion) || !isNum(engineVersion) || !isNum(seeds)) return null;
   if (typeof generatedAt !== 'string' || !Array.isArray(references) || !references.every(isCurve)) return null;
   const { champions } = data;
   if (champions === undefined) return { env, benchmarkVersion, engineVersion, generatedAt, seeds, references };

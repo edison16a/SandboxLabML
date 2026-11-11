@@ -41,6 +41,11 @@ export function engineVersionOf(env: EnvId): number {
   return env === 'hideseek' ? HIDESEEK_ENGINE_VERSION : requireEpisodeModule(env).engineVersion;
 }
 
+/** Display name of an env, such as "Racing". */
+export function envLabel(env: EnvId): string {
+  return env === 'hideseek' ? 'Hide and Seek' : (episodeModule(env)?.label ?? env);
+}
+
 /** Ids of every registered env, in registration order. */
 export function episodeEnvIds(): EnvId[] {
   return [...modules.keys()] as EnvId[];

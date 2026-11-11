@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Gauge, Square } from 'lucide-react';
 import { loadReferences, runBenchmark } from '@/engine/bench';
+import { envLabel } from '@/engine/env/registry';
 import type { BenchReferences, BenchResult } from '@/engine/bench/types';
 import { Button } from '@/ui/primitives/Button';
 import { Field } from '@/ui/primitives/Field';
@@ -10,7 +11,6 @@ import { Select } from '@/ui/primitives/Select';
 import { BenchResultCard } from './BenchResultCard';
 import { generationsOf, loadModel, saveScore, useBenchSources } from './benchSource';
 
-const ENV_NAMES = { racing: 'Racing', hideseek: 'Hide and Seek' } as const;
 
 type Outcome = { kind: 'result'; result: BenchResult; references: BenchReferences | null; generation: number } | { kind: 'message'; text: string };
 
@@ -78,7 +78,7 @@ export default function BenchTab() {
   return (
     <div className="flex flex-col gap-4 p-4">
       <Field label="Run">
-        <Select label="Run" value={source?.run.id ?? ''} disabled={progress !== null} onChange={(id) => setRunId(id)} options={sources.map((s) => ({ value: s.run.id, label: s.run.name, hint: `${ENV_NAMES[s.run.env]}, ${s.latest + 1} generations` }))} />
+        <Select label="Run" value={source?.run.id ?? ''} disabled={progress !== null} onChange={(id) => setRunId(id)} options={sources.map((s) => ({ value: s.run.id, label: s.run.name, hint: `${envLabel(s.run.env)}, ${s.latest + 1} generations` }))} />
       </Field>
       <Field label="Champion of generation" hint={source?.run.env === 'hideseek' ? 'Its hider and seeker play as a pair.' : undefined}>
         <Select

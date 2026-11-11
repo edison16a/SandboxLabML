@@ -1,4 +1,4 @@
-import { RADAR_AXES } from '../bench/radar';
+import { RACING_RADAR_AXES } from '../bench/racingAxes';
 import { BENCHMARK_VERSION, ENGINE_VERSION } from '../core/version';
 import type { EpisodeEnvModule } from '../env/episode';
 import type { MetricSpec } from '../env/metrics';
@@ -76,7 +76,7 @@ export const racingModule: EpisodeEnvModule<RacingSetup, TrackSpec, RacingResult
 
   bench: {
     version: BENCHMARK_VERSION,
-    axes: RADAR_AXES.racing,
+    axes: RACING_RADAR_AXES,
     hint: 'unseen tracks, 0 to 100',
     // Loaded on first use: the exam pulls in the script compiler, which training without a script never needs.
     run: async (config, genome, opts) => (await import('../bench/runner')).benchmarkRacing(config, genome, opts),
