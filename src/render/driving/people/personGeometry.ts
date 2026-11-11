@@ -51,6 +51,9 @@ export function personGeometry(fine: boolean): THREE.BufferGeometry {
     const sz = side * J.shoulderZ;
     parts.push(tag(segment(0, hz, J.hip + 0.02, J.knee, 0.078, 0.058, n), PART.pants, leg, 0));
     parts.push(tag(segment(0, hz, J.knee, 0.08, 0.056, 0.042, n), PART.pants, leg, 1));
+    // A ball at the knee and the elbow, turning with the lower limb about its center, so no seam opens as the joint bends.
+    parts.push(tag(new THREE.SphereGeometry(0.058, n, Math.max(3, n / 2)).translate(0, J.knee, hz), PART.pants, leg, 1));
+    parts.push(tag(new THREE.SphereGeometry(0.04, n, Math.max(3, n / 2)).translate(0, J.elbow, sz), PART.shirt, arm, 1));
     parts.push(tag(new THREE.BoxGeometry(0.25, 0.075, 0.1).translate(0.05, 0.0375, hz), PART.shoes, leg, 1));
     parts.push(tag(segment(0, sz, J.shoulder, J.elbow, 0.048, 0.04, n), PART.shirt, arm, 0));
     parts.push(tag(segment(0, sz * 1.02, J.elbow, 0.86, 0.038, 0.032, n), PART.skin, arm, 1));
