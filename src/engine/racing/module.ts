@@ -2,6 +2,7 @@ import { RADAR_AXES } from '../bench/radar';
 import { BENCHMARK_VERSION, ENGINE_VERSION } from '../core/version';
 import type { EpisodeEnvModule } from '../env/episode';
 import type { MetricSpec } from '../env/metrics';
+import { RACING_BLUEPRINTS } from '../blueprints/racingPresets';
 import type { RacingChampionRecord } from '../training/records';
 import { envOptionsFor, racingSetupFor, resolveTrackDirective, TrackCache, type RacingSetup } from '../training/racingSetup';
 import { physicsHash } from './car/params';
@@ -38,6 +39,7 @@ export const racingModule: EpisodeEnvModule<RacingSetup, TrackSpec, RacingResult
   outputs: RACING_OUTPUTS,
   metrics: RACING_METRICS,
 
+  blueprints: RACING_BLUEPRINTS,
   inputCount: (inputs) => builtInInputCount(inputs as RacingInputConfig),
   inputSchema: (config, custom = []) => {
     const { settings, inputs } = racingOf(config);

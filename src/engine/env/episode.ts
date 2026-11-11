@@ -9,6 +9,7 @@
  * runs every brain once. That is what makes a champion replay exactly when
  * it is re-simulated alone.
  */
+import type { Blueprint, BlueprintIssue } from '../blueprints/types';
 import type { Network } from '../neat/network';
 import type { Genome } from '../neat/types';
 import type { BenchOptions, BenchResult } from '../bench/types';
@@ -125,8 +126,12 @@ export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Con
   /** Generation stats the env records, in the order the lab shows them. */
   readonly metrics: readonly MetricSpec[];
 
+  /** The preset brains, simplest first. The first is the default for a new run. */
+  readonly blueprints: readonly Blueprint[];
   /** Brain inputs the blueprint's built in sensors produce, before script sensors. */
   inputCount(inputs: unknown): number;
+  /** Problems with a blueprint's sensor config, for the blueprint form and imports. */
+  validateInputs?(inputs: unknown): BlueprintIssue[];
   /** Every brain input of a run in observation order, script sensors last. */
   inputSchema(config: RunConfig, custom?: readonly CustomSensorSpec[]): InputSpec[];
   /** Hash of the rules a run freezes (physics, sensors), stored as the run's physicsHash. */
