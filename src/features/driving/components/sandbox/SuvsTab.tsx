@@ -31,6 +31,7 @@ function rowColors(field: readonly FieldEntry[]): Map<number, string> {
 /** The shipped trained model: a switch to drive it instead of the run's champions, and how many copies line up. */
 function TrainedModelCard({ cap }: { cap: number }) {
   const trained = useDrivingLab((s) => s.trained);
+  const failed = useDrivingLab((s) => s.trainedLoad === 'failed');
   const on = useDrivingLab((s) => s.sandbox?.model ?? false);
   const copies = useDrivingLab((s) => s.sandbox?.modelCopies ?? 1);
   const controls = () => drivingSession().sandbox;
@@ -41,7 +42,7 @@ function TrainedModelCard({ cap }: { cap: number }) {
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="text-[13px] font-medium text-white">Try a trained model</span>
           <span className="text-[11px] leading-snug text-white/60">
-            {trained ? `The ${TIER[trained.model.tier]} preset's champion, benchmark ${Math.round(trained.model.score)}. It drives without any training here.` : 'Loading the shipped model.'}
+            {trained ? `The ${TIER[trained.model.tier]} preset's champion, benchmark ${Math.round(trained.model.score)}. It drives without any training here.` : failed ? 'The trained model could not be loaded.' : 'Loading the shipped model.'}
           </span>
         </span>
         <Switch label="Drive the trained model" checked={on} disabled={!trained} onChange={(v) => controls()?.update({ model: v })} />

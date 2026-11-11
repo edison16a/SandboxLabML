@@ -40,9 +40,11 @@ function useTrip(): Trip {
   return trip;
 }
 
-/** Play, pause and restart for the Sandbox trip, with a live count of SUVs driving and arrived. */
+/** Play, pause and restart for the Sandbox trip, with a live count of SUVs driving and arrived, or why none are. */
 export function SandboxBar() {
   const paused = useDrivingLab((s) => s.sandboxPaused);
+  // The trained model is on its way: say so rather than that nothing drives.
+  const waiting = useDrivingLab((s) => (s.sandbox?.model ?? false) && s.trained === null && s.trainedLoad !== 'failed');
   const trip = useTrip();
   const controls = () => drivingSession().sandbox;
   return (
@@ -57,14 +59,18 @@ export function SandboxBar() {
           <RotateCcw />
         </Button>
       </Tooltip>
-      <div className="ml-auto flex items-baseline gap-3 text-[12px] text-white/60">
-        <span>
-          <span className="tabular font-mono text-white">{trip.driving}</span> of {trip.total} driving
-        </span>
-        <span>
-          <span className="tabular font-mono text-white">{trip.arrived}</span> arrived
-        </span>
-      </div>
+      {trip.total === 0 ? (
+        <span className="ml-auto text-[12px] text-white/60">{waiting ? 'Loading the trained model' : 'Nothing to drive yet'}</span>
+      ) : (
+        <div className="ml-auto flex items-baseline gap-3 text-[12px] text-white/60">
+          <span>
+            <span className="tabular font-mono text-white">{trip.driving}</span> of {trip.total} driving
+          </span>
+          <span>
+            <span className="tabular font-mono text-white">{trip.arrived}</span> arrived
+          </span>
+        </div>
+      )}
     </div>
   );
 }

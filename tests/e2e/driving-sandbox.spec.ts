@@ -67,6 +67,15 @@ test.describe('Driving Sandbox', () => {
     await expect(page.getByRole('radiogroup', { name: 'What to show' })).toBeVisible();
   });
 
+  test('says so when the trained model cannot be loaded', async ({ page }) => {
+    await page.route('**/references/driving.json', (route) => route.fulfill({ status: 404, body: '' }));
+    await openLab(page);
+    const panel = await openSandbox(page);
+    await expect(panel.getByText('The trained model could not be loaded.')).toBeVisible({ timeout: 60_000 });
+    await expect(panel.getByRole('switch', { name: 'Drive the trained model' })).toBeDisabled();
+    await expect(panel.getByText('Nothing to drive yet')).toBeVisible();
+  });
+
   test('lines up the run\'s own champions after a little training', async ({ page }) => {
     await openLab(page);
     await page.keyboard.press('5');

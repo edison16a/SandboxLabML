@@ -34,6 +34,8 @@ export interface DrivingLabState extends LabState {
   sandboxInputs: DrivingInputConfig | null;
   /** The shipped trained model, once loaded; null before, or when the build ships none. */
   trained: TrainedModel | null;
+  /** Where loading the trained model stands, so the Sandbox can say it failed rather than wait forever. */
+  trainedLoad: 'idle' | 'loading' | 'ready' | 'failed';
   set: (patch: Partial<DrivingLabState>) => void;
 }
 
@@ -59,5 +61,6 @@ export const useDrivingLab = create<DrivingLabState>((set) => ({
   sandboxSetup: null,
   sandboxInputs: null,
   trained: null,
+  trainedLoad: 'idle',
   set: (patch) => set(patch),
 }));

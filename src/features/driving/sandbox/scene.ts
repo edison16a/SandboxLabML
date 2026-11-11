@@ -18,13 +18,26 @@ interface SandboxHost {
   pause(): Promise<void>;
 }
 
-/** Loads the shipped trained model once, then replays the Sandbox if it was waiting for it. */
+/**
+ * Loads the shipped trained model once, then replays the Sandbox if it was
+ * waiting for it. When the file cannot be loaded (offline, or a build that
+ * ships none) the Sandbox says so and drives the run's champions instead,
+ * if it has any. The next opening of the Sandbox tries again.
+ */
 function ensureTrained(pool: WorkerPool): void {
-  if (store().trained) return;
+  const { trained, trainedLoad } = store();
+  if (trained || trainedLoad === 'loading') return;
+  store().set({ trainedLoad: 'loading' });
   void loadDrivingModels().then((models) => {
     const model = pickModel(models, store().run);
-    if (!model || store().trained) return;
-    store().set({ trained: trainedModel(model) });
+    if (store().trained) return;
+    if (!model) {
+      store().set({ trainedLoad: 'failed' });
+      const sb = store().sandbox;
+      if (sb?.model && sb.field.length > 0) sandboxControls(pool).update({ model: false });
+      return;
+    }
+    store().set({ trained: trainedModel(model), trainedLoad: 'ready' });
     if (store().sandbox?.model) scheduleSandboxScene(pool, 0);
   });
 }
