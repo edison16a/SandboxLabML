@@ -43,7 +43,7 @@ function addLights(bin: PartBin, detail: Detail): void {
   // The corner lamp: a smoked lens filling most of the band toward each corner.
   bin.add('glass', bandStrip(0.52, BAND.half - 0.014, 0.12, 0.88, 0.006, c));
   // The bar parts in the middle for the app's own mark, lit like the bar, and runs out over the lens.
-  bin.add('tail', bandStrip(0.036, BAND.half - 0.02, 0.4, 0.58, 0.008, c * 3));
+  bin.add('tail', bandStrip(0.036, BAND.half - 0.02, 0.38, 0.62, 0.008, c * 3));
   bin.add('tail', bandStrip(0.56, BAND.half - 0.034, 0.68, 0.78, 0.008, c));
   if (detail.brakes) addEmblem(bin, inBand(0, 0.49)[1], detail.fine ? 14 : 8);
   // Slim reflectors low on the bumper's corners.
@@ -68,7 +68,12 @@ function addEmblem(bin: PartBin, cy: number, seg: number): void {
   atoms.forEach(([z, y], i) => bin.add('tail', capDisc(-1, z, y, i === 1 ? 0.0085 : 0.0072, 0.009, seg, false)));
 }
 
-/** A lip spoiler along the top of the tail, where the roofline ends: it kicks up and stands out 3 cm. */
+/**
+ * A lip spoiler along the top of the tail, where the roofline ends. Its
+ * top grows out of the roof, kicks up a little and ends in a thin, crisp
+ * trailing edge 3 cm out; its underside tucks back into the tailgate.
+ * Both ends taper away.
+ */
 function addSpoiler(bin: PartBin, detail: Detail): void {
   const n = detail.fine ? 28 : detail.brakes ? 10 : 6;
   const half = 0.6;
@@ -76,8 +81,15 @@ function addSpoiler(bin: PartBin, detail: Detail): void {
   for (let i = 0; i <= n; i++) {
     const z = -half + (2 * half * i) / n;
     const top = faceTop(-1, z);
-    const k = 1 - (z / half) ** 6;
-    rows.push([onCap(-1, z, top - 0.045, 0.002), onCap(-1, z, top - 0.008 + 0.006 * k, 0.014 + 0.016 * k), onCap(-1, z, top + 0.004 + 0.006 * k, 0.012 + 0.018 * k), onCap(-1, z, top + 0.004, -0.02)]);
+    const k = 1 - (z / half) ** 8;
+    const edge = 0.004 + 0.03 * k;
+    rows.push([
+      onCap(-1, z, top - 0.03, 0.001),
+      onCap(-1, z, top - 0.008 * k, edge * 0.8),
+      onCap(-1, z, top + 0.001 + 0.006 * k, edge),
+      onCap(-1, z, top + 0.006 + 0.008 * k, edge),
+      onCap(-1, z, top + 0.012, -0.035),
+    ]);
   }
   bin.add('paint', gridGeometry(rows));
 }
