@@ -18,7 +18,7 @@ export interface SuvMaterials {
 }
 
 /** How strongly each slot mirrors the environment: paint and glass glossy, tires and liners dull. */
-const REFLECT: Partial<Record<Slot, number>> = { paint: 1.05, glass: 1.2, trim: 0.9, clad: 0.35, grille: 0.45, metal: 1, rim: 0.9, caliper: 0.8, disc: 0.5, tire: 0.35, liner: 0.25, tail: 0.6 };
+const REFLECT: Partial<Record<Slot, number>> = { paint: 1.05, glass: 1.6, trim: 0.9, clad: 0.35, grille: 0.45, metal: 1, rim: 0.9, caliper: 0.8, disc: 0.5, tire: 0.35, liner: 0.25, tail: 0.6 };
 
 /**
  * Tail lamp glow at rest and under braking. The lamps skip tone mapping,
@@ -61,7 +61,7 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
     grille,
     disc,
     tail,
-    glass: new THREE.MeshPhysicalMaterial({ color: '#05070a', metalness: 0.1, roughness: 0.03, clearcoat: 0.6, clearcoatRoughness: 0.02 }),
+    glass: new THREE.MeshPhysicalMaterial({ color: '#141c24', metalness: 0.25, roughness: 0.04, clearcoat: 0.8, clearcoatRoughness: 0.02 }),
     trim: new THREE.MeshPhysicalMaterial({ color: '#08090b', metalness: 0.2, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.04 }),
     clad: new THREE.MeshStandardMaterial({ color: '#16171a', roughness: 0.62, metalness: 0.05 }),
     led: new THREE.MeshBasicMaterial({ color: new THREE.Color(4.2, 4.2, 3.9), toneMapped: false }),
