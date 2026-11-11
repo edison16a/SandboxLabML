@@ -14,9 +14,10 @@ export const NAV_COLORS = {
   crowdGrey: '#9aa3b2',
   /** The ring at the champion's feet: a pale, bright blue. */
   championRing: '#7fc0ff',
-  /** Movers are the warmer amber of the planks, so a sliding crate reads apart from a still one. */
-  mover: HS_COLORS.plank,
-  moverRail: '#3a3f48',
+  /** Movers are machinery, not crates: a dark graphite body with hazard amber stripes and frame, and amber on their rail. */
+  moverBody: '#2c3139',
+  moverTrim: '#ffb020',
+  moverRail: '#30353d',
   /** Spikes: bright steel points on a near black base with a red trim that reads as danger at a glance. */
   spikeSteel: '#eef1f5',
   spikeBase: '#24272d',

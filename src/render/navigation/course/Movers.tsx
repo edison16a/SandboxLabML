@@ -8,8 +8,8 @@ import { moverSweep, moverTopSpeed, moverVelocity } from '@/engine/navigation/co
 import type { MoverSpec } from '@/engine/navigation/course/types';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { POSE_PRIORITY, useNavScene } from '../frame/sceneContext';
-import { NAV_COLORS } from '../palette';
-import { crateMaterials, crateMesh } from './crateMeshes';
+import { crateMesh } from './crateMeshes';
+import { moverMaterials } from './moverMaterials';
 import { moverGuideMaterial } from './moverGuide';
 
 /** Whether a mover slides along x (else along z). */
@@ -18,13 +18,13 @@ function alongX(m: MoverSpec): boolean {
 }
 
 /**
- * The movers of a course: amber crates with lit frames that slide on rails
- * in the floor, each over a faint guide that shows all the floor it sweeps
- * and which way it is going. Positions come from the world stream, blended,
+ * The movers of a course: dark crates with hazard stripes and glowing
+ * amber frames that slide on rails in the floor, each over a guide that
+ * shows all the floor it sweeps and which way it is going. Positions come from the world stream, blended,
  * so they glide at any frame rate.
  */
 export function Movers({ course, full, shadows }: { course: Course; full: boolean; shadows: boolean }) {
-  const mats = useDisposable(() => crateMaterials(NAV_COLORS.mover, full, 0.22), [full]);
+  const mats = useDisposable(() => moverMaterials(full), [full]);
   return (
     <group>
       {course.movers.map((m, k) => (
