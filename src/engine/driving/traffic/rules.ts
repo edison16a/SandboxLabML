@@ -78,8 +78,10 @@ export function trafficAccel(f: Fleet, i: number, ctx: TrafficContext): number {
     if (e.stopLine) {
       const axis = axisOf(e.dir);
       const light = lightState(ctx.time, ctx.signalOffsets[node.signal], axis, ctx.signalsOn);
-      // A car crawling or standing at the line can always stop, so it never starts a turn on yellow.
-      const canStop = v < 2 || front > (v * v) / (2 * YELLOW_BRAKE) + 1;
+      // A car crawling up to the line can always stop for a yellow. The one exception is a left turner already
+      // waiting at the head of the line: as oncoming cars stop for the yellow it takes its turn, as drivers do.
+      const waitingLeft = turn.turn === -1 && front < 3 && v < 0.5;
+      const canStop = (v < 2 && !waitingLeft) || front > (v * v) / (2 * YELLOW_BRAKE) + 1;
       if (light === LIGHT_RED || (light === LIGHT_YELLOW && canStop)) stop = Math.min(stop, standing(front, STOP_MARGIN));
       else if ((turn.turn === -1 && !oncomingClear(f, e.id)) || (front < 14 && !junctionFree(f, e.id, turn.id, node.id, axis, f.len[i]))) stop = Math.min(stop, standing(front, STOP_MARGIN));
     }
