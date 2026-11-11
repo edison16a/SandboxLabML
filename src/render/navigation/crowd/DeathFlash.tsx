@@ -25,29 +25,29 @@ export function DeathFlash() {
   const { frame } = useNavScene();
   const ring = useRef<THREE.Mesh>(null);
   const material = useDisposable(() => new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, toneMapped: false, side: THREE.DoubleSide }), []);
-  const state = useMemo(() => ({ age: 99, who: -1, epoch: Number.NaN }), []);
+  const state = useMemo(() => ({ at: -99, who: -1, epoch: Number.NaN }), []);
 
-  useFrame((_, dt) => {
+  useFrame(() => {
     const r = ring.current;
     const curr = frame.curr;
     if (!r) return;
     if (frame.epoch !== state.epoch) {
       state.epoch = frame.epoch;
       state.who = -1;
-      state.age = 99;
+      state.at = -99;
     }
     const i = frame.leader;
     if (curr && i >= 0 && i !== state.who) {
       const o = i * STRIDE;
       if (curr[o + SNAP_STATUS] === NAV_DIED && frame.time - curr[o + SNAP_STOP_TIME] < 0.3) {
         state.who = i;
-        state.age = 0;
+        state.at = curr[o + SNAP_STOP_TIME];
         material.color.copy(curr[o + SNAP_FLAGS] & FLAG_CRUSHED ? MOVER : SPIKES);
         r.position.set(frame.leaderPose.x, 0.025, frame.leaderPose.z);
       }
     }
-    state.age += Math.min(dt, 0.1) * frame.timeScale;
-    const k = Math.min(1, state.age / LENGTH);
+    // Timed from the episode clock, so it plays out with the fall and holds when the run is paused.
+    const k = Math.min(1, Math.max(0, frame.time - state.at) / LENGTH);
     r.visible = k < 1;
     r.scale.setScalar(0.35 + k * REACH);
     material.opacity = 0.95 * (1 - k) * (1 - k);

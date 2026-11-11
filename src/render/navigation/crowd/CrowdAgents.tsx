@@ -80,7 +80,7 @@ export function CrowdAgents() {
       commit(mf, 0);
       return;
     }
-    const step = Math.min(dt, 0.1) * frame.timeScale;
+    const step = frame.simDt;
     const time = clock.elapsedTime;
     let ns = 0;
     let nf = 0;

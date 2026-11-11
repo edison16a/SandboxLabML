@@ -75,7 +75,8 @@ export function NavCharacter({ read, detail, shadows, blob }: NavCharacterProps)
     const d = state.drive;
     const st = state.stop;
     d.airborne = st.airborne;
-    const pose = state.motion.update(d, dt, clock.elapsedTime, frame.timeScale);
+    // The body runs on simulation time: it stops with a paused run and hurries with a fast one.
+    const pose = state.motion.update(d, dt, clock.elapsedTime, dt > 0 ? Math.min(8, frame.simDt / dt) : 0);
     g.position.set(d.x, st.lift, d.z);
     g.rotation.set(0, d.yaw + st.spin, -st.tip, 'YXZ');
     g.scale.set(st.spread, st.squash, st.spread);

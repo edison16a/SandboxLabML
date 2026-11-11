@@ -34,9 +34,11 @@ export function NavFrameDriver() {
     frame.prev = feed.prev;
     frame.alpha = feed.alpha();
     frame.count = feed.count;
-    frame.epoch = feed.epoch;
     frame.timeScale = feed.timeScale;
-    frame.time = blendTime(feed.prevWorld, feed.world, frame.alpha);
+    const time = blendTime(feed.prevWorld, feed.world, frame.alpha);
+    frame.simDt = feed.epoch === frame.epoch ? Math.min(0.25, Math.max(0, time - frame.time)) : 0;
+    frame.time = time;
+    frame.epoch = feed.epoch;
     blendMovers(feed.prevWorld, feed.world, frame.alpha, frame.movers);
     const before = frame.leader;
     const pinned = feed.follow;

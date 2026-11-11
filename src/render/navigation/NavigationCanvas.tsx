@@ -9,6 +9,7 @@ import { useFrameLoop } from '@/render/shared/frameLoop';
 import { StatsProbe } from '@/render/shared/StatsProbe';
 import { NavCameraRig } from './camera/NavCameraRig';
 import { CourseScene } from './course/CourseScene';
+import { BlobShadows } from './crowd/BlobShadows';
 import { ChampionAgent } from './crowd/ChampionAgent';
 import { CrowdAgents } from './crowd/CrowdAgents';
 import { DeathFlash } from './crowd/DeathFlash';
@@ -79,6 +80,7 @@ export function NavigationCanvas({ getFeed, tier, camera, sensors, effects = tru
         <NavLighting tier={tier} shadows={shadows} />
         <CourseScene tier={tier} aoPass={composer} />
         <CrowdAgents />
+        {!shadows && <BlobShadows />}
         <ChampionAgent tier={tier} />
         <DeathFlash />
         <SensorOverlay />

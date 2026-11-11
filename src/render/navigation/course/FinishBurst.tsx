@@ -38,8 +38,8 @@ export function FinishBurst() {
   const ringMat = useDisposable(() => new THREE.MeshBasicMaterial({ color: NAV_COLORS.finishGlow, transparent: true, opacity: 0, depthWrite: false, toneMapped: false, side: THREE.DoubleSide }), []);
   const state = useMemo(() => ({ won: false, epoch: Number.NaN, ringAge: 99 }), []);
 
-  useFrame((_, dt) => {
-    const sim = Math.min(dt, 0.1) * frame.timeScale;
+  useFrame(() => {
+    const sim = frame.simDt;
     const curr = frame.curr;
     const course = frame.course;
     if (frame.epoch !== state.epoch) {

@@ -27,6 +27,12 @@ export interface NavFrame {
   timeScale: number;
   /** Episode clock, blended between snapshots, s. */
   time: number;
+  /**
+   * Simulation seconds since the last frame: 0 while the run is paused or
+   * a new episode starts. Animations step on it, so they freeze with the
+   * simulation and keep pace with it at any speed.
+   */
+  simDt: number;
   /** Where each mover stands this frame, blended: x, z per mover. */
   movers: Float32Array;
   /** The agent the champion character and the follow camera show, or -1. */
@@ -48,6 +54,7 @@ export function createNavFrame(): NavFrame {
     epoch: 0,
     timeScale: 1,
     time: 0,
+    simDt: 0,
     movers: new Float32Array(MAX_MOVERS * 2),
     leader: -1,
     leaderPose: { x: 0, z: 0, yaw: 0 },
