@@ -1,6 +1,6 @@
 'use client';
 
-import { PRESET_BLUEPRINTS } from '@/engine/blueprints/presets';
+import { presetBlueprints } from '@/engine/blueprints/presets';
 import { parse, toBlocks } from '@/engine/script';
 import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
@@ -26,7 +26,7 @@ export function HeaderCard() {
     );
   }
   const brainId = ws.brain ? String(ws.brain.fields.id) : NO_BRAIN;
-  const brains = PRESET_BLUEPRINTS.filter((b) => b.env === (env ?? header.fields.env));
+  const brains = presetBlueprints().filter((b) => b.env === (env ?? header.fields.env));
   const setBrain = (id: string) =>
     apply((w) => {
       if (id === NO_BRAIN) return { ...w, brain: null };

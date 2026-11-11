@@ -24,7 +24,7 @@ export interface ScriptEnv {
  * adds to the script layer: the checker, compiler, docs, block palette,
  * autocomplete and preset lists all read it.
  */
-export const SCRIPT_ENV_TABLE: readonly ScriptEnv[] = [
+const table: ScriptEnv[] = [
   {
     env: 'racing',
     slice: RACING_SLICE,
@@ -51,9 +51,33 @@ export const SCRIPT_ENV_TABLE: readonly ScriptEnv[] = [
   },
 ];
 
+export const SCRIPT_ENV_TABLE: readonly ScriptEnv[] = table;
+
 /** The env the Studio assumes for a script without a valid header, and offers first. */
-export const DEFAULT_SCRIPT_ENV: EnvId = SCRIPT_ENV_TABLE[0].env;
+export const DEFAULT_SCRIPT_ENV: EnvId = table[0].env;
 
 export function scriptEnv(env: string): ScriptEnv | undefined {
-  return SCRIPT_ENV_TABLE.find((e) => e.env === env);
+  return table.find((e) => e.env === env);
+}
+
+const listeners: Array<() => void> = [];
+
+/** Runs `fn` whenever a row is added or taken out, so lists derived from the table stay in step. */
+export function onScriptEnvsChanged(fn: () => void): void {
+  listeners.push(fn);
+}
+
+/**
+ * Adds a row at run time and returns the function that takes it out.
+ * Only tests use it, with registerEpisodeModule, to drive scripts and
+ * lessons of a toy env; the app lists its envs in the table above.
+ */
+export function registerScriptEnv(row: ScriptEnv): () => void {
+  table.push(row);
+  for (const fn of listeners) fn();
+  return () => {
+    const i = table.indexOf(row);
+    if (i >= 0) table.splice(i, 1);
+    for (const fn of listeners) fn();
+  };
 }

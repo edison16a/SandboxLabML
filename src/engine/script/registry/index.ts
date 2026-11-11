@@ -1,28 +1,51 @@
 import type { EnvId } from '../../env/types';
-import { SCRIPT_ENV_TABLE } from '../envs';
+import { onScriptEnvsChanged, SCRIPT_ENV_TABLE } from '../envs';
 import { CORE_SLICE } from './core';
 import { GENERATION_SLICE } from './generation';
 import type { RegistryEntry, RegistrySlice, Scope } from './types';
 
 export * from './types';
+export { metricSensor, setEnvDirective, type MetricSensorDocs } from './envHelpers';
 
 /**
  * Every registry slice. The registry is the single source of truth for what
  * scripts can use: the checker, compiler, docs, block palette and
  * autocomplete all read it. A new environment is a slice folder plus one
- * line in the script env table (../envs.ts).
+ * line in the script env table (../envs.ts). The lists below follow that
+ * table, so a row a test registers shows up in them too.
  */
-export const SLICES: readonly RegistrySlice[] = [CORE_SLICE, GENERATION_SLICE, ...SCRIPT_ENV_TABLE.map((e) => e.slice)];
+const slices: RegistrySlice[] = [];
+const registry: RegistryEntry[] = [];
+const envs: EnvId[] = [];
+const roots = new Set<string>();
 
-export const REGISTRY: readonly RegistryEntry[] = SLICES.flatMap((s) => s.entries);
+export const SLICES: readonly RegistrySlice[] = slices;
+
+export const REGISTRY: readonly RegistryEntry[] = registry;
 
 /** Environments a script header may name: every env in the script env table. */
-export const SCRIPT_ENVS: readonly EnvId[] = SCRIPT_ENV_TABLE.map((e) => e.env);
+export const SCRIPT_ENVS: readonly EnvId[] = envs;
+
+/** First parts of every registry name, such as "car". A let may not reuse one, or `car.speed` would become ambiguous. */
+export const RESERVED_ROOTS: ReadonlySet<string> = roots;
 
 export type BlockScope = 'tick' | 'generation';
 
 const byEnv = new Map<EnvId | null, ReadonlyMap<string, RegistryEntry>>();
 const renamesByEnv = new Map<EnvId | null, ReadonlyMap<string, RegistryEntry>>();
+
+/** Refills the lists from the script env table, in place, and drops the lookups built from the old ones. */
+function rebuild(): void {
+  slices.splice(0, slices.length, CORE_SLICE, GENERATION_SLICE, ...SCRIPT_ENV_TABLE.map((e) => e.slice));
+  registry.splice(0, registry.length, ...slices.flatMap((sl) => sl.entries));
+  envs.splice(0, envs.length, ...SCRIPT_ENV_TABLE.map((e) => e.env));
+  roots.clear();
+  for (const e of registry) roots.add(e.name.split('.')[0]);
+  byEnv.clear();
+  renamesByEnv.clear();
+}
+rebuild();
+onScriptEnvsChanged(rebuild);
 
 /** Core entries plus the slice for `env`. A null env (an unknown header) sees only core. */
 function visible(env: EnvId | null): RegistryEntry[] {
@@ -66,9 +89,6 @@ export function findAnywhere(name: string): RegistryEntry | undefined {
 export function sliceFor(env: EnvId | null): RegistrySlice | undefined {
   return SLICES.find((s) => s.env === env);
 }
-
-/** First parts of every registry name, such as "car". A let may not reuse one, or `car.speed` would become ambiguous. */
-export const RESERVED_ROOTS: ReadonlySet<string> = new Set(REGISTRY.map((e) => e.name.split('.')[0]));
 
 export function scopeLabel(scope: Scope): string {
   return scope === 'tick' ? 'each tick' : scope === 'generation' ? 'each generation' : 'any block';

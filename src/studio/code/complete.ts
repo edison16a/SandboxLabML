@@ -1,5 +1,5 @@
 import { autocompletion, snippetCompletion, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
-import { PRESET_BLUEPRINTS } from '@/engine/blueprints/presets';
+import { presetBlueprints } from '@/engine/blueprints/presets';
 import { callSnippets, DEFAULT_SCRIPT_ENV, entriesFor, SNIPPETS, type RegistryEntry } from '@/engine/script';
 import { analyze } from '../doc/analyze';
 import { scopeAt, unitContext, type CursorScope } from './context';
@@ -45,7 +45,7 @@ function optionsFor(scope: CursorScope, source: string): Completion[] {
 
 function brainOptions(source: string): Completion[] {
   const env = analyze(source).env ?? DEFAULT_SCRIPT_ENV;
-  return PRESET_BLUEPRINTS.filter((b) => b.env === env).map((b) => ({ label: b.id, detail: b.description, type: 'constant' }));
+  return presetBlueprints().filter((b) => b.env === env).map((b) => ({ label: b.id, detail: b.description, type: 'constant' }));
 }
 
 /**

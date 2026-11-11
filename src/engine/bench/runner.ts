@@ -1,4 +1,4 @@
-import { PRESET_BLUEPRINTS } from '../blueprints/presets';
+import { presetBlueprints } from '../blueprints/presets';
 import { mixSeed } from '../core/rng';
 import { BENCHMARK_VERSION, ENGINE_VERSION } from '../core/version';
 import { modelMetrics } from '../neat/metrics';
@@ -24,7 +24,7 @@ const BENCH_SEED = 0xbe7c;
 function examDriverFor(config: RunConfig): ExamDriver | null {
   if (config.env !== 'racing' || config.blueprint.env !== 'racing') return null;
   const source = config.scripts[config.scripts.length - 1]?.source;
-  const host = source ? createScriptHost(source, { blueprints: [...PRESET_BLUEPRINTS.map((b) => b.id), config.blueprint.id] }) : null;
+  const host = source ? createScriptHost(source, { blueprints: [...presetBlueprints().map((b) => b.id), config.blueprint.id] }) : null;
   return {
     inputs: config.blueprint.inputs,
     customSensors: host?.customSensors ?? [],

@@ -1,5 +1,5 @@
 import type { BrainDecl, Header, Program, SensorItem } from './ast';
-import { PRESET_BLUEPRINTS, findPresetBlueprint } from '../blueprints/presets';
+import { presetBlueprints, findPresetBlueprint } from '../blueprints/presets';
 import { SCRIPT_API_VERSION } from '../core/version';
 import type { EnvId } from '../env/types';
 import { suggest } from './autocorrect/suggest';
@@ -28,7 +28,7 @@ export function check(program: Program, opts: CheckOptions = {}): CheckResult {
   const env = envOf(program.header);
   const ctx = new CheckContext(env, entriesByName(env), renamesFor(env));
   checkHeader(ctx, program.header);
-  checkBrain(ctx, program.brain, env, opts.blueprints ?? PRESET_BLUEPRINTS.map((b) => b.id));
+  checkBrain(ctx, program.brain, env, opts.blueprints ?? presetBlueprints().map((b) => b.id));
 
   // Constants first, in order, so both blocks can use any of them.
   for (const item of program.items) {

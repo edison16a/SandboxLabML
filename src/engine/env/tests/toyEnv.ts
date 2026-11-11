@@ -1,117 +1,25 @@
 import { BLUEPRINT_SCHEMA_VERSION, type Blueprint } from '../../blueprints/types';
 import { hashObject } from '../../core/hash';
-import type { Network } from '../../neat/network';
+import { TEST_BRAIN_SEED } from '../../lessons/testDriver';
+import { Population } from '../../neat/population';
 import type { ChampionRecord } from '../../training/records';
 import { envSettings } from '../../training/runConfig';
-import type { EpisodeEnv, EpisodeEnvModule, EpisodeResult, EpisodeSetup } from '../episode';
+import type { EpisodeEnvModule } from '../episode';
 import type { EnvId } from '../types';
+import { toyBuiltin, ToyEnv, type ToyResult, type ToySetup, type ToyWalker } from './toyWalk';
+
+export type { ToyResult, ToySetup } from './toyWalk';
 
 /**
  * A toy env that only the tests register: every agent walks along a line
- * toward a goal 10 m away, and a beacon swings back and forth as shared
- * world state. It is small on purpose, so the tests can drive the whole
- * generic pipeline (trainer, sim, ghosts, storage) with an env that is
- * not Racing and check every seam of the contract.
+ * toward a goal 10 m away per level, and a beacon swings back and forth as
+ * shared world state. It is small on purpose, so the tests can drive the
+ * whole generic pipeline (trainer, sim, ghosts, storage, scripts, lessons)
+ * with an env that is not Racing and check every seam of the contract.
+ * Its script slice is in toyScript.ts.
  */
 export const TOY_ENV = 'toy' as EnvId;
 const GOAL = 10;
-const DT = 1 / 30;
-
-export interface ToySetup extends EpisodeSetup {
-  goal: number;
-  maxTime: number;
-}
-
-export interface ToyResult extends EpisodeResult {
-  reached: boolean;
-}
-
-interface Walker {
-  x: number;
-  best: number;
-  out: Float64Array;
-  obs: Float64Array;
-  running: boolean;
-  time: number;
-  stop: string | null;
-}
-
-class ToyEnv implements EpisodeEnv<ToyResult> {
-  readonly worldFloats = 2;
-  readonly raysPerAgent = 1;
-  tick = 0;
-  private walkers: Walker[] = [];
-  private brains: Network[] = [];
-
-  constructor(private readonly setup: ToySetup) {}
-
-  get agentCount(): number {
-    return this.walkers.length;
-  }
-
-  get done(): boolean {
-    return this.walkers.every((w) => !w.running);
-  }
-
-  reset(brains: Network[], _seeds: number[] = [], slots: number[] = []): void {
-    this.brains = brains;
-    this.walkers = brains.map((_, i) => ({ x: -(slots[i] ?? 0), best: 0, out: new Float64Array(1), obs: new Float64Array(2), running: true, time: 0, stop: null }));
-    this.tick = 0;
-  }
-
-  step(): void {
-    for (let i = 0; i < this.walkers.length; i++) {
-      const w = this.walkers[i];
-      if (!w.running) continue;
-      w.obs[0] = (this.setup.goal - w.x) / this.setup.goal;
-      w.obs[1] = 1;
-      this.brains[i].activate(w.obs, w.out);
-      w.x += w.out[0] * 3 * DT;
-      w.best = Math.max(w.best, w.x);
-      w.time += DT;
-      if (w.x >= this.setup.goal) w.stop = 'reached';
-      else if (w.time >= this.setup.maxTime - 1e-9) w.stop = 'time';
-      if (w.stop) w.running = false;
-    }
-    this.tick++;
-  }
-
-  writeSnapshot(out: Float32Array, offset = 0): void {
-    this.walkers.forEach((w, i) => {
-      out[offset + i * 2] = w.x;
-      out[offset + i * 2 + 1] = w.running ? 0 : 1;
-    });
-  }
-
-  writeWorld(out: Float32Array, offset: number): void {
-    out[offset] = Math.sin(this.tick * DT);
-    out[offset + 1] = this.tick;
-  }
-
-  leaderIndex(): number {
-    let best = 0;
-    this.walkers.forEach((w, i) => {
-      if (w.x > this.walkers[best].x) best = i;
-    });
-    return best;
-  }
-
-  results(): ToyResult[] {
-    return this.walkers.map((w) => ({ fitness: w.best, time: w.time, stopReason: w.stop, reached: w.stop === 'reached' }));
-  }
-
-  lastObservation(i: number): Float64Array {
-    return this.walkers[i].obs;
-  }
-
-  writeOutputs(i: number, out: Float32Array): void {
-    out[0] = this.walkers[i].out[0];
-  }
-
-  writeRays(i: number, out: Float32Array, offset: number): void {
-    out[offset] = this.walkers[i].obs[0];
-  }
-}
 
 export const TOY_BLUEPRINT = {
   id: 'toy-basic',
@@ -146,12 +54,16 @@ export const toyModule: EpisodeEnvModule<ToySetup, { level: number }, ToyResult,
   ],
   physicsHash: (config) => hashObject({ toy: 1, inputs: config.blueprint.inputs }),
   initialContent: () => ({ level: 1 }),
-  // The curriculum: a level up once half the population reaches the goal.
-  nextContent: ({ content, metrics }) => ((metrics.reachedShare ?? 0) >= 0.5 ? { content: { level: content.level + 1 }, reset: true } : null),
+  // A script's toyLevel wins; otherwise the curriculum moves up a level once half the population reaches the goal.
+  nextContent: ({ content, metrics, directives }) => {
+    const asked = directives.env?.level;
+    if (typeof asked === 'number') return asked === content.level ? null : { content: { level: Math.max(1, asked) }, reset: true };
+    return (metrics.reachedShare ?? 0) >= 0.5 ? { content: { level: content.level + 1 }, reset: true } : null;
+  },
   contentHash: (c) => `level-${c.level}`,
   contentOnRecords: true,
   createSetup: ({ config, content, scriptSource }) => ({ goal: GOAL * content.level, maxTime: envSettings<{ maxTime: number }>(config).maxTime, scriptSource }),
-  createEnv: (setup) => new ToyEnv(setup),
+  createEnv: (setup, host, seed) => new ToyEnv(setup, host.createController<ToyWalker>({ seed, extra: { goal: setup.goal } }) ?? toyBuiltin),
   championFields: (r) => ({ metrics: { best: r.fitness } }),
   bench: {
     version: 1,
@@ -162,6 +74,20 @@ export const toyModule: EpisodeEnvModule<ToySetup, { level: number }, ToyResult,
   },
   generationMetrics: (results) => ({ reachedShare: results.filter((r) => r.reached).length / results.length }),
   load: async () => toyModule,
+  lessons: {
+    testRunName: 'a test walk',
+    testRunMetrics: ['distance'],
+    brain: 'toy-basic',
+    formats: { distance: (v) => `${v.toFixed(1)} m` },
+    measure: (r) => ({ distance: r.x }),
+    settings: () => ({ maxTime: 5 }),
+    // Only the bias drives the output, so every test walk keeps one steady pace.
+    testBrain: (shape) => {
+      const genome = Population.create({ ...shape, wiring: 'direct' }, TEST_BRAIN_SEED, { populationSize: 1 }).genomes[0];
+      for (const c of genome.connections) c.weight = c.from === genome.biasId ? 1 : 0;
+      return genome;
+    },
+  },
   telemetry: {
     sample: (env, i, out) => {
       const snap = new Float32Array(env.agentCount * 2);

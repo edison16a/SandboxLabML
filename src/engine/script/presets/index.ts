@@ -9,7 +9,8 @@ export const SCRIPT_PRESETS: readonly ScriptPreset[] = SCRIPT_ENV_TABLE.flatMap(
 
 /** Finds a preset of any environment by id. */
 export function findScriptPreset(id: string): ScriptPreset | undefined {
-  return SCRIPT_PRESETS.find((p) => p.id === id);
+  for (const e of SCRIPT_ENV_TABLE) for (const p of e.presets) if (p.id === id) return p;
+  return undefined;
 }
 
 /** The read only scripts offered for one environment. */

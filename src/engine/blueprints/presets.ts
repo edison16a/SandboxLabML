@@ -47,9 +47,15 @@ export const HIDESEEK_BLUEPRINTS: HideSeekBlueprint[] = [
   },
 ];
 
-/** Every preset brain: each episode env's own, in registry order, then Hide and Seek's. */
-export const PRESET_BLUEPRINTS: Blueprint[] = [...episodeEnvIds().flatMap((env) => requireEpisodeInfo(env).blueprints), ...HIDESEEK_BLUEPRINTS];
+/**
+ * Every preset brain: each episode env's own, in registry order, then Hide
+ * and Seek's. Read from the registry on each call, so an env a test
+ * registers has its brains too.
+ */
+export function presetBlueprints(): Blueprint[] {
+  return [...episodeEnvIds().flatMap((env) => requireEpisodeInfo(env).blueprints), ...HIDESEEK_BLUEPRINTS];
+}
 
 export function findPresetBlueprint(id: string): Blueprint | undefined {
-  return PRESET_BLUEPRINTS.find((b) => b.id === id);
+  return presetBlueprints().find((b) => b.id === id);
 }
