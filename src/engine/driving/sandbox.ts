@@ -29,10 +29,16 @@ const MIN_TRIP = 30;
 /** Most SUVs the Sandbox lines up. More would not fit on most first lanes. */
 export const MAX_SANDBOX_CARS = 8;
 
-/** How many SUVs fit on the first lane of a route, nose to tail, up to MAX_SANDBOX_CARS. */
+/**
+ * How many SUVs fit on the first lane of a route, nose to tail, up to
+ * MAX_SANDBOX_CARS. On a trip that ends on its first lane the front SUV
+ * must stay MIN_TRIP short of the destination, so only the lane behind
+ * that point counts.
+ */
 export function startCapacity(city: City, route: RouteSpec): number {
   const length = city.elements[route.elements[0]].path.length;
-  return Math.max(1, Math.min(MAX_SANDBOX_CARS, Math.floor((length - 2 * START_MARGIN) / SLOT_GAP) + 1));
+  const front = route.elements.length === 1 ? Math.min(route.destS - MIN_TRIP, length - START_MARGIN) : length - START_MARGIN;
+  return Math.max(1, Math.min(MAX_SANDBOX_CARS, Math.floor((front - START_MARGIN) / SLOT_GAP) + 1));
 }
 
 /** The seeded trip's route, or the way from its start to a clicked destination when there is one. */

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { cityFor } from './city/buildCity';
 import { ELEMENT_LANE } from './city/types';
 import { cityOf } from './run/settings';
-import { MAX_SANDBOX_CARS, nearestLanePoint, sandboxSetup, startCapacity } from './sandbox';
+import { MAX_SANDBOX_CARS, nearestLanePoint, sandboxCapacity, sandboxSetup, startCapacity } from './sandbox';
 import { buildDrivingWorld, createDrivingSetup } from './setup';
 
 const city = cityFor(cityOf('midtown'));
@@ -31,6 +31,19 @@ describe('Sandbox trips', () => {
     const route = buildDrivingWorld(setup).route;
     expect(route.destS).toBeGreaterThan(route.startS);
     expect(setup.maxTime).toBeGreaterThan(30);
+  });
+
+  it('lines up no more SUVs than fit before a destination on the start lane', () => {
+    for (let seed = 1; seed <= 5; seed++) {
+      const start = sandboxSetup({ ...trip, seed }, 1).route;
+      const destination = { element: start.elements[0], s: start.startS + 32 };
+      const one = { ...trip, seed, destination };
+      const cap = sandboxCapacity(one);
+      const setup = sandboxSetup(one, MAX_SANDBOX_CARS);
+      // Every SUV in line starts on the lane, 7 m behind the one in front, none stacked at its mouth.
+      expect(setup.route.startS - 7 * (cap - 1)).toBeGreaterThanOrEqual(6 - 1e-9);
+      expect(setup.route.startS).toBeLessThanOrEqual(destination.s - 30 + 1e-9);
+    }
   });
 
   it('finds no lane far from every street', () => {
