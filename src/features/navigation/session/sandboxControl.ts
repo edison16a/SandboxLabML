@@ -6,6 +6,7 @@ import type { WorkerPool } from '@/workers/client/workerPool';
 import { isWatchSpeed, WATCH_SPEEDS } from '@/workers/shared/protocol';
 import { useNavigationLab } from '../state/labStore';
 import { SANDBOX_SEED, STARTING_COPIES, type FieldEntry, type NavSandbox, type SandboxCourse } from '../state/sandboxState';
+import { carryLesions, sandboxInputKeys } from './sandboxLesions';
 import { sandboxLineup, sandboxScene } from './sandboxScene';
 
 const store = () => useNavigationLab.getState();
@@ -59,9 +60,18 @@ export class SandboxControl {
     await this.send();
   }
 
-  /** Changes the setup and plays it from the start. */
+  /**
+   * Changes the setup and plays it from the start. Switching to another
+   * brain (the run's or a shipped model) carries any lesions over by input,
+   * so none lands on an input the user did not pick.
+   */
   configure(patch: Partial<Pick<NavSandbox, 'course' | 'source' | 'field' | 'model' | 'modelCopies'>>): void {
+    const before = store();
+    const brainChanges = (patch.source !== undefined && patch.source !== before.sandbox.source) || (patch.model !== undefined && patch.model !== before.sandbox.model);
+    const from = brainChanges && before.run && Object.keys(before.lesions).length ? sandboxInputKeys(before.run, before.sandbox, before.liveGeneration) : null;
     store().setSandbox({ ...patch, paused: false });
+    const after = store();
+    if (from && after.run) after.set({ lesions: carryLesions(before.lesions, from, sandboxInputKeys(after.run, after.sandbox, after.liveGeneration)) });
     this.schedule();
   }
 
