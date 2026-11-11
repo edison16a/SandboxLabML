@@ -1,0 +1,86 @@
+{
+  "id": "navigation-02-reward-what-you-want",
+  "course": "navigation",
+  "order": 2,
+  "title": "Reward what you want",
+  "summary": "Evolution gives you exactly what you pay for. Pay for the wrong thing and runners learn the wrong thing.",
+  "minutes": 7,
+  "steps": [
+    {
+      "id": "paid-to-stand-around",
+      "title": "Paid to stand around",
+      "body": "This script pays a tenth of a point for every tick a runner is still going. It sounds harmless: runners that last longer must be doing well.\n\nPress Check. It trains 40 runners for 8 generations, one course each, and reports the share of courses the best fifth of them finished.\n\nThey hardly finish. Crossing the line ends the run and stops the points, so the best scorers learn to wander until the clock runs out. Pay for new ground and the finish instead.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Reward what you want\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // A tenth of a point for every tick the runner is still going.\n  reward +0.1\n}\n\n// This block runs once per generation, after every runner has stopped.\neach generation {\n  // Breed the next generation from the best runners.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n}\n",
+      "highlight": {
+        "lines": [
+          12,
+          13
+        ]
+      },
+      "check": {
+        "kind": "metricAbove",
+        "generations": 8,
+        "metric": "eliteShare",
+        "value": 0.5,
+        "message": "The best fifth should finish more than half of their courses."
+      },
+      "hints": [
+        "Remove reward +0.1. Pay for agent.progressGain and agent.finished, as in the first lesson.",
+        "Write reward +10 * agent.progressGain and reward +10 when agent.finished."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Reward what you want\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n}\n\n// This block runs once per generation, after every runner has stopped.\neach generation {\n  // Breed the next generation from the best runners.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n}\n"
+    },
+    {
+      "id": "stop-runners-that-give-up",
+      "title": "Stop runners that give up",
+      "body": "A runner stuck behind a crate wastes time. The room ends a run after 4 seconds without new ground, but you can be stricter.\n\n`agent.stuckTime` counts the seconds since the runner last got closer. Add `stop \"stuck\" when agent.stuckTime > 2 s`. Runners that dither now lose their run sooner, and generations finish faster.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Reward what you want\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n\n  // Add a stop rule for runners that stop making progress here.\n}\n\n// This block runs once per generation, after every runner has stopped.\neach generation {\n  // Breed the next generation from the best runners.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n}\n",
+      "highlight": {
+        "lines": [
+          16
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "stop",
+            "scope": "tick",
+            "uses": [
+              "agent.stuckTime"
+            ]
+          }
+        ],
+        "message": "Add a stop rule that reads agent.stuckTime."
+      },
+      "hints": [
+        "A stop rule looks like stop \"reason\" when condition.",
+        "Write stop \"stuck\" when agent.stuckTime > 2 s."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Reward what you want\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n\n  // End the run of a runner that found no new ground for 2 seconds.\n  stop \"stuck\" when agent.stuckTime > 2 s\n}\n\n// This block runs once per generation, after every runner has stopped.\neach generation {\n  // Breed the next generation from the best runners.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n}\n"
+    },
+    {
+      "id": "time-to-spare",
+      "title": "Time to spare",
+      "body": "Two runners that both finish score the same, even if one took twice as long. Pay a little for speed.\n\n`agent.timeLeft` is the seconds left on the clock. Units keep numbers honest: seconds cannot be added to points, so divide by `1 s` to get a plain number. Add `reward +0.5 * agent.timeLeft / 1 s when agent.finished`.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Reward what you want\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  // Add a bonus for time to spare here.\n\n  // End the run of a runner that found no new ground for 2 seconds.\n  stop \"stuck\" when agent.stuckTime > 2 s\n}\n\n// This block runs once per generation, after every runner has stopped.\neach generation {\n  // Breed the next generation from the best runners.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n}\n",
+      "highlight": {
+        "lines": [
+          15
+        ]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "totalReward",
+        "op": ">",
+        "value": 22,
+        "message": "The test run should score more than 22 points."
+      },
+      "hints": [
+        "The bonus only counts on the tick the runner finishes, so end it with when agent.finished.",
+        "Write reward +0.5 * agent.timeLeft / 1 s when agent.finished."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Reward what you want\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  // Half a point for every second left on the clock at the line.\n  reward +0.5 * agent.timeLeft / 1 s when agent.finished\n\n  // End the run of a runner that found no new ground for 2 seconds.\n  stop \"stuck\" when agent.stuckTime > 2 s\n}\n\n// This block runs once per generation, after every runner has stopped.\neach generation {\n  // Breed the next generation from the best runners.\n  speciate(target: 8)\n  select(top: 20%)\n  breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })\n  keepChampions()\n}\n"
+    }
+  ]
+}

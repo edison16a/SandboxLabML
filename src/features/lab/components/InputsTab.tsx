@@ -37,6 +37,8 @@ export function InputsTab({ scopes = true }: { scopes?: boolean }) {
     const stream = ghost ? streams?.ghosts : streams?.population;
     return stream?.inspect ?? null;
   }, [session, ghost]);
+  // A brain the Sandbox drives from outside the run, such as a shipped model, brings a blueprint of its own.
+  const outside = useLab((s) => (s.mode === 'sandbox' ? (s.sandboxBrain?.run ?? null) : null));
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -67,7 +69,7 @@ export function InputsTab({ scopes = true }: { scopes?: boolean }) {
         </p>
       )}
       <p className="text-[12px] text-muted">
-        {schema.length} inputs, <span className="text-fg">{run?.blueprint.name}</span> blueprint
+        {schema.length} inputs, <span className="text-fg">{(outside ?? run)?.blueprint.name}</span> blueprint
       </p>
       <InputBars
         schema={schema}

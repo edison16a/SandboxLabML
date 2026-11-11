@@ -14,7 +14,11 @@ export interface NavView {
 export interface NavSceneValue {
   frame: NavFrame;
   getFeed: () => NavFeed | null;
+  /** The ghost replay, when the viewport has one. */
+  getGhosts?: () => NavFeed | null;
   view: NavView;
+  /** Called when a runner is clicked: whether it is a ghost, and its index in its feed. */
+  onPick?: (ghost: boolean, index: number) => void;
 }
 
 export const NavSceneContext = createContext<NavSceneValue | null>(null);

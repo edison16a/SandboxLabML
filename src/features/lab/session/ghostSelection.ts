@@ -53,7 +53,8 @@ export function selectGhosts(sel: GhostSelection, available: number): number[] {
 
 /**
  * What the replay worker needs to re-simulate each chosen champion: its
- * genome, the seed its car drove with and the script it trained under.
+ * genome, the seed its car drove with, the script it trained under and,
+ * where the env hands them out, its start slot.
  * Generations without a stored record are skipped.
  */
 export function ghostSpecs(run: RunConfig, records: GenerationRecord[], gens: number[]): GhostSpec[] {
@@ -61,5 +62,12 @@ export function ghostSpecs(run: RunConfig, records: GenerationRecord[], gens: nu
   return gens
     .map((g) => byGen.get(g))
     .filter((r) => r !== undefined)
-    .map((r) => ({ generation: r.generation, genome: r.genome, seed: r.replaySeed, scriptSource: scriptAt(run, r.generation)?.source ?? null }));
+    .map((r) => ({
+      generation: r.generation,
+      genome: r.genome,
+      seed: r.replaySeed,
+      scriptSource: scriptAt(run, r.generation)?.source ?? null,
+      // An env that hands out start slots replays each champion from its own.
+      ...(r.replaySlot !== undefined && { slot: r.replaySlot }),
+    }));
 }

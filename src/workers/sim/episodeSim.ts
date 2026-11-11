@@ -13,6 +13,8 @@ export interface LiveEpisodeRequest {
   setup: EpisodeSetup;
   genomes: Genome[];
   seeds: number[];
+  /** Start slots, agent i on slots[i], for envs that hand them out. */
+  slots?: number[];
   generation: number;
   speed: number;
   /** Species id per agent, for coloring. */
@@ -38,19 +40,20 @@ export class EpisodeSim {
     return this.host.host;
   }
 
-  private create(env: string, setup: EpisodeSetup, genomes: Genome[], seeds: number[], generation: number): EpisodeEnv {
+  private create(env: string, setup: EpisodeSetup, genomes: Genome[], seeds: number[], generation: number, slots?: number[]): EpisodeEnv {
     const episode = requireEpisodeModule(env).createEnv(setup, this.hostFor(setup.scriptSource), trainingControllerSeed(generation));
     episode.reset(
       genomes.map((g) => new Network(g)),
       seeds,
+      slots,
     );
     return episode;
   }
 
   /** Loads the env's module on first use, so one worker serves whichever env its pool trains. */
-  async evaluate(env: string, setup: EpisodeSetup, genomes: Genome[], seeds: number[], generation: number): Promise<EpisodeResult[]> {
+  async evaluate(env: string, setup: EpisodeSetup, genomes: Genome[], seeds: number[], generation: number, slots?: number[]): Promise<EpisodeResult[]> {
     await loadEpisodeModule(env);
-    const episode = this.create(env, setup, genomes, seeds, generation);
+    const episode = this.create(env, setup, genomes, seeds, generation, slots);
     while (!episode.done) episode.step();
     return episode.results();
   }
@@ -61,11 +64,11 @@ export class EpisodeSim {
     const envModule = await loadEpisodeModule(req.env);
     // A stop that came in while the module loaded still counts.
     if (run !== this.liveRuns) return [];
-    const episode = this.create(req.env, req.setup, req.genomes, req.seeds, req.generation);
+    const episode = this.create(req.env, req.setup, req.genomes, req.seeds, req.generation, req.slots);
     const count = req.genomes.length;
     const stride = envModule.snapshot.stride;
     stream.ring.resize(count * stride + episode.worldFloats);
-    stream.send({ kind: 'start', stream: 'population', generation: req.generation, count, tags: Int32Array.from(req.tags), world: episode.worldFloats });
+    stream.send({ kind: 'start', stream: 'population', generation: req.generation, count, tags: Int32Array.from(req.tags), world: episode.worldFloats, scene: episode.scene?.() });
     const send = () => writeFrame(episode, stride, envModule.outputs.length, stream, req.generation);
 
     return new Promise((resolve) => {

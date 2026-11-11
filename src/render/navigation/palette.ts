@@ -12,6 +12,9 @@ export const NAV_COLORS = {
   runner: HS_COLORS.hiderBody,
   /** The crowd runs a little greyer than the champion, so the eye finds the champion first. */
   crowdGrey: '#9aa3b2',
+  /** Ghosts of past champions: a cool slate for the oldest, nearly white blue for the newest. */
+  ghostOld: '#8d9dbd',
+  ghostNew: '#dcecff',
   /** The ring at the champion's feet: a pale, bright blue. */
   championRing: '#7fc0ff',
   /** Movers are machinery, not crates: a dark graphite body with hazard amber stripes and frame, and amber on their rail. */

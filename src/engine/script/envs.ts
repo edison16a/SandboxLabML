@@ -1,10 +1,12 @@
 import type { EnvId } from '../env/types';
 import { DRIVING_PRESETS } from './presets/driving';
 import { HIDESEEK_PRESETS } from './presets/hideseek';
+import { NAVIGATION_PRESETS } from './presets/navigation';
 import { RACING_PRESETS } from './presets/racing';
 import type { ScriptPreset } from './presets/types';
 import { DRIVING_SLICE } from './registry/driving';
 import { HIDESEEK_SLICE } from './registry/hideseek';
+import { NAVIGATION_SLICE } from './registry/navigation';
 import { RACING_SLICE } from './registry/racing';
 import type { RegistrySlice } from './registry/types';
 
@@ -98,6 +100,31 @@ const table: ScriptEnv[] = [
       'stop when': 'stop "${1:stuck}" when ${2:car.noProgress > 8 s}',
       sensor: 'sensor ${1:name} "${2:Label}" in ${3:0 m/s} .. ${4:20 m/s} = ${5:car.speed}',
       'each tick': 'each tick {\n  ${1:drive(steer: brain.steer, pedal: brain.pedal)}\n}',
+    },
+  },
+  {
+    env: 'navigation',
+    slice: NAVIGATION_SLICE,
+    presets: NAVIGATION_PRESETS,
+    builtin: 'New ground, a finish bonus and a cost for dying.',
+    starter: [
+      'script "My script" for navigation v1',
+      'brain navigation-starter',
+      '',
+      'each tick {',
+      '  act(move: brain.move, turn: brain.turn)',
+      '  reward +10 * agent.progressGain',
+      '  reward +10 when agent.finished',
+      '  reward -3 when agent.died',
+      '}',
+      '',
+    ].join('\n'),
+    templates: {
+      'reward when': 'reward ${1:+10} when ${2:agent.finished}',
+      'reward every tick': 'reward ${1:+10} * ${2:agent.progressGain}',
+      'stop when': 'stop "${1:slow}" when ${2:agent.stuckTime > 3 s}',
+      sensor: 'sensor ${1:name} "${2:Label}" in ${3:0 m} .. ${4:20 m} = ${5:agent.spikeDistance}',
+      'each tick': 'each tick {\n  ${1:act(move: brain.move, turn: brain.turn)}\n}',
     },
   },
 ];

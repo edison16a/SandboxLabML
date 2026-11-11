@@ -1,0 +1,88 @@
+{
+  "id": "navigation-01-first-run",
+  "course": "navigation",
+  "order": 1,
+  "title": "First run",
+  "summary": "Hand the runner to a brain, then pay it for getting closer to the line. Points are all evolution can see.",
+  "minutes": 6,
+  "steps": [
+    {
+      "id": "hand-over-the-legs",
+      "title": "Hand the legs to the brain",
+      "body": "The brain named on line 5 is a small neural network. It reads its inputs (eight rays, the way to the finish and the path hint) and answers with two numbers: `brain.move` and `brain.turn`.\n\nPass them to `act` so the brain moves the runner. Its connections start with random weights, so it moves badly at first. Training is how it gets better.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First run\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Hand the legs to the brain here.\n  act(move: 0, turn: 0)\n}\n",
+      "highlight": {
+        "lines": [
+          9,
+          10
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "call",
+            "scope": "tick",
+            "callee": "act",
+            "uses": [
+              "brain.move",
+              "brain.turn"
+            ]
+          }
+        ],
+        "message": "Call act with brain.move and brain.turn."
+      },
+      "hints": [
+        "Swap the two zeros for what the brain says.",
+        "Write act(move: brain.move, turn: brain.turn)."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First run\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n}\n"
+    },
+    {
+      "id": "points-for-new-ground",
+      "title": "Points for new ground",
+      "body": "Training is evolution. Every runner gets a score called fitness, and the brains with the best fitness become the parents of the next generation.\n\nFitness is the sum of the rewards a runner collects. There are none yet, so every runner scores 0.\n\n`agent.progressGain` is the new ground covered this tick, as a share of the way to the line. Add `reward +10 * agent.progressGain`, so the whole way is worth 10. The test run uses a fixed brain that follows the path hint, and the preview shows it.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First run\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Add a reward for new ground here.\n}\n",
+      "highlight": {
+        "lines": [
+          12
+        ]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "totalReward",
+        "op": ">",
+        "value": 5,
+        "message": "The test run should score more than 5 points."
+      },
+      "hints": [
+        "A reward that pays a little every tick looks like reward +points * amount.",
+        "Replace the comment with reward +10 * agent.progressGain."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First run\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground. The whole way to the line is worth 10.\n  reward +10 * agent.progressGain\n}\n"
+    },
+    {
+      "id": "a-prize-for-the-line",
+      "title": "A prize for the line",
+      "body": "Getting close is good. Crossing the line is better, and the reward should say so.\n\n`agent.finished` is true on the one tick the runner crosses the line. Add a bonus of 10 points for it. The test runner finishes, so it should now score about 20.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"First run\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground. The whole way to the line is worth 10.\n  reward +10 * agent.progressGain\n  // Add a bonus for crossing the line here.\n}\n",
+      "highlight": {
+        "lines": [
+          14
+        ]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "totalReward",
+        "op": ">",
+        "value": 15,
+        "message": "The test run should score more than 15 points."
+      },
+      "hints": [
+        "A one off reward looks like reward +points when condition.",
+        "Replace the comment with reward +10 when agent.finished."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"First run\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground. The whole way to the line is worth 10.\n  reward +10 * agent.progressGain\n  // Ten more for crossing the line, so finishing beats getting close.\n  reward +10 when agent.finished\n}\n"
+    }
+  ]
+}

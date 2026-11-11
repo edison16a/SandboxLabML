@@ -1,6 +1,6 @@
 import { isKnownEnv } from '../env/registry';
 import type { EnvId } from '../env/types';
-import type { BenchReferences, ReferenceBrain, ReferenceChampion, ReferenceCurve, ReferencePoint, ReferenceTier } from './types';
+import type { BenchReferences, ReferenceBrain, ReferenceChampion, ReferenceCurve, ReferenceModel, ReferencePoint, ReferenceTier } from './types';
 
 export const REFERENCE_TIERS: readonly ReferenceTier[] = ['beginner', 'intermediate', 'advanced'];
 
@@ -24,6 +24,10 @@ function isChampion(v: unknown): v is ReferenceChampion {
   return isObj(v) && REFERENCE_TIERS.includes(v.tier as ReferenceTier) && isNum(v.seed) && isNum(v.generation) && isNum(v.rating) && isBrain(v.hider) && isBrain(v.seeker);
 }
 
+function isModel(v: unknown): v is ReferenceModel {
+  return isObj(v) && REFERENCE_TIERS.includes(v.tier as ReferenceTier) && isNum(v.seed) && isNum(v.generation) && isNum(v.score) && typeof v.blueprint === 'string' && typeof v.preset === 'string' && typeof v.genome === 'string';
+}
+
 /**
  * Checks that parsed JSON really is a reference file. The file is fetched
  * over the network and may be stale or truncated, so anything unexpected
@@ -34,10 +38,10 @@ export function parseReferences(data: unknown): BenchReferences | null {
   const { env, benchmarkVersion, engineVersion, generatedAt, seeds, references } = data;
   if (typeof env !== 'string' || !isKnownEnv(env) || !isNum(benchmarkVersion) || !isNum(engineVersion) || !isNum(seeds)) return null;
   if (typeof generatedAt !== 'string' || !Array.isArray(references) || !references.every(isCurve)) return null;
-  const { champions } = data;
-  if (champions === undefined) return { env, benchmarkVersion, engineVersion, generatedAt, seeds, references };
-  if (!Array.isArray(champions) || !champions.every(isChampion)) return null;
-  return { env, benchmarkVersion, engineVersion, generatedAt, seeds, references, champions };
+  const { champions, models } = data;
+  if (champions !== undefined && (!Array.isArray(champions) || !champions.every(isChampion))) return null;
+  if (models !== undefined && (!Array.isArray(models) || !models.every(isModel))) return null;
+  return { env, benchmarkVersion, engineVersion, generatedAt, seeds, references, ...(champions !== undefined && { champions }), ...(models !== undefined && { models }) };
 }
 
 /** Where each environment's reference file is served from, under public/. */

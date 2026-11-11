@@ -1,5 +1,6 @@
 import { HIDESEEK_ENGINE_VERSION } from '../core/version';
 import { drivingInfo } from '../driving/info';
+import { navigationInfo } from '../navigation/info';
 import { racingInfo } from '../racing/info';
 import type { AnyEpisodeModule, EpisodeEnvInfo } from './episode';
 import type { EnvId } from './types';
@@ -17,6 +18,7 @@ import type { EnvId } from './types';
 const infos = new Map<string, EpisodeEnvInfo>([
   [racingInfo.id, racingInfo],
   [drivingInfo.id, drivingInfo],
+  [navigationInfo.id, navigationInfo],
 ]);
 
 const loaded = new Map<string, AnyEpisodeModule>();

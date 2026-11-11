@@ -3,6 +3,7 @@ import type { Blueprint } from '@/engine/blueprints/types';
 import type { EnvId } from '@/engine/env/types';
 import { DrivingBlueprintForm } from './DrivingBlueprintForm';
 import { HideSeekBlueprintForm } from './HideSeekBlueprintForm';
+import { NavigationBlueprintForm } from './NavigationBlueprintForm';
 import { RacingBlueprintForm } from './RacingBlueprintForm';
 
 /** A blueprint form edits a draft of its env's blueprint. The dialog only hands it blueprints of that env. */
@@ -20,4 +21,6 @@ export const BLUEPRINT_FORMS: Partial<Record<EnvId, BlueprintFormComponent>> = {
   hideseek: HideSeekBlueprintForm as BlueprintFormComponent,
   // Driving's sensor groups are its own type; the dialog only hands this form Driving blueprints.
   driving: DrivingBlueprintForm as unknown as BlueprintFormComponent,
+  // The dialog only hands a form blueprints of its env, whose inputs are that env's own config.
+  navigation: NavigationBlueprintForm as unknown as BlueprintFormComponent,
 };

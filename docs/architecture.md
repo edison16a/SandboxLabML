@@ -117,6 +117,15 @@ The Sandbox plays trained champions outside training: up to eight hiders and eig
 * The room editor works on immutable rooms through the rules in `roomEdit.ts`, so undo is a list of earlier rooms. Rooms the user saves live in their own IndexedDB table and belong to no run, so every model can play in every room.
 * The editor places cubes, planks and ramps. A ramp's yaw is its uphill direction, so it turns through all four quarter turns where a crate flips between two. Every 2D map (the editor board, the room thumbnails and the lesson preview) draws a ramp with chevrons toward its lip, from the shared geometry in `src/features/hideseek/components/maps/rampChevrons.ts`.
 
+## Navigation Sandbox
+
+The Navigation Sandbox plays runners outside training, through the shared ghost replay: `setGhostScene('navigation', setup, ghosts)` with a setup of one course and one ghost per runner, each with its own start slot. The runners are copies of the run's stored champions, or a model shipped in `public/references/navigation.json` (a preset's champion, with that preset's blueprint and script), so the Sandbox works before anything is trained.
+
+* While the Sandbox is open, the lab draws the replay as its field, with a champion and a crowd, rather than as see-through ghosts. A shipped model reads other inputs than the run's brain, so the store's `sandboxBrain` (the same field the Driving Sandbox sets) gives the inputs and network panels its run config, genome and name.
+* Each scene the Sandbox sends records a lineup in the store: the course and every runner's seed and start slot. Until the replay streams that very course, the viewport stands the runners on those spots, and frames of any other course (an older scene, or training's ghosts) never show. Training's course, population and shares never reach the Sandbox view or its HUD.
+* The course is a level of the curriculum (generated from a seed the user can change), a named course, or one the user drew. A `CourseSpec` may now place its start line and finish line (`start`, `finish`, clamped by `courseLines`); every generated and named course leaves them out.
+* The course editor works on immutable specs through the rules in `src/engine/navigation/course/edit.ts`, so undo is a list of earlier specs. Pieces may not share floor (a mover's whole path counts), except walls meeting walls. It refuses a course with no way from the start to the finish (`noWayThrough` in `src/engine/navigation/navigator/wayThrough.ts`): the floor a mover never leaves counts as solid, and a course with movers must be finished by the scripted navigator from one of the exam's start spots. Drawn courses live in the `courses` table that Dexie version 5 added, cleaned by `sanitizeCourse` on every read.
+
 ## Landing hero
 
 The first screen of the landing page plays both labs live and side by side around the page text, with real brains: a trained car laps the Grand Prix on the left and the shipped Hide and Seek reference champions play two on two on the right. Nothing in it is canned video.

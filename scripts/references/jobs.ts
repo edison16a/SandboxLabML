@@ -2,11 +2,12 @@ import { trainDrivingReference, type DrivingReferenceJob, type DrivingReferenceR
 import { runHideSeekExam, type HideSeekExamJob, type HideSeekExamResult } from './hideseek/exam';
 import { trainHideSeekReference, type HideSeekTrainJob, type HideSeekTrainResult } from './hideseek/train';
 import { runHideSeekYardstick, type HideSeekYardstickJob, type HideSeekYardstickResult } from './hideseek/yardstick';
+import { trainNavigationReference, type NavigationReferenceJob, type NavigationReferenceResult } from './navigation/train';
 import { trainRacingReference, type RacingReferenceJob, type RacingReferenceResult } from './racing/train';
 
 /** Every kind of work the generator hands to a worker thread. */
-export type Job = RacingReferenceJob | HideSeekTrainJob | HideSeekExamJob | HideSeekYardstickJob | DrivingReferenceJob;
-export type JobResult = RacingReferenceResult | HideSeekTrainResult | HideSeekExamResult | HideSeekYardstickResult | DrivingReferenceResult;
+export type Job = RacingReferenceJob | HideSeekTrainJob | HideSeekExamJob | HideSeekYardstickJob | DrivingReferenceJob | NavigationReferenceJob;
+export type JobResult = RacingReferenceResult | HideSeekTrainResult | HideSeekExamResult | HideSeekYardstickResult | DrivingReferenceResult | NavigationReferenceResult;
 
 /** Runs one job on this thread, whichever kind it is. */
 export function runJob(job: Job): Promise<JobResult> {
@@ -21,5 +22,7 @@ export function runJob(job: Job): Promise<JobResult> {
       return runHideSeekYardstick(job);
     case 'driving':
       return trainDrivingReference(job);
+    case 'navigation':
+      return trainNavigationReference(job);
   }
 }

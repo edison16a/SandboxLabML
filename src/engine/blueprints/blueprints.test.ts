@@ -15,6 +15,9 @@ const expected: Record<string, number> = {
   'driving-starter': 17,
   'driving-standard': 25,
   'driving-advanced': 46,
+  'navigation-starter': 11,
+  'navigation-standard': 42,
+  'navigation-advanced': 53,
 };
 
 describe('preset blueprints', () => {

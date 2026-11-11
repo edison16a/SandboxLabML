@@ -16,6 +16,7 @@ export function toRow(r: GenerationRecord): GenerationRow {
     genome: encodeGenome(r.genome),
     trackHash: r.trackHash,
     replaySeed: r.replaySeed,
+    ...(r.replaySlot !== undefined && { replaySlot: r.replaySlot }),
     simSeconds: r.simSeconds,
     wallMs: r.wallMs,
     markers: r.markers,

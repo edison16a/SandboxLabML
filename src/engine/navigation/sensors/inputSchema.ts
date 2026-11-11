@@ -35,6 +35,10 @@ function rayKey(angle: number): string {
  * network graph labels and the observation builder all follow this exact
  * order, and a test checks the lengths agree.
  *
+ * Labels stay within the 17 characters the network graph shows, so no two
+ * inputs read the same there. Bearings and the side speed are positive to
+ * the left.
+ *
  * Order: ray distances, then (with hit types) one "spikes" flag per ray,
  * then one "mover" flag per ray, then goal, path hint, velocity and time,
  * then script sensors. Distances come first so a ray keeps its index when
@@ -48,17 +52,17 @@ export function navigationInputSchema(cfg: NavigationInputConfig, params: Naviga
     specs.push({ key: rayKey(angle), label: `Ray ${rayName(angle)}`, group: 'ray', unit: 'm', scale: range, offset: 0, ray: { angle, maxLength: range } });
   }
   if (cfg.rays.hitTypes) {
-    for (const angle of angles) specs.push({ key: `${rayKey(angle)}:spikes`, label: `Spikes on ray ${rayName(angle)}`, group: 'ray', unit: '', scale: 1, offset: 0 });
-    for (const angle of angles) specs.push({ key: `${rayKey(angle)}:mover`, label: `Mover on ray ${rayName(angle)}`, group: 'ray', unit: '', scale: 1, offset: 0 });
+    for (const angle of angles) specs.push({ key: `${rayKey(angle)}:spikes`, label: `Spikes ${rayName(angle)}`, group: 'ray', unit: '', scale: 1, offset: 0 });
+    for (const angle of angles) specs.push({ key: `${rayKey(angle)}:mover`, label: `Mover ${rayName(angle)}`, group: 'ray', unit: '', scale: 1, offset: 0 });
   }
   if (cfg.goal) {
-    specs.push(scalar('goalBearing', 'Finish bearing (left)', 'rad', Math.PI));
-    specs.push(scalar('goalDistance', 'Distance to finish', 'm', MAX_COURSE_LENGTH));
+    specs.push(scalar('goalBearing', 'Finish bearing', 'rad', Math.PI));
+    specs.push(scalar('goalDistance', 'Finish distance', 'm', MAX_COURSE_LENGTH));
   }
-  if (cfg.pathHint) specs.push(scalar('pathHint', 'Path hint bearing (left)', 'rad', Math.PI));
+  if (cfg.pathHint) specs.push(scalar('pathHint', 'Path hint', 'rad', Math.PI));
   if (cfg.velocity) {
     specs.push(scalar('forwardSpeed', 'Forward speed', 'm/s', params.agent.maxSpeed));
-    specs.push(scalar('sideSpeed', 'Sideways speed (left)', 'm/s', params.agent.maxSpeed));
+    specs.push(scalar('sideSpeed', 'Side speed', 'm/s', params.agent.maxSpeed));
   }
   if (cfg.time) specs.push(scalar('timeLeft', 'Time left', '', 1));
   for (const c of custom) {

@@ -71,13 +71,17 @@ export function ScriptSidebar({ className }: { className?: string }) {
             </Tooltip>
           </div>
         </div>
-        <Segmented<EnvFilter>
-          label="Environment filter"
-          size="sm"
-          value={filter}
-          onChange={(v) => useStudio.setState({ envFilter: v })}
-          options={[{ value: 'all', label: 'All' }, ...SCRIPT_ENV_TABLE.map((e) => ({ value: e.env, label: envLabel(e.env) }))]}
-        />
+        {/* With more labs than fit the sidebar, the filter keeps its labels on one line and scrolls sideways. */}
+        <div className="no-scrollbar overflow-x-auto">
+          <Segmented<EnvFilter>
+            label="Environment filter"
+            size="sm"
+            value={filter}
+            onChange={(v) => useStudio.setState({ envFilter: v })}
+            className="w-max whitespace-nowrap"
+            options={[{ value: 'all', label: 'All' }, ...SCRIPT_ENV_TABLE.map((e) => ({ value: e.env, label: envLabel(e.env) }))]}
+          />
+        </div>
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-2">
         <Group title="My scripts" empty={!loading && mine.length === 0 ? 'None yet' : undefined}>

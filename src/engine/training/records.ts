@@ -39,6 +39,8 @@ export interface GenerationRecord<C extends ChampionRecord = ChampionRecord> {
   trackHash: string;
   /** Seed used for the champion's sensor noise and script rand(), needed for an exact replay. */
   replaySeed: number;
+  /** The champion's start slot, for envs that hand out slots (see EpisodeEnvModule.startSlots). */
+  replaySlot?: number;
   /** Seconds of simulated time across the whole population. */
   simSeconds: number;
   wallMs: number;

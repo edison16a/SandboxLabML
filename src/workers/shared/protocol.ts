@@ -45,6 +45,8 @@ export type StreamOut =
       part?: StreamPart;
       /** Floats of the env's world block (lights, traffic, movers) that follow the agents in every frame. */
       world?: number;
+      /** The env's own plain data about the episode (see EpisodeEnv.scene), such as the course on screen. */
+      scene?: unknown;
     }
   | {
       kind: 'frame';

@@ -6,6 +6,8 @@ import { sampleDistance } from './course/fieldSample';
 
 /** Progress an agent must gain to reset its stuck timer, m of walking distance. */
 const PROGRESS_STEP = 0.1;
+/** A runner this close to a mover is waiting for a gap, m, so its stuck timer holds still. */
+export const MOVER_WAIT = 1.5;
 
 /**
  * Updates an agent's progress from the distance field after it moved: the
@@ -24,7 +26,8 @@ export function updateProgress(a: NavAgent, course: Course, mark: number, dt: nu
     a.noProgress = 0;
     return a.progress;
   }
-  a.noProgress += dt;
+  // Waiting beside a mover for its gap is patience, not being stuck. The time limit still ends a wait that never stops.
+  if (a.moverDistance >= MOVER_WAIT) a.noProgress += dt;
   return mark;
 }
 

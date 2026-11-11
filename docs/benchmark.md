@@ -224,3 +224,62 @@ The file shipped now comes from 3 seeds of 200 generations per preset (22 minute
 | Advanced | 43.7 | seed 3, generation 160 | 50.8 | 78% |
 
 The presets do not rank in order. Beginner punishes nothing but leaving the road, yet its seeds climbed as fast as the others: at level 2 a trip that meets no red light counts as safe, and from level 4 on a red light run drives into cross traffic, which ends the trip. Single champions swing a lot from one checkpoint to the next (one Intermediate seed fell from 50 to 1 within twenty generations at traffic), so three seeds say little about the order.
+
+# The Navigation benchmark
+
+## The exam
+
+The exam has 14 rooms, all from levels 1 to 6. Each level has two rooms made by the level generator from fixed seeds in a seed domain that training never draws from, so no run ever trains on them. Two hand made rooms join them: Switchback (level 4) and Clockwork (level 5), the named courses marked held out, which no script can pick with `useCourse` and the curriculum never generates.
+
+Every room is run three times, from three spots of the start grid: the middle of the front row, far left in the front row, and right of the middle one row back. The runner is alone each time. It gets the inputs of its run's blueprint plus the sensors of its script, and its outputs go straight to its legs. Nothing is rewarded, and only the room's own rules end a run: the finish line, spikes, a mover, the clock, or four seconds without new ground. A script's rewards and stop rules never change a score, and a test checks this.
+
+The code is in `src/engine/bench/navigation`: `exam.ts` builds the rooms and par, `walk.ts` runs one brain, `scoring.ts` holds the weights and `runner.ts` puts them together. The whole exam takes well under a tenth of a second for a trained brain.
+
+## Scoring
+
+Each run gets up to three numbers between 0 and 1.
+
+Completion is the share of the walk covered at the runner's best point, measured along the shortest path round the obstacles. Crossing the line is 1.
+
+Safety counts only in rooms with spikes or movers. It keeps the completion of a runner that stayed alive and gives 0 to one that died. A runner that never left the start is not safe, it is nothing, so it scores 0 here too.
+
+Efficiency compares a finish with the scripted navigator's time from the same spot, so 1 means navigator pace. A run without a finish gets 0.
+
+The runs of a level are averaged into that level's numbers, and all runs into the radar. The fourth axis, generalization, is the completion on the weakest level. A brain that only learned open floors scores low there even if it flies through them.
+
+| Part | Weight |
+| --- | --- |
+| Completion | 40% |
+| Safety | 20% |
+| Efficiency | 20% |
+| Generalization | 20% |
+
+The result also lists raw metrics (finish rate, death rate, mean progress and mean finish time) and a score per level. The fixed lesson test brain, which simply turns toward the path hint, scores about 84. A still brain scores 0.
+
+## Versions
+
+Scores only compare within one `NAVIGATION_BENCHMARK_VERSION` (in `src/engine/bench/navigation/axes.ts`). Changing a room, a seed, a start spot or anything in `scoring.ts` changes scores, so it must bump that version. A change to the simulation bumps `NAVIGATION_ENGINE_VERSION`.
+
+## Reference results
+
+`public/references/navigation.json` holds a curve per preset and one trained model per preset, the last champion of the seed whose final score is the median of its tier. The Sandbox plays those models under Trained model, so a newcomer sees a skilled runner without training one. `scripts/references/navigation/generate.ts` trains each preset through the same code the sim workers run, with 100 runners on the default curriculum, benchmarks the champion every 5 generations, and pools the last three checkpoints of every seed into the final score.
+
+The shipped file is a smoke run: 2 seeds of 30 generations per preset, which takes under a minute on two worker threads. Regenerate it at full size with:
+
+    npm run refs -- --env navigation --workers 2 --seeds 8 --generations 60
+
+## What the presets show
+
+The brain matters more than the rewards. Four seeds of 60 generations each, pooled over the last three checkpoints:
+
+| Rewards | Brain | Pooled score |
+| --- | --- | --- |
+| Beginner | Starter | 80 |
+| Intermediate | Starter | 88 |
+| Advanced | Starter | 94 |
+| Intermediate | Standard | 71 |
+| Advanced | Standard | 72 |
+| Advanced without the extra courses | Standard | 74 |
+| Advanced | Advanced (no path hint) | 39 |
+
+The Starter brain has 11 inputs. The Standard brain sees more (hit types, its speed and the clock) but has 42 inputs, so evolution needs longer to tune it. The Advanced brain has no path hint and mostly stays stuck behind walls in 60 generations. All three presets therefore use the Starter brain, and on it they rank Beginner, Intermediate, Advanced. New runs in the lab start on the Starter brain too, so a first run climbs along the reference curves.

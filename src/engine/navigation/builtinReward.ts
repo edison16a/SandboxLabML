@@ -10,17 +10,25 @@ export const TIME_BONUS = 10;
 export const DEATH_PENALTY = 3;
 /** Taken away each tick spent standing still (under 0.3 m/s), so waiting has a small price. */
 export const IDLE_PENALTY = 0.005;
+/**
+ * Taken away each tick spent backing up. Backing turns twice as tight as
+ * running, so without it a population soon reverses all the way to the
+ * line: safe round crates, but slow and odd to watch. A short step back
+ * out of a corner still costs little.
+ */
+export const BACK_PENALTY = 0.03;
 
 /**
  * The reward used when a run has no script. It runs as plain TypeScript,
  * so it doubles as the speed baseline compiled scripts are measured
  * against. Written as a script it would read:
  *
- *   move(move: brain.move, turn: brain.turn)
+ *   act(move: brain.move, turn: brain.turn)
  *   reward +10 * agent.progressGain
- *   reward +10 + 10 * (1 - agent.time / agent.timeLimit) when agent.finishedNow
- *   reward -3 when agent.diedNow
- *   reward -0.005 when agent.speed < 0.3
+ *   reward +10 + 10 * agent.timeLeft / (agent.time + agent.timeLeft) when agent.finished
+ *   reward -3 when agent.died
+ *   reward -0.005 when abs(agent.speed) < 0.3 m/s
+ *   reward -0.03 when agent.speed <= -0.3 m/s
  *
  * Progress is the share of the start's walking distance, so the whole run
  * is worth 10, a finish 10 to 20, and a death undoes part of the way. Runs
@@ -36,6 +44,7 @@ export const builtinNavigationController: AgentController<NavAgent> = {
     if (a.finishedNow) r += FINISH_REWARD + TIME_BONUS * Math.max(0, 1 - a.time / a.timeLimit);
     if (a.diedNow) r -= DEATH_PENALTY;
     if (Math.abs(a.speed) < 0.3) r -= IDLE_PENALTY;
+    else if (a.speed < 0) r -= BACK_PENALTY;
     io.reward = r;
   },
 };

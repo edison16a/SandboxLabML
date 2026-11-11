@@ -20,8 +20,8 @@ let hideseek = new HideSeekSim(null);
 
 const api = {
   /** A headless batch of any single population env, as fast as it runs. */
-  evaluate(env: string, setup: EpisodeSetup, genomes: Genome[], seeds: number[], generation: number) {
-    return episodes.evaluate(env, setup, genomes, seeds, generation);
+  evaluate(env: string, setup: EpisodeSetup, genomes: Genome[], seeds: number[], generation: number, slots?: number[]) {
+    return episodes.evaluate(env, setup, genomes, seeds, generation, slots);
   },
   /** A whole generation paced to real time, streamed to the main thread. */
   runLive(req: LiveEpisodeRequest) {

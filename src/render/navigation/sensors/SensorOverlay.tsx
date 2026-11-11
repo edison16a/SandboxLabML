@@ -14,6 +14,7 @@ import { STRIDE } from '../frame/snapshotRead';
 import { NAV_COLORS } from '../palette';
 import { SENSE_Y, SensorDrawing } from './sensorDrawing';
 import { SensorFan } from './sensorFan';
+import { StreamedInputs } from './streamedInputs';
 
 const COLORS = {
   solid: new THREE.Color(NAV_COLORS.senseSolid),
@@ -33,15 +34,17 @@ const ARROW_AHEAD = 1.7;
  * What the followed runner senses, drawn in the scene: soft beams to what
  * each ray meets with a marker colored by what it is (walls and crates,
  * spikes, movers), an arrow on the floor toward the finish, and the path
- * hint as a trail of dots drifting along the shortest way round. Rays are
- * cast again here from the blended pose with the engine's own code, so the
- * beams glide with the runner instead of stepping at 30 Hz.
+ * hint as a trail of dots drifting along the shortest way round. Where
+ * the feed streams the runner's inputs (the lab does), the beams and the
+ * arrow show those, blended between ticks so they glide; a lesioned or
+ * noisy input shows as the brain saw it. Without them the rays are cast
+ * again here from the blended pose with the engine's own code.
  */
 export function SensorOverlay() {
   const { frame, view } = useNavScene();
   const draw = useDisposable(() => new SensorDrawing(), []);
   const fan = useDisposable(() => new SensorFan(), []);
-  const t = useMemo(() => ({ movers: new Float64Array(64), hit: { distance: 0, kind: 0 } as RayHit, flow: { x: 0, z: 0 }, angles: new Float64Array(0), key: -1 }), []);
+  const t = useMemo(() => ({ movers: new Float64Array(64), hit: { distance: 0, kind: 0 } as RayHit, flow: { x: 0, z: 0 }, angles: new Float64Array(0), key: -1, obs: new StreamedInputs() }), []);
 
   useFrame(({ size, clock }) => {
     const course = frame.course;
@@ -49,6 +52,7 @@ export function SensorOverlay() {
     const curr = frame.curr;
     const i = frame.leader;
     if (!view.sensors || !course || !inputs || !curr || i < 0 || curr[i * STRIDE + SNAP_STATUS] !== NAV_RUNNING) {
+      frame.rays = 0;
       fan.hide();
       return draw.hide();
     }
@@ -71,17 +75,24 @@ export function SensorOverlay() {
     const hovered = view.hoveredInput;
     const n = t.angles.length;
     const hoveredRay = hovered < 0 ? -1 : hovered < n ? hovered : rays.hitTypes && hovered < n * 3 ? hovered % n : -1;
+    // What the brain received, when the feed streams it for this runner; else the rays are cast again here.
+    const streamed = t.obs.take(frame.feed?.inspect, i, n * (rays.hitTypes ? 3 : 1) + (inputs.goal ? 2 : 0));
     for (let r = 0; r < n; r++) {
       const a = yaw + t.angles[r];
-      castRay(world, x, z, Math.cos(a), -Math.sin(a), rays.range, t.hit);
+      if (streamed) t.obs.ray(r, n, rays.range, rays.hitTypes, frame.alpha, t.hit);
+      else castRay(world, x, z, Math.cos(a), -Math.sin(a), rays.range, t.hit);
       const kind = t.hit.kind;
       const color = kind === RAY_SPIKES ? COLORS.spikes : kind === RAY_MOVER ? COLORS.mover : COLORS.solid;
       draw.beam(x, z, a, t.hit.distance, color, kind !== RAY_NONE, r === hoveredRay);
       fan.ray(x + Math.cos(a) * t.hit.distance, z - Math.sin(a) * t.hit.distance, t.hit.distance);
       if (kind !== RAY_NONE) draw.hit(x + Math.cos(a) * t.hit.distance, SENSE_Y, z - Math.sin(a) * t.hit.distance, color);
     }
-    if (inputs.goal) draw.goal(x + ARROW_AHEAD, z, 0, 0.85, COLORS.goal);
-    else draw.goal(0, 0, 0, 0, COLORS.goal);
+    if (inputs.goal) {
+      // The finish bearing as the brain read it (left positive, over pi), or straight down the room.
+      const g = streamed ? yaw + t.obs.value(n * (rays.hitTypes ? 3 : 1), frame.alpha) * Math.PI : 0;
+      draw.goal(x + Math.cos(g) * ARROW_AHEAD, z - Math.sin(g) * ARROW_AHEAD, g, 0.85, COLORS.goal);
+    } else draw.goal(0, 0, 0, 0, COLORS.goal);
+    frame.rays = n;
     if (inputs.pathHint) {
       // Walk the field from the runner; dots drift forward and fade in at the start and out at the end.
       const phase = (clock.elapsedTime * DRIFT) % DOT_STEP;

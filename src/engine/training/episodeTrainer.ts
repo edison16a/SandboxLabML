@@ -22,6 +22,13 @@ type StoredState<Content> = Omit<EpisodeTrainerState<Content>, 'content'> & { co
 
 /** Seed of the generation block's random stream, mixed from the run seed. */
 const SCRIPT_RNG_SALT = 0x5c;
+/** Mixed into the seed of each generation's start slots. */
+const SLOT_SALT = 0x51a7;
+
+/** The seed of a generation's start slots (see EpisodeEnvModule.startSlots), so a lab can line agents up as training will. */
+export function startSlotSeed(runSeed: number, generation: number): number {
+  return mixSeed(runSeed, generation, SLOT_SALT);
+}
 
 /**
  * Seed of the script controller for a training episode of `generation`.
@@ -95,6 +102,15 @@ export class EpisodeTrainer<Setup extends EpisodeSetup = EpisodeSetup, Content =
   }
 
   /**
+   * Start slots of this generation, agent i taking slot i, or undefined for
+   * an env that hands none out. Seeded by the run and the generation, so
+   * every worker and every replay agrees.
+   */
+  slots(): number[] | undefined {
+    return this.module.startSlots?.(this.genomes.length, startSlotSeed(this.config.seed, this.generation));
+  }
+
+  /**
    * Applies evaluated results, runs the script's generation block, breeds
    * the next generation and moves the content on. Returns the record of the
    * generation just finished.
@@ -113,6 +129,7 @@ export class EpisodeTrainer<Setup extends EpisodeSetup = EpisodeSetup, Content =
     const r = results[bestIndex];
     const generation = this.generation;
     const replaySeed = this.seeds([champ])[0];
+    const replaySlot = this.slots()?.[bestIndex];
     const ranOn = this.contentNow;
     const trackHash = this.module.contentHash(ranOn);
     const mean = genomes.reduce((s, g) => s + g.fitness, 0) / genomes.length;
@@ -149,6 +166,7 @@ export class EpisodeTrainer<Setup extends EpisodeSetup = EpisodeSetup, Content =
     const record: GenerationRecord<C> = { runId: this.config.id, generation, stats, champion, genome: championGenome, trackHash, replaySeed, simSeconds, wallMs, ...(metrics && { metrics }) };
     // The content this generation ran on, read before nextContent replaced it.
     if (this.module.contentOnRecords) record.content = ranOn;
+    if (replaySlot !== undefined) record.replaySlot = replaySlot;
     return record;
   }
 

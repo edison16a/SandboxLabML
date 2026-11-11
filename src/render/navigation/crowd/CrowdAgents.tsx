@@ -1,7 +1,7 @@
 'use client';
 
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { NAV_RUNNING } from '@/engine/navigation/agent';
 import { SNAP_FLAGS, SNAP_SPEED, SNAP_STATUS, SNAP_STOP_TIME } from '@/engine/navigation/snapshot';
@@ -54,7 +54,7 @@ function crowdMesh(fading: boolean) {
  * dwindle with them.
  */
 export function CrowdAgents() {
-  const { frame } = useNavScene();
+  const { frame, onPick } = useNavScene();
   const solid = useRef<THREE.InstancedMesh>(null);
   const fading = useRef<THREE.InstancedMesh>(null);
   const a = useDisposable(() => crowdMesh(false), []);
@@ -74,16 +74,25 @@ export function CrowdAgents() {
       s: new THREE.Vector3(),
       e: new THREE.Euler(0, 0, 0, 'YXZ'),
       c: new THREE.Color(),
+      /** The agent each instance of the solid and the fading mesh draws, for clicks. */
+      solidIds: new Int16Array(MAX_AGENTS),
+      fadeIds: new Int16Array(MAX_AGENTS),
     }),
     [],
   );
+  const pick = (ids: Int16Array) => (e: ThreeEvent<MouseEvent>) => {
+    if (e.instanceId === undefined || !onPick) return;
+    e.stopPropagation();
+    onPick(false, ids[e.instanceId]);
+  };
 
   useFrame(({ clock, camera }, dt) => {
     const ms = solid.current;
     const mf = fading.current;
     if (!ms || !mf) return;
     const curr = frame.curr;
-    if (!curr) {
+    // Following a ghost means the population is not on screen: the ghosts draw the rest.
+    if (!curr || frame.primaryGhosts) {
       commit(ms, 0);
       commit(mf, 0);
       return;
@@ -128,10 +137,12 @@ export function CrowdAgents() {
       t.c.copy(BODY).lerp(GREY, st.grey).lerp(st.thin < 1 ? CRUSH_FLASH : FLASH, st.flash * 0.55);
       const amp = st.tip !== 0 || st.squash < 1 || st.airborne ? 0 : Math.min(0.6, speed * 0.22);
       if (alpha >= 0.99) {
+        t.solidIds[ns] = i;
         ms.setMatrixAt(ns, t.m);
         ms.setColorAt(ns, t.c);
         a.gait.setXY(ns++, stride, amp);
       } else {
+        t.fadeIds[nf] = i;
         mf.setMatrixAt(nf, t.m);
         mf.setColorAt(nf, t.c);
         b.gait.setXY(nf, stride, amp);
@@ -145,10 +156,10 @@ export function CrowdAgents() {
 
   return (
     <group>
-      <instancedMesh ref={solid} args={[a.geometry, solidMat, MAX_AGENTS]} frustumCulled={false} castShadow receiveShadow />
+      <instancedMesh ref={solid} args={[a.geometry, solidMat, MAX_AGENTS]} frustumCulled={false} castShadow receiveShadow onClick={pick(t.solidIds)} />
       {/* Last of all, after the champion's passes and the sensors, so a ghost in front of them only tints them. */}
       {/* It casts its dwindling shadow; it takes none, as a see-through body darkened by its own shadow looks dirty. */}
-      <instancedMesh ref={fading} args={[b.geometry, fadeMat, MAX_AGENTS]} frustumCulled={false} renderOrder={FADE_ORDER} castShadow customDepthMaterial={fadeShadow} />
+      <instancedMesh ref={fading} args={[b.geometry, fadeMat, MAX_AGENTS]} frustumCulled={false} renderOrder={FADE_ORDER} castShadow customDepthMaterial={fadeShadow} onClick={pick(t.fadeIds)} />
     </group>
   );
 }

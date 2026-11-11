@@ -32,7 +32,7 @@ export class GhostFrames {
     this.world = groups[0]?.env.worldFloats ?? 0;
     this.count = generations.length;
     this.stream.ring.resize(this.count * this.stride + this.world);
-    this.stream.send({ kind: 'start', stream: 'ghosts', generation: 0, count: this.count, tags: Int32Array.from(generations), world: this.world });
+    this.stream.send({ kind: 'start', stream: 'ghosts', generation: 0, count: this.count, tags: Int32Array.from(generations), world: this.world, scene: groups[0]?.env.scene?.() });
   }
 
   send(groups: readonly GhostGroup[]): void {

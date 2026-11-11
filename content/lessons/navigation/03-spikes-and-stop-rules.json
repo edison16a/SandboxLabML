@@ -1,0 +1,92 @@
+{
+  "id": "navigation-03-spikes-and-stop-rules",
+  "course": "navigation",
+  "order": 3,
+  "title": "Spikes and stop rules",
+  "summary": "Teach runners that dying costs more than a detour, and find the bug in a stop rule that fires too soon.",
+  "minutes": 7,
+  "steps": [
+    {
+      "id": "a-price-for-dying",
+      "title": "A price for dying",
+      "body": "From level 3 on, courses have spike pads, and later moving crates that crush. Touching either ends the run.\n\nRight now a runner that dies keeps the points it won on the way. A brave dash that hits the spikes scores almost as well as a careful detour.\n\n`agent.died` is true on the tick a runner dies. Take 3 points away for it.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Spikes and stop rules\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  // Add a cost for dying here.\n}\n",
+      "highlight": {
+        "lines": [
+          15
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "reward",
+            "scope": "tick",
+            "uses": [
+              "agent.died"
+            ]
+          }
+        ],
+        "message": "Add a negative reward when agent.died is true."
+      },
+      "hints": [
+        "A penalty is a reward with a minus sign.",
+        "Write reward -3 when agent.died."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Spikes and stop rules\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  // Spikes and movers end the run. That should cost something.\n  reward -3 when agent.died\n}\n"
+    },
+    {
+      "id": "a-stop-rule-that-fires-too-soon",
+      "title": "A stop rule that fires too soon",
+      "body": "This script has a bug. Look at the preview: the runner never leaves the start.\n\nThe stop rule ends every run slower than 0.5 m/s. Every runner starts standing still, so every run ends on its first tick, and nobody can learn anything.\n\nStop runners for the right reason instead: no new ground for 3 seconds.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Spikes and stop rules\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  // Spikes and movers end the run. That should cost something.\n  reward -3 when agent.died\n\n  // End the run of a runner that has slowed down.\n  stop \"slow\" when agent.speed < 0.5 m/s\n}\n",
+      "highlight": {
+        "lines": [
+          19
+        ]
+      },
+      "check": {
+        "kind": "testRun",
+        "metric": "progress",
+        "op": ">",
+        "value": 0.5,
+        "message": "The test runner should get more than halfway."
+      },
+      "hints": [
+        "agent.stuckTime counts the seconds since the runner last got closer to the line.",
+        "Change the rule to stop \"slow\" when agent.stuckTime > 3 s."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Spikes and stop rules\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  // Spikes and movers end the run. That should cost something.\n  reward -3 when agent.died\n\n  // End the run of a runner that found no new ground for 3 seconds.\n  stop \"slow\" when agent.stuckTime > 3 s\n}\n"
+    },
+    {
+      "id": "keep-a-margin",
+      "title": "Keep a margin",
+      "body": "The death penalty only speaks once it is too late. A small cost for getting close warns a runner while it can still turn.\n\nThe `let` line above the tick block sets `margin` to half a meter. `agent.spikeDistance` is the gap between the runner and the nearest spikes. Take a hundredth of a point for every tick it is under the margin.",
+      "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Spikes and stop rules\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// How close to the spikes is too close.\nlet margin = 0.5 m\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  // Spikes and movers end the run. That should cost something.\n  reward -3 when agent.died\n  // Add a cost for getting close to spikes here.\n\n  // End the run of a runner that found no new ground for 3 seconds.\n  stop \"slow\" when agent.stuckTime > 3 s\n}\n",
+      "highlight": {
+        "lines": [
+          8,
+          20
+        ]
+      },
+      "check": {
+        "kind": "astContains",
+        "anyOf": [
+          {
+            "stmt": "reward",
+            "scope": "tick",
+            "uses": [
+              "agent.spikeDistance"
+            ]
+          }
+        ],
+        "message": "Add a small negative reward that reads agent.spikeDistance."
+      },
+      "hints": [
+        "Compare agent.spikeDistance with margin in the condition.",
+        "Write reward -0.01 when agent.spikeDistance < margin."
+      ],
+      "solution": "// Lines that start with // are notes for people. The app skips them.\nscript \"Spikes and stop rules\" for navigation v1\n\n// navigation-starter sees eight rays, the way to the finish and the path hint.\nbrain navigation-starter\n\n// How close to the spikes is too close.\nlet margin = 0.5 m\n\n// This block runs for every runner, 30 times per second.\neach tick {\n  // Move and turn exactly as the brain says.\n  act(move: brain.move, turn: brain.turn)\n\n  // Points for new ground, and ten more for crossing the line.\n  reward +10 * agent.progressGain\n  reward +10 when agent.finished\n  // Spikes and movers end the run. That should cost something.\n  reward -3 when agent.died\n  // A small cost for every tick spent close to spikes.\n  reward -0.01 when agent.spikeDistance < margin\n\n  // End the run of a runner that found no new ground for 3 seconds.\n  stop \"slow\" when agent.stuckTime > 3 s\n}\n"
+    }
+  ]
+}

@@ -10,6 +10,24 @@ export interface FloorPose {
 }
 
 /**
+ * Ghosts drawn as ghosts this frame: a replay of past champions on the
+ * same course as the frame. When the view follows a ghost (the population
+ * is hidden), this is the followed feed itself and `skip` is the one the
+ * champion character stands in for.
+ */
+export interface GhostLayer {
+  feed: NavFeed | null;
+  curr: Float32Array | null;
+  prev: Float32Array | null;
+  alpha: number;
+  count: number;
+  /** The replay's own clock, blended, s. */
+  time: number;
+  /** Ghost not to draw, or -1. */
+  skip: number;
+}
+
+/**
  * What every part of the Navigation scene needs to know this frame. The
  * frame driver fills it first thing each frame from the feed; the course,
  * the crowd, the overlays and the camera only read it.
@@ -40,6 +58,11 @@ export interface NavFrame {
   leaderPose: FloorPose;
   /** Bumped when the followed agent changes, so the champion character knows it jumped to someone else. */
   leaderVersion: number;
+  /** True when the followed feed is the ghost replay, so the crowd stands down and the ghosts draw the rest. */
+  primaryGhosts: boolean;
+  ghosts: GhostLayer;
+  /** Sensor beams drawn this frame, for the stats probe the browser tests read. */
+  rays: number;
 }
 
 export function createNavFrame(): NavFrame {
@@ -59,5 +82,8 @@ export function createNavFrame(): NavFrame {
     leader: -1,
     leaderPose: { x: 0, z: 0, yaw: 0 },
     leaderVersion: 0,
+    primaryGhosts: false,
+    rays: 0,
+    ghosts: { feed: null, curr: null, prev: null, alpha: 1, count: 0, time: 0, skip: -1 },
   };
 }
