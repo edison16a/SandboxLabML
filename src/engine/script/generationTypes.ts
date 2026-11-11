@@ -25,7 +25,11 @@ export interface GenerationDirectives {
   racing?: { track?: TrackDirective };
   /** Match rules from the Hide and Seek operators, such as prepTime and opponents. */
   hideseek?: HideSeekDirective;
-  /** Requests for the script's own env, written by its registry operators and read by its env module. */
+  /**
+   * Requests for the script's own env, one key per request (a level, a
+   * traffic density), read by its env module's nextContent. Operators set
+   * a key with setEnvDirective, which keeps the keys other operators set.
+   */
   env?: Record<string, unknown>;
 }
 

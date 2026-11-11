@@ -28,7 +28,8 @@ export interface GenerationDirectives {
   /**
    * Requests for the script's own env, such as a level or a course. A
    * script belongs to one env, so one slot is enough: that env's registry
-   * operators write it and its module's nextContent reads it.
+   * operators each set their own key in it with setEnvDirective, and its
+   * module's nextContent reads them.
    */
   env?: Record<string, unknown>;
 }
