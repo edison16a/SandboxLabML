@@ -28,8 +28,9 @@ export interface DrivingLevel {
   lenientCurb: boolean;
   /**
    * Arriving means the car's center is in the destination zone below this
-   * speed, m/s. The first two levels ask to roll in under 30 km/h, the next
-   * two under 15 km/h, and rush hour asks the car to stop there.
+   * speed, m/s. The first level only asks to stay under the speed limit,
+   * the second to roll in under 30 km/h, the next two under 15 km/h, and
+   * rush hour asks the car to stop there.
    */
   arriveSpeed: number;
 }
@@ -38,6 +39,8 @@ export interface DrivingLevel {
 const STOPPED = 1.5;
 /** Rolling in at a walking pace counts as arriving on the middle levels, m/s. */
 const SLOW = 4;
+/** The town speed limit, m/s: on empty streets, reaching the zone without speeding counts. */
+const UNDER_LIMIT = 14;
 /** First trips: one turn at most, a couple of blocks long. */
 const FIRST_TRIPS: RouteOptions = { minLength: 120, maxLength: 260, minTurns: 0, maxTurns: 1 };
 
@@ -49,7 +52,7 @@ const FIRST_TRIPS: RouteOptions = { minLength: 120, maxLength: 260, minTurns: 0,
  * final exam.
  */
 export const DRIVING_LEVELS: readonly DrivingLevel[] = [
-  { id: 1, name: 'Empty streets', signals: false, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0, route: FIRST_TRIPS, stopWait: 15, lenientCurb: true, arriveSpeed: 8 },
+  { id: 1, name: 'Empty streets', signals: false, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0, route: FIRST_TRIPS, stopWait: 15, lenientCurb: true, arriveSpeed: UNDER_LIMIT },
   { id: 2, name: 'Traffic lights', signals: true, pedestrians: 0, traffic: 0, jaywalk: 0, lateCross: 0, route: FIRST_TRIPS, stopWait: 15, lenientCurb: true, arriveSpeed: 8 },
   { id: 3, name: 'Pedestrians', signals: true, pedestrians: 60, traffic: 0, jaywalk: 0, lateCross: 0, route: FIRST_TRIPS, stopWait: 18, lenientCurb: true, arriveSpeed: SLOW },
   { id: 4, name: 'Traffic', signals: true, pedestrians: 76, traffic: 28, jaywalk: 0, lateCross: 0.1, route: FIRST_TRIPS, stopWait: 26, lenientCurb: true, arriveSpeed: SLOW },

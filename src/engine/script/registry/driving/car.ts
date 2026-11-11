@@ -59,7 +59,7 @@ export const DRIVING_CAR_ENTRIES: RegistryEntry[] = [
       name: 'car.arrived',
       unit: '',
       summary: 'True on the tick the SUV arrives at its destination.',
-      description: 'The SUV arrives when its center is in the destination zone and it is slow enough: under 8 m/s on the first two levels, under 4 m/s on the next two and stopped at rush hour. The trip ends there.',
+      description: 'The SUV arrives when its center is in the destination zone and it is slow enough: under the speed limit on empty streets, under 8 m/s with lights, under 4 m/s with people and traffic, and stopped at rush hour. The trip ends there.',
       example: 'reward +10 when car.arrived',
       explain: 'the SUV arrives',
       label: 'arrived',
