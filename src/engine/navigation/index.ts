@@ -2,6 +2,7 @@ export * from './params';
 export * from './agent';
 export * from './course/types';
 export * from './course/build';
+export * from './course/formation';
 export * from './course/field';
 export * from './course/fieldSample';
 export * from './course/movers';

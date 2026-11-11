@@ -140,7 +140,9 @@ describe('ends of a run', () => {
     env.reset([idle], [1]);
     while (!env.done) env.step();
     expect(env.agents[0].stopReason).toBe('time');
-    expect(env.agents[0].time).toBeCloseTo(course.timeLimit, 6);
+    // Its own limit: the course's, plus the walk from its spot behind the start line.
+    expect(env.agents[0].timeLimit).toBeGreaterThan(course.timeLimit);
+    expect(env.agents[0].time).toBeCloseTo(env.agents[0].timeLimit, 1);
     const stuck = runOne(course, 0, 0, builtinNavigationController, 2000);
     expect(stuck.a.status).toBe(NAV_STOPPED);
     expect(stuck.a.stopReason).toBe('stuck');

@@ -4,7 +4,6 @@ import { createNavAgent, NAV_RUNNING, stopAgent, type NavAgent } from './agent';
 import type { Course } from './course/build';
 import { moverPosition } from './course/movers';
 import { driveAgent, onSpikes, shoveAgent } from './kinematics/body';
-import { pushOut } from './kinematics/collide';
 import type { CollisionWorld } from './kinematics/slide';
 import type { NavigationParams } from './params';
 import { leaderOf, updateNearby, updateProgress } from './progress';
@@ -90,13 +89,18 @@ export class NavigationEnv {
     return this.active === 0;
   }
 
-  /** Starts a fresh episode with one agent per brain. `seeds` set each agent's start spot and noise. Slots are accepted for the generic pipeline and ignored: everyone starts on the pad. */
-  reset(brains: NavBrain[], seeds: number[] = [], _slots: number[] = []): void {
+  /**
+   * Starts a fresh episode with one agent per brain. `seeds` set each
+   * agent's noise and small offset off its spot. `slots` are spots on the
+   * start grid: a lab hands out 0 to n - 1 (see formationSlots) and replays
+   * pass the champion's own, so it starts where it trained. An agent with
+   * no slot takes one from its seed, which keeps runs exact but may stack
+   * two agents on one spot.
+   */
+  reset(brains: NavBrain[], seeds: number[] = [], slots: number[] = []): void {
     const { course, params, inputs } = this.opts;
     this.brains = brains;
-    this.agents = brains.map((_, i) => createNavAgent(i, course, params, inputs.rays.count, seeds[i] ?? i, this.maxTime));
-    // A course that puts something on the start pad must not trap anyone inside it from the first tick.
-    for (const a of this.agents) pushOut(a, params.agent.radius, course.solidData, course.solids.length, 8);
+    this.agents = brains.map((_, i) => createNavAgent(i, course, params, inputs.rays.count, seeds[i] ?? i, this.maxTime, slots[i]));
     this.obs = brains.map(() => new Float64Array(this.inputCount));
     this.actions = brains.map(() => new Float64Array(2));
     this.noise = brains.map((_, i) => (inputs.noise > 0 ? new Rng(seeds[i] ?? i) : null));
@@ -140,7 +144,7 @@ export class NavigationEnv {
       if (a.finishedNow) stopAgent(a, 'finished');
       else if (death) stopAgent(a, death);
       else if (io.stop) stopAgent(a, io.stop);
-      else if (a.time >= this.maxTime - 1e-9) stopAgent(a, 'time');
+      else if (a.time >= a.timeLimit - 1e-9) stopAgent(a, 'time');
       else if (a.noProgress >= params.stuckSeconds) stopAgent(a, 'stuck');
       if (a.status !== NAV_RUNNING) this.active--;
     }

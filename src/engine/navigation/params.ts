@@ -33,8 +33,12 @@ export interface NavigationParams {
   spikeInset: number;
   /** Crushed once a mover leaves this much overlap that nothing can push out, m. */
   crushDepth: number;
-  /** Where on the start pad an agent may begin, from its own seed: half ranges along x and z, m, and of the heading, rad. */
-  start: { jitterX: number; jitterZ: number; jitterYaw: number };
+  /**
+   * The start grid: the gap between spots in a row and between rows, m, and
+   * how far each agent stands off its spot (m) and turns from straight
+   * ahead (rad), from its own seed, so the grid looks like people, not pins.
+   */
+  start: { spacing: number; rowGap: number; jitter: number; jitterYaw: number };
 }
 
 export const DEFAULT_NAVIGATION_PARAMS: NavigationParams = {
@@ -43,7 +47,7 @@ export const DEFAULT_NAVIGATION_PARAMS: NavigationParams = {
   stuckSeconds: 4,
   spikeInset: 0.08,
   crushDepth: 0.06,
-  start: { jitterX: 0.45, jitterZ: 1.2, jitterYaw: 0.35 },
+  start: { spacing: 0.8, rowGap: 0.68, jitter: 0.06, jitterYaw: 0.15 },
 };
 
 /** Stable fingerprint of the rules, stored with every genome. */

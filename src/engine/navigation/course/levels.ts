@@ -14,13 +14,13 @@ export interface NavLevel {
  * last mixes them all.
  */
 export const NAV_LEVELS: readonly NavLevel[] = [
-  { level: 0, name: 'Straight run', description: 'An empty room. Run to the line.', length: 26 },
-  { level: 1, name: 'One block', description: 'A big crate stands in the way. Go round it.', length: 28 },
-  { level: 2, name: 'Block field', description: 'Crates all over the floor. Find a way through.', length: 34 },
-  { level: 3, name: 'Spikes', description: 'Rows of spikes. Touch one and the run ends.', length: 36 },
-  { level: 4, name: 'Walls and gaps', description: 'Walls across the room with narrow gaps to find.', length: 40 },
-  { level: 5, name: 'Movers', description: 'Crates slide across the way. Time the dash.', length: 40 },
-  { level: 6, name: 'Gauntlet', description: 'Everything at once.', length: 48 },
+  { level: 0, name: 'Straight run', description: 'An empty room. Run to the line.', length: 28 },
+  { level: 1, name: 'One block', description: 'A big crate stands in the way. Go round it.', length: 30 },
+  { level: 2, name: 'Block field', description: 'Crates all over the floor. Find a way through.', length: 36 },
+  { level: 3, name: 'Spikes', description: 'Rows of spikes. Touch one and the run ends.', length: 38 },
+  { level: 4, name: 'Walls and gaps', description: 'Walls across the room with narrow gaps to find.', length: 42 },
+  { level: 5, name: 'Movers', description: 'Crates slide across the way. Time the dash.', length: 42 },
+  { level: 6, name: 'Gauntlet', description: 'Everything at once.', length: 50 },
 ];
 
 /** The hardest level. */

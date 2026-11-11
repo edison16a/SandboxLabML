@@ -6,13 +6,15 @@ import type { NavigationResult } from './result';
 
 /**
  * Runs one course headless: all genomes walk together until every run has
- * ended. Returns one result per genome, in order.
+ * ended. Returns one result per genome, in order. `slots` place them on
+ * the start grid (see NavigationEnv.reset).
  */
-export function evaluateNavigation(genomes: Genome[], opts: NavigationEnvOptions, seeds: number[] = []): NavigationResult[] {
+export function evaluateNavigation(genomes: Genome[], opts: NavigationEnvOptions, seeds: number[] = [], slots: number[] = []): NavigationResult[] {
   const env = new NavigationEnv(opts);
   env.reset(
     genomes.map((g) => new Network(g)),
     seeds,
+    slots,
   );
   while (!env.done) env.step();
   return env.results();
@@ -23,20 +25,21 @@ export function evaluateNavigation(genomes: Genome[], opts: NavigationEnvOptions
  * fitness and progress add up, so a brain is judged on all of them. The
  * per course seeds differ, so start spots differ from course to course.
  */
-export function evaluateCourses(genomes: Genome[], courses: Course[], base: Omit<NavigationEnvOptions, 'course'>, seeds: number[] = []): NavigationResult[][] {
+export function evaluateCourses(genomes: Genome[], courses: Course[], base: Omit<NavigationEnvOptions, 'course'>, seeds: number[] = [], slots: number[] = []): NavigationResult[][] {
   return courses.map((course, k) =>
     evaluateNavigation(
       genomes,
       { ...base, course },
       genomes.map((_, i) => (seeds[i] ?? i) + k * 7919),
+      slots,
     ),
   );
 }
 
 /** Path of one agent as flat [x, z, yaw, speed] per tick, for path caches and tests. */
-export function recordPath(genome: Genome, opts: NavigationEnvOptions, seed = 0, maxTicks = 3600): Float32Array {
+export function recordPath(genome: Genome, opts: NavigationEnvOptions, seed = 0, maxTicks = 3600, slot?: number): Float32Array {
   const env = new NavigationEnv(opts);
-  env.reset([new Network(genome)], [seed]);
+  env.reset([new Network(genome)], [seed], slot === undefined ? [] : [slot]);
   const out: number[] = [];
   const snap = new Float32Array(8);
   while (!env.done && env.tick < maxTicks) {

@@ -9,7 +9,7 @@ import { FinishBurst } from './FinishBurst';
 import { FinishGate } from './FinishGate';
 import { Movers } from './Movers';
 import { SpikePads } from './SpikePads';
-import { StartPad } from './StartPad';
+import { StartZone } from './StartZone';
 
 /**
  * Everything on the course but the runners, the static parts rebuilt only
@@ -25,7 +25,7 @@ export function CourseScene({ tier, aoPass }: { tier: NavQualityTier; /** N8AO r
       {course && (
         <>
           <CourseRoom course={course} ao={aoPass ? 0.3 : 0.5} />
-          <StartPad course={course} />
+          <StartZone course={course} />
           <CourseBlocks course={course} full={full} shadows={full} />
           <SpikePads course={course} shadows={full} />
           <Movers course={course} full={full} shadows={full} />

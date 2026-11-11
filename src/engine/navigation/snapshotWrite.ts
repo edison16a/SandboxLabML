@@ -8,7 +8,7 @@ export function writeAgentSnapshot(a: NavAgent, out: Float32Array, o: number): v
   out[o + SNAP_YAW] = a.yaw;
   out[o + SNAP_SPEED] = a.speed;
   out[o + SNAP_STATUS] = a.status;
-  out[o + SNAP_PROGRESS] = a.progress;
+  out[o + SNAP_PROGRESS] = a.courseProgress;
   out[o + SNAP_FLAGS] = a.flags;
   out[o + SNAP_STOP_TIME] = a.stopTime;
 }

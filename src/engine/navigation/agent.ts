@@ -1,5 +1,8 @@
 import { Rng } from '../core/rng';
 import type { Course } from './course/build';
+import { sampleDistance } from './course/fieldSample';
+import { formationSpot, seedSlot } from './course/formation';
+import { pushOut } from './kinematics/collide';
 import type { NavigationParams } from './params';
 
 /** Where an agent's run stands. The snapshot carries it as a float. */
@@ -33,8 +36,10 @@ export const RAY_MOVER = 3;
  */
 export interface NavAgent {
   index: number;
-  /** Per agent seed (from run seed, generation and genome). Start spot, noise and script rand() derive from it, so a replay alone matches. */
+  /** Per agent seed (from run seed, generation and genome). Noise, script rand() and the small offset off its start spot derive from it, so a replay alone matches. */
   seed: number;
+  /** Its spot on the start grid (see formation.ts). */
+  slot: number;
   x: number;
   z: number;
   /** Heading, rad: 0 faces +x (toward the finish), positive turns toward -z. */
@@ -46,15 +51,19 @@ export interface NavAgent {
   vz: number;
   /** Turn rate this tick, rad/s. */
   turn: number;
-  /** Share of the start's walking distance covered now, and at its best, 0 to 1. */
+  /** Walking distance from its own start spot to the finish, m. */
+  startDistance: number;
+  /** Share of its own walk covered now, and at its best, 0 to 1. Rewards pay on it, so a spot at the back of the grid costs nothing. */
   progress: number;
   bestProgress: number;
+  /** Share of the course's walk covered, measured from the start line and the same for everyone: how the view and the leader compare agents. 0 behind the line. */
+  courseProgress: number;
   /** How much bestProgress grew in the latest tick. The built in reward pays for it. */
   progressGain: number;
   /** Walking distance left to the finish, m. */
   distanceLeft: number;
   time: number;
-  /** Episode length, s: the run ends as "time" once time reaches it. */
+  /** Its time limit, s: the run ends as "time" once time reaches it. The episode length, plus the time to walk the extra way from a spot further back at half speed. */
   timeLimit: number;
   /** Seconds since bestProgress last grew. */
   noProgress: number;
@@ -80,26 +89,37 @@ export interface NavAgent {
 }
 
 /**
- * Where an agent starts: near the pad center, offset and turned a little
- * by its own seed. Brains so meet slightly different starts every episode
- * and learn to navigate rather than replay one path, and the crowd spreads
- * over the pad instead of standing in one spot.
+ * Where an agent starts: on its spot of the start grid (its slot, or one
+ * from its seed when it has none), stood a few cm off it and turned a
+ * little by its own seed, so the grid looks like a crowd lining up.
  */
-export function startPose(course: Course, params: NavigationParams, seed: number, out: { x: number; z: number; yaw: number }): void {
+export function startSpot(course: Course, params: NavigationParams, seed: number, slot: number, out: { x: number; z: number; yaw: number }): void {
+  formationSpot(course.formation, slot, out);
   const rng = new Rng(seed ^ 0x5eed);
   const s = params.start;
-  out.x = course.startX + rng.range(-s.jitterX, s.jitterX);
-  out.z = course.startZ + rng.range(-s.jitterZ, s.jitterZ);
+  out.x += rng.range(-s.jitter, s.jitter);
+  out.z += rng.range(-s.jitter, s.jitter);
   out.yaw = rng.range(-s.jitterYaw, s.jitterYaw);
 }
 
 const pose = { x: 0, z: 0, yaw: 0 };
 
-export function createNavAgent(index: number, course: Course, params: NavigationParams, rayCount: number, seed = index, timeLimit = course.timeLimit): NavAgent {
-  startPose(course, params, seed, pose);
+/**
+ * A fresh agent on its start spot, freed from any solid a course put on
+ * the grid. `timeLimit` is the episode length; an agent further back than
+ * the start line gets the time to walk the difference at half speed.
+ */
+export function createNavAgent(index: number, course: Course, params: NavigationParams, rayCount: number, seed = index, timeLimit = course.timeLimit, slot?: number): NavAgent {
+  const spot = slot ?? seedSlot(seed, course.formation);
+  startSpot(course, params, seed, spot, pose);
+  pushOut(pose, params.agent.radius, course.solidData, course.solids.length, 8);
+  const d = sampleDistance(course.field, pose.x, pose.z);
+  const startDistance = Number.isFinite(d) ? Math.max(d, 1) : course.spec.length * 2;
+  const behind = Number.isFinite(course.startDistance) ? Math.max(0, startDistance - course.startDistance) : 0;
   return {
     index,
     seed,
+    slot: spot,
     x: pose.x,
     z: pose.z,
     yaw: pose.yaw,
@@ -107,12 +127,14 @@ export function createNavAgent(index: number, course: Course, params: Navigation
     vx: 0,
     vz: 0,
     turn: 0,
+    startDistance,
     progress: 0,
     bestProgress: 0,
+    courseProgress: 0,
     progressGain: 0,
-    distanceLeft: course.startDistance,
+    distanceLeft: startDistance,
     time: 0,
-    timeLimit,
+    timeLimit: timeLimit + behind / (params.agent.maxSpeed * 0.5),
     noProgress: 0,
     spikeDistance: NEAR_CAP,
     moverDistance: NEAR_CAP,

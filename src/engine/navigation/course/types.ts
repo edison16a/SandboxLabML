@@ -68,16 +68,18 @@ export interface CourseSpec {
   obstacles: ObstacleSpec[];
 }
 
-/** Gap kept between the start pad center and the start wall, m. */
-export const START_INSET = 2.6;
+/**
+ * Depth of the start zone, m: from the start wall to the start line. Agents
+ * line up on a grid of rows behind the line (see formation.ts); this fits
+ * 8 rows, 132 agents in a 14 m room, and more stand in the grid's gaps.
+ */
+export const START_ZONE = 6.4;
 /** Gap kept between the finish line and the end wall, m: room for finishers to run through and celebrate. */
 export const FINISH_INSET = 3;
 /** Thickness of the outer walls, m. */
 export const OUTER_WALL = 0.4;
 /** Thickness of inner walls, m. */
 export const INNER_WALL = 0.3;
-/** Radius of the start pad, m. */
-export const START_PAD_RADIUS = 1.7;
 /** Height of the walls, m: low enough to see agents over them, for the renderer and the follow camera. */
 export const WALL_HEIGHT = 1.4;
 /** Longest and widest course any level makes, m. Inputs scale distances by these. */

@@ -1,8 +1,9 @@
 import type { Rng } from '../../core/rng';
-import { FINISH_INSET, START_INSET, START_PAD_RADIUS, type ObstacleSpec, type Rect } from './types';
+import { startLineX } from './formation';
+import { FINISH_INSET, type ObstacleSpec, type Rect } from './types';
 
-/** Clear ground kept round the start pad, m past its rim, so nobody spawns into trouble. */
-const START_CLEAR = 1.6;
+/** Clear ground kept past the start line, m, so the grid sets off before anything is in the way. */
+const START_CLEAR = 1.5;
 /** Clear ground kept before the finish line, m. */
 const FINISH_CLEAR = 1.2;
 /**
@@ -20,7 +21,7 @@ export class CourseDraft {
   readonly obstacles: ObstacleSpec[] = [];
   /** Footprints taken, each grown by the gap its piece asked to keep. */
   private readonly taken: Rect[] = [];
-  readonly startX: number;
+  readonly startLine: number;
   readonly finishX: number;
 
   constructor(
@@ -28,13 +29,13 @@ export class CourseDraft {
     readonly width: number,
     readonly rng: Rng,
   ) {
-    this.startX = -length / 2 + START_INSET;
+    this.startLine = startLineX(length);
     this.finishX = length / 2 - FINISH_INSET;
   }
 
   /** First and last x obstacles may reach, m. */
   get bandStart(): number {
-    return this.startX + START_PAD_RADIUS + START_CLEAR;
+    return this.startLine + START_CLEAR;
   }
 
   get bandEnd(): number {

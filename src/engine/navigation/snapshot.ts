@@ -4,8 +4,8 @@ import { MAX_MOVERS } from './course/types';
 /**
  * 8 floats per agent, shared by the population stream and champion replays.
  * Status is NAV_RUNNING, NAV_FINISHED, NAV_DIED or NAV_STOPPED; flags are
- * the FLAG_* bits; progress is the share of the walking distance covered
- * now; stopTime is when the run ended (s, 0 while running), so a renderer
+ * the FLAG_* bits; progress is courseProgress, the share of the course
+ * covered from the start line, the same yardstick for every agent; stopTime is when the run ended (s, 0 while running), so a renderer
  * can time a fall or a celebration from the world clock at any speed.
  */
 export const NAVIGATION_SNAPSHOT: SnapshotLayout = {

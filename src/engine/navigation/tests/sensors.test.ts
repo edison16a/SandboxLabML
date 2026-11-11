@@ -67,16 +67,20 @@ describe('observer', () => {
     const maxTime = 3;
     expect(course.timeLimit).toBeGreaterThan(maxTime * 2);
     const env = new NavigationEnv({ course, params, inputs: STANDARD_NAVIGATION_INPUTS, controller: builtinNavigationController, maxTime });
-    env.reset([{ activate() {} }], [3]);
-    const schema = env.inputSchema();
-    const k = schema.findIndex((s) => s.key === 'timeLeft');
+    env.reset([{ activate() {} }], [3], [0]);
+    const a = env.agents[0];
+    const k = env.inputSchema().findIndex((s) => s.key === 'timeLeft');
+    // The front row stands half a meter behind the start line, so it gets that walk's time on top.
+    expect(a.timeLimit).toBeGreaterThan(maxTime);
+    expect(a.timeLimit).toBeLessThan(maxTime + 0.5);
     const ticks = Math.round(maxTime / 2 / params.dt);
     for (let t = 0; t < ticks; t++) env.step();
-    expect(env.agents[0].timeLimit).toBeCloseTo(maxTime, 9);
-    expect(env.lastObservation(0)[k]).toBeCloseTo(0.5, 6);
+    expect(env.lastObservation(0)[k]).toBeCloseTo(1 - a.time / a.timeLimit, 9);
+    expect(env.lastObservation(0)[k]).toBeLessThan(0.55);
     while (!env.done) env.step();
-    expect(env.agents[0].stopReason).toBe('time');
-    expect(env.agents[0].time).toBeCloseTo(maxTime, 6);
+    expect(a.stopReason).toBe('time');
+    expect(a.time).toBeGreaterThanOrEqual(a.timeLimit - 1e-6);
+    expect(a.time).toBeLessThan(a.timeLimit + params.dt);
   });
 
   it('reads bearings with left positive', () => {

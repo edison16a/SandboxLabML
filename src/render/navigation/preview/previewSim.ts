@@ -1,5 +1,6 @@
 import { mixSeed } from '@/engine/core/rng';
 import { buildCourse, type Course } from '@/engine/navigation/course/build';
+import { formationSlots } from '@/engine/navigation/course/formation';
 import { generateCourse } from '@/engine/navigation/course/generate';
 import { namedCourse } from '@/engine/navigation/course/presets';
 import { NavigationEnv } from '@/engine/navigation/env';
@@ -71,9 +72,11 @@ export class PreviewSim implements NavFeed {
     const course = buildCourse(spec, params);
     this.course = course;
     this.env = new NavigationEnv({ course, params, inputs: STANDARD_NAVIGATION_INPUTS, controller: crowdController(course, params) });
+    // Slots are handed out as a lab would: one spot each, in a seeded order.
     this.env.reset(
       Array.from({ length: agents }, () => IDLE_BRAIN),
       Array.from({ length: agents }, (_, i) => mixSeed(seed, this.round, i)),
+      formationSlots(agents, mixSeed(seed, this.round)),
     );
     this.round++;
     this.epoch++;

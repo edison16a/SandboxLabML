@@ -1,8 +1,9 @@
 import { DEFAULT_NAVIGATION_PARAMS, type NavigationParams } from '../params';
 import { buildField, type DistanceField } from './field';
 import { sampleDistance } from './fieldSample';
+import { startFormation, startLineX, type StartFormation } from './formation';
 import { MOVER_SPEED_LIMIT } from './movers';
-import { FINISH_INSET, MAX_MOVERS, OUTER_WALL, START_INSET, type CourseSpec, type MoverSpec, type Rect } from './types';
+import { FINISH_INSET, MAX_MOVERS, OUTER_WALL, type CourseSpec, type MoverSpec, type Rect } from './types';
 
 /**
  * A course ready to run: the spec plus everything derived from it once,
@@ -12,9 +13,11 @@ export interface Course {
   spec: CourseSpec;
   halfLength: number;
   halfWidth: number;
-  /** Center of the start pad. Agents start near it, facing +x. */
+  /** The start line's x, and its middle across the room (0). Agents line up behind it, facing +x. */
   startX: number;
   startZ: number;
+  /** The start grid behind the line. */
+  formation: StartFormation;
   /** Agents finish once their center crosses this x. */
   finishX: number;
   /** Every static solid: the four outer walls first, then inner walls and blocks. */
@@ -25,7 +28,7 @@ export interface Course {
   /** The movers as they run: at most MAX_MOVERS, none faster than MOVER_SPEED_LIMIT (see runnableMover). */
   movers: MoverSpec[];
   field: DistanceField;
-  /** Walking distance from the start pad to the finish, m. Progress is measured against it. */
+  /** Walking distance from the middle of the start line to the finish, m: the yardstick that compares agents (see NavAgent.courseProgress). */
   startDistance: number;
   /** Episode length, s: room for a slow, careful walk with waits at every mover, and a margin. */
   timeLimit: number;
@@ -75,7 +78,7 @@ function pack(rects: readonly Rect[]): Float64Array {
 export function buildCourse(spec: CourseSpec, params: NavigationParams = DEFAULT_NAVIGATION_PARAMS): Course {
   const halfLength = spec.length / 2;
   const halfWidth = spec.width / 2;
-  const startX = -halfLength + START_INSET;
+  const startX = startLineX(spec.length);
   const finishX = halfLength - FINISH_INSET;
   const inner: Rect[] = [];
   const spikes: Rect[] = [];
@@ -111,6 +114,7 @@ export function buildCourse(spec: CourseSpec, params: NavigationParams = DEFAULT
     halfWidth,
     startX,
     startZ: 0,
+    formation: startFormation(startX, spec.width, spec.length, params),
     finishX,
     solids,
     solidData: pack(solids),
@@ -123,7 +127,7 @@ export function buildCourse(spec: CourseSpec, params: NavigationParams = DEFAULT
   };
 }
 
-/** Whether an agent can walk from the start pad to the finish with clearance to spare (movers aside: they are timed, not walked round). */
+/** Whether an agent can walk from the start line to the finish with clearance to spare (movers aside: they are timed, not walked round). */
 export function isSolvable(course: Course): boolean {
   return Number.isFinite(course.startDistance) && course.startDistance < course.spec.length * 3;
 }
