@@ -26,7 +26,7 @@ export interface EndPull {
   side: number;
   /** Pull in of the fender peak or belt key, m. */
   peak: number;
-  /** Drop of every key from the shoulder up, m. */
+  /** Drop of the keys from the shoulder up, m. At the nose the shoulder keeps its height and the fender peak takes half. */
   drop: number;
 }
 
