@@ -9,15 +9,11 @@ import type { RunConfig } from '../training/runConfig';
 import { driveCourse, type EpisodeResult, type ExamDriver } from './drive';
 import { examTracks } from './exam';
 import { averageScores, composite, scoreEpisode, trackScore, type EpisodeScore } from './scoring';
-import type { BenchResult } from './types';
+import type { BenchOptions, BenchResult } from './types';
 
 /** Seed for sensor noise and script sensors during the exam. Fixed, so the same brain always scores the same. */
 const BENCH_SEED = 0xbe7c;
 
-export interface BenchOptions {
-  onProgress?: (fraction: number) => void;
-  signal?: AbortSignal;
-}
 
 /**
  * What the exam needs from a run: the blueprint's inputs plus the custom

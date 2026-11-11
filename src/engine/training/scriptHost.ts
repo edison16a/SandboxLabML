@@ -5,7 +5,7 @@ import type { NeatConfig } from '../neat/config';
 import type { GenerationPlan } from '../neat/plan';
 import { builtinRacingController } from '../racing/builtinReward';
 import type { RacingCar } from '../racing/car/runtime';
-import type { CustomSensorSpec } from '../racing/sensors/inputSchema';
+import type { CustomSensorSpec } from '../env/types';
 import type { Track } from '../racing/track/types';
 import type { HideSeekAgent } from '../hideseek/agents/agent';
 

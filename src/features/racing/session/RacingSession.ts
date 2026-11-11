@@ -1,5 +1,5 @@
 import type { RacingTrainerState } from '@/engine/training/racingTrainer';
-import type { GenerationRecord } from '@/engine/training/records';
+import type { RacingRecord } from '@/engine/training/records';
 import { racingSetupFor } from '@/engine/training/racingSetup';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { saveCheckpoint } from '@/storage/checkpoints';
@@ -28,7 +28,7 @@ export class RacingSession {
   private ready: Promise<WorkerPool> | null = null;
   private ghostKey = '';
   private readonly writes = new WriteQueue();
-  private readonly batcher = new RecordBatcher((batch) => {
+  private readonly batcher = new RecordBatcher<RacingRecord>((batch) => {
     this.store.addRecords(batch);
     // Benchmark once the records are in the store, so each score has a row to land on.
     if (this.pool) for (const r of batch) maybeBenchmark(this.pool, r);
@@ -61,7 +61,7 @@ export class RacingSession {
     return true;
   }
 
-  private async load(config: RunConfig, history: GenerationRecord[], state?: RacingTrainerState) {
+  private async load(config: RunConfig, history: RacingRecord[], state?: RacingTrainerState) {
     const pool = await this.init();
     await pool.coordinator.pause();
     this.batcher.clear();
@@ -171,7 +171,7 @@ export class RacingSession {
         break;
       }
       case 'generation':
-        this.batcher.push(e.record);
+        this.batcher.push(e.record as RacingRecord);
         void this.writes.push(() => saveGeneration(e.record));
         break;
       case 'checkpoint':

@@ -6,7 +6,6 @@ import { benchmarkRacing } from './runner';
 import type { BenchResult } from './types';
 
 export * from './types';
-export type { BenchOptions } from './runner';
 export type { HideSeekBenchOptions } from './hideseek/runner';
 export type { HideSeekModel } from './hideseek/types';
 export { loadReferences, parseReferences, referencesPath } from './references';

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { ENGINE_VERSION } from '@/engine/core/version';
-import type { GenerationRecord } from '@/engine/training/records';
+import type { RacingRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { TrackSpec } from '@/engine/racing/track/types';
 import type { TrainingStatus } from '@/workers/coordinator/events';
@@ -23,7 +23,7 @@ export type PanelTab = 'progress' | 'network' | 'species' | 'inputs' | 'model';
  * nothing cached from the run before. `leaving` is the mode the lab was in;
  * coming out of the Sandbox also brings the population back into view.
  */
-export function openedRunState(run: RunConfig, records: GenerationRecord[], liveGeneration: number, leaving: RacingLabState['mode'] = 'train'): Partial<RacingLabState> {
+export function openedRunState(run: RunConfig, records: RacingRecord[], liveGeneration: number, leaving: RacingLabState['mode'] = 'train'): Partial<RacingLabState> {
   return {
     ...(leaving === 'sandbox' && { view: 'both' as const }),
     run,
@@ -89,7 +89,7 @@ export interface RacingLabState {
   trackSpec: TrackSpec | null;
   status: TrainingStatus;
   speed: SpeedMode;
-  records: GenerationRecord[];
+  records: RacingRecord[];
   liveGeneration: number;
   /** Set when stored ghosts cannot be replayed under the current engine. */
   replayBlocked: string | null;
@@ -130,7 +130,7 @@ export interface RacingLabState {
 
   set: (patch: Partial<RacingLabState>) => void;
   /** Appends finished generations, oldest first, in one update. */
-  addRecords: (batch: GenerationRecord[]) => void;
+  addRecords: (batch: RacingRecord[]) => void;
 }
 
 export const useRacingLab = create<RacingLabState>((set, get) => ({

@@ -24,6 +24,12 @@ export interface HideSeekRadar {
  */
 export type BenchRadar = RacingRadar | HideSeekRadar;
 
+/** Progress and cancel for a benchmark that runs in slices. */
+export interface BenchOptions {
+  onProgress?: (fraction: number) => void;
+  signal?: AbortSignal;
+}
+
 /** The preset tiers that have reference results. */
 export type ReferenceTier = 'beginner' | 'intermediate' | 'advanced';
 

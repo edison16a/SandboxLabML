@@ -6,7 +6,7 @@ import { buildTrack } from '../racing/track/buildTrack';
 import type { RacingResult } from '../racing/episode';
 import type { Track, TrackSpec } from '../racing/track/types';
 import { racingSetupFor, resolveTrackDirective, type RacingSetup } from './racingSetup';
-import type { GenerationRecord } from './records';
+import type { RacingRecord } from './records';
 import { runShape, scriptAt, type RunConfig } from './runConfig';
 import { hostFor, type GenerationContext, type ScriptHost } from './scriptHost';
 
@@ -82,7 +82,7 @@ export class RacingTrainer {
    * Applies evaluated results, runs the script's generation block and breeds
    * the next generation. Returns the record of the generation just finished.
    */
-  complete(results: RacingResult[], wallMs: number): GenerationRecord {
+  complete(results: RacingResult[], wallMs: number): RacingRecord {
     const genomes = this.genomes;
     if (results.length !== genomes.length) throw new Error('Result count does not match the population');
     let bestIndex = 0;

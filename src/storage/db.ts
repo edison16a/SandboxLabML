@@ -38,6 +38,8 @@ export interface GenerationRow {
   wallMs: number;
   markers?: string[];
   benchmark?: number;
+  /** Stats over the whole generation, from the env module. Racing rows have none. */
+  metrics?: Record<string, number>;
 }
 
 /** Whole-population snapshots. Only the newest three per run are kept. */

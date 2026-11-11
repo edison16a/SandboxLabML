@@ -7,17 +7,17 @@ import type { GenerationRecord } from '@/engine/training/records';
  * queue up behind each other until the page stops responding. A record that
  * arrives after a quiet spell still shows at once; only bursts are grouped.
  */
-export class RecordBatcher {
-  private pending: GenerationRecord[] = [];
+export class RecordBatcher<R extends GenerationRecord = GenerationRecord> {
+  private pending: R[] = [];
   private timer: ReturnType<typeof setTimeout> | null = null;
   private last = -Infinity;
 
   constructor(
-    private readonly deliver: (batch: GenerationRecord[]) => void,
+    private readonly deliver: (batch: R[]) => void,
     private readonly gapMs = 500,
   ) {}
 
-  push(record: GenerationRecord): void {
+  push(record: R): void {
     this.pending.push(record);
     if (this.timer) return;
     this.timer = setTimeout(() => this.flush(), Math.max(0, this.last + this.gapMs - performance.now()));

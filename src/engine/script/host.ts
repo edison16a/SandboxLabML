@@ -3,7 +3,7 @@ import type { AgentController } from '../env/types';
 import type { HideSeekAgent } from '../hideseek/agents/agent';
 import type { NeatConfig } from '../neat/config';
 import type { RacingCar } from '../racing/car/runtime';
-import type { CustomSensorSpec } from '../racing/sensors/inputSchema';
+import type { CustomSensorSpec } from '../env/types';
 import type { Track } from '../racing/track/types';
 import type { CheckOptions } from './checker';
 import { compileScript } from './compiler';
