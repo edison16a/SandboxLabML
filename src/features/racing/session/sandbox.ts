@@ -3,7 +3,7 @@ import { racingSetupFor } from '@/engine/training/racingSetup';
 import type { WorkerPool } from '@/workers/client/workerPool';
 import { isWatchSpeed, WATCH_SPEEDS } from '@/workers/shared/protocol';
 import { fieldFromGenerations, fieldScene, STARTING_FIELD, type FieldEntry } from './field';
-import { selectGhosts } from './ghostSelection';
+import { selectGhosts } from '@/features/lab/session/ghostSelection';
 import { useRacingLab } from '../state/labStore';
 
 /** The parts of the session the Sandbox needs, kept narrow to avoid an import cycle. */
