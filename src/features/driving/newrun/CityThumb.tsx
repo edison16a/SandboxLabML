@@ -33,7 +33,7 @@ export function CityThumb({ spec, size = 64, className }: { spec: CitySpec; size
   return (
     <svg viewBox={`${-pad} ${-pad} ${plan.width + pad * 2} ${plan.depth + pad * 2}`} width={size} height={size} className={className} aria-hidden="true" preserveAspectRatio="xMidYMid meet">
       {plan.blocks.map((b, i) => (
-        <rect key={i} x={b.x} y={b.y} width={b.w} height={b.h} rx={plan.street * 0.5} fill="currentColor" opacity={0.28} />
+        <rect key={i} x={b.x} y={b.y} width={b.w} height={b.h} rx={plan.street * 0.5} fill="currentColor" opacity={0.4} />
       ))}
       {plan.slowX.map((x) => (
         <line key={`x${x}`} x1={x} y1={0} x2={x} y2={plan.depth} stroke="#ff9f43" strokeWidth={plan.street * 0.35} strokeDasharray={`${plan.street} ${plan.street}`} />

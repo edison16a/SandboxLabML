@@ -5,6 +5,7 @@ import { STATUS_ARRIVED, STATUS_DRIVING } from '@/engine/driving/agent/learner';
 import { drivingLevel } from '@/engine/driving/levels';
 import { DRIVING_SNAPSHOT, LF_RAN_RED, LF_WRONG_WAY, SNAP } from '@/engine/driving/snapshotLayout';
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
+import { cn } from '@/ui/cn';
 import { isWatchSpeed } from '@/workers/shared/protocol';
 import { useDrivingLab } from '../state/labStore';
 
@@ -46,9 +47,10 @@ function useLive(stream: SnapshotStream | null): Live {
   return live;
 }
 
-function Chip({ label, value, tour, title }: { label: string; value: React.ReactNode; tour?: string; title?: string }) {
+/** One HUD number. `wide` ones only show from tablet width up, so a phone keeps two rows of chips. */
+function Chip({ label, value, tour, title, wide }: { label: string; value: React.ReactNode; tour?: string; title?: string; wide?: boolean }) {
   return (
-    <div data-tour={tour} title={title} className="flex flex-col rounded-md border border-white/10 bg-black/45 px-2.5 py-1.5 leading-tight backdrop-blur-sm">
+    <div data-tour={tour} title={title} className={cn('flex flex-col rounded-md border border-white/10 bg-black/45 px-2.5 py-1.5 leading-tight backdrop-blur-sm', wide && 'max-sm:hidden')}>
       <span className="text-[10px] font-medium tracking-wide text-white/60 uppercase">{label}</span>
       <span className="tabular font-mono text-[14px] font-semibold text-white">{value}</span>
     </div>
@@ -77,7 +79,7 @@ export function LiveStats({ stream, shown }: { stream: SnapshotStream | null; sh
       {trips > 1 && live.total > 0 && <Chip label="Trip" value={`${trip + 1} of ${trips}`} />}
       {watching && live.total > 0 && <Chip label="Driving" value={`${live.driving} / ${live.total}`} />}
       {watching && live.total > 0 && <Chip label="Arrived" value={percent(live.arrived / live.total)} />}
-      {watching && live.total > 0 && <Chip label="Violations" value={live.violations} title="Ran a red light, or on the wrong side of the road" />}
+      {watching && live.total > 0 && <Chip label="Violations" value={live.violations} title="Ran a red light, or on the wrong side of the road" wide />}
       {watching && live.total > 0 && <Chip label="Speed" value={`${Math.round(live.speed * 3.6)} km/h`} />}
       {!watching && last && <Chip label="Arrived" value={percent(last.metrics?.arrived)} title="Share of last generation's trips that arrived" />}
       {!watching && last && <Chip label="Safe" value={percent(last.metrics?.safe)} title="Arrived with no crash and no red light run" />}

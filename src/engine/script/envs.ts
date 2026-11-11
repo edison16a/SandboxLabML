@@ -77,7 +77,7 @@ const table: ScriptEnv[] = [
     env: 'driving',
     slice: DRIVING_SLICE,
     presets: [],
-    builtin: 'Progress along the route, a big bonus for arriving, small costs for breaking rules.',
+    builtin: 'Progress, a bonus for arriving, and small costs for breaking rules.',
     starter: [
       'script "My script" for driving v1',
       'brain driving-standard',
