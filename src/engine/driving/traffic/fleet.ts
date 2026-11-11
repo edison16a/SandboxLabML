@@ -131,6 +131,9 @@ export class Fleet {
   }
 }
 
+/** Shared stretches per city: they depend only on its geometry, and every episode builds a new fleet. */
+const sharedCache = new WeakMap<City, Float64Array>();
+
 /** Two paths closer than this, m, are close enough for cars on them to touch. */
 const TOUCH = 2.6;
 
@@ -140,7 +143,10 @@ const TOUCH = 2.6;
  * must follow each other; past it they have gone their separate ways.
  */
 function sharedStretch(city: City): Float64Array {
+  const cached = sharedCache.get(city);
+  if (cached) return cached;
   const out = new Float64Array(city.elements.length);
+  sharedCache.set(city, out);
   for (const lane of city.elements) {
     if (lane.kind !== ELEMENT_LANE) continue;
     for (const c of lane.next) {

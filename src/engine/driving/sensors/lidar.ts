@@ -1,3 +1,4 @@
+import { wrapAngle } from '../../core/math';
 import { castStatic, rayCircle } from '../city/surface';
 import type { City } from '../city/types';
 import { MAX_PEDS, MAX_TRAFFIC, type WorldState } from '../world/state';
@@ -45,6 +46,13 @@ export class Lidar {
   private readonly sa: Float64Array;
   private readonly cars = new Int32Array(MAX_TRAFFIC);
   private readonly peds = new Int32Array(MAX_PEDS);
+  /** Per object in reach: bearing from the heading, angular half width, and distance to its nearest point. */
+  private readonly carBear = new Float64Array(MAX_TRAFFIC);
+  private readonly carSpan = new Float64Array(MAX_TRAFFIC);
+  private readonly carNear = new Float64Array(MAX_TRAFFIC);
+  private readonly pedBear = new Float64Array(MAX_PEDS);
+  private readonly pedSpan = new Float64Array(MAX_PEDS);
+  private readonly pedNear = new Float64Array(MAX_PEDS);
 
   constructor(angles: ArrayLike<number>) {
     this.angles = Float64Array.from(angles);
@@ -61,29 +69,45 @@ export class Lidar {
    */
   cast(city: City, world: WorldState, near: Nearby, x: number, y: number, heading: number, range: number, dist: Float64Array, kind: Uint8Array, hit: Int32Array | null = null): void {
     const reach2 = (range + 3) * (range + 3);
+    const ch = Math.cos(heading);
+    const sh = Math.sin(heading);
+    // Keep what is in reach, with its bearing and how wide it looks, so each beam only tests what lies along it.
     let nc = 0;
     for (let k = 0; k < near.carCount; k++) {
       const i = near.cars[k];
       const dx = world.carX[i] - x;
       const dy = world.carY[i] - y;
-      if (dx * dx + dy * dy < reach2) this.cars[nc++] = i;
+      const d2 = dx * dx + dy * dy;
+      if (d2 >= reach2) continue;
+      const d = Math.sqrt(d2);
+      const r = Math.hypot(world.carLength[i], world.carWidth[i]) / 2;
+      this.carBear[nc] = Math.atan2(-dx * sh + dy * ch, dx * ch + dy * sh);
+      this.carSpan[nc] = d > r ? Math.asin(r / d) + 1e-3 : Math.PI;
+      this.carNear[nc] = d - r;
+      this.cars[nc++] = i;
     }
     let np = 0;
     for (let k = 0; k < near.pedCount; k++) {
       const i = near.peds[k];
       const dx = world.pedX[i] - x;
       const dy = world.pedY[i] - y;
-      if (dx * dx + dy * dy < reach2) this.peds[np++] = i;
+      const d2 = dx * dx + dy * dy;
+      if (d2 >= reach2) continue;
+      const d = Math.sqrt(d2);
+      this.pedBear[np] = Math.atan2(-dx * sh + dy * ch, dx * ch + dy * sh);
+      this.pedSpan[np] = d > PED_RADIUS ? Math.asin(PED_RADIUS / d) + 1e-3 : Math.PI;
+      this.pedNear[np] = d - PED_RADIUS;
+      this.peds[np++] = i;
     }
-    const ch = Math.cos(heading);
-    const sh = Math.sin(heading);
     for (let r = 0; r < this.angles.length; r++) {
+      const a = this.angles[r];
       const dx = ch * this.ca[r] - sh * this.sa[r];
       const dy = sh * this.ca[r] + ch * this.sa[r];
       let best = castStatic(city, x, y, dx, dy, range);
       let what = best < range ? HIT_STATIC : HIT_NONE;
       let who = -1;
       for (let k = 0; k < nc; k++) {
+        if (this.carNear[k] >= best || Math.abs(wrapAngle(a - this.carBear[k])) > this.carSpan[k]) continue;
         const i = this.cars[k];
         const t = rayCar(x, y, dx, dy, world.carX[i], world.carY[i], world.carHeading[i], world.carLength[i] / 2, world.carWidth[i] / 2);
         if (t < best) {
@@ -93,6 +117,7 @@ export class Lidar {
         }
       }
       for (let k = 0; k < np; k++) {
+        if (this.pedNear[k] >= best || Math.abs(wrapAngle(a - this.pedBear[k])) > this.pedSpan[k]) continue;
         const i = this.peds[k];
         const t = rayCircle(x, y, dx, dy, world.pedX[i], world.pedY[i], PED_RADIUS);
         if (t < best) {

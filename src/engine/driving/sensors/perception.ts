@@ -3,7 +3,7 @@ import type { City } from '../city/types';
 import { projection, type Path } from '../geometry/path';
 import type { Route } from '../route/route';
 import { LIGHT_FLASHING, lightState } from '../signals/plan';
-import type { WorldState } from '../world/state';
+import { PED_WALK, type WorldState } from '../world/state';
 import { crossingPerson, NOT_AT_CROSSING } from './crossings';
 import type { Nearby } from './nearby';
 import { CAR_CORRIDOR, GAP_RANGE, PED_CORRIDOR, PED_RANGE, STOP_RANGE } from './inputConfig';
@@ -124,12 +124,15 @@ export function perceive(city: City, route: Route, world: WorldState, near: Near
     const dy = world.pedY[i] - pose.y;
     const d2 = dx * dx + dy * dy;
     if (d2 > pedReach || dx * ch + dy * sh < 0) continue;
+    // Someone strolling along the sidewalk never counts: skip them before the costlier projection.
+    const onRoad = isOnRoad(city, world.pedX[i], world.pedY[i]);
+    if (!onRoad && world.pedState[i] === PED_WALK) continue;
     if (!onRoute(path, pose, world.pedX[i], world.pedY[i], Math.sqrt(d2))) continue;
     const ds = proj.s - front;
     if (ds <= -0.5 || ds >= out.pedDistance) continue;
     const lateral = proj.lateral;
     // People on the sidewalk are no hazard. Someone in the road counts when in the car's path, or on a crossing it will drive over.
-    const inPath = Math.abs(lateral) <= PED_CORRIDOR && isOnRoad(city, world.pedX[i], world.pedY[i]);
+    const inPath = onRoad && Math.abs(lateral) <= PED_CORRIDOR;
     if (!inPath && !atRouteCrossing(city, route, world, i, front)) continue;
     out.ped = i;
     out.pedDistance = Math.max(ds, 0);
