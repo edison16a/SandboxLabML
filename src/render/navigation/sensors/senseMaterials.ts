@@ -40,7 +40,7 @@ export function beamMaterial(base: THREE.Color): THREE.ShaderMaterial {
         float body = 1.0 - smoothstep(0.15, 1.0, across);
         float core = 1.0 - smoothstep(0.0, 0.35, across);
         float hit = vBeam.x;
-        float a = mix(0.18, 0.7, pow(along, 1.3)) * mix(0.55, 1.0, core);
+        float a = mix(0.12, 0.5, pow(along, 1.3)) * mix(0.5, 1.0, core);
         a *= mix(1.0 - smoothstep(0.55, 1.0, along), 1.0, hit);
         vec3 col = mix(uBase, vColor, hit * smoothstep(0.35, 1.0, along));
         col = mix(col, vec3(0.07, 0.09, 0.14), vBeam.y);

@@ -2,6 +2,9 @@ import * as THREE from 'three';
 import { NAV_COLORS } from '../palette';
 
 const MAX_RAYS = 64;
+/** Opacity at the runner's feet and at a ray's end (before the long ray fade): strong enough that the fan, not the beams, carries the read. */
+const CENTER_ALPHA = 0.36;
+const RIM_ALPHA = 0.17;
 
 /**
  * The floor a runner can see, as a soft shape on the tiles: a fan from its
@@ -63,7 +66,7 @@ export class SensorFan {
   /** Starts a fan at (x, z). `closed` joins the last ray back to the first, for rays all round. */
   begin(x: number, z: number, closed: boolean): void {
     this.pos.setXYZ(0, x, 0.011, z);
-    this.fade.setX(0, 0.2);
+    this.fade.setX(0, CENTER_ALPHA);
     this.n = 0;
     this.closed = closed;
   }
@@ -73,8 +76,9 @@ export class SensorFan {
     if (this.n >= MAX_RAYS) return;
     this.n++;
     this.pos.setXYZ(this.n, x, 0.011, z);
-    // Fades toward the rim, more for a long ray, so open floor dissolves rather than ending on a hard edge.
-    this.fade.setX(this.n, 0.07 / (1 + length * 0.12));
+    // Fades toward the rim, a little more for a long ray, so open floor softens rather than ending on a hard edge,
+    // yet the shape still reads from the overview.
+    this.fade.setX(this.n, RIM_ALPHA / (1 + length * 0.05));
   }
 
   end(): void {

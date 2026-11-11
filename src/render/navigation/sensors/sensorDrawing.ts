@@ -91,7 +91,7 @@ export class SensorDrawing {
   beam(x: number, z: number, angle: number, length: number, color: THREE.Color, hit: boolean, highlighted: boolean): void {
     if (this.nb >= MAX_BEAMS || length < 0.05) return;
     const i = this.nb++;
-    this.beams.mesh.setMatrixAt(i, this.place(x, SENSE_Y, z, angle, length, highlighted ? 0.17 : 0.13));
+    this.beams.mesh.setMatrixAt(i, this.place(x, SENSE_Y, z, angle, length, highlighted ? 0.17 : 0.1));
     this.beams.mesh.setColorAt(i, color);
     this.beams.aux.setXY(i, hit ? 1 : 0, highlighted ? 1 : 0);
   }
