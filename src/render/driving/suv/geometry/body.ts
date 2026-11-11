@@ -1,7 +1,7 @@
-import type * as THREE from 'three';
 import { endFace, faceNormal } from './face';
 import { bothSides, gridGeometry } from './grid';
 import { intakeCut } from './intakes';
+import { bodyNormals } from './normals';
 import type { Detail, PartBin, Slot } from './parts';
 import { ARCHED_BANDS, archFloor, NOSE, sectionAt, stations, TAIL } from './profile';
 import { along, resample, span, type Pt } from './section';
@@ -10,13 +10,13 @@ import { warp } from './warp';
 /**
  * Bands joined into one smooth grid each: the gloss black sill trim, the
  * lower side, the side up to the shoulder, and everything from the
- * shoulder crease over the top. The side and the shoulder meet where the
- * surface stands upright, and their normals are welded there, so the seam
- * never shows; the arch cuts in the side never disturb the shoulder.
+ * shoulder crease over the top. Normals come from the surface itself
+ * (normals.ts), so the panels shade as one sheet wherever they meet
+ * smoothly; only the sill trim keeps the crease at its top edge.
  */
-const PANELS: Array<{ bands: number[]; slot: Slot }> = [
+const PANELS: Array<{ bands: number[]; slot: Slot; creased?: boolean }> = [
   { bands: [0], slot: 'trim' },
-  { bands: [1], slot: 'paint' },
+  { bands: [1], slot: 'paint', creased: true },
   { bands: [2], slot: 'paint' },
   { bands: [3, 4, 5, 6], slot: 'paint' },
 ];
@@ -69,41 +69,34 @@ function panelPoints(x: number, bands: number[], counts: number[]): Pt[] {
 export function addBody(bin: PartBin, detail: Detail): void {
   const xs = stations(detail.stations, detail.archSteps);
   const last = xs.length - 1;
-  const grids: THREE.BufferGeometry[] = [];
-  for (const panel of PANELS) {
+  const grids = PANELS.map((panel) => {
     const raw = xs.map((x) => panelPoints(x, panel.bands, detail.bands));
-    const g = gridGeometry(raw.map((row, i) => row.map(([z, y]) => warp([xs[i], y, z]))));
-    // The end rows have curled round to face straight back and forward: give them the faces' own normals, so the corner and the face shade as one.
+    return gridGeometry(raw.map((row, i) => row.map(([z, y]) => warp([xs[i], y, z]))));
+  });
+  const starts = PANELS.map((_, p) => PANELS.slice(0, p).reduce((n, q) => n + q.bands.reduce((m, b) => m + detail.bands[b], 0), 0));
+  bodyNormals(grids, xs, (x, k) => outlineOf(x, detail.bands.map((c) => c * k)), starts, PANELS.map((p) => !!p.creased));
+  // The end rows have curled round to face straight back and forward: give them the faces' own normals, so the corner and the face shade as one.
+  grids.forEach((g, p) => {
     const n = g.attributes.normal;
-    const cols = raw[0].length;
-    raw[0].forEach(([z, y], j) => n.setXYZ(j, ...faceNormal(-1, xs[0], y, z)));
-    raw[last].forEach(([z, y], j) => n.setXYZ(last * cols + j, ...faceNormal(1, xs[last], y, z)));
-    grids.push(g);
-  }
-  weld(grids[2], grids[3], xs.length);
-  grids.forEach((g, i) => bin.add(PANELS[i].slot, bothSides(g)));
+    const ends = [xs[0], xs[last]].map((x) => panelPoints(x, PANELS[p].bands, detail.bands));
+    const cols = ends[0].length;
+    ends[0].forEach(([z, y], j) => n.setXYZ(j, ...faceNormal(-1, xs[0], y, z)));
+    ends[1].forEach(([z, y], j) => n.setXYZ(last * cols + j, ...faceNormal(1, xs[last], y, z)));
+    bin.add(PANELS[p].slot, bothSides(g));
+  });
   const cut = detail.fine || detail.brakes ? intakeCut(detail) : undefined;
   bin.add('paint', endFace(1, NOSE, outline(NOSE, detail), detail, cut));
   bin.add('paint', endFace(-1, TAIL, outline(TAIL, detail), detail));
 }
 
-/**
- * Where the side meets the shoulder panel, the shoulder's own first
- * column only sees the crease's tight radius above it and leans its
- * normals up. The side's normals there are the surface's true ones, so
- * the shoulder takes them and the two shade as one sheet.
- */
-function weld(side: THREE.BufferGeometry, top: THREE.BufferGeometry, rows: number): void {
-  const a = side.attributes.normal;
-  const b = top.attributes.normal;
-  const ca = a.count / rows;
-  const cb = b.count / rows;
-  for (let i = 0; i < rows; i++) b.setXYZ(i * cb, a.getX(i * ca + ca - 1), a.getY(i * ca + ca - 1), a.getZ(i * ca + ca - 1));
+/** The section at x from sill to centerline with `counts` steps per band, as the panels draw it. */
+function outlineOf(x: number, counts: number[]): Pt[] {
+  return PANELS.flatMap((p, i) => panelPoints(x, p.bands, counts).slice(i === 0 ? 0 : 1));
 }
 
 /** The outline of the section at x from sill to centerline, as the body's panels draw it. */
 export function outline(x: number, detail: Detail): Pt[] {
-  return PANELS.flatMap((p, i) => panelPoints(x, p.bands, detail.bands).slice(i === 0 ? 0 : 1));
+  return outlineOf(x, detail.bands);
 }
 
 /** A point on the body surface: band `band` of the section at x, a share `t` of the way along it, lifted along its outward normal. */
