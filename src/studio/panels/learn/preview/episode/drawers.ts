@@ -1,6 +1,7 @@
 import type { EnvId } from '@/engine/env/types';
 import type { EpisodePreview } from '@/engine/lessons/preview/types';
 import { frameAt, secondsAt } from '../playback';
+import { DRIVING_DRAWER } from './driving/drivingDrawer';
 import { drawEpisode } from './drawEpisode';
 
 /** How the Studio draws the lesson preview of one env added through the registry. */
@@ -22,7 +23,7 @@ export interface PreviewDrawer {
  * spikes) from the preview hook's `scene`. The shared drawing helpers in
  * drawEpisode.ts and pose.ts are there to build on.
  */
-const DRAWERS: Partial<Record<EnvId, PreviewDrawer>> = {};
+const DRAWERS: Partial<Record<EnvId, PreviewDrawer>> = { driving: DRIVING_DRAWER };
 
 const GENERIC: Required<Omit<PreviewDrawer, 'draw'>> = {
   readout: episodeReadout,
