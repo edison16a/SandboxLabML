@@ -13,7 +13,7 @@ import { warp } from './warp';
  * ends, about 3 cm above where the deck would run on, so the roofline
  * turns up at its end. `half` is how far it reaches: the whole tail.
  */
-export const LIP = { root: -2.2, edge: TAIL - 0.002, top: 1.226, crown: 0.032, half: 0.672, edgeDepth: 0.007 };
+export const LIP = { root: -2.2, edge: TAIL - 0.002, top: 1.226, crown: 0.03, half: 0.645, edgeDepth: 0.007 };
 
 /** The deck's top at (x, z) behind the rear glass: the cabin's section there from belt to centerline, read at z. */
 export function deckAt(x: number, z: number): number {
@@ -27,10 +27,10 @@ export function deckAt(x: number, z: number): number {
   return a > pts[0][0] ? pts[0][1] : pts[pts.length - 1][1];
 }
 
-/** The trailing edge's height at z: the arch, easing down onto the deck over the last 10 cm, where it dives in. */
+/** The trailing edge's height at z: the arch, easing down onto the deck over the last 12 cm, where it dives in. */
 function edgeAt(z: number, deck: number): number {
   const arch = LIP.top - LIP.crown * (z / LIP.half) ** 2;
-  return deck + (arch - deck) * smooth((LIP.half - Math.abs(z)) / 0.1);
+  return deck + (arch - deck) * smooth((LIP.half - Math.abs(z)) / 0.12);
 }
 
 /**
@@ -46,7 +46,8 @@ export function addSpoiler(bin: PartBin, detail: Detail): void {
   const on = LIP.edge + 0.027;
   const rows: Vec3[][] = [];
   for (let i = 0; i <= n; i++) {
-    const z = -LIP.half + (2 * LIP.half * i) / n;
+    // Columns bunch up toward the ends, where the lip dives into the deck over a short run.
+    const z = -LIP.half * Math.cos((Math.PI * i) / n);
     const line = deckAt(on, z);
     const rootY = deckAt(LIP.root, z);
     const edgeY = edgeAt(z, line) - 0.0008;
