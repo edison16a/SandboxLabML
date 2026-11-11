@@ -18,6 +18,8 @@ export function autopilotController(pilots: Autopilot[], inner: AgentController<
     sensors: (l, out, offset) => inner.sensors(l, out, offset),
     tick(l: DrivingLearner, io: TickIO) {
       inner.tick(l, io);
+      // The autopilot waits on purpose (a start delay, a gap to turn left), so standing still never ends its trip.
+      if (io.stop === 'stuck') io.stop = null;
       pilots[l.index % pilots.length]?.drive(l, io.action);
     },
   };
