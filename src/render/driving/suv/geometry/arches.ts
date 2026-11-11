@@ -45,16 +45,27 @@ function underSkin(x: number, z: number, y: number): number {
  * Across the arch's edge, as (out along the arch's radius, in toward the
  * car) offsets from the skin's cut: the paint rolls over a tight radius
  * into the opening, so the arch has a crisp body colored edge, then a
- * slim black trim ring 2.4 cm wide faces out a little deeper. The ring is
- * satin rather than gloss: gloss turned silver wherever it caught the sky.
+ * slim satin black trim ring 2.4 cm wide faces out a little deeper. The
+ * far population skips the roll and starts the ring right at the cut.
  */
 const LIP: Array<[number, number]> = [[0, 0], [-0.003, -0.002], [-0.006, -0.006], [-0.008, -0.012]];
 const TRIM: Array<[number, number]> = [[-0.008, -0.012], [-0.009, -0.014], [-0.03, -0.016], [-0.033, -0.019], [-0.034, -0.032]];
+const FAR_TRIM: Array<[number, number]> = [[0, 0], [-0.03, -0.016], [-0.034, -0.032]];
+
+/**
+ * A strip laid along the arch's edge. Rows climb the edge from the rear
+ * leg over the top to the front leg, and each row runs from the skin into
+ * the opening; that order faces into the body, so each row is walked
+ * backwards to face the wheel and the street.
+ */
+const towardWheel = (rows: Vec3[][]) => gridGeometry(rows.map((row) => [...row].reverse()));
 
 /**
  * Wheel wells: the rolled edge and trim round each arch, a liner over the
  * tire, an inner wall and floor plates. The arches sit 5 cm clear of the
- * tires, so the wheels fill them as on a performance SUV.
+ * tires, so the wheels fill them as on a performance SUV. The liner runs
+ * the whole edge, down the legs too, so the well is closed fore and aft
+ * and no view through the opening can see into the hollow body.
  */
 export function addArches(bin: PartBin, detail: Detail): void {
   const n = Math.max(6, Math.round(detail.archSteps * 1.6));
@@ -66,24 +77,25 @@ export function addArches(bin: PartBin, detail: Detail): void {
     const leg = (x: number, out: number) =>
       Array.from({ length: legs }, (_, k) => {
         const y = ARCH.centerY - ((ARCH.centerY - sillY(x)) * (legs - k)) / legs;
-        return { x, z: skinZ(x + out * 0.002, y), y, ux: out, uy: 0 };
+        return { x, z: skinZ(x + out * 0.002, y), y, ux: out, uy: 0, ring: false };
       });
     const ring = xs.map((x, i) => {
       const [z, y] = cuts[i];
       const r = Math.hypot(x - axle, y - ARCH.centerY) || 1;
-      return { x, z, y, ux: (x - axle) / r, uy: (y - ARCH.centerY) / r };
+      return { x, z, y, ux: (x - axle) / r, uy: (y - ARCH.centerY) / r, ring: true };
     });
     const edge = [...leg(xs[0], -1), ...ring, ...leg(xs[n], 1).reverse()];
     const across = (profile: Array<[number, number]>) =>
       edge.map(({ x, z, y, ux, uy }) => profile.map(([out, inward]) => warp([x + ux * out, y + uy * out, z + inward])));
-    // The far population skips the rolled edge and keeps only the trim's face and its turn inward.
-    if (detail.brakes) bin.add('paint', bothSides(gridGeometry(across(LIP))));
-    const trim = across(detail.brakes ? TRIM : [TRIM[0], TRIM[2], TRIM[4]]);
-    bin.add('clad', bothSides(gridGeometry(trim)));
-    const liner = xs.map((x, i) => {
-      const [z, y] = cuts[i];
+    if (detail.brakes) bin.add('paint', bothSides(towardWheel(across(LIP))));
+    const trim = across(detail.brakes ? TRIM : FAR_TRIM);
+    bin.add('clad', bothSides(towardWheel(trim)));
+    // From the inner wall, up over the tire, to the trim's inner edge; over the legs it is a flat end wall.
+    const liner = edge.map(({ x, z, y, ring: over }, k) => {
+      const inner = trim[k][trim[k].length - 1];
       const mid = Math.min(Math.max(sectionAt(x).keys[5].z - 0.02, WELL_Z + 0.01), z - 0.05);
-      return [warp([x, underSkin(x, WELL_Z, y - 0.02), WELL_Z]), warp([x, underSkin(x, mid, y - 0.024), mid]), trim[legs + i][trim[0].length - 1]];
+      if (!over) return [warp([x, y, WELL_Z]), warp([x, y, mid]), inner];
+      return [warp([x, underSkin(x, WELL_Z, y - 0.02), WELL_Z]), warp([x, underSkin(x, mid, y - 0.024), mid]), inner];
     });
     bin.add('liner', bothSides(gridGeometry(liner)));
     const wall: Vec3[] = [...xs.map((x, i) => warp([x, underSkin(x, WELL_Z, cuts[i][1] - 0.02), WELL_Z])), warp([xs[n], FLOOR_Y, WELL_Z]), warp([xs[0], FLOOR_Y, WELL_Z])];
