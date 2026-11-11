@@ -19,6 +19,8 @@ export class SnapshotStream {
   tags: Int32Array = new Int32Array(0);
   /** Floats of world state after the agents in each frame, from the episode's start message. */
   world = 0;
+  /** What the episode runs on, from its start message (see EpisodeEnv.scene), or null. */
+  scene: unknown = null;
   inspect: InspectPayload | null = null;
   rays: Float32Array | null = null;
   /** Bumped on every episode start, so renderers can rebuild per-agent state. */
@@ -41,6 +43,7 @@ export class SnapshotStream {
       this.generation = msg.generation;
       this.tags = msg.tags ?? new Int32Array(msg.count);
       this.world = msg.world ?? 0;
+      this.scene = msg.scene ?? null;
       this.epoch++;
       this.release(this.prev);
       this.release(this.curr);
