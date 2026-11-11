@@ -32,7 +32,10 @@ export class IdleFeed implements NavFeed {
   inputs: NavigationInputConfig | null = null;
   follow: number | null = null;
   level = 0;
-  private key = '';
+  /** What the feed was last built from, compared field by field so a frame with nothing new builds no key. */
+  private builtRun: RunConfig | null = null;
+  private builtContent: NavigationContent | null = null;
+  private builtAgents = false;
 
   constructor(private readonly courses: CourseCache) {}
 
@@ -40,9 +43,10 @@ export class IdleFeed implements NavFeed {
 
   /** Rebuilds for a run and content when either changed. `agents` 0 shows the room alone. */
   sync(run: RunConfig | null, content: NavigationContent | null, agents: boolean): void {
-    const key = run && content ? `${run.id}:${content.generation}:${content.curriculum.level}:${content.course}:${agents}` : '';
-    if (key === this.key) return;
-    this.key = key;
+    if (run === this.builtRun && content === this.builtContent && agents === this.builtAgents) return;
+    this.builtRun = run;
+    this.builtContent = content;
+    this.builtAgents = agents;
     this.epoch++;
     if (!run || !content || run.env !== 'navigation') {
       this.course = null;

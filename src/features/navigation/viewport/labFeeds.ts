@@ -20,6 +20,8 @@ export class LabFeeds {
   readonly population: StreamFeed;
   readonly ghosts: StreamFeed;
   private readonly idle: IdleFeed;
+  private run: NavigationLabState['run'] = null;
+  private parts: ReturnType<typeof navigationOf> | null = null;
 
   constructor(
     streams: { population: SnapshotStream; ghosts: SnapshotStream },
@@ -75,7 +77,12 @@ export class LabFeeds {
   }
 
   private sync(s: NavigationLabState): void {
-    const { settings, inputs } = navigationOf(s.run!);
+    // The run's rules and sensors are read once per run, so a frame allocates nothing.
+    if (s.run !== this.run) {
+      this.run = s.run;
+      this.parts = navigationOf(s.run!);
+    }
+    const { settings, inputs } = this.parts!;
     const scale = s.mode === 'train' && isWatchSpeed(s.speed) ? WATCH_SPEEDS[s.speed] : 1;
     syncFeed(this.population, settings.params, inputs, scale);
     syncFeed(this.ghosts, settings.params, inputs, scale);
