@@ -6,10 +6,10 @@ import type { Vec3 } from './grid';
  * A final bend applied to every point on the body. Sections are easiest
  * to draw upright, but a real nose rakes back toward the hood and a real
  * tail leans in toward the hatch. The corners themselves are rounded in
- * the sections (see endRound). Running
- * the body, its caps and every lamp through the same bend keeps them
- * glued together. Every ramp eases in and out, so the bend never puts a
- * slope break (and a line of light) into the paint.
+ * the sections (see endRound). Running the body, its faces and every
+ * lamp through the same bend keeps them glued together. Every ramp eases
+ * in and out, so the bend never puts a slope break (and a line of light)
+ * into the paint.
  */
 export function warp(p: Vec3): Vec3 {
   const [x, y, z] = p;
@@ -40,7 +40,7 @@ function rake(y: number): number {
  * at `slope`; the lean switches on over `onset` m, which draws the crease,
  * and off again `off` m higher, so the deck and the cabin are not bent.
  */
-export const FOLD = { at: 1.045, onset: 0.018, slope: 0.32, off: 0.17 };
+const FOLD = { at: 1.045, onset: 0.018, slope: 0.32, off: 0.17 };
 
 /** The fold's lean, integrated once from its slope in 1 mm steps. */
 const FOLD_LEAN = (() => {
@@ -52,6 +52,7 @@ const FOLD_LEAN = (() => {
   return out;
 })();
 
+/** How far the tail leans in at height y from the fold, read from the table. */
 function fold(y: number): number {
   const d = (y - FOLD.at) * 1000;
   if (d <= 0) return 0;
