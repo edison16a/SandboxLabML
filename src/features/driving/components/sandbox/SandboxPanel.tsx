@@ -29,12 +29,20 @@ const startsOpen = () => typeof window === 'undefined' || window.matchMedia('(mi
  * Training is paused the whole time.
  */
 export function SandboxPanel() {
-  const mode = useDrivingLab((s) => s.mode);
-  const ready = useDrivingLab((s) => s.sandbox !== null);
+  const shown = useDrivingLab((s) => s.mode === 'sandbox' && s.sandbox !== null);
+  // Mounted only while the Sandbox is open, so each opening picks its first tab afresh.
+  return shown ? <OpenSandboxPanel /> : null;
+}
+
+/**
+ * The panel itself. It opens on the SUVs tab when the trained model
+ * drives, since a run with nothing trained yet comes here for the model,
+ * and on the Trip tab when the run's own champions do.
+ */
+function OpenSandboxPanel() {
   const suvs = useDrivingLab((s) => (s.sandbox?.model ? s.sandbox.modelCopies : (s.sandbox?.field.reduce((n, e) => n + e.copies, 0) ?? 0)));
   const [tab, setTab] = useState<SandboxTab>(() => (useDrivingLab.getState().sandbox?.model ? 'suvs' : 'trip'));
   const [open, setOpen] = useState(startsOpen);
-  if (mode !== 'sandbox' || !ready) return null;
 
   return (
     <section

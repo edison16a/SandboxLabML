@@ -25,8 +25,8 @@ test.describe('Driving Sandbox', () => {
     await openLab(page);
     const panel = await openSandbox(page);
 
-    // A run with nothing trained yet opens on the shipped trained model.
-    await panel.getByRole('tab', { name: /SUVs/ }).click();
+    // A run with nothing trained yet opens on the shipped trained model, on the SUVs tab.
+    await expect(panel.getByRole('tab', { name: /SUVs/ })).toHaveAttribute('aria-selected', 'true');
     const model = panel.getByRole('switch', { name: 'Drive the trained model' });
     await expect(model).toBeChecked({ timeout: 60_000 });
     await expect(panel.getByText(/preset's champion, benchmark \d+/)).toBeVisible();
@@ -76,6 +76,8 @@ test.describe('Driving Sandbox', () => {
     await expect(page.getByText('Paused while Max trains')).toBeHidden();
 
     const panel = await openSandbox(page);
+    // With champions to drive it opens on the trip.
+    await expect(panel.getByRole('tab', { name: 'Trip' })).toHaveAttribute('aria-selected', 'true');
     await panel.getByRole('tab', { name: /SUVs/ }).click();
     const model = panel.getByRole('switch', { name: 'Drive the trained model' });
     await expect(model).not.toBeChecked();
