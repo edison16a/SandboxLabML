@@ -84,6 +84,16 @@ test.describe('Navigation Sandbox', () => {
     await expect(dialog).toBeVisible();
     await dialog.getByRole('radio', { name: '30 m' }).click();
 
+    // Keys in the editor stay in the editor: C picks the crate tool, not the next camera, and Space presses the focused tool.
+    await page.getByTestId('course-board').focus();
+    await page.keyboard.press('c');
+    await expect(dialog.getByRole('radio', { name: /Crate/ })).toHaveAttribute('aria-checked', 'true');
+    await dialog.getByRole('radio', { name: /Wall/ }).focus();
+    await page.keyboard.press(' ');
+    await expect(dialog.getByRole('radio', { name: /Wall/ })).toHaveAttribute('aria-checked', 'true');
+    await page.keyboard.press('n');
+    await expect(page.getByRole('dialog')).toHaveCount(1);
+
     // A wall right across the room leaves no way through, so Save is refused until a gap opens.
     await page.keyboard.press('w');
     await drag(page, 30, [0, -7], [0, 7]);
@@ -108,6 +118,9 @@ test.describe('Navigation Sandbox', () => {
     await dialog.getByRole('textbox', { name: 'Name' }).fill('Test hall');
     await dialog.getByRole('button', { name: 'Save and play' }).click();
     await expect(dialog).toBeHidden();
+    // None of the editor's keys reached the lab behind it.
+    await expect(page.getByRole('combobox', { name: 'Camera' })).toContainText('Follow');
+    await expect(panel.getByRole('button', { name: 'Pause' })).toBeVisible();
 
     // It is stored, in play, and still there after a reload.
     await expect(panel.getByRole('button', { name: 'Test hall', exact: true })).toHaveAttribute('aria-pressed', 'true');

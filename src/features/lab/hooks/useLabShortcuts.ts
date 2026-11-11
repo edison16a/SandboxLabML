@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { isTyping } from '@/ui/typing';
+import { inDialog, isTyping } from '@/ui/typing';
 import type { SpeedMode } from '@/workers/shared/protocol';
 import { useLabContext } from '../LabContext';
 import type { ViewMode } from '../state/labState';
@@ -24,13 +24,14 @@ export interface ShortcutOptions {
  * Keyboard shortcuts every lab shares: Space trains or pauses, S steps one
  * generation, 1 to 5 pick a speed, I toggles the inputs overlay, C cycles
  * cameras, V cycles views, N opens a new run and Esc follows the leader
- * again. Ignored while typing or with a modifier held.
+ * again. Ignored while typing, inside a dialog (whose buttons own their
+ * keys, as in the course editor) or with a modifier held.
  */
 export function useLabShortcuts(onNewRun: () => void, { cameras, onKey }: ShortcutOptions) {
   const { api, session } = useLabContext();
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (isTyping(e.target)) return;
+      if (isTyping(e.target) || inDialog(e.target)) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const s = api.getState();
       const key = e.key.toLowerCase();
