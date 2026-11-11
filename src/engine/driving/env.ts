@@ -111,7 +111,7 @@ export class DrivingEnv {
       l.time += SIM_DT;
       trackRoute(l, city, route);
       this.sense(i);
-      detectEvents(l, city, route, this.world.state, this.near, SUV_SIZE.length, SUV_SIZE.width, SIM_DT);
+      detectEvents(l, city, route, this.world.state, this.near, SUV_SIZE.length, SUV_SIZE.width, SIM_DT, this.opts.level);
       this.brains[i].activate(this.obs[i], io.brain);
       io.action[0] = 0;
       io.action[1] = 0;

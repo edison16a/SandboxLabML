@@ -74,6 +74,8 @@ export interface DrivingLearner {
   laneDeparture: boolean;
   wrongWay: boolean;
   hardBrake: boolean;
+  /** A wheel over the curb. Ends the episode except on levels with a lenient curb, where it only costs a little. */
+  overCurb: boolean;
 
   /** Totals over the episode. */
   redLightRuns: number;
@@ -82,6 +84,8 @@ export interface DrivingLearner {
   laneDepartureTime: number;
   wrongWayTime: number;
   hardBrakes: number;
+  /** Seconds with a wheel over the curb. */
+  curbTime: number;
   /** Seconds without progress that a red light, a car or a person ahead does not explain. */
   noProgress: number;
   /** True while stopped for a good reason: a red light, a car or a person ahead. */
@@ -142,12 +146,14 @@ export function createLearner(index: number, route: Route, rays: number, seed = 
     laneDeparture: false,
     wrongWay: false,
     hardBrake: false,
+    overCurb: false,
     redLightRuns: 0,
     stopLineOverruns: 0,
     speedingTime: 0,
     laneDepartureTime: 0,
     wrongWayTime: 0,
     hardBrakes: 0,
+    curbTime: 0,
     noProgress: 0,
     waiting: false,
     lineLight: -1,

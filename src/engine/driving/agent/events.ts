@@ -16,8 +16,14 @@ const LANE_SLACK = 1.05;
 const HARD_BRAKE = 5.5;
 /** Speeding starts this far over the limit, m/s. */
 const SPEED_SLACK = 0.5;
-/** Arrival: the car's center in the destination zone, nearly stopped and in its lane. */
-const ARRIVE_SPEED = 1.5;
+/** How strict a level is about the curb and about stopping at the destination (see DrivingLevel). */
+export interface ArrivalRules {
+  lenientCurb: boolean;
+  arriveSpeed: number;
+}
+
+/** The full rules: any wheel over the curb ends the episode, and arriving means stopping. */
+const STRICT: ArrivalRules = { lenientCurb: false, arriveSpeed: 1.5 };
 
 /**
  * Collisions and rule breaking for one learner after it moved. Traffic
@@ -25,7 +31,7 @@ const ARRIVE_SPEED = 1.5;
  * it (see detectContacts). A car that rolls into a learner waiting at a
  * light simply passes through, which is the trade off of a shared city.
  */
-export function detectEvents(l: DrivingLearner, city: City, route: Route, world: WorldState, near: Nearby, length: number, width: number, dt: number): void {
+export function detectEvents(l: DrivingLearner, city: City, route: Route, world: WorldState, near: Nearby, length: number, width: number, dt: number, rules: ArrivalRules = STRICT): void {
   const car = l.car;
   const half = length / 2;
   const front = l.progress + half;
@@ -61,17 +67,20 @@ export function detectEvents(l: DrivingLearner, city: City, route: Route, world:
   if (hard && !l.hardBrake) l.hardBrakes++;
   l.hardBrake = hard;
 
-  // The curb: any wheel over it means the car has left the road. The bodywork may overhang a curb in a tight turn.
+  // The curb: any wheel over it means the car has left the road (with a lenient curb, only its center leaving
+  // the road does). The bodywork may overhang a curb in a tight turn.
   const ch = Math.cos(car.heading);
   const sh = Math.sin(car.heading);
   const fx = ch * WHEEL_X;
   const fy = sh * WHEEL_X;
   const sx = -sh * (width / 2 - 0.15);
   const sy = ch * (width / 2 - 0.15);
-  l.offRoad = !isOnRoad(city, car.x + fx + sx, car.y + fy + sy) || !isOnRoad(city, car.x + fx - sx, car.y + fy - sy) || !isOnRoad(city, car.x - fx + sx, car.y - fy + sy) || !isOnRoad(city, car.x - fx - sx, car.y - fy - sy);
+  l.overCurb = !isOnRoad(city, car.x + fx + sx, car.y + fy + sy) || !isOnRoad(city, car.x + fx - sx, car.y + fy - sy) || !isOnRoad(city, car.x - fx + sx, car.y - fy + sy) || !isOnRoad(city, car.x - fx - sx, car.y - fy - sy);
+  if (l.overCurb) l.curbTime += dt;
+  l.offRoad = rules.lenientCurb ? l.overCurb && !isOnRoad(city, car.x, car.y) : l.overCurb;
 
   detectContacts(l, world, near, half, width / 2);
-  l.arrived = l.inDestination && car.speed < ARRIVE_SPEED && Math.abs(l.lateral) < 1.5;
+  l.arrived = l.inDestination && car.speed < rules.arriveSpeed && Math.abs(l.lateral) < 1.5;
 
   // Standing still is fine behind a red light, a car or a person; anything else is a stall.
   const s = l.sense;

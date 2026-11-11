@@ -9,9 +9,10 @@ export const STUCK_AFTER = 8;
  * meter and arriving pays most. Rules broken while driving on cost a
  * little; the episode itself ends a learner on a crash, a person hit, the
  * curb, a wrong turn or arrival (see DrivingEnv), so the ground it never
- * covers is the main price of a crash. The curb costs nothing extra: early
- * brains that try to drive and clip a curb must still beat brains that
- * never move. As a script it would read:
+ * covers is the main price of a crash. On the first level only the car's
+ * center leaving the road ends it, and a wheel over the curb costs a little
+ * each tick: early brains that try to drive and clip a corner must still
+ * beat brains that never move. As a script it would read:
  *
  *   drive(steer: brain.steer, pedal: brain.pedal)
  *   reward +0.02 * progress.gain
@@ -22,6 +23,7 @@ export const STUCK_AFTER = 8;
  *   reward -0.005 when speeding
  *   reward -0.01 when wrongWay
  *   reward -0.002 when laneDeparture
+ *   reward -0.01 when overCurb (only lenient levels let a car carry on)
  *   reward -2 when crashed
  *   reward -4 when hitPedestrian
  *   stop "stuck" when noProgress > 8 s
@@ -41,6 +43,7 @@ export const builtinDrivingController: AgentController<DrivingLearner> = {
     if (l.speeding) r -= 0.005;
     if (l.wrongWay) r -= 0.01;
     if (l.laneDeparture) r -= 0.002;
+    if (l.overCurb) r -= 0.01;
     if (l.crashed) r -= 2;
     if (l.hitPedestrian) r -= 4;
     io.reward = r;

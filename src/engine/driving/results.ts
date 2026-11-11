@@ -19,6 +19,8 @@ export interface DrivingResult {
   laneDepartureTime: number;
   wrongWayTime: number;
   hardBrakes: number;
+  /** Seconds with a wheel over the curb (only lenient levels let a car carry on after that). */
+  curbTime: number;
   /** Arrived with no crash, no person hit and no red light run. */
   safe: boolean;
   crashX: number;
@@ -43,6 +45,7 @@ export function resultOf(l: DrivingLearner, startS: number, destS: number): Driv
     laneDepartureTime: l.laneDepartureTime,
     wrongWayTime: l.wrongWayTime,
     hardBrakes: l.hardBrakes,
+    curbTime: l.curbTime,
     safe: arrived && l.redLightRuns === 0,
     crashX: l.crashX,
     crashY: l.crashY,

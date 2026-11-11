@@ -9,7 +9,7 @@ import { Nearby } from '../sensors/nearby';
 import { perceive, type RoutePose } from '../sensors/perception';
 import { SIGNAL_CYCLE, LIGHT_RED, axisOf, lightState } from '../signals/plan';
 import { createWorldState, type WorldState } from '../world/state';
-import { detectEvents } from './events';
+import { detectEvents, type ArrivalRules } from './events';
 import { createLearner, type DrivingLearner } from './learner';
 import { trackRoute } from './tracking';
 
@@ -31,12 +31,12 @@ function learnerAt(s: number, lateral = 0, speed = 8, turn = 0): DrivingLearner 
 }
 
 /** Runs one tick of tracking, perception and event checks for a learner in a world. */
-function check(l: DrivingLearner, world: WorldState): DrivingLearner {
+function check(l: DrivingLearner, world: WorldState, rules?: ArrivalRules): DrivingLearner {
   trackRoute(l, city, route);
   const pose: RoutePose = { x: l.car.x, y: l.car.y, heading: l.car.heading, speed: l.car.speed, progress: l.progress, index: l.routeIndex, half: SUV_SIZE.length / 2 };
   near.gather(world, l.car.x, l.car.y);
   perceive(city, route, world, near, pose, l.sense);
-  detectEvents(l, city, route, world, near, SUV_SIZE.length, SUV_SIZE.width, SIM_DT);
+  detectEvents(l, city, route, world, near, SUV_SIZE.length, SUV_SIZE.width, SIM_DT, rules);
   return l;
 }
 
@@ -150,6 +150,18 @@ describe('collisions', () => {
   it('notices wheels over the curb', () => {
     expect(check(learnerAt(mid, 0), world()).offRoad).toBe(false);
     expect(check(learnerAt(mid, -2.6), world()).offRoad).toBe(true);
+  });
+
+  it('on a lenient level only ends the drive once the center leaves the road', () => {
+    const lenient: ArrivalRules = { lenientCurb: true, arriveSpeed: 8 };
+    const clipped = check(learnerAt(mid, -1.4), world(), lenient);
+    expect(clipped.overCurb).toBe(true);
+    expect(clipped.offRoad).toBe(false);
+    expect(clipped.curbTime).toBeCloseTo(SIM_DT);
+    expect(check(learnerAt(mid, -4.2), world(), lenient).offRoad).toBe(true);
+    // Rolling into the zone below its arrival speed counts there, but not on a level that asks for a stop.
+    expect(check(learnerAt(route.destS, 0, 6), world(), lenient).arrived).toBe(true);
+    expect(check(learnerAt(route.destS, 0, 6), world()).arrived).toBe(false);
   });
 });
 
