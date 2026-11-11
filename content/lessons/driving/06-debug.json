@@ -32,7 +32,7 @@
     {
       "id": "a-rule-that-never-fires",
       "title": "A rule that never fires",
-      "body": "The Problems tab has a warning for this one. The SUV tops out at 20 m/s, so a cost for going over 30 m/s never applies and brains never hear about speeding.\n\n`rules.speeding` is true while the SUV is over the speed limit where it is, which is what the line meant to say.",
+      "body": "The Problems tab has a warning for this one. The SUV tops out at 24 m/s, so a cost for going over 30 m/s never applies and brains never hear about speeding.\n\n`rules.speeding` is true while the SUV is over the speed limit where it is, which is what the line meant to say.",
       "starter": "// Lines that start with // are notes for people. The app skips them.\nscript \"Debug\" for driving v1\n\n// driving-standard sees nine lidar beams, its lane, its route, the light ahead,\n// the car ahead, the nearest person in its path and its speed.\nbrain driving-standard\n\n// This block runs for every SUV, 30 times per second of driving.\neach tick {\n  // Steer and press the pedal exactly as the brain says.\n  drive(steer: brain.steer, pedal: brain.pedal)\n\n  // A little for every meter of new ground along the route.\n  reward +0.02 * route.gain\n  // The big prize: arriving at the destination.\n  reward +10 when car.arrived\n  // Running a red light costs 2 points.\n  reward -2 when rules.ranRedLight\n  // A small cost for speeding.\n  reward -0.005 when car.speed > 30 m/s\n\n  // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.\n  stop \"stuck\" when car.noProgress > 8 s\n}\n",
       "highlight": {
         "lines": [

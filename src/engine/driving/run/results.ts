@@ -16,7 +16,7 @@ export interface DrivingRunResult {
   arrivals: number;
   /** Arrivals with no crash, no person hit and no red light run. */
   safeArrivals: number;
-  /** Trips that ended against another car, against a person, or off the road. */
+  /** Trips that ended against another car. People hit and leaving the road count on their own, below. */
   crashes: number;
   pedestrianHits: number;
   offRoads: number;
