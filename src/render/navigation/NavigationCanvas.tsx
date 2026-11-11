@@ -49,6 +49,8 @@ export interface NavigationCanvasProps {
   onFollow?: (ghost: boolean, index: number) => void;
   /** Anything else whose change should redraw an idle canvas for a moment, such as the view toggle or a new course. */
   wake?: unknown;
+  /** A runner was clicked: whether it is a ghost, and its index in its feed. */
+  onPick?: (ghost: boolean, index: number) => void;
 }
 
 /**
@@ -57,7 +59,7 @@ export interface NavigationCanvasProps {
  * golden crates, the grey block city, the same characters and the same
  * daylight, with the course pieces this game adds.
  */
-export function NavigationCanvas({ getFeed, getGhosts, tier, camera, sensors, effects = true, live, held = false, hoveredInput = -1, onFrame, onReady, onFollow, wake }: NavigationCanvasProps) {
+export function NavigationCanvas({ getFeed, getGhosts, tier, camera, sensors, effects = true, live, held = false, hoveredInput = -1, onFrame, onReady, onFollow, wake, onPick }: NavigationCanvasProps) {
   const loop = useFrameLoop(held ? 'held' : live ? 'live' : 'idle');
   const frame = useMemo(() => createNavFrame(), []);
   const view = useMemo<NavView>(() => ({ tier, sensors, hoveredInput }), []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -66,7 +68,7 @@ export function NavigationCanvas({ getFeed, getGhosts, tier, camera, sensors, ef
     view.sensors = sensors;
     view.hoveredInput = hoveredInput;
   }, [view, tier, sensors, hoveredInput]);
-  const value = useMemo(() => ({ frame, getFeed, getGhosts, view }), [frame, getFeed, getGhosts, view]);
+  const value = useMemo(() => ({ frame, getFeed, getGhosts, view, onPick }), [frame, getFeed, getGhosts, view, onPick]);
   const composer = effects && (tier === 'high' || tier === 'ultra');
   const shadows = tier !== 'low';
   const instances = useMemo(() => () => ({ agents: frame.primaryGhosts ? 0 : frame.count, ghosts: frame.ghosts.count, movers: frame.course?.movers.length ?? 0, rays: frame.rays }), [frame]);

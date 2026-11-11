@@ -31,6 +31,12 @@ export class LabFeeds {
     this.idle = new IdleFeed(courses);
   }
 
+  /** Lets go of the streams, when the lab unmounts. */
+  dispose(): void {
+    this.population.dispose();
+    this.ghosts.dispose();
+  }
+
   /** The population feed, the idle course when nothing streams, or null when the ghosts take the view. */
   readonly getFeed = (): NavFeed | null => {
     const s = this.state();
@@ -57,9 +63,11 @@ export class LabFeeds {
 
   /** True when the live population is what the view follows. */
   showsPopulation(s: NavigationLabState): boolean {
-    if (s.mode !== 'train' || s.view === 'overlay' || !this.population.hasFrame) return false;
-    // A frame with nobody running is an episode that ended; while Turbo trains unseen, the replay is the better view.
-    return this.population.anyRunning || (s.status === 'running' && isWatchSpeed(s.speed));
+    const pop = this.population;
+    if (s.mode !== 'train' || s.view === 'overlay' || !pop.hasFrame) return false;
+    if (s.status === 'running' && isWatchSpeed(s.speed)) return true;
+    // Paused mid run it stays; once its episode is over (as under Turbo, which trains unseen), the replay is the better view.
+    return !pop.ended && pop.anyRunning;
   }
 
   private showsGhosts(s: NavigationLabState): boolean {

@@ -31,15 +31,17 @@ function useLive(feeds: LabFeeds | null): Live {
     const id = setInterval(() => {
       const s = useNavigationLab.getState();
       const level = feeds.level(s);
-      const feed = feeds.population;
-      if (!feeds.showsPopulation(s) || !feed.curr) return setLive((l) => (l.watching || l.level !== level ? { ...NONE, level } : l));
-      const next: Live = { watching: true, level, running: 0, finished: 0, died: 0, total: feed.count, best: 0 };
-      for (let i = 0; i < feed.count; i++) {
-        const status = feed.curr[i * STRIDE + SNAP_STATUS];
+      // Read from the stream itself: it holds its latest buffer until the next frame, which the renderer's copy may not.
+      const stream = feeds.population.stream;
+      const buf = stream.curr?.buffer;
+      if (!feeds.showsPopulation(s) || !buf) return setLive((l) => (l.watching || l.level !== level ? { ...NONE, level } : l));
+      const next: Live = { watching: true, level, running: 0, finished: 0, died: 0, total: stream.count, best: 0 };
+      for (let i = 0; i < stream.count; i++) {
+        const status = buf[i * STRIDE + SNAP_STATUS];
         if (status === NAV_RUNNING) next.running++;
         else if (status === NAV_FINISHED) next.finished++;
         else if (status === NAV_DIED) next.died++;
-        next.best = Math.max(next.best, status === NAV_FINISHED ? 1 : feed.curr[i * STRIDE + SNAP_PROGRESS]);
+        next.best = Math.max(next.best, status === NAV_FINISHED ? 1 : buf[i * STRIDE + SNAP_PROGRESS]);
       }
       setLive(next);
     }, 250);

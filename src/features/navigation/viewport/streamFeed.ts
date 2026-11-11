@@ -39,10 +39,20 @@ export class StreamFeed implements NavFeed {
   private seenScene: unknown = undefined;
   private running = false;
 
+  /** True once the stream's episode sent its end message, until the next one starts. */
+  ended = false;
+  /** Stops listening to the stream. */
+  readonly dispose: () => void;
+
   constructor(
     readonly stream: SnapshotStream,
     private readonly courses: CourseCache,
-  ) {}
+  ) {
+    this.dispose = stream.on((msg) => {
+      if (msg.kind === 'start') this.ended = false;
+      else if (msg.kind === 'end') this.ended = true;
+    });
+  }
 
   alpha = (): number => this.stream.alpha();
 

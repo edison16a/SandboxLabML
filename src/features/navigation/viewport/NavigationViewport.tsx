@@ -31,6 +31,15 @@ export function NavigationViewport({ feeds, ultra, onReady }: Props) {
   const live = useNavigationLab((s) => !(s.status === 'paused' && s.mode === 'train' && isWatchSpeed(s.speed)));
   // While idle, these redraw for a moment: the view toggle, a new course, a new run.
   const wake = useNavigationLab((s) => `${s.view}:${s.run?.id}:${s.content?.generation}:${s.focus.kind}`);
+  // A clicked runner becomes the focus: the population's by index, a ghost by the generation it replays.
+  const onPick = useCallback(
+    (ghost: boolean, index: number) => {
+      const tags = feeds.ghosts.tags;
+      if (!ghost) useNavigationLab.getState().set({ focus: { kind: 'car', index } });
+      else if (tags && index < tags.length) useNavigationLab.getState().set({ focus: { kind: 'ghost', generation: tags[index] } });
+    },
+    [feeds],
+  );
   const onFollow = useCallback((ghost: boolean, index: number) => useNavigationLab.getState().set({ followed: index, viewFollowsGhost: ghost }), []);
   const drawTier: NavQualityTier = ultra && tier === 'high' ? 'ultra' : tier;
   return (
@@ -46,6 +55,7 @@ export function NavigationViewport({ feeds, ultra, onReady }: Props) {
       onReady={onReady}
       onFollow={onFollow}
       wake={wake}
+      onPick={onPick}
     />
   );
 }

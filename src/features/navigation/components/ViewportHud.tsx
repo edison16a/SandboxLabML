@@ -1,5 +1,6 @@
 'use client';
 
+import { Video } from 'lucide-react';
 import { CameraSelect, FocusChip, HeldNote, InputsToggle, ViewSwitch } from '@/features/lab/components/ViewportControls';
 import type { LabFeeds } from '../viewport/labFeeds';
 import { GhostMenu } from './GhostMenu';
@@ -33,6 +34,9 @@ export function ViewportHud({ feeds }: { feeds: LabFeeds | null }) {
         </div>
       </div>
       <HeldNote />
+      <div className="pointer-events-none absolute right-3 bottom-3 hidden items-center gap-1 rounded-md bg-black/40 px-2 py-1 text-[11px] text-white/70 md:flex">
+        <Video className="size-3" /> Click a runner to follow it
+      </div>
     </>
   );
 }

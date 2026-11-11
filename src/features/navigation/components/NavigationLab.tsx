@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { navigationModule } from '@/engine/navigation/module';
 import { InputsCard } from '@/features/lab/components/InputsCard';
@@ -58,6 +58,7 @@ function NavigationLabBody() {
   useNavInspect(ready);
   const streams = ready ? navigationSession().streams : null;
   const feeds = useMemo(() => (streams ? new LabFeeds(streams, useNavigationLab.getState) : null), [streams]);
+  useEffect(() => () => feeds?.dispose(), [feeds]);
 
   return (
     // Under lg the viewport and the side panel stack taller than the screen, so the stack scrolls.

@@ -1,7 +1,7 @@
 'use client';
 
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { SNAP_FLAGS, SNAP_SPEED, SNAP_STATUS, SNAP_STOP_TIME } from '@/engine/navigation/snapshot';
 import { instancedCharacterGeometry } from '@/render/hideseek/characters/instancedCharacter';
@@ -35,7 +35,7 @@ const CLEAR_ALPHA = 0.3;
  * one the view follows is left to the champion character.
  */
 export function GhostRunners() {
-  const { frame } = useNavScene();
+  const { frame, onPick } = useNavScene();
   const mesh = useRef<THREE.InstancedMesh>(null);
   const built = useDisposable(() => {
     const geometry = instancedCharacterGeometry();
@@ -57,9 +57,17 @@ export function GhostRunners() {
       s: new THREE.Vector3(),
       e: new THREE.Euler(0, 0, 0, 'YXZ'),
       c: new THREE.Color(),
+      /** The ghost each instance draws, for clicks. */
+      ids: new Int16Array(MAX_GHOSTS),
     }),
     [],
   );
+  // Only ghosts the view can follow take clicks: with the population on screen, it stays the followed feed.
+  const pick = (e: ThreeEvent<MouseEvent>) => {
+    if (e.instanceId === undefined || !onPick || !frame.primaryGhosts) return;
+    e.stopPropagation();
+    onPick(true, t.ids[e.instanceId]);
+  };
 
   useFrame(({ camera }) => {
     const m = mesh.current;
@@ -94,6 +102,7 @@ export function GhostRunners() {
       t.p.set(t.pose.x, run * Math.abs(Math.sin(stride)) * 0.035 + st.lift, t.pose.z);
       t.s.set(st.spread * st.thin, st.squash, st.spread);
       t.m.compose(t.p, t.q, t.s);
+      t.ids[n] = i;
       m.setMatrixAt(n, t.m);
       m.setColorAt(n, t.c.copy(OLD).lerp(NEW, rank));
       built.gait.setXY(n, stride, st.tip !== 0 || st.squash < 1 || st.airborne ? 0 : Math.min(0.6, speed * 0.22));
@@ -103,5 +112,5 @@ export function GhostRunners() {
     built.gait.needsUpdate = built.fade.needsUpdate = true;
   }, POSE_PRIORITY);
 
-  return <instancedMesh ref={mesh} args={[built.geometry, built.material, MAX_GHOSTS]} frustumCulled={false} renderOrder={GHOST_ORDER} />;
+  return <instancedMesh ref={mesh} args={[built.geometry, built.material, MAX_GHOSTS]} frustumCulled={false} renderOrder={GHOST_ORDER} onClick={pick} />;
 }
