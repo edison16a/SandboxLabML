@@ -29,8 +29,9 @@ export function ViewportHud({ feeds }: { feeds: LabFeeds | null }) {
           </div>
         </div>
         <div className="no-scrollbar pointer-events-auto flex max-w-[60%] shrink-0 flex-wrap items-center justify-end gap-1.5 max-sm:max-w-none max-sm:flex-nowrap max-sm:justify-start max-sm:overflow-x-auto max-sm:[&>*]:shrink-0">
-          <ViewSwitch />
-          <GhostMenu />
+          {/* The Sandbox shows only its own runners, so the view switch and the ghost picks have nothing to do there. */}
+          {!sandbox && <ViewSwitch />}
+          {!sandbox && <GhostMenu />}
           <InputsToggle />
           <CameraSelect options={NAVIGATION_CAMERAS} />
         </div>
