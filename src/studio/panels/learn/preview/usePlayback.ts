@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import type { LessonPreview } from '@/engine/lessons/preview/types';
 import { driveReadout, drawDrive } from './drawDrive';
 import { drawMatch, matchReadout } from './drawMatch';
@@ -82,5 +82,11 @@ export function usePlayback(preview: LessonPreview | null, canvas: RefObject<HTM
     pos.current = 0;
     paint(canvas.current, readout.current, preview, 0);
   };
-  return { playing, toggle: () => setPlaying((p) => !p), restart };
+  /** Moves the playhead to a tick and draws it, playing or not. For a scrubber. */
+  const seek = (tick: number) => {
+    pos.current = Math.max(0, tick);
+    paint(canvas.current, readout.current, preview, pos.current);
+  };
+  const position = useCallback(() => pos.current, []);
+  return { playing, toggle: () => setPlaying((p) => !p), restart, seek, position };
 }

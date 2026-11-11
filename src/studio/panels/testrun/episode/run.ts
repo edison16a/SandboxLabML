@@ -45,7 +45,7 @@ export async function runEpisodeTest(source: string): Promise<EpisodeTestResult>
   const result = env.results()[0];
   const stopReason = result.stopReason ?? 'time';
   const measured = lessons.measure(result);
-  const metrics = lessons.testRunMetrics.map((key) => ({ label: key, value: (lessons.formats?.[key] ?? ((v: number) => String(Math.round(v * 100) / 100)))(measured[key] ?? NaN) }));
+  const metrics = lessons.testRunMetrics.map((key) => ({ label: lessons.labels?.[key] ?? key, value: (lessons.formats?.[key] ?? ((v: number) => String(Math.round(v * 100) / 100)))(measured[key] ?? NaN) }));
   return {
     ok: true,
     ticks: time.length,

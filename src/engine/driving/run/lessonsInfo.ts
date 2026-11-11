@@ -14,6 +14,7 @@ export const DRIVING_LESSONS_INFO: EpisodeLessonsInfo = {
   testRunName: 'a test drive',
   testRunMetrics: ['arrived', 'completion', 'distance', 'redLightRuns', 'time'],
   brain: 'driving-standard',
+  labels: { arrived: 'Arrived', completion: 'Route covered', distance: 'Distance', redLightRuns: 'Red lights', time: 'Time' },
   formats: {
     arrived: percent,
     safe: percent,

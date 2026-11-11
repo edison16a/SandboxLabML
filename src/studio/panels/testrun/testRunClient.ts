@@ -1,4 +1,5 @@
 import * as Comlink from 'comlink';
+import type { PreviewResult } from '@/engine/lessons/preview/types';
 import type { EpisodeTestResult } from './episode/run';
 import type { MatchTestRequest, MatchTestResult } from './hideseek/types';
 import type { TestRunApi } from './testRun.worker';
@@ -65,6 +66,11 @@ export function runInWorker(req: TestRunRequest, signal: AbortSignal): Promise<T
 /** Runs one test episode of a script for an env added through the registry. */
 export function runEpisodeInWorker(source: string, signal: AbortSignal): Promise<EpisodeTestResult> {
   return inWorker<EpisodeTestResult>(signal, async (api) => api.episode(source));
+}
+
+/** Records a script's test episode for a top down replay, the same recording the lesson preview plays. */
+export function recordInWorker(source: string, signal: AbortSignal): Promise<PreviewResult> {
+  return inWorker<PreviewResult>(signal, async (api) => api.preview(source));
 }
 
 /** Plays one Hide and Seek test match in a test worker. */

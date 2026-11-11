@@ -53,6 +53,8 @@ export interface EpisodeLessonsInfo {
   brain: string;
   /** Wording of a measured value in a check outcome, such as (v) => `${v} m`. */
   formats?: Readonly<Record<string, (value: number) => string>>;
+  /** Short names of the test run metrics for the Studio's result tiles, such as "Arrived". Left out, the key is shown. */
+  labels?: Readonly<Record<string, string>>;
 }
 
 /** The runtime half of the lesson hooks, which runs episodes. */
