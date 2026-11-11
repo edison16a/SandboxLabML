@@ -66,6 +66,25 @@ const percent = (v: number | undefined) => (v === undefined || !Number.isFinite(
  */
 export function LiveStats({ stream, shown }: { stream: SnapshotStream | null; shown: 'population' | 'ghosts' }) {
   const live = useLive(stream);
+  const sandboxLevel = useDrivingLab((s) => (s.mode === 'sandbox' ? s.sandbox?.trip.level : undefined));
+  if (sandboxLevel !== undefined) return <SandboxStats live={live} level={sandboxLevel} />;
+  return <TrainingStats live={live} shown={shown} />;
+}
+
+/** The Sandbox's own numbers: its level, then who is still driving, who arrived and the followed SUV's speed. */
+function SandboxStats({ live, level }: { live: Live; level: number }) {
+  return (
+    <div className="pointer-events-none flex flex-wrap gap-1.5">
+      <Chip label="Sandbox" value={`${level} ${drivingLevel(level).name}`} />
+      {live.total > 0 && <Chip label="Driving" value={`${live.driving} / ${live.total}`} />}
+      {live.total > 0 && <Chip label="Arrived" value={`${live.arrived} / ${live.total}`} />}
+      {live.total > 0 && <Chip label="Violations" value={live.violations} title="Ran a red light, or on the wrong side of the road" wide />}
+      {live.total > 0 && <Chip label="Speed" value={`${Math.round(live.speed * 3.6)} km/h`} />}
+    </div>
+  );
+}
+
+function TrainingStats({ live, shown }: { live: Live; shown: 'population' | 'ghosts' }) {
   const gen = useDrivingLab((s) => s.liveGeneration);
   const level = useDrivingLab((s) => (shown === 'ghosts' ? (s.ghostContent ?? s.content) : s.content)?.level);
   const trip = useDrivingLab((s) => s.trip);

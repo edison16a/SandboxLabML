@@ -24,6 +24,7 @@ import { drivingSession } from '../session/DrivingSession';
 import { useDrivingLab } from '../state/labStore';
 import { DrivingViewport } from './DrivingViewport';
 import { LabToolbar } from './LabToolbar';
+import { SandboxPanel } from './sandbox/SandboxPanel';
 import { ViewportHud } from './ViewportHud';
 
 /** The Driving lab: the shared lab parts bound to the Driving store and session, around the city. */
@@ -61,6 +62,7 @@ function DrivingLabBody() {
           <LoadingCover loading={!streams || !sceneReady} label={streams ? 'Building the city' : 'Starting the lab'} />
           {streams && <ViewportHud streams={streams} />}
           <InputsCard />
+          <SandboxPanel />
         </div>
         <LabToolbar onNewRun={openNewRun} />
       </div>

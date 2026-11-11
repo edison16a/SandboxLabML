@@ -32,6 +32,7 @@ function TurboNote() {
 export function ViewportHud({ streams }: { streams: { population: SnapshotStream; ghosts: SnapshotStream } }) {
   const shown = useDrivingLab(shownStream);
   const watching = useDrivingLab((s) => isWatchSpeed(s.speed) && s.mode === 'train');
+  const sandbox = useDrivingLab((s) => s.mode === 'sandbox');
   return (
     <>
       {/* Stats and controls share one row, so on a narrow viewport the stats wrap instead of sliding under the
@@ -44,7 +45,8 @@ export function ViewportHud({ streams }: { streams: { population: SnapshotStream
           </div>
         </div>
         <div className="no-scrollbar pointer-events-auto flex max-w-[60%] shrink-0 flex-wrap items-center justify-end gap-1.5 max-sm:max-w-none max-sm:flex-nowrap max-sm:justify-start max-sm:overflow-x-auto max-sm:[&>*]:shrink-0">
-          <ViewSwitch />
+          {/* The Sandbox only shows the SUVs it lined up, so there is no view to pick. */}
+          {!sandbox && <ViewSwitch />}
           <InputsToggle />
           <span data-tour="camera">
             <CameraSelect options={CAMERAS} />
