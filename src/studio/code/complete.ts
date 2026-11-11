@@ -1,6 +1,6 @@
 import { autocompletion, snippetCompletion, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
 import { PRESET_BLUEPRINTS } from '@/engine/blueprints/presets';
-import { callSnippets, entriesFor, SNIPPETS, type RegistryEntry } from '@/engine/script';
+import { callSnippets, DEFAULT_SCRIPT_ENV, entriesFor, SNIPPETS, type RegistryEntry } from '@/engine/script';
 import { analyze } from '../doc/analyze';
 import { scopeAt, unitContext, type CursorScope } from './context';
 import { completionInfo } from './docCard';
@@ -26,7 +26,7 @@ function entryOption(e: RegistryEntry, boost = 0): Completion {
 /** Registry names, call templates, language snippets and local names for one block. */
 function optionsFor(scope: CursorScope, source: string): Completion[] {
   const a = analyze(source);
-  const env = a.env ?? 'racing';
+  const env = a.env ?? DEFAULT_SCRIPT_ENV;
   const snippets = SNIPPETS.filter((s) => s.scopes.includes(scope)).map((s) => snippetCompletion(s.template, { label: s.label, detail: s.detail, type: 'keyword', boost: 2 }));
   if (scope === 'top') return snippets;
   const entries = entriesFor(env, scope);
@@ -44,7 +44,7 @@ function optionsFor(scope: CursorScope, source: string): Completion[] {
 }
 
 function brainOptions(source: string): Completion[] {
-  const env = analyze(source).env ?? 'racing';
+  const env = analyze(source).env ?? DEFAULT_SCRIPT_ENV;
   return PRESET_BLUEPRINTS.filter((b) => b.env === env).map((b) => ({ label: b.id, detail: b.description, type: 'constant' }));
 }
 

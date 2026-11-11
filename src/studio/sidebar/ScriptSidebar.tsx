@@ -8,6 +8,8 @@ import { Button } from '@/ui/primitives/Button';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import { duplicate, newScript, openScript, remove, rename } from '../state/scriptActions';
+import { envLabel } from '@/engine/env/registry';
+import { DEFAULT_SCRIPT_ENV, SCRIPT_ENV_TABLE } from '@/engine/script';
 import { useStudio, type EnvFilter } from '../state/studioStore';
 import { RenameDialog } from './RenameDialog';
 import { ScriptRow } from './ScriptRow';
@@ -47,7 +49,7 @@ export function ScriptSidebar({ className }: { className?: string }) {
     <aside className={cn('flex min-h-0 flex-col bg-surface', className)} aria-label="Scripts">
       <div className="flex flex-col gap-3 border-b border-border p-3">
         <div className="flex items-center gap-1">
-          <Button variant="primary" size="sm" onClick={() => void newScript(filter === 'all' ? 'racing' : filter)}>
+          <Button variant="primary" size="sm" onClick={() => void newScript(filter === 'all' ? DEFAULT_SCRIPT_ENV : filter)}>
             <Plus />
             New
           </Button>
@@ -74,11 +76,7 @@ export function ScriptSidebar({ className }: { className?: string }) {
           size="sm"
           value={filter}
           onChange={(v) => useStudio.setState({ envFilter: v })}
-          options={[
-            { value: 'all', label: 'All' },
-            { value: 'racing', label: 'Racing' },
-            { value: 'hideseek', label: 'Hide and Seek' },
-          ]}
+          options={[{ value: 'all', label: 'All' }, ...SCRIPT_ENV_TABLE.map((e) => ({ value: e.env, label: envLabel(e.env) }))]}
         />
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-2">

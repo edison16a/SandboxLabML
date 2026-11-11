@@ -15,6 +15,8 @@ export interface ScriptEnv {
   presets: readonly ScriptPreset[];
   /** What a run without a script trains on, in one line for the script picker. */
   builtin: string;
+  /** The source a new Studio script starts from. It should compile and run as it is. */
+  starter: string;
 }
 
 /**
@@ -23,9 +25,34 @@ export interface ScriptEnv {
  * autocomplete and preset lists all read it.
  */
 export const SCRIPT_ENV_TABLE: readonly ScriptEnv[] = [
-  { env: 'racing', slice: RACING_SLICE, presets: RACING_PRESETS, builtin: 'Checkpoints, laps and a little speed.' },
-  { env: 'hideseek', slice: HIDESEEK_SLICE, presets: HIDESEEK_PRESETS, builtin: 'Hiders score while unseen, seekers while they see.' },
+  {
+    env: 'racing',
+    slice: RACING_SLICE,
+    presets: RACING_PRESETS,
+    builtin: 'Checkpoints, laps and a little speed.',
+    starter: [
+      'script "My script" for racing v1',
+      'brain racing-standard',
+      '',
+      'each tick {',
+      '  drive(steer: brain.steer, pedal: brain.pedal)',
+      '  reward +1 when checkpoint.passed',
+      '  stop "crash" when car.offTrack',
+      '}',
+      '',
+    ].join('\n'),
+  },
+  {
+    env: 'hideseek',
+    slice: HIDESEEK_SLICE,
+    presets: HIDESEEK_PRESETS,
+    builtin: 'Hiders score while unseen, seekers while they see.',
+    starter: 'script "My script" for hideseek v1\n\n// Hide and Seek scripts are coming soon. Sketch your ideas here.\n',
+  },
 ];
+
+/** The env the Studio assumes for a script without a valid header, and offers first. */
+export const DEFAULT_SCRIPT_ENV: EnvId = SCRIPT_ENV_TABLE[0].env;
 
 export function scriptEnv(env: string): ScriptEnv | undefined {
   return SCRIPT_ENV_TABLE.find((e) => e.env === env);

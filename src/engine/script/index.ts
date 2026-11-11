@@ -26,4 +26,4 @@ export * from './blocks';
 export { SCRIPT_PRESETS, findScriptPreset, presetsOf, type ScriptPreset } from './presets';
 export { RACING_PRESETS } from './presets/racing';
 export { HIDESEEK_PRESETS } from './presets/hideseek';
-export { SCRIPT_ENV_TABLE, scriptEnv, type ScriptEnv } from './envs';
+export { DEFAULT_SCRIPT_ENV, SCRIPT_ENV_TABLE, scriptEnv, type ScriptEnv } from './envs';

@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { entriesByName, type EntryKind, type RegistryEntry } from '@/engine/script';
+import { envLabel } from '@/engine/env/registry';
+import { DEFAULT_SCRIPT_ENV, entriesByName, type EntryKind, type RegistryEntry } from '@/engine/script';
 import { TextInput } from '@/ui/primitives/Field';
 import { analyze } from '../../doc/analyze';
 import { selectText, useStudio } from '../../state/studioStore';
@@ -43,13 +44,13 @@ export function groupEntries(entries: readonly RegistryEntry[], query: string): 
 export function ReferenceTab() {
   const text = useStudio(selectText);
   const readonly = useStudio((s) => s.script?.readonly ?? true);
-  const env = analyze(text).env ?? 'racing';
+  const env = analyze(text).env ?? DEFAULT_SCRIPT_ENV;
   const [query, setQuery] = useState('');
   const groups = useMemo(() => groupEntries([...entriesByName(env).values()], query), [env, query]);
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="border-b border-border p-3">
-        <TextInput aria-label="Search the reference" placeholder={`Search ${env === 'racing' ? 'Racing' : 'Hide and Seek'} and core names`} value={query} onChange={(e) => setQuery(e.target.value)} className="w-full" />
+        <TextInput aria-label="Search the reference" placeholder={`Search ${envLabel(env)} and core names`} value={query} onChange={(e) => setQuery(e.target.value)} className="w-full" />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
         {groups.length === 0 && <p className="py-8 text-center text-[13px] text-muted">Nothing matches &quot;{query}&quot;.</p>}
