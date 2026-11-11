@@ -1,0 +1,77 @@
+{
+  "env": "navigation",
+  "benchmarkVersion": 1,
+  "engineVersion": 1,
+  "generatedAt": "2026-11-11",
+  "seeds": 2,
+  "references": [
+    {
+      "tier": "beginner",
+      "finalScore": 79.6,
+      "curve": [
+        { "generation": 0, "median": 13.8, "p25": 10.1, "p75": 17.5 },
+        { "generation": 5, "median": 38.5, "p25": 27.3, "p75": 49.7 },
+        { "generation": 10, "median": 60.4, "p25": 49.8, "p75": 70.9 },
+        { "generation": 15, "median": 72.2, "p25": 69.4, "p75": 75.1 },
+        { "generation": 20, "median": 78, "p25": 77.4, "p75": 78.6 },
+        { "generation": 25, "median": 88.7, "p25": 87.5, "p75": 90 },
+        { "generation": 30, "median": 71.2, "p25": 66.8, "p75": 75.5 }
+      ]
+    },
+    {
+      "tier": "intermediate",
+      "finalScore": 87.9,
+      "curve": [
+        { "generation": 0, "median": 21.7, "p25": 19.6, "p75": 23.8 },
+        { "generation": 5, "median": 56.7, "p25": 48.1, "p75": 65.2 },
+        { "generation": 10, "median": 55.8, "p25": 55.2, "p75": 56.4 },
+        { "generation": 15, "median": 65.4, "p25": 61.4, "p75": 69.5 },
+        { "generation": 20, "median": 74.1, "p25": 64.1, "p75": 84 },
+        { "generation": 25, "median": 91, "p25": 89, "p75": 93 },
+        { "generation": 30, "median": 79, "p25": 74.1, "p75": 83.9 }
+      ]
+    },
+    {
+      "tier": "advanced",
+      "finalScore": 87,
+      "curve": [
+        { "generation": 0, "median": 21.7, "p25": 19.6, "p75": 23.8 },
+        { "generation": 5, "median": 56.7, "p25": 48.1, "p75": 65.2 },
+        { "generation": 10, "median": 37.4, "p25": 30.4, "p75": 44.3 },
+        { "generation": 15, "median": 82.9, "p25": 80.6, "p75": 85.1 },
+        { "generation": 20, "median": 82.6, "p25": 79.8, "p75": 85.5 },
+        { "generation": 25, "median": 74.8, "p25": 67.7, "p75": 81.8 },
+        { "generation": 30, "median": 88.6, "p25": 87.1, "p75": 90.1 }
+      ]
+    }
+  ],
+  "models": [
+    {
+      "tier": "beginner",
+      "seed": 2,
+      "generation": 30,
+      "score": 62.5,
+      "blueprint": "navigation-starter",
+      "preset": "navigation-beginner",
+      "genome": "U0JHMQEAAACBCwAADwAaAAsAAgAeAAAAAACgQQAAAAAAAAAAAQAAAAAAAAACAAAAAAAAAAMAAAAAAAAABAAAAAAAAAAFAAAAAAAAAAYAAAAAAAAABwAAAAAAAAAIAAAAAAAAAAkAAAAAAAAACgAAAAAAAAALAAAAAQAAAAwAAAACAAAADQAAAAIAAAAQAAAAAwAAAAAAAAAAAAwAgYZQvgEAAAABAAAAAQAMANM0GcABAAAAAgAAAAIADAD1kQpAAQAAAAMAAAADAAwAfHZOvgEAAAAEAAAABAAMABacjsABAAAABQAAAAUADABwskbAAQAAAAYAAAAGAAwA2/vMPgEAAAAHAAAABwAMAEfqB78BAAAACAAAAAgADAAgk8e+AQAAAAkAAAAJAAwANsVOPwEAAAAKAAAACgAMAKY8jr8BAAAACwAAAAsADAB97dC/AQAAAAwAAAAAAA0AQr+4wAEAAAANAAAAAQANAPjkiEABAAAADgAAAAIADQAtVX8/AQAAAA8AAAADAA0ACeC8vwEAAAAQAAAABAANAFC1hEABAAAAEQAAAAUADQDYGDxAAQAAABIAAAAGAA0AgPrGPQEAAAATAAAABwANAEQCFsABAAAAFAAAAAgADQDTrjK/AQAAABUAAAAJAA0AZWgjvwEAAAAWAAAACgANANkkxMABAAAAFwAAAAsADQC7Uh0/AQAAABwAAAABAA4A3vIiPwEAAAAdAAAADgAMACFSU0ABAAAA"
+    },
+    {
+      "tier": "intermediate",
+      "seed": 1,
+      "generation": 30,
+      "score": 69.3,
+      "blueprint": "navigation-starter",
+      "preset": "navigation-intermediate",
+      "genome": "U0JHMQEAAACACwAADgAYAAsAAgAeAAAA6A7bQQAAAAAAAAAAAQAAAAAAAAACAAAAAAAAAAMAAAAAAAAABAAAAAAAAAAFAAAAAAAAAAYAAAAAAAAABwAAAAAAAAAIAAAAAAAAAAkAAAAAAAAACgAAAAAAAAALAAAAAQAAAAwAAAACAAAADQAAAAIAAAAAAAAAAAAMAE28pEABAAAAAQAAAAEADAAfsgc/AQAAAAIAAAACAAwAU69VwAEAAAADAAAAAwAMAEepYT4BAAAABAAAAAQADADKmtg/AQAAAAUAAAAFAAwAA3YRvwEAAAAGAAAABgAMABGKAb4BAAAABwAAAAcADADfJtBAAQAAAAgAAAAIAAwA6htkPgEAAAAJAAAACQAMAPrTqj8BAAAACgAAAAoADAC+BFpAAQAAAAsAAAALAAwA4X30PwEAAAAMAAAAAAANAFiXJ78BAAAADQAAAAEADQA35nRAAQAAAA4AAAACAA0AOfnOPwEAAAAPAAAAAwANAFZgE8ABAAAAEAAAAAQADQAczdI/AQAAABEAAAAFAA0AXbhwvwEAAAASAAAABgANAKIM7L4BAAAAEwAAAAcADQBZOXy/AQAAABQAAAAIAA0A8JWfQAEAAAAVAAAACQANAM9Rub4BAAAAFgAAAAoADQBg+pJAAQAAABcAAAALAA0AUYeGvgEAAAA="
+    },
+    {
+      "tier": "advanced",
+      "seed": 1,
+      "generation": 30,
+      "score": 85.5,
+      "blueprint": "navigation-starter",
+      "preset": "navigation-advanced",
+      "genome": "U0JHMQEAAACqCwAADwAaAAsAAgAeAAAAXajZQQAAAAAAAAAAAQAAAAAAAAACAAAAAAAAAAMAAAAAAAAABAAAAAAAAAAFAAAAAAAAAAYAAAAAAAAABwAAAAAAAAAIAAAAAAAAAAkAAAAAAAAACgAAAAAAAAALAAAAAQAAAAwAAAACAAAADQAAAAIAAAAbAAAAAwAAAAAAAAAAAAwAzHXIPgEAAAABAAAAAQAMAOLbtL8BAAAAAgAAAAIADABXWgdAAQAAAAMAAAADAAwA8j/4PwEAAAAEAAAABAAMANrXFcABAAAABQAAAAUADACWe+k/AQAAAAYAAAAGAAwAKFR4QAEAAAAHAAAABwAMAN3RdUABAAAACAAAAAgADAAFce8/AQAAAAkAAAAJAAwAW1IOwAEAAAAKAAAACgAMAON4V78BAAAACwAAAAsADADVJ2dAAQAAAAwAAAAAAA0AuoxdQAAAAAANAAAAAQANAET1YkABAAAADgAAAAIADQC1/9u/AQAAAA8AAAADAA0Axee9PwEAAAAQAAAABAANAMqqOT8BAAAAEQAAAAUADQAOFpK/AAAAABIAAAAGAA0AWU84vwEAAAATAAAABwANADpwG8ABAAAAFAAAAAgADQA7/T1AAQAAABUAAAAJAA0AnUfpPwEAAAAWAAAACgANAE23kEABAAAAFwAAAAsADQAyVBvAAQAAADMAAAAJAA4AEbj1vgEAAAA0AAAADgANAIsys78BAAAA"
+    }
+  ]
+}
