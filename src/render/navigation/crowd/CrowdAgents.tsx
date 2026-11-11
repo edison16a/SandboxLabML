@@ -49,7 +49,7 @@ function crowdMesh(fading: boolean) {
  * that ends plays out on the spot (see stopPose): a fall onto the spikes,
  * a squash under a mover, a hop past the line, then a fade. Fading ones
  * move to a second small mesh with per instance opacity, whose shadows
- * thin out with them.
+ * dwindle with them.
  */
 export function CrowdAgents() {
   const { frame } = useNavScene();
@@ -145,7 +145,7 @@ export function CrowdAgents() {
     <group>
       <instancedMesh ref={solid} args={[a.geometry, solidMat, MAX_AGENTS]} frustumCulled={false} castShadow receiveShadow />
       {/* After the champion's own passes, so a ghost in front of it only tints it. */}
-      {/* It casts its thinning shadow but takes none: a hashed shadow falling on its own see-through body speckles it. */}
+      {/* It casts its dwindling shadow; it takes none, as a see-through body darkened by its own shadow looks dirty. */}
       <instancedMesh ref={fading} args={[b.geometry, fadeMat, MAX_AGENTS]} frustumCulled={false} renderOrder={5} castShadow customDepthMaterial={fadeShadow} />
     </group>
   );

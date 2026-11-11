@@ -34,19 +34,18 @@ export function crowdFadeMaterial(): THREE.MeshStandardMaterial {
 }
 
 /**
- * What the fading crowd casts into the sun's shadow map: a hashed alpha
- * test on the same per instance opacity, so a fading character's shadow
- * thins out with it instead of vanishing the moment it starts to fade.
+ * What the fading crowd casts into the sun's shadow map: the body shrunk
+ * toward its feet with its opacity, so a fading character's shadow dwindles
+ * with it instead of vanishing the moment it starts to fade. Shrinking
+ * keeps the shadow's edge as clean as any other; a dithered alpha test
+ * would speckle the floor under a see-through body.
  */
 export function crowdFadeShadowMaterial(): THREE.MeshDepthMaterial {
-  const m = new THREE.MeshDepthMaterial({ alphaHash: true });
+  const m = new THREE.MeshDepthMaterial();
   m.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nattribute float aFade;\nvarying float vFade;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvFade = aFade;');
-    shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying float vFade;')
-      .replace('#include <alphahash_fragment>', 'diffuseColor.a *= vFade;\n#include <alphahash_fragment>');
+      .replace('#include <common>', '#include <common>\nattribute float aFade;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\ntransformed *= smoothstep(0.05, 0.75, aFade);');
   };
   m.customProgramCacheKey = () => 'nav-crowd-fade-shadow';
   return m;
