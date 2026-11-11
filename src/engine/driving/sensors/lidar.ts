@@ -12,7 +12,7 @@ export const HIT_PED = 3;
 /** A person is a 0.3 m circle to the sensors and the collision check. */
 export const PED_RADIUS = 0.3;
 
-/** Distance along a unit ray to an oriented box (a car), or Infinity. */
+/** Distance along a unit ray to an oriented box (a car), or Infinity, also when the ray starts inside it. */
 function rayCar(ox: number, oy: number, dx: number, dy: number, cx: number, cy: number, heading: number, hl: number, hw: number): number {
   const c = Math.cos(heading);
   const s = Math.sin(heading);
@@ -20,6 +20,8 @@ function rayCar(ox: number, oy: number, dx: number, dy: number, cx: number, cy: 
   const ry = oy - cy;
   const lx = rx * c + ry * s;
   const ly = -rx * s + ry * c;
+  // A car the sensor sits inside drove into the SUV from outside; it cannot be seen from in there.
+  if (Math.abs(lx) <= hl && Math.abs(ly) <= hw) return Infinity;
   const ux = dx * c + dy * s;
   const uy = -dx * s + dy * c;
   const ix = ux !== 0 ? 1 / ux : 1e12;

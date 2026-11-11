@@ -108,9 +108,11 @@ export function perceive(city: City, route: Route, world: WorldState, near: Near
     const ds = proj.s - pose.progress;
     if (ds <= 0 || Math.abs(proj.lateral) > CAR_CORRIDOR) continue;
     const gap = ds - pose.half - world.carLength[i] / 2;
+    // A car overlapping the SUV drove into it (traffic cannot see learners); it counts once it is clear ahead.
+    if (gap < 0) continue;
     if (gap < out.gap) {
       out.car = i;
-      out.gap = Math.max(gap, 0);
+      out.gap = gap;
       out.relSpeed = world.carSpeed[i] * align - pose.speed;
     }
   }
