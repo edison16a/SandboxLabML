@@ -45,7 +45,8 @@ function underSkin(x: number, z: number, y: number): number {
  * Across the arch's edge, as (out along the arch's radius, in toward the
  * car) offsets from the skin's cut: the paint rolls over a tight radius
  * into the opening, so the arch has a crisp body colored edge, then a
- * slim gloss black trim ring 2.4 cm wide faces out a little deeper.
+ * slim black trim ring 2.4 cm wide faces out a little deeper. The ring is
+ * satin rather than gloss: gloss turned silver wherever it caught the sky.
  */
 const LIP: Array<[number, number]> = [[0, 0], [-0.003, -0.002], [-0.006, -0.006], [-0.008, -0.012]];
 const TRIM: Array<[number, number]> = [[-0.008, -0.012], [-0.009, -0.014], [-0.03, -0.016], [-0.033, -0.019], [-0.034, -0.032]];
@@ -78,7 +79,7 @@ export function addArches(bin: PartBin, detail: Detail): void {
     // The far population skips the rolled edge and keeps only the trim's face and its turn inward.
     if (detail.brakes) bin.add('paint', bothSides(gridGeometry(across(LIP))));
     const trim = across(detail.brakes ? TRIM : [TRIM[0], TRIM[2], TRIM[4]]);
-    bin.add('trim', bothSides(gridGeometry(trim)));
+    bin.add('clad', bothSides(gridGeometry(trim)));
     const liner = xs.map((x, i) => {
       const [z, y] = cuts[i];
       const mid = Math.min(Math.max(sectionAt(x).keys[5].z - 0.02, WELL_Z + 0.01), z - 0.05);

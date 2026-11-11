@@ -66,7 +66,7 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
     tail,
     glass: new THREE.MeshPhysicalMaterial({ color: '#0b0f14', metalness: 0.1, roughness: 0.05, clearcoat: 0.6, clearcoatRoughness: 0.03 }),
     trim: new THREE.MeshPhysicalMaterial({ color: '#08090b', metalness: 0.2, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.04 }),
-    clad: new THREE.MeshStandardMaterial({ color: '#16171a', roughness: 0.62, metalness: 0.05 }),
+    clad: new THREE.MeshStandardMaterial({ color: '#0e0f11', roughness: 0.5, metalness: 0.05 }),
     led: new THREE.MeshBasicMaterial({ color: new THREE.Color(4.2, 4.2, 3.9), toneMapped: false }),
     liner: new THREE.MeshStandardMaterial({ color: '#050506', roughness: 0.95 }),
     metal: new THREE.MeshStandardMaterial({ color: '#cfd3d8', metalness: 1, roughness: 0.16 }),
