@@ -17,7 +17,7 @@ export const STUCK_AFTER = 8;
  *   drive(steer: brain.steer, pedal: brain.pedal)
  *   reward +0.02 * progress.gain
  *   reward +10 when arrived
- *   reward +0.01 * (1 - car.speed / 8) when remaining < 25 m (0.03 inside the zone)
+ *   reward +0.015 * (1 - car.speed / 8) when remaining < 30 m (0.06 inside the zone)
  *   reward -2 when ranRedLight
  *   reward -0.3 when overranStopLine
  *   reward -0.005 when speeding
@@ -37,7 +37,7 @@ export const builtinDrivingController: AgentController<DrivingLearner> = {
     let r = 0.02 * l.progressGain;
     if (l.arrived) r += 10;
     // Slowing down on the way into the destination zone pays a little, the trail that leads to stopping there.
-    if (l.remaining < 25 && l.remaining > -7) r += (l.inDestination ? 0.03 : 0.01) * (1 - Math.min(1, l.car.speed / 8));
+    if (l.remaining < 30 && l.remaining > -7) r += (l.inDestination ? 0.06 : 0.015) * (1 - Math.min(1, l.car.speed / 8));
     if (l.ranRedLight) r -= 2;
     if (l.overranStopLine) r -= 0.3;
     if (l.speeding) r -= 0.005;
