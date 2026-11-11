@@ -151,11 +151,19 @@ export class EpisodeSession<S extends LabState = LabState> {
   /** Call after a lesion or a Sandbox edit. Labs with a Sandbox resend its scene. */
   sandboxChanged(): void {}
 
-  /** The setup ghosts replay on: the content training is on now, at the live generation. */
-  protected ghostSetup(run: RunConfig): EpisodeSetup {
-    const envModule = requireEpisodeModule(this.env);
-    const content = this.content ?? envModule.initialContent(run);
-    return envModule.createSetup({ config: run, content, generation: this.store.liveGeneration, scriptSource: null });
+  /**
+   * What ghosts replay on. By default it is the content training is on
+   * now, so old champions race the new agents on the same course. A lab
+   * that wants a champion's own episode returns the content its record
+   * kept (see contentOnRecords). Every ghost of a scene shares it.
+   */
+  protected ghostContent(run: RunConfig, _generations: readonly number[]): unknown {
+    return this.content ?? requireEpisodeModule(this.env).initialContent(run);
+  }
+
+  /** The setup ghosts replay on, built from ghostContent. */
+  protected ghostSetup(run: RunConfig, generations: readonly number[]): EpisodeSetup {
+    return requireEpisodeModule(this.env).createSetup({ config: run, content: this.ghostContent(run, generations), scriptSource: null });
   }
 
   /** Rebuilds the ghost list from the current selection and restarts the replay if it changed. */
@@ -168,7 +176,7 @@ export class EpisodeSession<S extends LabState = LabState> {
     const key = `${run.id}:${gens.join(',')}`;
     if (key === this.ghostKey && !force) return;
     this.ghostKey = key;
-    await pool.replay.setGhostScene(this.env, this.ghostSetup(run), ghostSpecs(run, records, gens));
+    await pool.replay.setGhostScene(this.env, this.ghostSetup(run, gens), ghostSpecs(run, records, gens));
     this.set({ ghostGenerations: gens } as Partial<S>);
     if (!isWatchSpeed(speed) || this.store.status !== 'running') await this.playGhosts(isWatchSpeed(speed) ? WATCH_SPEEDS[speed] : 1, true);
     await this.afterGhosts(pool);

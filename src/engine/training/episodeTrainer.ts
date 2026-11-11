@@ -86,7 +86,7 @@ export class EpisodeTrainer<Setup extends EpisodeSetup = EpisodeSetup, Content =
 
   /** Everything a worker needs to run this generation, as plain data. */
   setup(): Setup {
-    return this.module.createSetup({ config: this.config, content: this.contentNow, generation: this.generation, scriptSource: this.scriptSource() });
+    return this.module.createSetup({ config: this.config, content: this.contentNow, scriptSource: this.scriptSource() });
   }
 
   /** Per agent seeds for noise and script rand(). Stored on records so replays match. */
@@ -113,7 +113,8 @@ export class EpisodeTrainer<Setup extends EpisodeSetup = EpisodeSetup, Content =
     const r = results[bestIndex];
     const generation = this.generation;
     const replaySeed = this.seeds([champ])[0];
-    const trackHash = this.module.contentHash(this.contentNow);
+    const ranOn = this.contentNow;
+    const trackHash = this.module.contentHash(ranOn);
     const mean = genomes.reduce((s, g) => s + g.fitness, 0) / genomes.length;
     const metrics = this.module.generationMetrics?.(results, this.contentNow);
 
@@ -145,7 +146,10 @@ export class EpisodeTrainer<Setup extends EpisodeSetup = EpisodeSetup, Content =
       }
     }
     const champion = { genomeId: champ.id, fitness: champ.fitness, ...this.module.championFields(r), stopReason: r.stopReason } as C;
-    return { runId: this.config.id, generation, stats, champion, genome: championGenome, trackHash, replaySeed, simSeconds, wallMs, ...(metrics && { metrics }) };
+    const record: GenerationRecord<C> = { runId: this.config.id, generation, stats, champion, genome: championGenome, trackHash, replaySeed, simSeconds, wallMs, ...(metrics && { metrics }) };
+    // The content this generation ran on, read before nextContent replaced it.
+    if (this.module.contentOnRecords) record.content = ranOn;
+    return record;
   }
 
   toState(): EpisodeTrainerState<Content> {

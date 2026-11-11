@@ -18,6 +18,7 @@ export function toRow(r: GenerationRecord): GenerationRow {
     markers: r.markers,
     benchmark: r.benchmark,
     ...(r.metrics && { metrics: r.metrics }),
+    ...(r.content !== undefined && { content: r.content }),
   };
 }
 

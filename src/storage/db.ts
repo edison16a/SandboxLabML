@@ -40,6 +40,8 @@ export interface GenerationRow {
   benchmark?: number;
   /** Stats over the whole generation, from the env module. Racing rows have none. */
   metrics?: Record<string, number>;
+  /** The content the generation ran on, for envs whose module keeps it (contentOnRecords). */
+  content?: unknown;
 }
 
 /** Whole-population snapshots. Only the newest three per run are kept. */

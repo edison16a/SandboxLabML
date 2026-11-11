@@ -64,7 +64,7 @@ export function startTestEpisode(p: PreparedWithBrain): EpisodeEnv {
   linkScriptCompiler();
   const envModule = requireEpisodeModule(p.env);
   const config = lessonRunConfig(p);
-  const setup = envModule.createSetup({ config, content: envModule.initialContent(config), generation: 0, scriptSource: p.source });
+  const setup = envModule.createSetup({ config, content: envModule.initialContent(config), scriptSource: p.source });
   const env = envModule.createEnv(setup, hostFor(p.source), TEST_BRAIN_SEED);
   const genome = lessonsOf(p.env).testBrain(runShape(config), envModule.inputSchema(config, p.script.sensors));
   env.reset([new Network(genome)], [TEST_BRAIN_SEED]);

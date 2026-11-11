@@ -44,6 +44,8 @@ export interface GenerationRecord<C extends ChampionRecord = ChampionRecord> {
   wallMs: number;
   /** Stats over the whole generation, keyed like the env module's generation metrics. Racing has none. */
   metrics?: Record<string, number>;
+  /** The content the generation ran on, kept for envs whose module sets contentOnRecords. Plain data. */
+  content?: unknown;
   /** Optional chart markers, such as "script edited". */
   markers?: string[];
   benchmark?: number;

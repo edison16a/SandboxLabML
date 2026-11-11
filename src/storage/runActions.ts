@@ -17,7 +17,9 @@ function cloneConfig(config: RunConfig, patch: Partial<RunConfig>): RunConfig {
 /**
  * Starts a new run from the champion of one generation. Nothing is removed
  * from the original run. The new population is that champion plus mutated
- * copies, and the script version it trained under comes along.
+ * copies, and the script version it trained under comes along. An env
+ * that keeps content on its records resumes on what that generation ran
+ * on (Navigation: its level); the rest start on the run's first content.
  */
 export async function branchRun(runId: string, generation: number): Promise<RunConfig> {
   const run = await getRun(runId);
@@ -36,9 +38,10 @@ export async function branchRun(runId: string, generation: number): Promise<RunC
   await createRun(config);
   const envModule = isEpisodeEnv(config.env) ? await loadEpisodeModule(config.env) : null;
   if (envModule) {
+    const kept = envModule.contentOnRecords ? (await db().generations.get([runId, generation]))?.content : undefined;
     const state: EpisodeTrainerState = {
       population: pop.toState(),
-      content: envModule.initialContent(config),
+      content: kept ?? envModule.initialContent(config),
       bestEver: -1e9,
       stagnation: 0,
       scriptRng: new Rng(seed).getState(),

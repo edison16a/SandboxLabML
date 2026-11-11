@@ -85,11 +85,17 @@ export interface EpisodeEnv<R extends EpisodeResult = EpisodeResult> {
   writeRays?(i: number, out: Float32Array, offset: number): void;
 }
 
-/** What `createSetup` gets: the run, what it trains on now, and the generation. */
+/**
+ * What `createSetup` gets: the run and what it trains on now. There is no
+ * generation on purpose. Anything that changes from one generation to the
+ * next (a level, a route seed) belongs in the content, which nextContent
+ * moves on, checkpoints keep and records can store. Ghosts and the
+ * Sandbox replay on the live content, so a setup built from the content
+ * alone means the same episode wherever it is rebuilt.
+ */
 export interface SetupInput<Content> {
   config: RunConfig;
   content: Content;
-  generation: number;
   scriptSource: string | null;
 }
 
@@ -159,10 +165,18 @@ export interface EpisodeEnvInfo {
 export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Content = unknown, R extends EpisodeResult = EpisodeResult, C extends ChampionRecord = ChampionRecord>
   extends Omit<EpisodeEnvInfo, 'lessons'> {
   initialContent(config: RunConfig): Content;
-  /** The content for the next generation, or null to keep it. `reset` means old scores no longer compare. */
+  /** The content for the next generation as a new object, or null to keep it. `reset` means old scores no longer compare. */
   nextContent(step: ContentStep<Content, R>): { content: Content; reset: boolean } | null;
   /** Stored on every record as `trackHash`, so a path or replay knows what it ran on. */
   contentHash(content: Content): string;
+  /**
+   * Set when the content changes during a run in ways its hash cannot
+   * rebuild, such as a curriculum level or a route seed. Every record then
+   * keeps the content it ran on, so a branch resumes on it and a lab can
+   * replay a champion on its own episode. Keep such content small: a level
+   * and a seed, not a built course. Racing leaves it out.
+   */
+  readonly contentOnRecords?: boolean;
   createSetup(input: SetupInput<Content>): Setup;
   /** Builds an episode. The script controller comes from `host`; null means the env's built in reward. */
   createEnv(setup: Setup, host: ScriptHost, seed: number): EpisodeEnv<R>;

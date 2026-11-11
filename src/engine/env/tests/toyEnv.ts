@@ -149,6 +149,7 @@ export const toyModule: EpisodeEnvModule<ToySetup, { level: number }, ToyResult,
   // The curriculum: a level up once half the population reaches the goal.
   nextContent: ({ content, metrics }) => ((metrics.reachedShare ?? 0) >= 0.5 ? { content: { level: content.level + 1 }, reset: true } : null),
   contentHash: (c) => `level-${c.level}`,
+  contentOnRecords: true,
   createSetup: ({ config, content, scriptSource }) => ({ goal: GOAL * content.level, maxTime: envSettings<{ maxTime: number }>(config).maxTime, scriptSource }),
   createEnv: (setup) => new ToyEnv(setup),
   championFields: (r) => ({ metrics: { best: r.fitness } }),
