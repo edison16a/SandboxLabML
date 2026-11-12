@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: 'Page not found',
 };
 
-/** The 404 page: what happened in one line, then the way back to the labs, the Studio and the Runs page. */
+/** The 404 page: what happened in one line, then the way back to the labs, the Studio and the home page. */
 export default function NotFound() {
   return (
     <Workspace>
