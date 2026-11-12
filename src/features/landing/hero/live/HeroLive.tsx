@@ -60,9 +60,11 @@ export default function HeroLive({ active, hero, panel }: HeroLiveProps) {
 
   const runGo = feeds.run !== null && (shown.drive || feeds.drive === null || waited);
   const live = shown.drive || shown.run;
+  // Still loading while a scene that loaded has not reached the screen. One that failed keeps its poster.
+  const waiting = !feeds.settled || (feeds.drive !== null && !shown.drive) || (feeds.run !== null && !shown.run);
   return (
     <>
-      <HeroLoading loading={feeds.settled ? !((shown.drive || !feeds.drive) && (shown.run || !feeds.run)) : true} />
+      <HeroLoading loading={waiting} />
       {/* The data attribute says which scenes are on screen, for the browser tests and the poster capture. */}
       <div aria-hidden="true" data-hero-shown={[shown.drive && 'drive', shown.run && 'run'].filter(Boolean).join(' ')} className="pointer-events-none absolute inset-0">
         {layout && feeds.drive && (
