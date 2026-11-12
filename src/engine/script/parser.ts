@@ -101,11 +101,11 @@ function parseHeader(c: Cursor): Header {
 
 const isIdPart = (t: Token) => t.kind === 'ident' || t.kind === 'number' || t.kind === 'unit' || t.kind === 'keyword' || (t.kind === 'op' && t.text === '-');
 
-/** `brain racing-starter`. The id is glued back together from touching tokens, since `-` is also minus. */
+/** `brain driving-standard`. The id is glued back together from touching tokens, since `-` is also minus. */
 function parseBrain(c: Cursor): BrainDecl {
   const kw = c.next();
   const first = c.peek();
-  if (first.kind !== 'ident' || first.line !== kw.line) c.fail('Expected a brain id after brain, like brain racing-starter.', c.spanHere(), 'expected-brain');
+  if (first.kind !== 'ident' || first.line !== kw.line) c.fail('Expected a brain id after brain, like brain driving-standard.', c.spanHere(), 'expected-brain');
   let id = '';
   let to = first.from;
   while (isIdPart(c.peek()) && (id === '' || c.peek().from === to)) {
@@ -132,7 +132,7 @@ function parseItem(c: Cursor): Item {
 
 function parseSensor(c: Cursor): SensorItem {
   const kw = c.next();
-  const name = c.expect('ident', undefined, 'Expected a sensor name, like sensor gap "Gap ahead" in 0 m .. 60 m = rays.min.');
+  const name = c.expect('ident', undefined, 'Expected a sensor name, like sensor gap "Gap ahead" in 0 m .. 50 m = carAhead.gap.');
   const label = c.peek();
   if (label.kind !== 'string') c.fail('Give the sensor a label in quotes, like "Gap ahead".', c.spanHere(), 'expected-label');
   c.next();
@@ -146,7 +146,7 @@ function parseSensor(c: Cursor): SensorItem {
   } finally {
     c.allowAssign = false;
   }
-  c.expect('op', '=', 'Expected = and the value to sense, like = rays.min.');
+  c.expect('op', '=', 'Expected = and the value to sense, like = lidar.min.');
   const value = parseExpr(c);
   return {
     kind: 'sensor',

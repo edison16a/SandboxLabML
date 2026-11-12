@@ -21,7 +21,7 @@ function inner(ctx: CheckContext, e: Expr): ExprInfo {
     case 'bool':
       return { type: BOOL, value: e.value };
     case 'string':
-      ctx.error('misplaced-text', 'Text in quotes can only be a name, such as a stop reason or a track id.', e.span);
+      ctx.error('misplaced-text', 'Text in quotes can only be a name, such as a stop reason or a city id.', e.span);
       return ERROR_INFO;
     case 'record':
       ctx.error('misplaced-record', 'Settings in { } only work as an argument, such as mutate: { weights: 0.8 }.', e.span);

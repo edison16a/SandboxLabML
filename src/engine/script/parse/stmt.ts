@@ -104,11 +104,11 @@ function parseStop(c: Cursor): Stmt {
     reason = r.text;
     c.error('Put the stop reason in quotes.', tokenSpan(r), 'unquoted-reason', [replaceFix(`Change to "${r.text}"`, r, `"${r.text}"`)]);
   } else {
-    c.fail('Give the stop a reason in quotes, like stop "crash" when car.offTrack.', c.spanHere(), 'expected-reason');
+    c.fail('Give the stop a reason in quotes, like stop "crash" when car.crashed.', c.spanHere(), 'expected-reason');
   }
   c.next();
   if (!eatWord(c, 'when')) {
-    c.fail('A stop needs a condition. Add when and a test, like when car.offTrack.', c.spanHere(), 'expected-when');
+    c.fail('A stop needs a condition. Add when and a test, like when car.crashed.', c.spanHere(), 'expected-when');
   }
   const when = parseExpr(c);
   return { kind: 'stop', reason, reasonSpan: tokenSpan(r), when, span: { from: kw.from, to: when.span.to }, ...emptyTrivia() };
@@ -151,10 +151,10 @@ function parseRepeat(c: Cursor): RepeatStmt {
 
 function parseForEach(c: Cursor): ForEachStmt {
   const kw = c.next();
-  if (!eatWord(c, 'each')) c.fail('Write for each, like for each r in rays { ... }.', c.spanHere(), 'expected-each');
-  const v = c.expect('ident', undefined, 'Expected a name for each item, like r in for each r in rays.');
-  if (!eatWord(c, 'in')) c.fail(`Expected in after ${v.text}, like for each ${v.text} in rays.`, c.spanHere(), 'expected-in');
-  const coll = c.expect('ident', undefined, 'Expected the name of a list, like rays.');
+  if (!eatWord(c, 'each')) c.fail('Write for each, like for each d in lidar { ... }.', c.spanHere(), 'expected-each');
+  const v = c.expect('ident', undefined, 'Expected a name for each item, like d in for each d in lidar.');
+  if (!eatWord(c, 'in')) c.fail(`Expected in after ${v.text}, like for each ${v.text} in lidar.`, c.spanHere(), 'expected-in');
+  const coll = c.expect('ident', undefined, 'Expected the name of a list, like lidar.');
   const body = blockAfterHead(c);
   return {
     kind: 'forEach',
