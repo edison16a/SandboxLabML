@@ -4,7 +4,7 @@ import { buildBody } from './assemble';
 import { DLO } from './windows';
 import { DETAIL, type Slot } from './parts';
 import { CABIN } from './cabin';
-import { AXLES, beltAt } from './profile';
+import { ARCH, AXLES, beltAt } from './profile';
 import { deckAt, LIP } from './spoiler';
 
 /**
@@ -117,6 +117,24 @@ describe('SUV silhouette', () => {
       const gap = edge - 2 * WHEEL.radius;
       expect(gap).toBeGreaterThan(0.04);
       expect(gap).toBeLessThan(0.06);
+    }
+  });
+
+  it('lifts the paint off the road on a dark base: cladding, its bright strip and the arch flares', () => {
+    // Between the wheels the satin cladding runs from the sill up to about 0.40 m.
+    const clad = points(['clad']).filter(([px, , pz]) => px > -0.8 && px < 0.9 && pz > 0.8).map(([, py]) => py);
+    expect(Math.abs(Math.min(...clad) - 0.22)).toBeLessThan(0.01);
+    expect(Math.abs(Math.max(...clad) - 0.4)).toBeLessThan(0.01);
+    // The bright strip rides along the cladding's top edge.
+    const strip = points(['metal']).filter(([px, py, pz]) => px > -0.8 && px < 0.9 && pz > 0.8 && py < 0.5).map(([, py]) => py);
+    expect(strip.length).toBeGreaterThan(0);
+    for (const py of strip) expect(Math.abs(py - 0.39)).toBeLessThan(0.02);
+    // Over each wheel the flare frames the arch with 4 to 5 cm of satin black on the paint.
+    for (const axle of AXLES) {
+      const flare = points(['clad']).filter(([px, py, pz]) => near(px, axle, 0.03) && py > 0.8 && pz > 0.8).map(([, py]) => py);
+      const width = Math.max(...flare) - (ARCH.centerY + ARCH.radius);
+      expect(width).toBeGreaterThan(0.04);
+      expect(width).toBeLessThan(0.05);
     }
   });
 
