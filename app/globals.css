@@ -28,8 +28,6 @@
   --color-success: #3dd68c;
   --color-danger: #ff5f5f;
   --color-warn: #f5c451;
-  --color-hider: #4c9aff;
-  --color-seeker: #ff5f6d;
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, 'SFMono-Regular', monospace;
