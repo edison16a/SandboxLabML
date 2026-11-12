@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { DIR_X, DIR_Y, LANE_OFFSET, STOP_LINE } from '@/engine/driving/city/dimensions';
 import { cityFor } from '@/engine/driving/city/buildCity';
 import { builtInCity, DEFAULT_CITY_ID } from '@/engine/driving/city/presets';
-import { pickCornerSpot, rankCornerSpots } from './cornerSight';
+import { buildDrivingWorld, createDrivingSetup } from '@/engine/driving/setup';
+import { pickCornerSpot, rankArrivalSpots, rankCornerSpots } from './cornerSight';
 import { NEAR_HEIGHT, streetscapeFor } from '../city/streetscape/layout';
 import { crowdedLens, sees, sightWorld } from './sightLines';
 
@@ -55,6 +56,21 @@ describe('street corner camera spots', () => {
     const ranked = rankCornerSpots(city, all[0].node, all[0].dir, all[0].turn);
     expect(ranked.length).toBeGreaterThan(4);
     expect(new Set(ranked.map((s) => `${s.x},${s.y},${s.height}`)).size).toBe(ranked.length);
+  });
+});
+
+describe('arrival spots', () => {
+  it('see the destination past the furniture on most trips, and never stand in a crowd of poles', () => {
+    let clear = 0;
+    const trips = 16;
+    for (let seed = 1; seed <= trips; seed++) {
+      const { route } = buildDrivingWorld(createDrivingSetup({ level: 2, seed }));
+      const s = rankArrivalSpots(city, route)[0];
+      const dest = route.path.sample(route.destS, { x: 0, y: 0, tx: 1, ty: 0, k: 0, index: 0 });
+      expect(crowdedLens(world, s.x, s.y, s.height), `seed ${seed}`).toBe(false);
+      if (sees(world, s.x, s.y, s.height, dest.x, dest.y, 1, 0.9)) clear++;
+    }
+    expect(clear).toBeGreaterThanOrEqual(trips - 1);
   });
 });
 

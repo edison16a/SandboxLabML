@@ -24,6 +24,9 @@ export interface SightWorld {
 
 const worlds = new WeakMap<City, SightWorld>();
 
+/** How far from the lens the clutter margin of `sees` reaches, m. */
+const CLUTTER_REACH = 14;
+
 /** The sight world of a city, built once and kept. */
 export function sightWorld(city: City): SightWorld {
   let w = worlds.get(city);
@@ -78,13 +81,17 @@ function crossesBox(ax: number, ay: number, bx: number, by: number, b: SightWorl
  * Whether the camera at (ax, ay, ah) sees the point (bx, by, bh) past the
  * street furniture and the buildings, in sim meters. The first and last
  * few percent of the line are forgiven: the lens itself and the car's own
- * surroundings never count as blocking it. Plain loops over plain arrays,
- * cheap enough to run every few frames.
+ * surroundings never count as blocking it. `clutter` widens what counts
+ * near the lens, by up to that many meters at the lens and none past
+ * CLUTTER_REACH: a trunk or crown that only grazes the line close by still
+ * fills half the frame. Plain loops over plain arrays, cheap enough to run
+ * every few frames.
  */
-export function sees(w: SightWorld, ax: number, ay: number, ah: number, bx: number, by: number, bh: number): boolean {
+export function sees(w: SightWorld, ax: number, ay: number, ah: number, bx: number, by: number, bh: number, clutter = 0): boolean {
   const dx = bx - ax;
   const dy = by - ay;
   const len2 = dx * dx + dy * dy || 1;
+  const len = Math.sqrt(len2);
   for (let i = 0; i < w.obstacles.length; i++) {
     const o = w.obstacles[i];
     const t = ((o.x - ax) * dx + (o.y - ay) * dy) / len2;
@@ -93,7 +100,8 @@ export function sees(w: SightWorld, ax: number, ay: number, ah: number, bx: numb
     if (h < o.bottom || h > o.top) continue;
     const ex = ax + dx * t - o.x;
     const ey = ay + dy * t - o.y;
-    if (ex * ex + ey * ey < o.r * o.r) return false;
+    const r = o.r + clutter * Math.max(0, 1 - (t * len) / CLUTTER_REACH);
+    if (ex * ex + ey * ey < r * r) return false;
   }
   for (let i = 0; i < w.blocks.length; i++) if (crossesBox(ax, ay, bx, by, w.blocks[i])) return false;
   return true;

@@ -1,5 +1,7 @@
-import { DIR_X, DIR_Y, LANE_OFFSET, PROPERTY, STOP_LINE } from '@/engine/driving/city/dimensions';
+import { DIR_X, DIR_Y, LANE_OFFSET, PROPERTY, ROAD_HALF, SIDEWALK, STOP_LINE } from '@/engine/driving/city/dimensions';
 import type { City } from '@/engine/driving/city/types';
+import { pathPoint } from '@/engine/driving/geometry/path';
+import type { Route } from '@/engine/driving/route/route';
 import { crowdedLens, sees, sightWorld, type SightWorld } from './sightLines';
 
 /** Camera height on its corner, m, and the raised heights used when the corner is cluttered. */
@@ -14,6 +16,16 @@ const CLEAR_STEP = 3.2;
 const APPROACH = [0, 7.5, 15, 22.5, 30];
 /** Points along the exit it pans to as the car leaves the junction, m past the far stop line. */
 const EXIT = [0, 6, 12];
+/**
+ * How much wider street furniture counts close to the lens, m (see sees):
+ * a trunk or a crown grazing the line a few meters out fills the frame.
+ * The camera uses the same margin to decide it has lost the car.
+ */
+export const CLUTTER = 0.9;
+/** Where the camera may wait for the car's arrival: this far past the destination, looking back down the street, m. */
+const PAST_DEST = [14, 10, 18, 22];
+/** Points before the destination it must see, m. */
+const ARRIVAL = [0, 10, 20, 30];
 
 /** A camera spot on a corner, in sim meters, and its height. */
 export interface CornerSpot {
@@ -42,7 +54,7 @@ function viewPoints(city: City, node: number, dir: number, turn: number): Array<
 function blockedPoints(w: SightWorld, spot: CornerSpot, points: ReadonlyArray<[number, number]>): number {
   if (crowdedLens(w, spot.x, spot.y, spot.height)) return points.length + 1;
   let blocked = 0;
-  for (const [x, y] of points) if (!sees(w, spot.x, spot.y, spot.height, x, y, 1)) blocked++;
+  for (const [x, y] of points) if (!sees(w, spot.x, spot.y, spot.height, x, y, 1, CLUTTER)) blocked++;
   return blocked;
 }
 
@@ -77,10 +89,47 @@ export function rankCornerSpots(city: City, node: number, dir: number, turn: num
     spots.push({ x: x + fx * CLEAR_STEP, y: y + fy * CLEAR_STEP, height: RAISED_HEIGHT });
     spots.push({ x, y, height: HIGH_HEIGHT });
   }
-  const points = viewPoints(city, node, dir, turn);
+  return ranked(w, spots, viewPoints(city, node, dir, turn));
+}
+
+/** Spots best first: fewest points hidden, then the order they were tried in. */
+function ranked(w: SightWorld, spots: CornerSpot[], points: ReadonlyArray<[number, number]>): CornerSpot[] {
   const score = spots.map((s, i) => ({ s, blocked: blockedPoints(w, s, points), i }));
   score.sort((a, b) => a.blocked - b.blocked || a.i - b.i);
   return score.map((e) => e.s);
+}
+
+const at = pathPoint();
+
+/**
+ * Spots for the last stretch, once the car is through its last junction:
+ * on either sidewalk a little past the destination, looking back down the
+ * street at the car rolling in, the same spots raised, and high over the
+ * middle of the road. Ranked like the corner spots, on the points before
+ * the destination.
+ */
+export function rankArrivalSpots(city: City, route: Route): CornerSpot[] {
+  const p = route.path;
+  // The path runs down the middle of the lane: the right sidewalk is past the near curb, the left one past the far curb.
+  // On each, the walking line and a spot nearer the buildings, clear of the trees and lamps by the curb.
+  const sides = [ROAD_HALF - LANE_OFFSET + SIDEWALK / 2, PROPERTY - LANE_OFFSET - 0.6, -(ROAD_HALF + LANE_OFFSET + SIDEWALK / 2), -(PROPERTY + LANE_OFFSET - 0.6)];
+  const spots: CornerSpot[] = [];
+  for (const height of [CORNER_HEIGHT, RAISED_HEIGHT]) {
+    for (const past of PAST_DEST) {
+      p.sample(Math.min(route.destS + past, p.length), at);
+      for (const off of sides) spots.push({ x: at.x + at.ty * off, y: at.y - at.tx * off, height });
+    }
+  }
+  // Last, high over the middle of the road, as from a gantry: nothing stands between it and the lane.
+  for (const past of PAST_DEST) {
+    p.sample(Math.min(route.destS + past, p.length), at);
+    spots.push({ x: at.x - at.ty * LANE_OFFSET, y: at.y + at.tx * LANE_OFFSET, height: RAISED_HEIGHT });
+  }
+  const points: Array<[number, number]> = ARRIVAL.map((back) => {
+    p.sample(Math.max(0, route.destS - back), at);
+    return [at.x, at.y];
+  });
+  return ranked(sightWorld(city), spots, points);
 }
 
 /** The best spot for the street corner camera (see rankCornerSpots). */
