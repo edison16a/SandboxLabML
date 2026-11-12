@@ -9,6 +9,7 @@ import { useDisposable } from '@/render/shared/useDisposable';
 import { useDrivingScene } from '../frame/sceneContext';
 import { bodyMotion, FLAT_ROAD, stepBody } from '../motion/bodyModel';
 import { paintColor } from '../population/palette';
+import { TIERS } from '../quality';
 import { smoothstep } from '../textures/noise';
 import { ContactShadow } from './ContactShadow';
 import { BODY, WHEEL, WHEEL_SPOTS } from './dimensions';
@@ -84,7 +85,7 @@ export function FollowedSuv() {
   return (
     <group ref={root} visible={false}>
       <SuvModel tier={tier} materials={materials} rig={rig} />
-      <ContactShadow />
+      <ContactShadow core={!TIERS[tier].shadows} />
     </group>
   );
 }
