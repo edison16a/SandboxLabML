@@ -35,6 +35,9 @@ export function skinAt(x: number, y: number): { z: number; nz: number; ny: numbe
   return { z: sectionAt(x).keys[0].z, nz: 1, ny: 0 };
 }
 
+/** How far the flare reaches out over the paint from the arch's edge, m. */
+export const FLARE_REACH = 0.046;
+
 /**
  * The flare round each arch, as (out from the arch's edge, lift off the
  * skin) in m: a slim satin black band 4.6 cm wide that rises from a
@@ -43,10 +46,10 @@ export function skinAt(x: number, y: number): { z: number; nz: number; ny: numbe
  * tire reads against the dark well, and with the sill cladding it draws
  * the dark base an SUV stands on.
  */
-const FLARE: Array<[number, number]> = [[0.046, 0.001], [0.04, 0.0042], [0.034, 0.0068], [0.02, 0.0084], [0.009, 0.0084], [0.003, 0.0068], [0.0005, 0.0042]];
-const FAR_FLARE: Array<[number, number]> = [[0.046, 0.0015], [0.012, 0.0075], [0.002, 0.005]];
+const FLARE: Array<[number, number]> = [[FLARE_REACH, 0.001], [0.04, 0.0042], [0.034, 0.0068], [0.02, 0.0084], [0.009, 0.0084], [0.003, 0.0068], [0.0005, 0.0042]];
+const FAR_FLARE: Array<[number, number]> = [[FLARE_REACH, 0.0015], [0.012, 0.0075], [0.002, 0.005]];
 /** The lightest population car keeps three points across: the flare's edge, its crown and the ring's inner edge. */
-const FAREST: Array<[number, number]> = [[0.046, 0.0015], [0.008, 0.0075]];
+const FAREST: Array<[number, number]> = [[FLARE_REACH, 0.0015], [0.008, 0.0075]];
 
 /**
  * Inside the opening, as (out along the radius, in toward the car) from
