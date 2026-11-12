@@ -9,7 +9,7 @@ export interface RunScriptInfo {
   editedAt: number | null;
 }
 
-/** A script names itself on its first line: script "Beginner: first laps" for racing v1. */
+/** A script names itself on its first line: script "Beginner: first trips" for driving v1. */
 const HEADER = /^\s*script\s+"([^"\n]+)"/m;
 
 /** The name a script gives itself, or a fallback when the header has none. */

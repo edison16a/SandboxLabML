@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { runScriptInfo, scriptName } from './runScript';
 
-const source = (name: string) => `// A comment first\nscript "${name}" for racing v1\nbrain racing-starter\n`;
+const source = (name: string) => `// A comment first\nscript "${name}" for driving v1\nbrain driving-standard\n`;
 
 function run(scripts: RunConfig['scripts']): RunConfig {
   return { scripts } as RunConfig;
@@ -10,7 +10,7 @@ function run(scripts: RunConfig['scripts']): RunConfig {
 
 describe('naming the script a run trains with', () => {
   it('reads the name from the header line', () => {
-    expect(scriptName(source('Beginner: first laps'))).toBe('Beginner: first laps');
+    expect(scriptName(source('Beginner: first trips'))).toBe('Beginner: first trips');
     expect(scriptName('each tick {}')).toBe('Untitled script');
   });
 

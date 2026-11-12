@@ -1,10 +1,10 @@
 import { findPresetBlueprint } from '@/engine/blueprints/presets';
-import type { Blueprint, EpisodeBlueprint, EpisodeEnvId, HideSeekBlueprint, RacingBlueprint } from '@/engine/blueprints/types';
+import type { Blueprint, EpisodeBlueprint, EpisodeEnvId } from '@/engine/blueprints/types';
 import type { EnvId } from '@/engine/env/types';
 import { compileScript, presetsOf, type ScriptPreset } from '@/engine/script';
 
 /** The blueprint type a lab works with, so each dialog gets back the shape it can train. */
-export type BlueprintOf<E extends EnvId> = E extends 'racing' ? RacingBlueprint : E extends 'hideseek' ? HideSeekBlueprint : EpisodeBlueprint<E & EpisodeEnvId>;
+export type BlueprintOf<E extends EnvId> = EpisodeBlueprint<E & EpisodeEnvId>;
 
 /** The reward a new run trains with: the built-in reward or a compiled SBL script. */
 export type ScriptChoice<B = Blueprint> =

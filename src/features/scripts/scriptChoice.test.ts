@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { HIDESEEK_PRESETS, RACING_PRESETS } from '@/engine/script';
+import { presetsOf } from '@/engine/script';
+
+const DRIVING_PRESETS = presetsOf('driving');
+const NAVIGATION_PRESETS = presetsOf('navigation');
 import { choiceFromPreset, choiceFromSource } from './scriptChoice';
 
 describe('script choices', () => {
   it('compiles every preset and finds its blueprint', () => {
-    for (const [env, presets] of [['racing', RACING_PRESETS], ['hideseek', HIDESEEK_PRESETS]] as const) {
+    expect(DRIVING_PRESETS.length).toBeGreaterThan(0);
+    expect(NAVIGATION_PRESETS.length).toBeGreaterThan(0);
+    for (const [env, presets] of [['driving', DRIVING_PRESETS], ['navigation', NAVIGATION_PRESETS]] as const) {
       for (const p of presets) {
         const c = choiceFromPreset(env, p);
         expect(c?.kind, p.id).toBe('script');
@@ -17,7 +22,7 @@ describe('script choices', () => {
   });
 
   it('refuses a script written for the other environment', () => {
-    expect(choiceFromSource('hideseek', 'x', 'x', RACING_PRESETS[0].source)).toBeNull();
-    expect(choiceFromSource('racing', 'x', 'x', HIDESEEK_PRESETS[0].source)).toBeNull();
+    expect(choiceFromSource('navigation', 'x', 'x', DRIVING_PRESETS[0].source)).toBeNull();
+    expect(choiceFromSource('driving', 'x', 'x', NAVIGATION_PRESETS[0].source)).toBeNull();
   });
 });
