@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { CHASE_SPOT } from '@/engine/hero/driver/camera';
 import { chaseAnchor, stepAnchor, type ChaseAnchor } from '@/render/driving/camera/chaseAnchor';
 import type { DrivingFrame } from '@/render/driving/frame/sceneContext';
 import { stepSpring, type Spring } from '@/render/shared/interpolate';
@@ -6,8 +7,8 @@ import type { PaneView } from '../stage/paneView';
 
 /** The shot: how far round from straight behind (to the SUV's left, over the middle of the road) and how high it looks down, rad. */
 export const CHASE = {
-  side: (10 * Math.PI) / 180,
-  elevation: (12 * Math.PI) / 180,
+  side: CHASE_SPOT.side,
+  elevation: (13 * Math.PI) / 180,
   /** The SUV's span seen from three quarters behind, m, and the share of the free part of the pane it fills. */
   span: 3.2,
   fill: 0.55,
@@ -15,10 +16,11 @@ export const CHASE = {
    * Distance limits, m: never so close the SUV crowds the frame, never so
    * far the camera reaches the trees along the far curb or a corner
    * building gets in the way. The streets are narrow, so the side angle
-   * stays small and the camera stays over the road.
+   * stays small and the camera stays over the road. The hero's trips are
+   * picked to keep traffic off this stretch (see carAtCamera).
    */
-  near: 10,
-  far: 14,
+  near: CHASE_SPOT.near,
+  far: CHASE_SPOT.far,
   /** Meters of road over which the shot turns most of the way round with the SUV, so a corner is a slow swing. */
   turnDistance: 10,
   /** How stiffly the camera holds its place round the anchor, 1/s. */

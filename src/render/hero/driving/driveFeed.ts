@@ -1,5 +1,5 @@
 import { SIM_DT } from '@/engine/driving/car/params';
-import { buildDrivingWorld, type DrivingWorld } from '@/engine/driving/setup';
+import type { DrivingWorld } from '@/engine/driving/setup';
 import { DRIVING_SNAPSHOT, WORLD_SIZE } from '@/engine/driving/snapshot';
 import type { HeroDriver } from '@/engine/hero/driver/file';
 import { DRIVER_OPENING_TICK, HeroDriveLoop } from '@/engine/hero/driver/loop';
@@ -35,7 +35,7 @@ export class DriveFeed extends HeroFeed {
       { index: 0, tick: -1, obs: new Float32Array(inputs) },
     ];
     this.observed = { prev: null, curr: null };
-    this.trip = buildDrivingWorld(driver.trips[0]);
+    this.trip = this.tripOf();
     this.publish();
     this.tick();
   }
@@ -57,6 +57,12 @@ export class DriveFeed extends HeroFeed {
     return this.loop.brain;
   }
 
+  /** The city, route and level the trip's env was built with, so the renderer draws exactly the trip being driven. */
+  private tripOf(): DrivingWorld {
+    const { city, route, level } = this.loop.env.opts;
+    return { city, route, level };
+  }
+
   /** Writes the newest tick into the sources. A new trip starts them over, so nothing blends across the cut. */
   private publish(): void {
     const { loop } = this;
@@ -64,7 +70,7 @@ export class DriveFeed extends HeroFeed {
     const fresh = loop.episode !== this.shownEpisode;
     if (fresh) {
       this.shownEpisode = loop.episode;
-      this.trip = buildDrivingWorld(this.driver.trips[loop.trip]);
+      this.trip = this.tripOf();
       this.population.restart();
       this.world.restart();
       this.observed.prev = this.observed.curr = null;
