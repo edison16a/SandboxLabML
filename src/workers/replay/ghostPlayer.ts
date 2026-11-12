@@ -20,7 +20,7 @@ export interface GhostSpec {
   slot?: number;
 }
 
-/** Salt of a ghost's controller seed. Script rand() in a tick draws from the agent's own stream, so it does not change a lap. */
+/** Salt of a ghost's controller seed. Script rand() in a tick draws from the agent's own stream, so it does not change a run. */
 const GHOST_CONTROLLER_SALT = 0x9405;
 
 /**
@@ -50,7 +50,7 @@ export class GhostPlayer {
   }
 
   /**
-   * The env, its setup (Racing: the track to drive) and the champions to
+   * The env, its setup (such as the trip to drive) and the champions to
    * replay on it. Loads the env's module first, so the scene only changes
    * once the player can run it.
    */

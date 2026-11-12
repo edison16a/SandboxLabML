@@ -81,7 +81,7 @@ export function entriesFor(env: EnvId | null, scope: BlockScope): RegistryEntry[
   return [...entriesByName(env).values()].filter((e) => inScope(e, scope));
 }
 
-/** Finds an entry by name in any environment, used to explain "this belongs to racing". */
+/** Finds an entry by name in any environment, used to explain "this belongs to driving". */
 export function findAnywhere(name: string): RegistryEntry | undefined {
   return REGISTRY.find((e) => e.name === name);
 }

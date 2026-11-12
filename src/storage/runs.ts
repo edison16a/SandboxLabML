@@ -15,8 +15,6 @@ export async function createRun(config: RunConfig): Promise<RunRow> {
     updatedAt: Date.now(),
     generation: 0,
     bestFitness: 0,
-    bestDistance: 0,
-    bestLapTime: 0,
   };
   await db().runs.put(row);
   return row;

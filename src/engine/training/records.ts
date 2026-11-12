@@ -13,20 +13,6 @@ export interface ChampionRecord {
   metrics?: Record<string, number>;
 }
 
-/**
- * Racing's champion. Its fields predate the metrics map and stay where
- * they always were, so stored runs and exports keep their layout.
- */
-export interface RacingChampionRecord extends ChampionRecord {
-  /** Meters along the road before stopping. */
-  distance: number;
-  laps: number;
-  bestLapTime: number;
-  crashed: boolean;
-  crashX: number;
-  crashY: number;
-}
-
 /** One generation's worth of history. Stored per generation in IndexedDB. */
 export interface GenerationRecord<C extends ChampionRecord = ChampionRecord> {
   runId: string;
@@ -35,7 +21,11 @@ export interface GenerationRecord<C extends ChampionRecord = ChampionRecord> {
   champion: C;
   /** The champion's genome, kept so any generation can be replayed or branched from. */
   genome: Genome;
-  /** Hash of the content the generation ran on (Racing: the track), from the env module's contentHash. */
+  /**
+   * Hash of the content the generation ran on, from the env module's
+   * contentHash. The name is older than the env registry; stored rows
+   * and exports keep it.
+   */
   trackHash: string;
   /** Seed used for the champion's sensor noise and script rand(), needed for an exact replay. */
   replaySeed: number;
@@ -44,7 +34,7 @@ export interface GenerationRecord<C extends ChampionRecord = ChampionRecord> {
   /** Seconds of simulated time across the whole population. */
   simSeconds: number;
   wallMs: number;
-  /** Stats over the whole generation, keyed like the env module's generation metrics. Racing has none. */
+  /** Stats over the whole generation, keyed like the env module's generation metrics. */
   metrics?: Record<string, number>;
   /** The content the generation ran on, kept for envs whose module sets contentOnRecords. Plain data. */
   content?: unknown;
@@ -53,4 +43,3 @@ export interface GenerationRecord<C extends ChampionRecord = ChampionRecord> {
   benchmark?: number;
 }
 
-export type RacingRecord = GenerationRecord<RacingChampionRecord>;

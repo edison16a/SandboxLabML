@@ -19,7 +19,7 @@ export interface NewEpisodeRun<S extends Readonly<Record<string, unknown>> = Rea
 /**
  * The run config of a new run for any registry env. The engine version
  * and physics hash come from the env's module, and the NEAT settings from
- * the blueprint, the same way Racing builds its runs.
+ * the blueprint.
  */
 export function createEpisodeRunConfig(input: NewEpisodeRun): RunConfig {
   const envModule = requireEpisodeInfo(input.env);

@@ -3,7 +3,6 @@ import type { AgentController, CustomSensorSpec } from '../env/types';
 import { defaultPlan } from '../neat/population';
 import type { NeatConfig } from '../neat/config';
 import type { GenerationPlan } from '../neat/plan';
-import type { Track } from '../racing/track/types';
 
 /** Facts about the finished generation that a script's `each generation` block can read. */
 export interface GenerationContext {
@@ -17,12 +16,9 @@ export interface GenerationContext {
   metrics?: Readonly<Record<string, number>>;
 }
 
-export type TrackDirective = { kind: 'builtin'; id: string } | { kind: 'random'; seed: number };
-
 /** What the generation block decided: the NEAT plan plus environment changes. */
 export interface GenerationDirectives {
   plan: GenerationPlan;
-  racing?: { track?: TrackDirective };
   /**
    * Requests for the script's own env, such as a level or a course. A
    * script belongs to one env, so one slot is enough: that env's registry
@@ -35,9 +31,7 @@ export interface GenerationDirectives {
 /** What a compiled script's controller is bound to for one episode batch. Matches the script registry's ControllerContext. */
 export interface ControllerRequest {
   seed: number;
-  /** Racing scripts that read the road need it. */
-  track?: Track;
-  /** Whatever else an env's script entries read, such as a city. */
+  /** Whatever an env's script entries read beyond the agent, such as a city. */
   extra?: Readonly<Record<string, unknown>>;
 }
 

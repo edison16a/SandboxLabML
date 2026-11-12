@@ -1,8 +1,8 @@
 import { hashObject } from '../../core/hash';
 
 /**
- * The SUV's model constants: the same kinematic bicycle with a grip limit
- * the racing car used, retuned for a 2.1 tonne SUV at city speeds. Frozen
+ * The SUV's model constants: a kinematic bicycle with a grip limit, tuned
+ * for a 2.1 tonne SUV at city speeds. Frozen
  * when a run is created and hashed onto every genome, so changing these
  * means a new run.
  */

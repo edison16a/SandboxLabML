@@ -6,7 +6,7 @@ let linked = false;
 
 /**
  * Plugs the SBL compiler into the training layer on the current thread.
- * RacingTrainer only finds a script compiler through registration, and the
+ * EpisodeTrainer only finds a script compiler through registration, and the
  * workers register theirs in src/workers/shared/loadScripts.ts. Lesson checks,
  * the benchmark tests and the reference generator train outside the workers,
  * so they register the same factory here. Doing it twice is harmless because

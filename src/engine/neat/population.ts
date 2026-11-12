@@ -105,7 +105,7 @@ export class Population {
 
   /**
    * Forgets every species' best score. Call it when the environment changes
-   * (a new track): old bests were earned on easier or different ground, and
+   * (a new level): old bests were earned on easier or different ground, and
    * keeping them would mark every species as stagnant and cull them.
    */
   resetStagnation(): void {

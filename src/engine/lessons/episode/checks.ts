@@ -1,7 +1,6 @@
 import { requireEpisodeInfo } from '../../env/registry';
-import { MAX_CHECK_GENERATIONS } from '../checks/metricAbove';
 import { metricOutcome } from '../checks/compare';
-import type { TrainingOptions } from '../training';
+import { MAX_CHECK_GENERATIONS, type TrainingOptions } from '../shared';
 import type { CheckOutcome, LessonCheck } from '../types';
 import { testRunMetricNames, trainingMetricNames } from './names';
 import { testEpisode, trainEpisodeLesson, type PreparedEpisode, type PreparedWithBrain } from './run';

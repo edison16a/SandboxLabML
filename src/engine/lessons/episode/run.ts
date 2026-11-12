@@ -11,8 +11,7 @@ import { runShape, type RunConfig } from '../../training/runConfig';
 import { hostFor } from '../../training/scriptHost';
 import { linkScriptCompiler } from '../compilerLink';
 import { pause } from '../pause';
-import { TEST_BRAIN_SEED } from '../testDriver';
-import { LESSON_POPULATION, LESSON_SEED, type TrainingOptions } from '../training';
+import { LESSON_POPULATION, LESSON_SEED, TEST_BRAIN_SEED, type TrainingOptions } from '../shared';
 
 export { testRunMetricNames, trainingMetricNames } from './names';
 

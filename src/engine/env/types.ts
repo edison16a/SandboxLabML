@@ -4,7 +4,7 @@
  * knowing about any one env.
  */
 
-export type EnvId = 'racing' | 'driving' | 'navigation';
+export type EnvId = 'driving' | 'navigation';
 
 /** One brain input, described well enough to label it and draw it in 3D. */
 export interface InputSpec {

@@ -1,7 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import type { Blueprint } from '@/engine/blueprints/types';
 import type { EnvId } from '@/engine/env/types';
-import type { TrackSpec } from '@/engine/racing/track/types';
 import type { GenerationStats } from '@/engine/neat/stats';
 import type { ChampionRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
@@ -16,8 +15,6 @@ export interface RunRow {
   updatedAt: number;
   generation: number;
   bestFitness: number;
-  bestDistance: number;
-  bestLapTime: number;
   /** Best value of each env metric so far, in the direction it prefers, keyed like the env's metrics. */
   best?: Record<string, number>;
   benchmark?: number;
@@ -40,7 +37,7 @@ export interface GenerationRow {
   wallMs: number;
   markers?: string[];
   benchmark?: number;
-  /** Stats over the whole generation, from the env module. Racing rows have none. */
+  /** Stats over the whole generation, from the env module. */
   metrics?: Record<string, number>;
   /** The content the generation ran on, for envs whose module keeps it (contentOnRecords). */
   content?: unknown;
@@ -81,7 +78,7 @@ export interface PathCacheRow {
   runId: string;
   generation: number;
   trackHash: string;
-  /** Quantized x, y per tick as Int16 (decimeters relative to the track bounds). */
+  /** Quantized x, y per tick as Int16 (decimeters relative to the world bounds). */
   path: Int16Array;
 }
 
@@ -117,14 +114,6 @@ export interface SettingRow {
   value: unknown;
 }
 
-/** A track the user drew in the Racing Sandbox and saved under a name. */
-export interface TrackRow {
-  id: string;
-  name: string;
-  spec: TrackSpec;
-  updatedAt: number;
-}
-
 /** A Navigation course the user drew in the Sandbox editor. `spec` is a CourseSpec as plain data, cleaned on read. */
 export interface CourseRow {
   id: string;
@@ -148,7 +137,6 @@ export class SandboxDb extends Dexie {
   benchmarks!: Table<BenchmarkRow, [string, number]>;
   settings!: Table<SettingRow, string>;
   hsGenerations!: Table<RetiredGenerationRow, [string, number]>;
-  tracks!: Table<TrackRow, string>;
   courses!: Table<CourseRow, string>;
 
   constructor(name = 'sandboxlab') {

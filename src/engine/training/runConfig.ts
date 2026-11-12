@@ -1,25 +1,14 @@
-import type { Blueprint, RacingBlueprint } from '../blueprints/types';
+import type { Blueprint } from '../blueprints/types';
 import { blueprintShape } from '../blueprints/shape';
-import { ENGINE_VERSION } from '../core/version';
 import type { EnvId } from '../env/types';
-import { neatConfig, type NeatConfig } from '../neat/config';
+import type { NeatConfig } from '../neat/config';
 import type { GenomeShape } from '../neat/types';
-import { CAR_PRESETS, physicsHash, type CarParams, type CarPresetId } from '../racing/car/params';
-import type { TrackSpec } from '../racing/track/types';
 
 /** A script version and the generation it took effect, so replays use the rules each ghost lived under. */
 export interface ScriptVersion {
   fromGeneration: number;
   source: string;
   hash: string;
-}
-
-export interface RacingSettings {
-  track: TrackSpec;
-  carPreset: CarPresetId;
-  car: CarParams;
-  /** Episode length, s. */
-  maxTime: number;
 }
 
 /**
@@ -42,12 +31,9 @@ export interface RunConfig {
   /** Number of extra inputs the script's sensors add. */
   customSensors: number;
   neat: NeatConfig;
-  racing?: RacingSettings;
   /**
-   * The env's own options for envs added through the registry (a city, a
-   * level, an episode length), opaque here and read only by the env's
-   * module through envSettings. Racing predates it and keeps its own
-   * under its id.
+   * The env's own options (a city, a level, an episode length), opaque
+   * here and read only by the env's module through envSettings.
    */
   settings?: Readonly<Record<string, unknown>>;
   /** Set when the run was forked from another run. */
@@ -58,40 +44,6 @@ export function newRunId(): string {
   const bytes = new Uint8Array(8);
   globalThis.crypto.getRandomValues(bytes);
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-export interface NewRacingRun {
-  name: string;
-  seed: number;
-  blueprint: RacingBlueprint;
-  track: TrackSpec;
-  carPreset: CarPresetId;
-  populationSize: number;
-  maxTime?: number;
-  script?: { source: string; hash: string; customSensors: number };
-}
-
-export function createRacingRunConfig(input: NewRacingRun): RunConfig {
-  const car = CAR_PRESETS[input.carPreset];
-  const bp = input.blueprint;
-  return {
-    id: newRunId(),
-    name: input.name,
-    env: 'racing',
-    seed: input.seed >>> 0,
-    createdAt: Date.now(),
-    engineVersion: ENGINE_VERSION,
-    physicsHash: physicsHash(car, { inputs: bp.inputs }),
-    blueprint: bp,
-    scripts: input.script ? [{ fromGeneration: 0, source: input.script.source, hash: input.script.hash }] : [],
-    customSensors: input.script?.customSensors ?? 0,
-    neat: neatConfig({
-      populationSize: input.populationSize,
-      ...(bp.neat ?? {}),
-      mutation: { ...neatConfig().mutation, ...(bp.neat?.mutation ?? {}) },
-    }),
-    racing: { track: input.track, carPreset: input.carPreset, car, maxTime: input.maxTime ?? 60 },
-  };
 }
 
 /** A registry env's options, typed by the module that reads them. Throws when the run has none. */

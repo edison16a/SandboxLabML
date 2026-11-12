@@ -27,11 +27,7 @@ const FORMATS: Record<string, (v: number) => string> = {
   totalReward: (v) => `${round(v)} points`,
   bestFitness: (v) => `${round(v)} points`,
   distance: (v) => `${Math.round(v)} m`,
-  bestDistance: (v) => `${Math.round(v)} m`,
-  laps: (v) => `${v} ${v === 1 ? 'lap' : 'laps'}`,
   ticks: (v) => `${v} ticks (${(v / 30).toFixed(1)} s)`,
-  crashed: (v) => (v ? 'the car crashed' : 'the car did not crash'),
-  checkpoints: (v) => `${v} ${v === 1 ? 'checkpoint' : 'checkpoints'}`,
   inputs: (v) => `${v} brain inputs`,
   species: (v) => `${v} species`,
 };

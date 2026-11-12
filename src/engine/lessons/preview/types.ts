@@ -1,32 +1,6 @@
 import type { PreviewBounds } from '../../env/hooks';
 import type { EnvId } from '../../env/types';
 
-/**
- * One lesson test drive, recorded for the preview beside a lesson. Every
- * array is a typed array so a worker can hand it over without copying.
- * Coordinates are track meters with y up.
- */
-export interface DrivePreview {
-  kind: 'racing';
-  /** The road as closed polylines of x, y pairs: the center line and both edges. */
-  center: Float32Array;
-  left: Float32Array;
-  right: Float32Array;
-  /** Road width, m. */
-  width: number;
-  bounds: { minX: number; minY: number; maxX: number; maxY: number };
-  ticks: number;
-  /** x, y and heading of the car after every tick. */
-  poses: Float32Array;
-  /** Where each ray hit after every tick, as x, y pairs, `rayCount` per tick. */
-  rays: Float32Array;
-  rayCount: number;
-  /** The car's total reward after every tick. */
-  rewards: Float32Array;
-  /** Why the drive ended: time, crash, or a stop rule's reason. */
-  stopReason: string;
-}
-
 /** A ray of the test agent, as the input schema describes it: its angle from the agent's facing (left positive) and its range, m. */
 export interface PreviewRay {
   angle: number;
@@ -63,12 +37,11 @@ export interface EpisodePreview {
   bounds: PreviewBounds | null;
 }
 
-export type LessonPreview = DrivePreview | EpisodePreview;
+export type LessonPreview = EpisodePreview;
 
 export type PreviewResult = { ok: true; preview: LessonPreview } | { ok: false; message: string };
 
 /** The buffers of a preview, for a worker's transfer list. */
 export function previewBuffers(p: LessonPreview): ArrayBuffer[] {
-  const arrays = p.kind === 'racing' ? [p.center, p.left, p.right, p.poses, p.rays, p.rewards] : [p.frames, p.world, p.reach, p.rewards];
-  return arrays.map((a) => a.buffer as ArrayBuffer);
+  return [p.frames, p.world, p.reach, p.rewards].map((a) => a.buffer as ArrayBuffer);
 }

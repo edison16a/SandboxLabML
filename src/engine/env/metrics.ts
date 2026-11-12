@@ -14,7 +14,7 @@ export interface MetricSpec {
   source: 'champion' | 'generation';
   /** Which way is better, for best so far summaries. */
   better: 'higher' | 'lower';
-  /** A value that means "none yet", like Racing's lap time of 0 before any lap. It reads as NaN. */
+  /** A value that means "none yet", like a finish time of 0 before any finish. It reads as NaN. */
   missing?: number;
   /** Formats a value for the champion table and chart ticks, e.g. "412 m". NaN means there is none. */
   format(value: number): string;
@@ -39,18 +39,13 @@ export function chartedMetrics(specs: readonly MetricSpec[]): MetricSpec[] {
 }
 
 /**
- * Reads a metric off a record. Champion metrics live in `champion.metrics`,
- * except Racing's, which predate the map and sit on the champion itself.
- * A metric the record lacks reads as NaN, so charts leave a gap.
+ * Reads a metric off a record: a champion metric from `champion.metrics`,
+ * a generation metric from the record's own `metrics`. A metric the record
+ * lacks reads as NaN, so charts leave a gap.
  */
 export function metricValue(record: GenerationRecord, spec: MetricSpec): number {
-  if (spec.source === 'generation') {
-    const value = record.metrics?.[spec.key];
-    return value === undefined || value === spec.missing ? NaN : value;
-  }
-  const champion = record.champion as unknown as Record<string, unknown>;
-  const value = record.champion.metrics?.[spec.key] ?? champion[spec.key];
-  return typeof value === 'number' && value !== spec.missing ? value : NaN;
+  const value = spec.source === 'generation' ? record.metrics?.[spec.key] : record.champion.metrics?.[spec.key];
+  return value === undefined || value === spec.missing ? NaN : value;
 }
 
 /** The best value a metric reached over a history, or NaN when it never had one. */

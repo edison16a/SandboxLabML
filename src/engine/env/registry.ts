@@ -1,6 +1,5 @@
 import { drivingInfo } from '../driving/info';
 import { navigationInfo } from '../navigation/info';
-import { racingInfo } from '../racing/info';
 import type { AnyEpisodeModule, EpisodeEnvInfo } from './episode';
 import type { EnvId } from './types';
 
@@ -14,7 +13,6 @@ import type { EnvId } from './types';
  * runs or checks scripts never ships an env's engine.
  */
 const infos = new Map<string, EpisodeEnvInfo>([
-  [racingInfo.id, racingInfo],
   [drivingInfo.id, drivingInfo],
   [navigationInfo.id, navigationInfo],
 ]);

@@ -1,19 +1,11 @@
 import type { EnvId } from '../env/types';
 
-/** The four axes of the Racing radar chart, each 0 to 1. */
-export interface RacingRadar {
-  speed: number;
-  completion: number;
-  smoothness: number;
-  generalization: number;
-}
-
 /**
- * Radar values for one result. Each environment has its own axes, so the
- * chart reads their keys and labels from RADAR_AXES instead of assuming
- * Racing's four.
+ * Radar values for one result, each 0 to 1, keyed by axis. Each env has
+ * its own axes, so the chart reads their keys and labels from the env's
+ * benchmark (radarAxesOf).
  */
-export type BenchRadar = RacingRadar | Readonly<Record<string, number>>;
+export type BenchRadar = Readonly<Record<string, number>>;
 
 /** Progress and cancel for a benchmark that runs in slices. */
 export interface BenchOptions {

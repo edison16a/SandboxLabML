@@ -1,11 +1,9 @@
 import type { EnvId } from '../env/types';
 import { DRIVING_PRESETS } from './presets/driving';
 import { NAVIGATION_PRESETS } from './presets/navigation';
-import { RACING_PRESETS } from './presets/racing';
 import type { ScriptPreset } from './presets/types';
 import { DRIVING_SLICE } from './registry/driving';
 import { NAVIGATION_SLICE } from './registry/navigation';
-import { RACING_SLICE } from './registry/racing';
 import type { RegistrySlice } from './registry/types';
 
 /** The script layer's part of one env: what its scripts may use and the scripts it ships. */
@@ -34,31 +32,6 @@ export interface ScriptEnv {
  * autocomplete and preset lists all read it.
  */
 const table: ScriptEnv[] = [
-  {
-    env: 'racing',
-    slice: RACING_SLICE,
-    presets: RACING_PRESETS,
-    builtin: 'Checkpoints, laps and a little speed.',
-    starter: [
-      'script "My script" for racing v1',
-      'brain racing-standard',
-      '',
-      'each tick {',
-      '  drive(steer: brain.steer, pedal: brain.pedal)',
-      '  reward +1 when checkpoint.passed',
-      '  stop "crash" when car.offTrack',
-      '}',
-      '',
-    ].join('\n'),
-    templates: {
-      'reward when': 'reward ${1:+1} when ${2:checkpoint.passed}',
-      'reward every tick': 'reward ${1:+0.01} * ${2:car.speed}',
-      'stop when': 'stop "${1:crash}" when ${2:car.offTrack}',
-      'for each': 'for each ${1:r} in ${2:rays} {\n  ${3}\n}',
-      sensor: 'sensor ${1:name} "${2:Label}" in ${3:0 m} .. ${4:60 m} = ${5:rays.min}',
-      'each tick': 'each tick {\n  ${1:drive(steer: brain.steer, pedal: brain.pedal)}\n}',
-    },
-  },
   {
     env: 'driving',
     slice: DRIVING_SLICE,

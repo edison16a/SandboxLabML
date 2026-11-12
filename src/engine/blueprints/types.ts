@@ -1,7 +1,6 @@
 import type { EnvId } from '../env/types';
 import type { NeatConfig } from '../neat/config';
 import type { Activation, GenomeShape } from '../neat/types';
-import type { RacingInputConfig } from '../racing/sensors/inputConfig';
 
 export const BLUEPRINT_SCHEMA_VERSION = 1;
 
@@ -32,14 +31,6 @@ interface BlueprintBase {
   };
 }
 
-export interface RacingBlueprint extends BlueprintBase {
-  env: 'racing';
-  inputs: RacingInputConfig;
-}
-
-/** Ids of the envs that plug in through the env registry after Racing. */
-export type EpisodeEnvId = Exclude<EnvId, 'racing'>;
-
 /**
  * The sensor config of an env added through the registry. Only its module
  * reads the groups; every env shares the noise level, which the blueprint
@@ -48,11 +39,11 @@ export type EpisodeEnvId = Exclude<EnvId, 'racing'>;
 export type EpisodeInputs = { noise: number } & Readonly<Record<string, unknown>>;
 
 /**
- * A blueprint of an env added through the env registry. Its inputs are the
- * env's own sensor config, read only by its module (inputCount,
- * inputSchema, validateInputs), so this layer never needs to know them.
+ * A blueprint of an env. Its inputs are the env's own sensor config, read
+ * only by its module (inputCount, inputSchema, validateInputs), so this
+ * layer never needs to know them.
  */
-export interface EpisodeBlueprint<E extends EpisodeEnvId = EpisodeEnvId, I extends EpisodeInputs = EpisodeInputs> extends BlueprintBase {
+export interface EpisodeBlueprint<E extends EnvId = EnvId, I extends EpisodeInputs = EpisodeInputs> extends BlueprintBase {
   env: E;
   inputs: I;
 }
@@ -61,7 +52,7 @@ export interface EpisodeBlueprint<E extends EpisodeEnvId = EpisodeEnvId, I exten
  * What a brain senses and how it starts out. Stored as JSON in the
  * blueprints table and frozen into a run's config when the run is created.
  */
-export type Blueprint = RacingBlueprint | EpisodeBlueprint;
+export type Blueprint = EpisodeBlueprint;
 
 export interface BlueprintIssue {
   field: string;

@@ -80,7 +80,6 @@ export function allowedHere(ctx: CheckContext, entry: RegistryEntry, node: NameE
     ctx.error('not-in-sensor', `A sensor cannot read ${entry.name}, because the brain runs after the sensors.`, node.span);
     return false;
   }
-  for (const n of entry.needs ?? []) ctx.needs.add(n);
   if (entry.name === 'rand') ctx.usesRand[scope] = true;
   return true;
 }

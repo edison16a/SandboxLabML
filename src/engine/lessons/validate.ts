@@ -1,10 +1,8 @@
 import { episodeInfo, isEpisodeEnv } from '../env/registry';
 import type { EnvId } from '../env/types';
-import { MAX_CHECK_GENERATIONS } from './checks/metricAbove';
 import { testRunMetricNames, trainingMetricNames } from './episode/names';
-import { TEST_DRIVE_METRICS } from './checks/testRun';
+import { MAX_CHECK_GENERATIONS } from './shared';
 import { scriptComments, styleProblems } from './style';
-import { TRAINING_METRICS } from './training';
 import type { AstPattern, Lesson, LessonCheck, LessonStep } from './types';
 
 interface Measures {
@@ -14,15 +12,8 @@ interface Measures {
   maxGenerations: number;
 }
 
-/** What Racing checks can measure, and how many generations their training checks may ask for. */
-const MEASURES: Partial<Record<EnvId, Measures>> = {
-  racing: { testRunName: 'a test drive', testRun: TEST_DRIVE_METRICS, training: TRAINING_METRICS, maxGenerations: MAX_CHECK_GENERATIONS },
-};
-
-/** What a course's checks can measure. Envs added through the registry describe theirs in their module's lesson hooks. */
+/** What a course's checks can measure, as the env's module lesson hooks describe it, and how long a training check may train. */
 function measuresOf(course: EnvId): Measures | null {
-  const fixed = MEASURES[course];
-  if (fixed) return fixed;
   const lessons = episodeInfo(course)?.lessons;
   if (!lessons) return null;
   return { testRunName: lessons.testRunName, testRun: testRunMetricNames(lessons), training: trainingMetricNames(course), maxGenerations: MAX_CHECK_GENERATIONS };

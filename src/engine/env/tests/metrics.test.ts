@@ -25,6 +25,8 @@ describe('env metrics', () => {
     expect(metricValue(record({ metrics: { time: 12 } }), time)).toBe(12);
     expect(metricValue(record({}, { arrived: 0.5 }), share)).toBe(0.5);
     expect(metricValue(record({}), share)).toBeNaN();
+    // A champion's own numbers live only in its metrics map.
+    expect(metricValue(record({ time: 12 }), time)).toBeNaN();
   });
 
   it('keeps the best value in the direction the metric prefers', () => {

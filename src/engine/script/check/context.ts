@@ -62,7 +62,6 @@ export interface CheckResult {
   slotCount: { tick: number; generation: number };
   declarations: Declaration[];
   usesRand: { tick: boolean; generation: boolean };
-  needs: Set<'track'>;
 }
 
 /**
@@ -80,7 +79,6 @@ export class CheckContext {
   readonly sensorNames = new Set<string>();
   readonly slotCount = { tick: 0, generation: 0 };
   readonly usesRand = { tick: false, generation: false };
-  readonly needs = new Set<'track'>();
   scope: CheckScope = 'top';
   private frames: Map<string, Local>[] = [];
 
@@ -163,7 +161,6 @@ export class CheckContext {
       slotCount: this.slotCount,
       declarations: this.declarations,
       usesRand: this.usesRand,
-      needs: this.needs,
     };
   }
 }

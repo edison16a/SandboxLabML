@@ -1,7 +1,7 @@
 import { requireEpisodeInfo } from '../env/registry';
 import { MAX_HIDDEN_LAYERS } from '../neat/startShape';
 import type { GenomeShape } from '../neat/types';
-import { MAX_INPUTS, MAX_OUTPUTS, type Blueprint, type BlueprintIssue, type EpisodeBlueprint } from './types';
+import { MAX_INPUTS, MAX_OUTPUTS, type Blueprint, type BlueprintIssue } from './types';
 
 /** Number of brain inputs the blueprint produces before any script sensors. */
 export function blueprintInputCount(b: Blueprint): number {
@@ -38,15 +38,7 @@ export function validateBlueprint(b: Blueprint, customSensors = 0): BlueprintIss
   // Every env shares the noise level, so it is checked here, whatever the env checks on top.
   const noise = (b.inputs as { noise?: unknown }).noise;
   if (typeof noise !== 'number' || !(noise >= 0 && noise <= 0.1)) issues.push({ field: 'noise', message: 'Noise must be between 0 and 10%.' });
-  if (b.env === 'racing') {
-    if (b.inputs.rays.count < 1 || b.inputs.rays.count > 33) {
-      issues.push({ field: 'rays', message: 'Use between 1 and 33 rays.' });
-    }
-    if (b.inputs.rays.range <= 0) issues.push({ field: 'rays', message: 'Ray range must be positive.' });
-  } else {
-    const plugin: EpisodeBlueprint = b;
-    issues.push(...(requireEpisodeInfo(plugin.env).validateInputs?.(plugin.inputs) ?? []));
-  }
+  issues.push(...(requireEpisodeInfo(b.env).validateInputs?.(b.inputs) ?? []));
   if (b.wiring === 'hidden' && (!b.hiddenCount || b.hiddenCount < 1 || b.hiddenCount > 32)) {
     issues.push({ field: 'hiddenCount', message: 'Hidden layer needs 1 to 32 neurons.' });
   }

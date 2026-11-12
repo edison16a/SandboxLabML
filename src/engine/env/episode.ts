@@ -1,6 +1,6 @@
 /**
- * The contract every single population environment implements. Racing is
- * the first; Driving and Navigation follow. The trainer, the workers, the
+ * The contract every single population environment implements, Driving
+ * and Navigation alike. The trainer, the workers, the
  * storage layer and the lab UI only ever talk to an env through this file,
  * so a new env is a set of modules plus one entry in `registry.ts`.
  *
@@ -116,7 +116,7 @@ export interface ContentStep<Content, R extends EpisodeResult> {
   metrics: Readonly<Record<string, number>>;
 }
 
-/** The env's half of a champion record. Racing returns its distance and lap fields; newer envs return `{ metrics }`. */
+/** The env's half of a champion record, which is `{ metrics }` keyed like its champion metrics. */
 export type ChampionFields<C extends ChampionRecord> = Omit<C, 'genomeId' | 'fitness' | 'stopReason'>;
 
 /**
@@ -127,7 +127,7 @@ export type ChampionFields<C extends ChampionRecord> = Omit<C, 'genomeId' | 'fit
  */
 export interface EpisodeEnvInfo {
   readonly id: EnvId;
-  /** Display name, e.g. "Racing". */
+  /** Display name, e.g. "Driving". */
   readonly label: string;
   /** Bumped whenever a change could alter this env's results. Runs and references store it. */
   readonly engineVersion: number;
@@ -163,9 +163,8 @@ export interface EpisodeEnvInfo {
 
 /**
  * One single population environment: its info plus the simulation.
- * `Content` is what the population trains on right now (Racing: the track;
- * Driving: a city, level and route seed; Navigation: a level and course
- * seed). It is plain data, kept in checkpoints, and changed by the script's
+ * `Content` is what the population trains on right now (Driving: a city,
+ * level and route seed; Navigation: a level and course seed). It is plain data, kept in checkpoints, and changed by the script's
  * generation block or by the env's own curriculum.
  */
 export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Content = unknown, R extends EpisodeResult = EpisodeResult, C extends ChampionRecord = ChampionRecord>
@@ -180,7 +179,7 @@ export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Con
    * rebuild, such as a curriculum level or a route seed. Every record then
    * keeps the content it ran on, so a branch resumes on it and a lab can
    * replay a champion on its own episode. Keep such content small: a level
-   * and a seed, not a built course. Racing leaves it out.
+   * and a seed, not a built course.
    */
   readonly contentOnRecords?: boolean;
   createSetup(input: SetupInput<Content>): Setup;

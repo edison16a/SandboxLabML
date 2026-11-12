@@ -76,9 +76,9 @@ async function train(c: RunConfig, generations: number): Promise<{ hash: string;
 
 /**
  * Training must stay bit for bit what it was: the shipped reference files
- * and every stored run depend on it. These hashes were taken before Racing
- * and Hide and Seek left the code; a change means Driving or Navigation
- * results changed, which needs an engine version bump and new references.
+ * and every stored run depend on it. These hashes were taken before the
+ * old labs left the code; a change means Driving or Navigation results
+ * changed, which needs an engine version bump and new references.
  */
 describe('golden training runs', () => {
   const driving = (source?: string) => config(DEFAULT_DRIVING_BLUEPRINT, { ...DEFAULT_DRIVING_SETTINGS, trips: 1 }, source);

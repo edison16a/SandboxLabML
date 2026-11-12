@@ -5,10 +5,6 @@ import type { Blueprint } from './types';
 import { presetBlueprints, blueprintInputCount, validateBlueprint } from './index';
 
 const expected: Record<string, number> = {
-  'racing-tiny': 2,
-  'racing-starter': 4,
-  'racing-standard': 11,
-  'racing-advanced': 15,
   'driving-starter': 17,
   'driving-standard': 25,
   'driving-advanced': 46,

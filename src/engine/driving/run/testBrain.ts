@@ -1,5 +1,5 @@
 import type { InputSpec } from '../../env/types';
-import { TEST_BRAIN_SEED } from '../../lessons/testDriver';
+import { TEST_BRAIN_SEED } from '../../lessons/shared';
 import { Population } from '../../neat/population';
 import type { Genome, GenomeShape } from '../../neat/types';
 

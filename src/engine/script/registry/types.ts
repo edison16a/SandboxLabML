@@ -1,6 +1,5 @@
 import type { Rng } from '../../core/rng';
 import type { EnvId, TickIO } from '../../env/types';
-import type { Track } from '../../racing/track/types';
 import type { UnitName } from '../units';
 
 /** Where a name may be used: once per agent per tick, once per generation, or both. */
@@ -27,7 +26,7 @@ export interface ParamDef {
   default?: number | boolean | string;
   /** Inclusive bounds. Constant arguments outside them get a warning and are clamped. */
   range?: readonly [number, number];
-  /** Allowed values of a string parameter, such as built-in track ids. */
+  /** Allowed values of a string parameter, such as built-in city ids. */
   choices?: readonly string[];
   /** Fields of a record parameter, such as the rates inside `mutate: { ... }`. */
   fields?: readonly ParamDef[];
@@ -43,9 +42,7 @@ export type ItemReader = (view: unknown, index: number) => number;
 /** Passed to `createController`. The trainer builds one per episode batch. */
 export interface ControllerContext {
   seed: number;
-  /** Required by racing scripts that read the track, such as track.width. */
-  track?: Track;
-  /** Room for what later environments need, so adding one does not change this type. */
+  /** What an env's entries read beyond the agent, such as the course on screen. */
   extra?: Readonly<Record<string, unknown>>;
 }
 
@@ -109,8 +106,6 @@ export interface RegistryEntry {
   progress?: boolean;
   /** Not known yet when script sensors run, so sensor expressions may not read it. */
   notInSensor?: boolean;
-  /** Pieces of the controller context this entry needs. */
-  needs?: readonly 'track'[];
   binding: Binding;
 }
 

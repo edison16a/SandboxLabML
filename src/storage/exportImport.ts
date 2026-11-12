@@ -82,7 +82,7 @@ export async function importRun(text: string): Promise<RunConfig> {
   return config;
 }
 
-/** The file name a run exports to, such as oval-laps.sandboxlab.json. */
+/** The file name a run exports to, such as rush-hour.sandboxlab.json. */
 export function runFileName(name: string): string {
   return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'run'}.sandboxlab.json`;
 }

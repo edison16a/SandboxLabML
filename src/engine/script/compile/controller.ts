@@ -24,7 +24,7 @@ export function sensorRange(check: CheckResult, s: SensorItem): [number, number]
 
 /**
  * Builds a fresh controller: its own local slots, its own random streams
- * and closures bound to this context's track. Building is cheap, and the
+ * and closures bound to this context's extra data. Building is cheap, and the
  * trainer makes one per episode batch.
  *
  * `rand()` in a tick draws from a stream owned by the agent, seeded from

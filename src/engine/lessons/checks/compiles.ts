@@ -2,7 +2,7 @@ import type { Program } from '../../script/ast';
 import { compileScript } from '../../script/compiler';
 import { print } from '../../script/printer';
 import { findScriptPreset } from '../../script/presets';
-import { firstProblem, type PreparedScript } from '../prepare';
+import { firstProblem, type PreparedEpisode } from '../prepare';
 import type { CheckOutcome, LessonCheck } from '../types';
 
 type CompilesCheck = Extract<LessonCheck, { kind: 'compiles' }>;
@@ -32,7 +32,7 @@ function firstDifference(mine: Program, preset: Program): string {
 }
 
 /** Runs a compiles check on a script that already compiled without errors. */
-export function compilesCheck(check: CompilesCheck, prepared: PreparedScript): CheckOutcome {
+export function compilesCheck(check: CompilesCheck, prepared: PreparedEpisode): CheckOutcome {
   if (check.noWarnings) {
     const warning = firstProblem(prepared.source, prepared.compiled.diagnostics, 'warning');
     if (warning) return { passed: false, message: `${check.message} ${warning}` };

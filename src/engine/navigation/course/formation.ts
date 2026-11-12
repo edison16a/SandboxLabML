@@ -10,8 +10,8 @@ const FRONT_GAP = 0.5;
 const BACK_GAP = 0.7;
 
 /**
- * The start grid of a course: rows across the room behind the start line,
- * like the start of a race. Even rows hold `columns` spots, odd rows one
+ * The start grid of a course: rows across the room behind the start line.
+ * Even rows hold `columns` spots, odd rows one
  * fewer, set half a gap across, so neighbours in two rows never stand
  * right behind each other. Spots fill from the front row's middle outward,
  * then row by row, so any number of agents makes a tidy block.

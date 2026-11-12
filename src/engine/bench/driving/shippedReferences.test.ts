@@ -32,7 +32,7 @@ describe('public/references/driving.json', () => {
   });
 
   it('reads no models from a file of another lab or a broken one', () => {
-    expect(parseDrivingModels({ env: 'racing', models: [] })).toEqual([]);
+    expect(parseDrivingModels({ env: 'navigation', models: [] })).toEqual([]);
     expect(parseDrivingModels({ env: 'driving', models: [{ tier: 'beginner' }] })).toEqual([]);
     expect(parseDrivingModels(null)).toEqual([]);
   });

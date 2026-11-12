@@ -17,8 +17,6 @@ export interface EpisodeTrainerState<Content = unknown> {
   scriptRng: [number, number, number, number];
 }
 
-/** Checkpoints saved before the generic trainer kept Racing's track under `track`. */
-type StoredState<Content> = Omit<EpisodeTrainerState<Content>, 'content'> & { content?: Content; track?: Content };
 
 /** Seed of the generation block's random stream, mixed from the run seed. */
 const SCRIPT_RNG_SALT = 0x5c;
@@ -60,9 +58,9 @@ export class EpisodeTrainer<Setup extends EpisodeSetup = EpisodeSetup, Content =
     if (config.env !== module.id) throw new Error(`This is a ${config.env} run, not ${module.id}.`);
     this.module = module;
     this.config = config;
-    const stored = state as StoredState<Content> | undefined;
+    const stored = state;
     this.population = stored ? Population.fromState(stored.population) : Population.create(runShape(config), config.seed, config.neat);
-    this.contentNow = stored?.content ?? stored?.track ?? module.initialContent(config);
+    this.contentNow = stored?.content ?? module.initialContent(config);
     this.bestEver = stored?.bestEver ?? -Infinity;
     this.stagnation = stored?.stagnation ?? 0;
     this.scriptRng = stored ? Rng.fromState(stored.scriptRng) : new Rng(mixSeed(config.seed, SCRIPT_RNG_SALT));

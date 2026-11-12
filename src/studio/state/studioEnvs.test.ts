@@ -27,12 +27,11 @@ describe('the Studio envs', () => {
 });
 
 describe('a script header for a removed lab', () => {
-  it('is an error with a fix to each lab, and the script reads as having no env', () => {
+  it('is an unknown env that names the labs, and the script reads as having no env', () => {
     const a = analyze('script "Old" for racing v1\n\neach tick {\n}\n');
-    const d = a.diagnostics.find((x) => x.code === 'retired-env');
+    const d = a.diagnostics.find((x) => x.code === 'unknown-env');
     expect(d?.severity).toBe('error');
-    expect(d?.message).toBe('This version has no racing lab. Write the script for driving or navigation.');
-    expect(d?.fixes?.map((f) => f.title)).toEqual(['Change to driving', 'Change to navigation']);
+    expect(d?.message).toBe('There is no environment called racing. Use driving or navigation.');
     expect(a.env).toBeNull();
   });
 

@@ -19,7 +19,7 @@ export interface EpisodeBench {
   version: number;
   /** Radar axes in drawing order, clockwise from the top. */
   axes: ReadonlyArray<{ key: string; label: string }>;
-  /** Shown beside the benchmark chart, e.g. "unseen tracks, 0 to 100". */
+  /** Shown beside the benchmark chart, e.g. "unseen cities, 0 to 100". */
   hint: string;
   /** What the chart says before the first score lands, in one sentence. */
   about: string;

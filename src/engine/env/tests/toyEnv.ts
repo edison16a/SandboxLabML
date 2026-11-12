@@ -1,6 +1,6 @@
 import { BLUEPRINT_SCHEMA_VERSION, type Blueprint } from '../../blueprints/types';
 import { hashObject } from '../../core/hash';
-import { TEST_BRAIN_SEED } from '../../lessons/testDriver';
+import { TEST_BRAIN_SEED } from '../../lessons/shared';
 import { Population } from '../../neat/population';
 import type { ChampionRecord } from '../../training/records';
 import { envSettings } from '../../training/runConfig';

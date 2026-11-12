@@ -16,12 +16,9 @@ export interface GenerationContext {
   metrics?: Readonly<Record<string, number>>;
 }
 
-export type TrackDirective = { kind: 'builtin'; id: string } | { kind: 'random'; seed: number };
-
-/** What a generation block decided: the NEAT plan plus requests for each environment. */
+/** What a generation block decided: the NEAT plan plus requests for the script's env. */
 export interface GenerationDirectives {
   plan: GenerationPlan;
-  racing?: { track?: TrackDirective };
   /**
    * Requests for the script's own env, one key per request (a level, a
    * traffic density), read by its env module's nextContent. Operators set

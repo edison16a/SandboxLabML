@@ -26,7 +26,7 @@ const KIND: Record<Token['kind'], HighlightKind> = {
  * it uses the lexer alone and never throws, even on half-typed text. The
  * contextual words get their keyword color here: `brain` on its own line,
  * and `tick` or `generation` right after `each`. A brain id such as
- * `racing-starter` is merged into one span.
+ * `driving-starter` is merged into one span.
  */
 export function tokenize(source: string): HighlightSpan[] {
   try {

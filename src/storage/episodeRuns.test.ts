@@ -2,7 +2,6 @@ import 'fake-indexeddb/auto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { summaryMetric } from '@/engine/env/metrics';
 import { registerEpisodeModule } from '@/engine/env/registry';
-import { racingInfo } from '@/engine/racing/info';
 import { TOY_BLUEPRINT, toyModule } from '@/engine/env/tests/toyEnv';
 import { NAVIGATION_BLUEPRINTS } from '@/engine/navigation/pipeline/blueprints';
 import type { Blueprint } from '@/engine/blueprints/types';
@@ -61,12 +60,12 @@ describe('runs of a registry env', () => {
     expect((await getRun(copy.id))?.best).toEqual(row.best);
   });
 
-  it('read the best lap of Racing rows saved before the metric map', () => {
-    const lap = racingInfo.metrics.find((m) => m.summary)!;
-    const old = { bestLapTime: 31.25, bestDistance: 900 } as RunRow;
-    expect(runBest(old, lap)).toBe(31.25);
-    expect(runBest({ ...old, bestLapTime: 0 }, lap)).toBeNaN();
-    expect(runBest(old, racingInfo.metrics[0])).toBe(900);
+  it('read a metric a run has no best for yet, or only the missing value of, as none', () => {
+    const [, best] = toyModule.metrics;
+    const finish = { ...best, key: 'finish', missing: 0 };
+    expect(runBest({} as RunRow, best)).toBeNaN();
+    expect(runBest({ best: { finish: 0 } } as unknown as RunRow, finish)).toBeNaN();
+    expect(runBest({ best: { finish: 12 } } as unknown as RunRow, finish)).toBe(12);
   });
 
   it('grow a brain onto a blueprint with more sensors and keep training', async () => {

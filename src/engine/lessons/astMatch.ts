@@ -64,7 +64,7 @@ function candidates(program: Program, result: CheckResult): Candidate[] {
 /**
  * Whether one candidate satisfies a pattern. `callee` means "is a call to"
  * for call statements and "contains a call to" for anything else, so a
- * pattern can ask for an if that switches tracks.
+ * pattern can ask for an if that switches levels.
  */
 function matchesOne(c: Candidate, p: AstPattern): boolean {
   if (c.stmt !== p.stmt) return false;
