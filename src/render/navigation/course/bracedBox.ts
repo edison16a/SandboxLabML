@@ -15,7 +15,7 @@ export interface BracedBoxParts {
   braces: THREE.BufferGeometry;
 }
 
-/** Edge frame thickness and face brace width, m. The ramp is built from the same bars. */
+/** Edge frame thickness and face brace width, m. */
 export const EDGE = 0.07;
 export const BRACE = 0.052;
 export const BRACE_DEPTH = 0.026;

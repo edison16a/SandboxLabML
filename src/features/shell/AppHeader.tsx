@@ -30,7 +30,7 @@ export function AppHeader({ right }: { right?: React.ReactNode }) {
               href={href}
               // Both lab tours end by pointing at the Studio.
               data-tour={href === '/studio' ? 'nav-studio' : undefined}
-              // Lab routes carry three.js and Rapier; prefetching them would make every page heavy.
+              // Lab routes carry three.js and the training workers; prefetching them would make every page heavy.
               prefetch={false}
               aria-current={active ? 'page' : undefined}
               className={cn(
