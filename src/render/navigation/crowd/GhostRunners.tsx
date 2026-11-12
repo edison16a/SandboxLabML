@@ -33,8 +33,8 @@ const CLEAR_ALPHA = 0.3;
  * followed runner, or to a ghost drawn before it, fades out, fully by the
  * near distance, so they merge into one and part again smoothly, m.
  */
-const MERGE_NEAR = 0.3;
-const MERGE_FAR = 0.75;
+const MERGE_NEAR = 0.45;
+const MERGE_FAR = 1.1;
 
 /** 0 at `a` or closer, 1 at `b` or further, smooth between. */
 function smoothstep(a: number, b: number, x: number): number {
