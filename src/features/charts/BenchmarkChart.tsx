@@ -12,31 +12,30 @@ import { axis, generationAxis, UPlotChart } from './UPlotChart';
 
 const TIER_COLORS = { beginner: '#5d6779', intermediate: '#8a94a7', advanced: '#ff9f43' } as const;
 
-/** What the chart says before the first benchmark lands: Hide and Seek's own line, or the env module's. */
+/** What the chart says before the first benchmark lands: the env's own line about its exam. */
 function emptyText(env: EnvId): string {
-  return env === 'hideseek' ? 'Every 10 generations, the champions play fixed reference teams.' : (episodeInfo(env)?.bench?.about ?? '');
+  return episodeInfo(env)?.bench?.about ?? '';
 }
 
-/** Any record with a generation and, once benchmarked, its score. Racing and Hide and Seek records both fit. */
+/** Any record with a generation and, once benchmarked, its score. */
 interface Scored {
   generation: number;
   benchmark?: number;
 }
 
 interface Props {
-  env?: EnvId;
+  env: EnvId;
   records: readonly Scored[];
   height?: number;
 }
 
 /**
  * The run's benchmark score against the reference scripts' median and 25
- * to 75% band. In Racing the scores come from held-out roads, so a curve
- * that falls while fitness rises is overfitting to the training track. In
- * Hide and Seek they come from games against fixed reference champions,
- * which co-evolved fitness cannot show, since both teams improve together.
+ * to 75% band. The scores come from held-out exams (Driving: trips in two
+ * cities it never trained in), so a curve that falls while fitness rises
+ * is overfitting to what training shows it.
  */
-export function BenchmarkChart({ env = 'racing', records, height = 160 }: Props) {
+export function BenchmarkChart({ env, records, height = 160 }: Props) {
   const [refs, setRefs] = useState<BenchReferences | null>(null);
   useEffect(() => {
     void loadReferences(env).then(setRefs);
