@@ -84,10 +84,10 @@ export function sillY(x: number): number {
  * wheel it climbs to the diffuser's top, so one dark base runs round the car.
  */
 export function rockerY(x: number): number {
-  return 0.4 - 0.02 * smooth((x - 1.98) / 0.36) + 0.12 * smooth((-x - 1.9) / 0.4);
+  return 0.4 - 0.025 * smooth((x - 1.98) / 0.36) + 0.12 * smooth((-x - 1.9) / 0.4);
 }
 
 /** Where the lower side starts to tuck under. At the nose it is the fold over the central intake. */
 export function tuckY(x: number): number {
-  return 0.62 - 0.035 * smooth((x - 1.95) / 0.4);
+  return 0.62 - 0.025 * smooth((x - 1.95) / 0.4);
 }
