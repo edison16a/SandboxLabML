@@ -12,7 +12,8 @@ import { Section } from './Section';
 /**
  * Fitness curve, the env's metrics, the benchmark, species bands and the
  * latest champions. The champion table shows the env's champion metrics
- * (Racing: distance and best lap) between fitness and how the run ended.
+ * (Driving: arrived, distance and red lights) between fitness and how the
+ * run ended.
  * `extra` is a lab's own panels, placed under the metrics. `metrics`
  * replaces the generic metrics charts, for a lab that charts its numbers
  * its own way (Navigation: the level timeline and the finish shares).

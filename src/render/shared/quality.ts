@@ -1,4 +1,4 @@
-import type { QualityTier } from '@/features/racing/state/labStore';
+import type { QualityTier } from '@/features/lab/state/labState';
 
 /** Pixel ratio cap per tier. Pixel ratio is the first thing to drop on a cheaper tier. */
 export function tierDpr(tier: QualityTier): [number, number] {
@@ -9,8 +9,7 @@ export function tierDpr(tier: QualityTier): [number, number] {
 
 /**
  * Rough guess at a weak GPU from the WebGL renderer string. Integrated GPUs
- * start on Medium, and until someone picks a quality the Hide and Seek grid
- * caps at 25 arenas on them.
+ * start on Medium until someone picks a quality.
  */
 export function isIntegratedGpu(gl: WebGL2RenderingContext | WebGLRenderingContext): boolean {
   const ext = gl.getExtension('WEBGL_debug_renderer_info');

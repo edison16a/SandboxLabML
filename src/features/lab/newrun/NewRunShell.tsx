@@ -33,9 +33,9 @@ interface Props<B extends Blueprint> {
   defaultBlueprint: B;
   /** Prefill the script, e.g. when Studio sends a script here to train. */
   initialScript?: ScriptChoice<B>;
-  /** The lab's own fields between the name and the script, such as the track. */
+  /** The lab's own fields between the name and the script, such as the city. */
   children?: React.ReactNode;
-  /** A lab field beside population and seed, such as car physics. */
+  /** A lab field beside population and seed. */
   besideSeed?: React.ReactNode;
   build: (basics: NewRunBasics<B>) => RunConfig;
 }

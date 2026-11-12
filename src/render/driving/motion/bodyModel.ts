@@ -3,10 +3,9 @@ import { damped, stepDamped, type Damped } from './damped';
 import type { TickMotion } from './tickMotion';
 
 /**
- * Suspension tuning for a stiff mid engine car, per g of acceleration:
- * about 2.3 degrees of roll and 1.3 of pitch, a body that rings at 1.4 to
- * 2 Hz and settles within a bounce. Real road cars roll more; race cars
- * less. These read as weight without looking soft.
+ * Suspension tuning per g of acceleration: about 2.3 degrees of roll and
+ * 1.3 of pitch, a body that rings at 1.4 to 2 Hz and settles within a
+ * bounce. A firm, sporty ride that reads as weight without looking soft.
  */
 const ROLL_PER_G = 0.04;
 const PITCH_PER_G = 0.023;

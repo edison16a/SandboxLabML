@@ -19,7 +19,7 @@ interface Props {
   onNewRun: () => void;
   /** The lab's help menu: its shortcuts and tour. */
   help: React.ReactNode;
-  /** Lab buttons placed before the help menu, such as Racing's Sandbox. */
+  /** Lab buttons placed before the help menu, such as the Sandbox. */
   extra?: React.ReactNode;
 }
 

@@ -16,7 +16,7 @@ export type PanelTab = 'progress' | 'network' | 'species' | 'inputs' | 'model';
 
 /**
  * UI state every single population lab has. A lab's own store extends it
- * with what only it needs (Racing: tracks, telemetry, the Sandbox field),
+ * with what only it needs (Navigation: the course, the Sandbox lineup),
  * and the shared toolbar, side panel tabs and session read only these
  * fields. Snapshots never go through a store; they flow from the workers
  * straight to the renderer.
@@ -33,7 +33,7 @@ export interface LabState {
   view: ViewMode;
   ghostSelection: GhostSelection;
   ghostGenerations: number[];
-  /** The lab's own camera names (Racing: chase, orbit, trackside, top, free). */
+  /** The lab's own camera names (Driving: chase, orbit, corner, top, free). */
   camera: string;
   focus: Focus;
   /** Render tier. Settings own the choice; the lab copies it here for the renderer. */

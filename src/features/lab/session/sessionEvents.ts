@@ -17,7 +17,7 @@ export interface SessionEventHooks {
   set(patch: Partial<LabState>): void;
   /** Takes a batch of finished records into the store. */
   deliver(batch: GenerationRecord[]): void;
-  /** Takes the new content (Racing: a track a script switched to) and lets the lab mirror it. */
+  /** Takes the new content (Navigation: the next course) and lets the lab mirror it. */
   content(content: unknown): void;
   refreshGhosts(force: boolean): void;
   /** Restarts the ghosts once, at a watch speed. */
@@ -68,7 +68,7 @@ export class SessionEvents {
       case 'live-start':
         h.set({ liveGeneration: e.generation });
         if (h.lab().mode === 'sandbox') break;
-        // Ghosts restart with every live generation so they race the new agents from the same start.
+        // Ghosts restart with every live generation so they run beside the new agents from the same start.
         h.playGhosts(e.speed);
         break;
       case 'error':

@@ -35,9 +35,9 @@ export interface LabContextValue {
   /** The lab's store. Its state may hold more than LabState; shared code only touches the shared fields. */
   api: LabStoreApi;
   session: LabSession;
-  /** Setting that remembers the run the lab opened last, such as "racing.lastRun". */
+  /** Setting that remembers the run the lab opened last, such as "driving.lastRun". */
   lastRunKey: string;
-  /** What one agent is called in this lab, such as "car", for labels like "Followed car". */
+  /** What one agent is called in this lab, such as "SUV", for labels like "Followed SUV". */
   agentNoun: string;
 }
 

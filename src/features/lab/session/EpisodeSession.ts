@@ -159,7 +159,7 @@ export class EpisodeSession<S extends LabState = LabState> {
 
   /**
    * What ghosts replay on. By default it is the content training is on
-   * now, so old champions race the new agents on the same course. A lab
+   * now, so old champions run beside the new agents on the same course. A lab
    * that wants a champion's own episode returns the content its record
    * kept (see contentOnRecords). Every ghost of a scene shares it.
    */
@@ -188,13 +188,13 @@ export class EpisodeSession<S extends LabState = LabState> {
     await this.afterGhosts(pool);
   }
 
-  /** Runs once a new ghost scene plays, such as Racing fetching its speed traces. */
+  /** Runs once a new ghost scene plays, for a lab that fetches something per scene. */
   protected async afterGhosts(_pool: WorkerPool): Promise<void> {}
 
   protected async playGhosts(speed: number, loop: boolean): Promise<void> {
     await this.pool?.replay.playGhosts(speed, loop);
   }
 
-  /** The content changed (Racing: a script switched the track). Labs mirror it into their store. */
+  /** The content changed (Driving: the curriculum moved up a level). Labs mirror it into their store. */
   protected onContent(_content: unknown): void {}
 }

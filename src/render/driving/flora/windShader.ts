@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-/** The breeze blows from the south west, across most tracks' main straight. */
+/** The breeze blows from the south west. */
 export const WIND_DIR = new THREE.Vector2(0.8, 0.6);
 
 /**

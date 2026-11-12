@@ -6,7 +6,7 @@ interface Disposable {
 
 /**
  * useMemo for GPU resources: the value is disposed when the deps change or
- * the component unmounts, so editing a track never leaks geometry.
+ * the component unmounts, so editing a course never leaks geometry.
  */
 export function useDisposable<T extends Disposable | null>(factory: () => T, deps: DependencyList): T {
   // The caller owns the deps list, exactly like useMemo itself.

@@ -12,7 +12,7 @@ import { Section } from './Section';
  * The env's own numbers per generation, one chart at a time with a picker
  * when there are several: a curriculum level, the share that arrived, an
  * average speed. It reads the module's metrics, so a new env shows here
- * without touching this file. Racing charts none, so it shows nothing.
+ * without touching this file. An env that charts none shows nothing.
  */
 export function MetricsSection({ records }: { records: GenerationRecord[] }) {
   const { module } = useLabContext();
