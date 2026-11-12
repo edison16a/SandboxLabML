@@ -1,4 +1,6 @@
-import { DEFAULT_SCRIPT_ENV, emptyTrivia, parse, print, type EachItem, type EventName, type Item, type Stmt } from '@/engine/script';
+import type { EnvId } from '@/engine/env/types';
+import { emptyTrivia, parse, print, type EachItem, type EventName, type Item, type Stmt } from '@/engine/script';
+import { studioEnvOf } from '../state/studioEnvs';
 
 export type InsertScope = 'top' | EventName;
 
@@ -47,7 +49,7 @@ export function appendToSection(source: string, scope: InsertScope, snippet: str
   const parsed = parse(source);
   if (parsed.diagnostics.some((d) => d.severity === 'error')) return null;
   const program = parsed.program;
-  const added = snippetItems(snippet, scope, program.header?.env ?? DEFAULT_SCRIPT_ENV);
+  const added = snippetItems(snippet, scope, studioEnvOf(program.header?.env as EnvId | undefined));
   if (!added) return null;
   if (scope === 'top') {
     const firstEach = program.items.findIndex((i) => i.kind === 'each');

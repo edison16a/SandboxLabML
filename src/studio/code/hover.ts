@@ -1,8 +1,8 @@
 import { EditorSelection } from '@codemirror/state';
 import { hoverTooltip, type EditorView } from '@codemirror/view';
-import { DEFAULT_SCRIPT_ENV } from '@/engine/script';
 import { toast } from '@/ui/toast/toastStore';
 import { analyze } from '../doc/analyze';
+import { studioEnvOf } from '../state/studioEnvs';
 import { insertBelowLine } from '../doc/insert';
 import { minimalChange } from '../doc/textChange';
 import { lookupEntry } from '../reference/entryDocs';
@@ -39,7 +39,7 @@ export const sblHover = hoverTooltip(
     const text = view.state.doc.toString();
     const hit = wordAt(text, pos);
     if (!hit) return null;
-    const entry = lookupEntry(analyze(text).env ?? DEFAULT_SCRIPT_ENV, hit.word);
+    const entry = lookupEntry(studioEnvOf(analyze(text).env), hit.word);
     if (!entry) return null;
     return {
       pos: hit.from,

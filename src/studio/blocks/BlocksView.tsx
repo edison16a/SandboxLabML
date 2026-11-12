@@ -2,12 +2,13 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { CircleAlert, Lock } from 'lucide-react';
-import { DEFAULT_SCRIPT_ENV, fromBlocks, lineOf, print, toBlocks, type BlockWorkspace } from '@/engine/script';
+import { fromBlocks, lineOf, print, toBlocks, type BlockWorkspace } from '@/engine/script';
 import { Button } from '@/ui/primitives/Button';
 import { Switch } from '@/ui/primitives/Switch';
 import { analyze } from '../doc/analyze';
 import { lastValidText } from '../doc/lastValid';
 import { duplicate } from '../state/scriptActions';
+import { studioEnvOf } from '../state/studioEnvs';
 import { selectText, useStudio } from '../state/studioStore';
 import { BlocksContext, type BlocksApi, type BlockEdit } from './BlocksContext';
 import { HeaderCard } from './HeaderCard';
@@ -51,7 +52,7 @@ export default function BlocksView() {
   const [scope, setScope] = useState<PaletteScope>('tick');
   const broken = analysis.syntaxError !== null;
   const readOnly = presetOnly || broken;
-  const env = analysis.env ?? DEFAULT_SCRIPT_ENV;
+  const env = studioEnvOf(analysis.env);
 
   const select = useCallback((path: BlockPath | null) => {
     setSelection(path);

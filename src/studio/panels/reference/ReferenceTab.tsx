@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from 'react';
 import { envLabel } from '@/engine/env/registry';
-import { DEFAULT_SCRIPT_ENV, entriesByName, type EntryKind, type RegistryEntry } from '@/engine/script';
+import { entriesByName, type EntryKind, type RegistryEntry } from '@/engine/script';
 import { TextInput } from '@/ui/primitives/Field';
 import { analyze } from '../../doc/analyze';
+import { studioEnvOf } from '../../state/studioEnvs';
 import { selectText, useStudio } from '../../state/studioStore';
 import { ReferenceEntry } from './ReferenceEntry';
 
@@ -44,7 +45,7 @@ export function groupEntries(entries: readonly RegistryEntry[], query: string): 
 export function ReferenceTab() {
   const text = useStudio(selectText);
   const readonly = useStudio((s) => s.script?.readonly ?? true);
-  const env = analyze(text).env ?? DEFAULT_SCRIPT_ENV;
+  const env = studioEnvOf(analyze(text).env);
   const [query, setQuery] = useState('');
   const groups = useMemo(() => groupEntries([...entriesByName(env).values()], query), [env, query]);
   return (
