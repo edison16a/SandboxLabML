@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { archCut, bandCurve } from './body';
 import { bothSides, gridGeometry, polygonGeometry, type Vec3 } from './grid';
+import { flareRows, skinAt } from './flares';
 import type { Detail, PartBin } from './parts';
 import { ARCH, ARCHED_BANDS, archFloor, AXLES, sectionAt, sillY } from './profile';
 import { warp } from './warp';
@@ -12,19 +13,6 @@ import { warp } from './warp';
 export const WELL_Z = 0.4;
 const FLOOR_Y = 0.22;
 const UNDER_SKIN = 0.012;
-
-/** Where the side skin stands at height y on the section at x, as its z. */
-function skinZ(x: number, y: number): number {
-  for (let band = 0; band < ARCHED_BANDS; band++) {
-    const pts = bandCurve(x, band, 16);
-    for (let i = 0; i < pts.length - 1; i++) {
-      const [z0, y0] = pts[i];
-      const [z1, y1] = pts[i + 1];
-      if (y0 <= y && y1 >= y) return z0 + ((z1 - z0) * (y - y0)) / (y1 - y0 || 1);
-    }
-  }
-  return sectionAt(x).keys[0].z;
-}
 
 /** The skin height at (x, z) on the bands above the side, so the liner never pokes through the paint. */
 function underSkin(x: number, z: number, y: number): number {
@@ -42,17 +30,6 @@ function underSkin(x: number, z: number, y: number): number {
 }
 
 /**
- * Across the arch's edge, as (out along the arch's radius, in toward the
- * car) offsets from the skin's cut: the paint rolls over a tight radius
- * into the opening, so the arch has a crisp body colored edge, then a
- * slim satin black trim ring 2.4 cm wide faces out a little deeper. The
- * far population skips the roll and starts the ring right at the cut.
- */
-const LIP: Array<[number, number]> = [[0, 0], [-0.003, -0.002], [-0.006, -0.006], [-0.008, -0.012]];
-const TRIM: Array<[number, number]> = [[-0.008, -0.012], [-0.009, -0.014], [-0.03, -0.016], [-0.033, -0.019], [-0.034, -0.032]];
-const FAR_TRIM: Array<[number, number]> = [[0, 0], [-0.03, -0.016], [-0.034, -0.032]];
-
-/**
  * A strip laid along the arch's edge. Rows climb the edge from the rear
  * leg over the top to the front leg, and each row runs from the skin into
  * the opening; that order faces into the body, so each row is walked
@@ -61,11 +38,12 @@ const FAR_TRIM: Array<[number, number]> = [[0, 0], [-0.03, -0.016], [-0.034, -0.
 const towardWheel = (rows: Vec3[][]) => gridGeometry(rows.map((row) => [...row].reverse()));
 
 /**
- * Wheel wells: the rolled edge and trim round each arch, a liner over the
- * tire, an inner wall and floor plates. The arches sit 5 cm clear of the
- * tires, so the wheels fill them as on a performance SUV. The liner runs
- * the whole edge, down the legs too, so the well is closed fore and aft
- * and no view through the opening can see into the hollow body.
+ * Wheel wells: a satin black flare round each arch (flares.ts), a liner
+ * over the tire, an inner wall and floor plates. The arches sit about
+ * 5 cm clear of the tires, so the wheels fill them as on a performance
+ * SUV. The flare and the liner run the whole edge, down the legs too, so
+ * the well is closed fore and aft and no view through the opening can
+ * see into the hollow body.
  */
 export function addArches(bin: PartBin, detail: Detail): void {
   const n = Math.max(6, Math.round(detail.archSteps * 1.6));
@@ -77,7 +55,7 @@ export function addArches(bin: PartBin, detail: Detail): void {
     const leg = (x: number, out: number) =>
       Array.from({ length: legs }, (_, k) => {
         const y = ARCH.centerY - ((ARCH.centerY - sillY(x)) * (legs - k)) / legs;
-        return { x, z: skinZ(x + out * 0.002, y), y, ux: out, uy: 0, ring: false };
+        return { x, z: skinAt(x + out * 0.002, y).z, y, ux: out, uy: 0, ring: false };
       });
     const ring = xs.map((x, i) => {
       const [z, y] = cuts[i];
@@ -85,10 +63,7 @@ export function addArches(bin: PartBin, detail: Detail): void {
       return { x, z, y, ux: (x - axle) / r, uy: (y - ARCH.centerY) / r, ring: true };
     });
     const edge = [...leg(xs[0], -1), ...ring, ...leg(xs[n], 1).reverse()];
-    const across = (profile: Array<[number, number]>) =>
-      edge.map(({ x, z, y, ux, uy }) => profile.map(([out, inward]) => warp([x + ux * out, y + uy * out, z + inward])));
-    if (detail.brakes) bin.add('paint', bothSides(towardWheel(across(LIP))));
-    const trim = across(detail.brakes ? TRIM : FAR_TRIM);
+    const trim = flareRows(edge, detail);
     bin.add('clad', bothSides(towardWheel(trim)));
     // From the inner wall, up over the tire, to the trim's inner edge; over the legs it is a flat end wall.
     const liner = edge.map(({ x, z, y, ring: over }, k) => {

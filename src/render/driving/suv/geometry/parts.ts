@@ -39,6 +39,9 @@ export const DETAIL: Record<'high' | 'medium' | 'low' | 'crowd' | 'crowdLow', De
   crowdLow: { stations: 14, archSteps: 4, bands: [1, 1, 1, 1, 1, 1, 1], cabin: [1, 2], wheel: 9, brakes: false, fine: false },
 };
 
+/** The far population's lightest build, which drops even the small trims a 100 car field cannot afford. */
+export const lightest = (detail: Detail) => detail.wheel < 12;
+
 /** Collects geometry by slot while the SUV is assembled. */
 export class PartBin {
   private bins = new Map<Slot, THREE.BufferGeometry[]>();

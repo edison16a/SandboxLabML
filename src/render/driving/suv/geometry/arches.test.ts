@@ -6,14 +6,16 @@ import { ARCH, AXLES } from './profile';
 
 /**
  * Share of a slot's left side triangles that face the wheel they wrap:
- * toward the wheel's center, with a little outward lean, since the lip
- * and the trim ring also face the street. A triangle facing the other way
- * is culled by a front side material and the arch shows a hole.
+ * toward the wheel's center, with an outward lean, since the flare and
+ * its ring also face the street (the flare's feathered outer edge mostly
+ * so). A triangle facing the other way is culled by a front side
+ * material and the arch shows a hole.
  */
 function facingWheel(detail: Detail, slot: 'paint' | 'clad' | 'liner'): number {
   const bin = new PartBin();
   addArches(bin, detail);
-  const g = bin.build().get(slot) as THREE.BufferGeometry;
+  const g = bin.build().get(slot);
+  if (!g) return slot === 'paint' ? 1 : 0;
   const p = g.attributes.position;
   const [a, b, c, e1, e2, n, to] = Array.from({ length: 7 }, () => new THREE.Vector3());
   let left = 0;
@@ -29,7 +31,7 @@ function facingWheel(detail: Detail, slot: 'paint' | 'clad' | 'liner'): number {
     n.crossVectors(e1.subVectors(b, a), e2.subVectors(c, a));
     if (n.lengthSq() < 1e-14) continue;
     to.set(axle - cx, ARCH.centerY - (a.y + b.y + c.y) / 3, 0).normalize();
-    to.z = 0.5;
+    to.z = slot === 'clad' ? 1.2 : 0.5;
     left++;
     if (n.dot(to) > 0) good++;
   }
