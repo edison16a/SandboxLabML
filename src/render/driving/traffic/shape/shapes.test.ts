@@ -102,6 +102,12 @@ describe('traffic body types', () => {
         // The left half's widest point is the body's half width; mirrors stand a little proud of it.
         expect(box.max.z, tier).toBeCloseTo(width / 2, 2);
       }
+      // Every outline point of every piece lands on the body, on every tier.
+      for (const tier of ['medium', 'low'] as const) {
+        const built = buildTrafficBody(shape, TRAFFIC_DETAIL[tier]);
+        expect(built.misses, tier).toBe(0);
+        built.geometry.dispose();
+      }
       const { geometry, misses } = buildTrafficBody(shape, TRAFFIC_DETAIL.high);
       expect(misses).toBe(0);
       geometry.computeBoundingBox();

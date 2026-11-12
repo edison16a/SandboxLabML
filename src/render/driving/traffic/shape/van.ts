@@ -39,7 +39,7 @@ const BASE: CarShape = {
 
 function vanDecals(s: CarShape): Decal[] {
   const side = sideGlass(s, { cTop: -2.22, rearTip: -2.22, gap: 0.016, drop: 0.03 });
-  const screen = topGlass(s, { low: 1.97, high: 1.12, bow: 0.08, margin: 0.035 });
+  const screen = topGlass(s, { low: 1.97, high: 1.12, bow: 0.08, margin: 0.085 });
   const back = strip('rear', [[0, 1.3], [0.74, 1.3]], [[0, 1.78], [0.7, 1.78]]);
   return [
     { region: side, look: 'trim', kind: 'ring', grow: 0.022, cells: [8, 2], fine: true },

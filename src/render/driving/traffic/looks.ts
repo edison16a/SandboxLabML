@@ -24,7 +24,7 @@ const LOOKS: Record<Look, { color: [number, number, number]; rough: number; meta
   lens: { color: [0.75, 0.78, 0.8], rough: 0.12, metal: 0.7, glow: 0.12, tint: 0 },
   drl: { color: [1, 0.98, 0.94], rough: 0.3, metal: 0, glow: 1.6, tint: 0 },
   tail: { color: [0.45, 0.02, 0.015], rough: 0.2, metal: 0.1, glow: 0, tint: 0 },
-  amber: { color: [0.7, 0.33, 0.04], rough: 0.2, metal: 0.1, glow: 0, tint: 0 },
+  amber: { color: [0.34, 0.15, 0.03], rough: 0.18, metal: 0.1, glow: 0, tint: 0 },
   sign: { color: [0.98, 0.9, 0.62], rough: 0.4, metal: 0, glow: 1.1, tint: 0 },
   tire: { color: [0.022, 0.022, 0.024], rough: 0.9, metal: 0, glow: 0, tint: 0 },
   wall: { color: [0.046, 0.047, 0.05], rough: 0.8, metal: 0, glow: 0, tint: 0 },

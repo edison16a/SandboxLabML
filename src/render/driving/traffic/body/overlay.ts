@@ -1,7 +1,7 @@
 import type * as THREE from 'three';
 import { gridGeometry, type Vec3 } from '../../suv/geometry/grid';
 import type { Region } from '../shape/types';
-import type { Projector } from './project';
+import type { Hit, Projector } from './project';
 import { growGrid, laidParams, regionGrid } from './region';
 import type { Pt } from './section';
 
@@ -12,7 +12,10 @@ import type { Pt } from './section';
  */
 function lay(proj: Projector, r: Region, flat: Pt[][], lift: number): { geometry: THREE.BufferGeometry; misses: number } {
   let misses = 0;
-  let last = { p: [0, 0, 0] as Vec3, n: [0, 0, 1] as Vec3 };
+  // A miss before any hit borrows the first hit there is, so a stray point never flies to the origin.
+  let first: Hit | null = null;
+  for (const row of flat) for (const [a, b] of row) first ??= proj.hit(r.view, a, b);
+  let last = first ?? { p: [0, 0, 0] as Vec3, n: [0, 0, 1] as Vec3 };
   const normals: Vec3[][] = [];
   const rows = flat.map((row) => {
     const ns: Vec3[] = [];
