@@ -1,17 +1,19 @@
 /**
- * Captures the landing hero's poster from the real live scenes, the racing
- * scene and the arena side by side (stacked for the portrait frame), and
- * writes the WebP files under public/hero that the page paints before any
- * script runs. Re-run it whenever either scene, the hero car or the
- * cameras change, so the poster still matches what fades in over it.
+ * Captures the landing hero's poster from the real live scenes, the city
+ * and the course side by side (stacked for the portrait frame), and writes
+ * the WebP files under public/hero that the page paints before any script
+ * runs. The page is opened with ?hero=still, which holds both scenes on
+ * their opening tick, the very frame each one shows first when it fades
+ * in, so the poster and the live scene line up. Re-run it whenever either
+ * scene, a hero file or the cameras change.
  *
  *   npm run build
  *   npx next start -p 3100
  *   npm run hero:poster
  *
  * Options, all optional: --url (default http://127.0.0.1:3100), --chromium
- * (a Chromium binary; Playwright's own is used when left out), --settle 9
- * (seconds both scenes play before the shot), --quality medium, --out
+ * (a Chromium binary; Playwright's own is used when left out), --settle 4
+ * (seconds the scenes settle once shown), --quality medium, --out
  * public/hero and --only wide, --only standard or --only portrait. It needs a production build, Playwright and sharp (which
  * comes with Next). Chromium draws with its software renderer, so every
  * machine captures the same picture; it is slow, so expect a few minutes.
@@ -28,7 +30,7 @@ const args = Object.fromEntries(
     .filter(Boolean),
 );
 const url = args.url ?? 'http://127.0.0.1:3100';
-const settle = Number(args.settle ?? 9) * 1000;
+const settle = Number(args.settle ?? 4) * 1000;
 const out = args.out ?? 'public/hero';
 /** The quality the poster is drawn at. Medium matches what most visitors see once the scene goes live. */
 const quality = args.quality ?? 'medium';
@@ -42,16 +44,16 @@ const HIDE = '[data-hero-content], [data-hero-panels] { visibility: hidden !impo
  * On a phone the text panel takes about 60% of the hero's height, far more
  * than in the wide capture window, so the portrait frame is shot with the
  * panel stretched to that share. The scenes frame their subjects around
- * the panel, so the car and the players then sit above and below where a
+ * the panel, so the SUV and the runner then sit above and below where a
  * phone's panel will be.
  */
 const PHONE_PANEL = '[data-hero-content] { min-height: 60%; }';
 
-/** Opens the hero in a window of this size and returns a PNG of the scenes alone, once both have played a while. */
+/** Opens the hero in a window of this size and returns a PNG of the scenes alone, held on their opening frame. */
 async function capture(browser, width, height, scale, css = '') {
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: scale, locale: 'en-US' });
-  await page.goto(`${url}/?quality=${quality}`, { waitUntil: 'load' });
-  await page.waitForSelector('[data-hero-shown~="car"][data-hero-shown~="arena"]', { state: 'attached', timeout: 10 * 60_000 });
+  await page.goto(`${url}/?quality=${quality}&hero=still`, { waitUntil: 'load' });
+  await page.waitForSelector('[data-hero-shown~="drive"][data-hero-shown~="run"]', { state: 'attached', timeout: 10 * 60_000 });
   await page.addStyleTag({ content: HIDE + css });
   await page.waitForTimeout(settle);
   const png = await page.locator('section[aria-labelledby="hero-title"]').screenshot({ timeout: 5 * 60_000 });
