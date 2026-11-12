@@ -27,11 +27,11 @@ Both exams follow the same rules:
 | Driving | 35% | 35% | 15% | 15% |
 | Navigation | 40% | 20% | 20% | 20% |
 
-In a lab the replay worker benchmarks every fifth generation's champion in the background (`BENCH_EVERY` in `src/features/lab/session/backgroundBench.ts`), one exam at a time, so watching never slows training. When an exam takes longer than five generations, only the newest champion waits for it and the ones in between are skipped. Results land on the generation record, in IndexedDB and on the run's summary. Each lab's Benchmark chart and the Studio's Bench tab draw them next to the reference curves.
+In a lab the replay worker benchmarks every fifth generation's champion in the background (`BENCH_EVERY` in `src/features/lab/session/backgroundBench.ts`), one exam at a time and off the training threads. When an exam takes longer than five generations, only the newest champion waits for it and the ones in between are skipped. Results land on the generation record, in IndexedDB and on the run's summary. Each lab's Benchmark chart draws them next to the reference curves, and the Studio's Bench tab scores a run's champion on demand and compares it with the presets.
 
 ## Reference files
 
-`public/references/driving.json` and `public/references/navigation.json` each hold, for the Beginner, Intermediate and Advanced preset scripts, a curve of the median and the middle half of several seeds' scores at every checkpoint, and a final score. Beside the curves sits one trained model per preset, which the Sandboxes play under "Try a trained model", so a newcomer sees a skilled agent before training one. The Bench tab only draws curves from a file of the same benchmark version as the result, and with fewer than three seeds it shows the median alone.
+`public/references/driving.json` and `public/references/navigation.json` each hold, for the Beginner, Intermediate and Advanced preset scripts, a curve of the median and the middle half of several seeds' scores at every checkpoint, and a final score. Beside the curves sits one trained model per preset, which the Sandboxes play as their trained model, so a newcomer sees a skilled agent before training one. The Bench tab only draws curves from a file of the same benchmark version as the result, and with fewer than three seeds it shows the median alone.
 
 `npm run refs` rebuilds both files (`scripts/generate-references.ts`). Pass `-- --env driving` or `-- --env navigation` for one env, and `--workers` for the number of worker threads (2 by default). Each env keeps its defaults and options in `scripts/references/<env>/generate.ts`, described in its section below. Training is seeded, so the same code makes the same file.
 
