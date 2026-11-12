@@ -9,7 +9,7 @@ import { Segmented } from '@/ui/primitives/Segmented';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import { duplicate, newScript, openScript, remove, rename } from '../state/scriptActions';
 import { envLabel } from '@/engine/env/registry';
-import { DEFAULT_SCRIPT_ENV, SCRIPT_ENV_TABLE } from '@/engine/script';
+import { STUDIO_DEFAULT_ENV, studioEnvs } from '../state/studioEnvs';
 import { useStudio, type EnvFilter } from '../state/studioStore';
 import { RenameDialog } from './RenameDialog';
 import { ScriptRow } from './ScriptRow';
@@ -49,7 +49,7 @@ export function ScriptSidebar({ className }: { className?: string }) {
     <aside className={cn('flex min-h-0 flex-col bg-surface', className)} aria-label="Scripts">
       <div className="flex flex-col gap-3 border-b border-border p-3">
         <div className="flex items-center gap-1">
-          <Button variant="primary" size="sm" onClick={() => void newScript(filter === 'all' ? DEFAULT_SCRIPT_ENV : filter)}>
+          <Button variant="primary" size="sm" onClick={() => void newScript(filter === 'all' ? STUDIO_DEFAULT_ENV : filter)}>
             <Plus />
             New
           </Button>
@@ -71,7 +71,7 @@ export function ScriptSidebar({ className }: { className?: string }) {
             </Tooltip>
           </div>
         </div>
-        {/* With more labs than fit the sidebar, the filter keeps its labels on one line and scrolls sideways. */}
+        {/* Should more labs come than fit the sidebar, the filter keeps its labels on one line and scrolls sideways. */}
         <div className="no-scrollbar overflow-x-auto">
           <Segmented<EnvFilter>
             label="Environment filter"
@@ -79,7 +79,7 @@ export function ScriptSidebar({ className }: { className?: string }) {
             value={filter}
             onChange={(v) => useStudio.setState({ envFilter: v })}
             className="w-max whitespace-nowrap"
-            options={[{ value: 'all', label: 'All' }, ...SCRIPT_ENV_TABLE.map((e) => ({ value: e.env, label: envLabel(e.env) }))]}
+            options={[{ value: 'all', label: 'All' }, ...studioEnvs().map((e) => ({ value: e.env, label: envLabel(e.env) }))]}
           />
         </div>
       </div>

@@ -2,9 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { listPresets, listScripts, type ScriptEntry } from '@/storage/scripts';
+import { shownScript } from '../state/studioEnvs';
 import { useStudio } from '../state/studioStore';
 
-/** The user's scripts and the presets for the env filter, reloaded whenever a storage action bumps the list version. */
+/**
+ * The user's scripts and the presets for the env filter, reloaded whenever
+ * a storage action bumps the list version. Scripts of a removed lab stay
+ * stored but never show.
+ */
 export function useScriptLists(): { mine: ScriptEntry[]; presets: ScriptEntry[]; loading: boolean } {
   const filter = useStudio((s) => s.envFilter);
   const version = useStudio((s) => s.listVersion);
@@ -13,12 +18,12 @@ export function useScriptLists(): { mine: ScriptEntry[]; presets: ScriptEntry[];
   useEffect(() => {
     let live = true;
     listScripts(filter === 'all' ? undefined : filter)
-      .then((rows) => live && setMine(rows))
+      .then((rows) => live && setMine(rows.filter(shownScript)))
       .catch(() => live && setMine([]))
       .finally(() => live && setLoading(false));
     return () => {
       live = false;
     };
   }, [filter, version]);
-  return { mine, presets: listPresets(filter === 'all' ? undefined : filter), loading };
+  return { mine, presets: listPresets(filter === 'all' ? undefined : filter).filter(shownScript), loading };
 }
