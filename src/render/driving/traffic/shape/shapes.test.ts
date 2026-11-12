@@ -70,7 +70,9 @@ function seenFromInside(tris: ReturnType<typeof faces>, dir: THREE.Vector3, box:
         const d = hit.distanceTo(ray.origin);
         if (d < best) {
           best = d;
-          facing = liner(t) ? 1 : -t.n.dot(dir);
+          // A ray that skims a thin piece lying along it (a pillar on the glass, seen from behind)
+          // meets its edge, not a hole: within a few degrees of grazing it counts as seen.
+          facing = liner(t) || Math.abs(t.n.dot(dir)) < 0.05 ? 1 : -t.n.dot(dir);
         }
       }
       if (best < Infinity && facing < 0) bad++;
@@ -129,7 +131,9 @@ describe('traffic body types', () => {
         // car's middle. Liners face their wheel and mirrors stand out from the door, so both are
         // left out of the second check (their gloss black and dark looks are their own). A few
         // slivers at the wheel openings' straight sides lean against their neighbors' normals.
-        const middle = (box.max.y + box.min.y) / 2;
+        // The core runs along the car just above the sill, so the hood and deck, which sit below
+        // the roof's middle height, still have to face up and away from it.
+        const core = box.min.y + 0.12;
         const roof = Math.max(...buildShell(shape, TRAFFIC_DETAIL[tier]).panels.map((g) => (g.computeBoundingBox(), (g.boundingBox as THREE.Box3).max.y)));
         let flipped = 0;
         let inward = 0;
@@ -138,8 +142,8 @@ describe('traffic body types', () => {
           const c = t.p[0].clone().add(t.p[1]).add(t.p[2]).divideScalar(3);
           // The cab's sign stands above the roof, its underside facing down at it.
           if (t.color < 0.013 || c.y > roof + 0.005) continue;
-          const core = new THREE.Vector3(THREE.MathUtils.clamp(c.x, -length / 2 + 0.7, length / 2 - 0.7), middle, 0);
-          if (t.n.dot(c.sub(core)) < 0) inward++;
+          const axis = new THREE.Vector3(THREE.MathUtils.clamp(c.x, -length / 2 + 0.7, length / 2 - 0.7), core, 0);
+          if (t.n.dot(c.sub(axis)) < 0) inward++;
         }
         expect(flipped / tris.length, tier).toBeLessThan(0.005);
         expect(inward / tris.length, tier).toBeLessThan(0.005);

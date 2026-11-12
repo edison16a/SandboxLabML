@@ -1,6 +1,6 @@
 import { profile } from '../../suv/geometry/curve';
 import type { CarShape, Keys, PlanEnd } from '../shape/types';
-import { chord, deg, type Key } from './section';
+import { chord, deg, HANDLE, type Key } from './section';
 
 type Fn = (x: number) => number;
 
@@ -40,7 +40,7 @@ export function axles(s: CarShape): [number, number] {
 export const archRadius = (s: CarShape) => s.wheelRadius + 0.04;
 
 /** Where an end's superellipse sits: the x its rounding starts at and the tip's x. */
-function endSpan(s: CarShape, front: boolean): { end: PlanEnd; from: number; tip: number } {
+export function endSpan(s: CarShape, front: boolean): { end: PlanEnd; from: number; tip: number } {
   const h = s.length / 2;
   const end = front ? s.nose : s.tail;
   return { end, from: front ? h - end.reach : -h + end.reach, tip: front ? h : -h };
@@ -54,46 +54,6 @@ export function planShare(s: CarShape, x: number): number {
     if (u > 0) return u >= 1 ? 0 : Math.pow(1 - Math.pow(u, end.square), 1 / end.square);
   }
   return 1;
-}
-
-/** How much a radian of turn counts against a meter of length when spacing end stations. */
-const TURN_WEIGHT = 0.35;
-
-/**
- * Stations through an end's rounding, spaced by the plan outline's length
- * plus its turning, so the tight corner gets more of them than the flat
- * face: each step then turns the surface by about as much, and the
- * corner's reflections stay smooth. Returned tip last.
- */
-export function endStations(s: CarShape, front: boolean, count: number): number[] {
-  const { end, from, tip } = endSpan(s, front);
-  const w = s.width / 2;
-  const dense: Array<[number, number]> = [];
-  for (let i = 0; i <= 96; i++) {
-    const phi = (Math.PI / 2) * (1 - i / 96);
-    dense.push([from + (tip - from) * Math.pow(Math.cos(phi), 2 / end.square), w * Math.pow(Math.sin(phi), 2 / end.square)]);
-  }
-  const seg = (i: number) => [dense[i + 1][0] - dense[i][0], dense[i + 1][1] - dense[i][1]];
-  const acc = [0];
-  for (let i = 1; i < dense.length; i++) {
-    const [ax, az] = seg(i - 1);
-    const len = Math.hypot(ax, az);
-    let turn = 0;
-    if (i < dense.length - 1) {
-      const [bx, bz] = seg(i);
-      turn = Math.acos(Math.max(-1, Math.min(1, (ax * bx + az * bz) / (len * Math.hypot(bx, bz) || 1))));
-    }
-    acc.push(acc[i - 1] + len + TURN_WEIGHT * turn);
-  }
-  const out: number[] = [];
-  for (let k = 1; k <= count; k++) {
-    const d = (acc[acc.length - 1] * k) / count;
-    let j = 0;
-    while (j < dense.length - 2 && acc[j + 1] < d) j++;
-    const t = (d - acc[j]) / (acc[j + 1] - acc[j] || 1);
-    out.push(dense[j][0] + (dense[j + 1][0] - dense[j][0]) * t);
-  }
-  return out;
 }
 
 /**
@@ -125,6 +85,11 @@ export function keysAt(s: CarShape, x: number): Key[] {
   ];
   // Above the shoulder the outline is one smooth curve: each key takes the mean of its two chords.
   for (let i = 4; i <= 6; i++) k[i].a = (chord(k[i - 1], k[i]) + chord(k[i], k[i + 1])) / 2;
+  // The arc over the roof (or hood) must not rise above the centerline before it levels out
+  // there, or the two mirrored halves meet in a shallow valley that shows in every reflection.
+  // A cubic stays at or below its end while its first handle does, which bounds the rail's angle.
+  const reach = Math.hypot(k[7].z - k[6].z, k[7].y - k[6].y) * HANDLE;
+  k[6].a = Math.max(k[6].a, Math.acos(Math.min(1, Math.max(0, (k[7].y - k[6].y) / reach))));
   return k;
 }
 

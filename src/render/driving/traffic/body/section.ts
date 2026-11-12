@@ -19,13 +19,16 @@ export function chord(p: { z: number; y: number }, q: { z: number; y: number }):
   return Math.atan2(p.z - q.z, q.y - p.y);
 }
 
+/** A span's handles as a share of its chord. */
+export const HANDLE = 0.36;
+
 /**
  * Points along a cubic from p to q that leaves p and arrives at q along
  * their angles. Handles scale with the chord, so a span keeps its shape
  * whatever its size.
  */
 export function span(p: Key, q: Key, steps: number): Pt[] {
-  const h = Math.hypot(q.z - p.z, q.y - p.y) * 0.36;
+  const h = Math.hypot(q.z - p.z, q.y - p.y) * HANDLE;
   const c1: Pt = [p.z - Math.sin(p.a) * h, p.y + Math.cos(p.a) * h];
   const c2: Pt = [q.z + Math.sin(q.a) * h, q.y - Math.cos(q.a) * h];
   const out: Pt[] = [];
