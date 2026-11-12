@@ -37,10 +37,3 @@ export function broadleafGeometry(variant: number): THREE.BufferGeometry {
   broadleaf(b, new Rng(301 + variant * 13), variant, 1);
   return b.build();
 }
-
-/** A distant broadleaf: the same masses from a dozen big cards. */
-export function broadleafLodGeometry(variant: number): THREE.BufferGeometry {
-  const b = new FoliageBuilder();
-  broadleaf(b, new Rng(301 + variant * 13), variant, 0);
-  return b.build();
-}

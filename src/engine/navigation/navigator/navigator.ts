@@ -1,5 +1,4 @@
 import { clamp, wrapAngle } from '../../core/math';
-import { mixSeed, Rng } from '../../core/rng';
 import type { AgentController, TickIO } from '../../env/types';
 import type { NavAgent } from '../agent';
 import { builtinNavigationController } from '../builtinReward';
@@ -30,20 +29,6 @@ export interface NavigatorSkill {
 }
 
 export const PERFECT_NAVIGATOR: NavigatorSkill = { pace: 1, wobble: 0, shortcut: 0, careful: true, swayRate: 0, swayPhase: 0 };
-
-/** A crowd member's skill from its seed: most walk well, a few are clumsy or reckless. */
-export function crowdSkill(seed: number): NavigatorSkill {
-  const r = new Rng(mixSeed(seed, 0x6e61));
-  const clumsy = r.chance(0.3);
-  return {
-    pace: r.range(0.62, 1),
-    wobble: clumsy ? r.range(0.3, 0.75) : r.range(0.05, 0.3),
-    shortcut: clumsy ? r.range(0.25, 0.8) : r.range(0, 0.12),
-    careful: !r.chance(0.18),
-    swayRate: r.range(0.6, 1.6),
-    swayPhase: r.range(0, Math.PI * 2),
-  };
-}
 
 const flow = { x: 0, z: 0 };
 const order: CrossingOrder = { move: 0, hx: 1, hz: 0 };

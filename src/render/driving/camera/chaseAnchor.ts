@@ -82,11 +82,6 @@ export interface ChaseAnchor {
   ready: boolean;
 }
 
-/** One number naming the followed car, stream and index together, for stepAnchor's `owner`. */
-export function focusOwner(f: { focusIndex: number; focusStream: 'population' | 'ghosts' | null }): number {
-  return f.focusIndex + (f.focusStream === 'ghosts' ? 100000 : 0);
-}
-
 export function chaseAnchor(): ChaseAnchor {
   return { x: 0, z: 0, heading: 0, lead: follower(), body: follower(), vx: 0, vz: 0, rawX: 0, rawZ: 0, lastX: 0, lastZ: 0, owner: -1, ready: false };
 }

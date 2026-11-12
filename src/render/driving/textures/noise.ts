@@ -45,28 +45,6 @@ export function fbm(x: number, z: number, seed: number, octaves = 4): number {
   return sum / norm;
 }
 
-/**
- * Ridged noise: sharp crests where plain noise crosses its middle. It reads
- * as ridgelines and rock spines, which is what eroded sandstone hills look like.
- */
-export function ridged(x: number, z: number, seed: number, octaves = 4): number {
-  let sum = 0;
-  let amp = 0.5;
-  let norm = 0;
-  let f = 1;
-  let weight = 1;
-  for (let o = 0; o < octaves; o++) {
-    const n = 1 - Math.abs(valueNoise(x * f, z * f, seed + o * 17) * 2 - 1);
-    const v = n * n * weight;
-    weight = Math.min(1, v * 1.6);
-    sum += v * amp;
-    norm += amp;
-    amp *= 0.5;
-    f *= 2.1;
-  }
-  return sum / norm;
-}
-
 /** Hermite step between two edges, like GLSL smoothstep. */
 export function smoothstep(e0: number, e1: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));

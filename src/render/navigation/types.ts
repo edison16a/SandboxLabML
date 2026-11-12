@@ -12,11 +12,6 @@ export type NavQualityTier = 'low' | 'medium' | 'high' | 'ultra';
 export type NavCamera = 'follow' | 'overview' | 'top' | 'free';
 export const NAV_CAMERAS: readonly NavCamera[] = ['follow', 'overview', 'top', 'free'];
 
-/** The view after `c`, for the key that cycles views. */
-export function nextCamera(c: NavCamera): NavCamera {
-  return NAV_CAMERAS[(NAV_CAMERAS.indexOf(c) + 1) % NAV_CAMERAS.length];
-}
-
 /**
  * What the viewport draws from: a population stream of one course. The
  * lab fills it from its workers; the preview fills it from a simulation on

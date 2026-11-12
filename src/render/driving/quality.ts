@@ -35,13 +35,6 @@ export const TIERS: Record<DrivingTier, TierLook> = {
   ultra: { dpr: [1, 2], shadows: true, shadowMap: 4096, shadowBox: 90, post: true, ao: true, skyOctaves: 6, envResolution: 1024, glowCards: 0.45, facadeDetail: 2, fineCrowd: true, antialias: false },
 };
 
-const NAMES: readonly DrivingTier[] = ['low', 'medium', 'high', 'ultra'];
-
-/** A tier from a quality name, defaulting to High for anything unknown. */
-export function drivingTier(name: string | null | undefined): DrivingTier {
-  return NAMES.includes(name as DrivingTier) ? (name as DrivingTier) : 'high';
-}
-
 /** The car and paint detail a tier builds: Ultra shares High's geometry. */
 export function detailTier(tier: DrivingTier): 'low' | 'medium' | 'high' {
   return tier === 'ultra' ? 'high' : tier;

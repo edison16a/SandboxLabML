@@ -1,12 +1,3 @@
-import type { QualityTier } from '@/features/lab/state/labState';
-
-/** Pixel ratio cap per tier. Pixel ratio is the first thing to drop on a cheaper tier. */
-export function tierDpr(tier: QualityTier): [number, number] {
-  if (tier === 'low') return [1, 1];
-  if (tier === 'medium') return [1, 1.5];
-  return [1, 2];
-}
-
 /**
  * Rough guess at a weak GPU from the WebGL renderer string. Integrated GPUs
  * start on Medium until someone picks a quality.

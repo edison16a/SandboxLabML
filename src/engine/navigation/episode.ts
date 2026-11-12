@@ -35,17 +35,3 @@ export function evaluateCourses(genomes: Genome[], courses: Course[], base: Omit
     ),
   );
 }
-
-/** Path of one agent as flat [x, z, yaw, speed] per tick, for path caches and tests. */
-export function recordPath(genome: Genome, opts: NavigationEnvOptions, seed = 0, maxTicks = 3600, slot?: number): Float32Array {
-  const env = new NavigationEnv(opts);
-  env.reset([new Network(genome)], [seed], slot === undefined ? [] : [slot]);
-  const out: number[] = [];
-  const snap = new Float32Array(8);
-  while (!env.done && env.tick < maxTicks) {
-    env.step();
-    env.snapshot(snap);
-    out.push(snap[0], snap[1], snap[2], snap[3]);
-  }
-  return Float32Array.from(out);
-}
