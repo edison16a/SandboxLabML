@@ -11,9 +11,8 @@ export { sillY } from './lines';
  * A cross section of the body at x is eight keys from under the sill up
  * and over to the centerline:
  *
- * 0 under the sill, 1 top of the satin black sill cladding, which stands
- * nearly upright so it reads from the side as a band and rolls in at its
- * top (rockerLean), 2 where the lower side starts to tuck under, 3 and 4
+ * 0 under the sill, 1 top of the satin black sill cladding, which turns
+ * out under the sill and leans in up its face (cladKeys), 2 where the lower side starts to tuck under, 3 and 4
  * either end of the shoulder crease's small radius, 5 the belt where the
  * glass sits (ahead of the windshield, the fender peak), 6 the edge of the
  * hood's valley, 7 the centerline.
@@ -31,14 +30,23 @@ export interface Section {
 const SHOULDER_R = 0.015;
 
 /**
- * How far the sill cladding's top leans in where it meets the paint. The
- * cladding swells out low and rolls back in at the top, so its upper part
- * faces the sky and shows a satin sheen above the dark shadow under the
- * car instead of merging with it. The roll fades out round the ends, so
- * the lip and the diffuser keep their own shape.
+ * How much of the sill cladding's roll is on at x, 0 to 1: full between
+ * the wheels, fading out round the ends so the lip and the diffuser keep
+ * their own shape.
  */
-function rockerLean(x: number): number {
-  return deg(-6 + 28 * smooth((2.2 - x) / 0.25) * smooth((x + 2.15) / 0.25));
+const rollAt = (x: number) => smooth((2.2 - x) / 0.25) * smooth((x + 2.15) / 0.25);
+
+/**
+ * The sill cladding's two keys at x on a side of half width w. Rolled, its
+ * underside turns out almost flat from the sill, so the face is widest
+ * just 5 cm up and leans in 25 degrees by the top, where it meets the
+ * paint. Most of the face you see from the side then looks up at the sky
+ * and shows a satin sheen over the dark shadow under the car instead of
+ * merging with it.
+ */
+function cladKeys(x: number, w: number): [Key, Key] {
+  const r = rollAt(x);
+  return [key(w - 0.085 + 0.035 * r, sillY(x), deg(-70 - 15 * r)), key(w - 0.032 - 0.013 * r, rockerY(x), deg(-6 + 31 * r), deg(-10))];
 }
 
 /** The belt line at x as (z, y), after the end rounding: where the cabin's glass sits on the body. */
@@ -79,8 +87,7 @@ export function sectionAt(x: number): Section {
   // The valley falls from the peak to a floor on the centerline like half a cosine wave: flat at both ends, one U, no ridge.
   const fall = Math.atan((Math.PI / 2) * Math.sin(0.45 * Math.PI) * (v / Math.max(bz, 0.2)));
   const keys: Key[] = [
-    key(w - 0.085, sillY(x), deg(-70)),
-    key(w - 0.032, rockerY(x), rockerLean(x), deg(-10)),
+    ...cladKeys(x, w),
     key(w - 0.014, tuckY(x), deg(-5)),
     key(w + t * Math.sin(up), ys - t * Math.cos(up), up),
     key(w - t * Math.sin(shelf), ys + t * Math.cos(shelf), shelf),
