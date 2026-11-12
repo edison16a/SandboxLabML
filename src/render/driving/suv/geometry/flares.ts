@@ -50,13 +50,13 @@ const FAREST: Array<[number, number]> = [[0.046, 0.0015], [0.008, 0.0075]];
 
 /**
  * Inside the opening, as (out along the radius, in toward the car) from
- * the skin's cut: the flare's roll carries on down and in, then a ring
- * 2.4 cm wide faces out a little deeper, and the liner takes over from
- * its inner edge.
+ * the skin's cut: the flare's roll carries on down and in, and 1.5 cm in
+ * from the cut the dull liner takes over. The satin flare is then the
+ * only frame round the wheel, and the gap over the tire reads as a gap.
  */
-const RING: Array<[number, number]> = [[-0.002, -0.0005], [-0.005, -0.005], [-0.008, -0.012], [-0.009, -0.014], [-0.03, -0.016], [-0.033, -0.019], [-0.034, -0.032]];
-const FAR_RING: Array<[number, number]> = [[-0.03, -0.016], [-0.034, -0.032]];
-const FAREST_RING: Array<[number, number]> = [[-0.034, -0.032]];
+const RING: Array<[number, number]> = [[-0.002, -0.0005], [-0.005, -0.005], [-0.008, -0.012], [-0.009, -0.014], [-0.013, -0.017], [-0.015, -0.026]];
+const FAR_RING: Array<[number, number]> = [[-0.012, -0.016], [-0.015, -0.026]];
+const FAREST_RING: Array<[number, number]> = [[-0.015, -0.026]];
 
 /** How far below the hub the flare's legs taper into the cladding, m. */
 const TAPER = 0.09;
