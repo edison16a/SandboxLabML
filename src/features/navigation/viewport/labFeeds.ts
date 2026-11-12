@@ -146,9 +146,9 @@ export class LabFeeds {
     syncFeed(this.population, settings.params, inputs, scale);
     // A shipped model in the Sandbox has inputs of its own, which the sensor drawing must read.
     syncFeed(this.ghosts, settings.params, (s.mode === 'sandbox' && s.sandbox.inputs) || inputs, scale);
-    const car = s.focus.kind === 'car' ? s.focus.index : null;
-    this.ghosts.follow = s.mode === 'sandbox' ? car : s.focus.kind === 'ghost' && this.ghosts.tags ? indexOrNull(this.ghosts.tags.indexOf(s.focus.generation)) : null;
-    this.population.follow = car;
+    const runner = s.focus.kind === 'agent' ? s.focus.index : null;
+    this.ghosts.follow = s.mode === 'sandbox' ? runner : s.focus.kind === 'ghost' && this.ghosts.tags ? indexOrNull(this.ghosts.tags.indexOf(s.focus.generation)) : null;
+    this.population.follow = runner;
   }
 }
 

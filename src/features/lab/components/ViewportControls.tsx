@@ -19,7 +19,7 @@ export function FocusChip() {
   const focus = useLab((s) => s.focus);
   const set = useLabSet();
   if (focus.kind === 'champion') return null;
-  const label = focus.kind === 'car' ? `${capital(agentNoun)} ${focus.index + 1}` : `Gen ${focus.generation + 1} ghost`;
+  const label = focus.kind === 'agent' ? `${capital(agentNoun)} ${focus.index + 1}` : `Gen ${focus.generation + 1} ghost`;
   return (
     <Button size="sm" variant="secondary" className={glass} onClick={() => set({ focus: { kind: 'champion' } })}>
       <Crosshair />

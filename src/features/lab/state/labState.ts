@@ -9,8 +9,8 @@ import type { GhostSelection } from '../session/ghostSelection';
 export type ViewMode = 'population' | 'overlay' | 'both';
 export type QualityTier = 'low' | 'medium' | 'high';
 
-/** What the camera follows and what the inputs overlay inspects. `car` is any agent of the population. */
-export type Focus = { kind: 'champion' } | { kind: 'car'; index: number } | { kind: 'ghost'; generation: number };
+/** What the camera follows and what the inputs overlay inspects: the champion, any agent of the live population by index, or a ghost by generation. */
+export type Focus = { kind: 'champion' } | { kind: 'agent'; index: number } | { kind: 'ghost'; generation: number };
 
 export type PanelTab = 'progress' | 'network' | 'species' | 'inputs' | 'model';
 

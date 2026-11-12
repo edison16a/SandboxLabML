@@ -34,7 +34,7 @@ export function secondsAt(pos: number, ticks: number, hz = TICKS_PER_SECOND): nu
 
 export const lerp = (a: number, b: number, f: number) => a + (b - a) * f;
 
-/** Interpolates angles the short way round, so a heading that wraps past pi does not spin the car. */
+/** Interpolates angles the short way round, so a heading that wraps past pi does not spin the agent. */
 export function lerpAngle(a: number, b: number, f: number): number {
   const turn = 2 * Math.PI;
   const d = b - a - turn * Math.round((b - a) / turn);

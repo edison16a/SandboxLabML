@@ -7,7 +7,7 @@ export interface KeySpot {
   onControl: boolean;
   /** Focus sits in a widget the arrows move through, like a tab list or a slider. */
   inArrowWidget: boolean;
-  /** The page has something Escape backs out of, like a car the camera follows. */
+  /** The page has something Escape backs out of, like an agent the camera follows. */
   pageOwnsEscape: boolean;
 }
 

@@ -55,10 +55,10 @@ describe('the stream on screen', () => {
   });
 
   it('follows a picked SUV only in the stream it was picked in', () => {
-    expect(focusIndex({ kind: 'car', index: 4 }, 'population', [])).toBe(4);
-    expect(focusIndex({ kind: 'car', index: 4 }, 'ghosts', [])).toBe(-1);
+    expect(focusIndex({ kind: 'agent', index: 4 }, 'population', [])).toBe(4);
+    expect(focusIndex({ kind: 'agent', index: 4 }, 'ghosts', [])).toBe(-1);
     expect(focusIndex({ kind: 'ghost', generation: 7 }, 'ghosts', [0, 3, 7])).toBe(2);
     expect(pickedFocus(2, 'ghosts', [0, 3, 7])).toEqual({ kind: 'ghost', generation: 7 });
-    expect(pickedFocus(5, 'population', [])).toEqual({ kind: 'car', index: 5 });
+    expect(pickedFocus(5, 'population', [])).toEqual({ kind: 'agent', index: 5 });
   });
 });

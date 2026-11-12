@@ -53,7 +53,7 @@ export function selectGhosts(sel: GhostSelection, available: number): number[] {
 
 /**
  * What the replay worker needs to re-simulate each chosen champion: its
- * genome, the seed its car drove with, the script it trained under and,
+ * genome, the seed its agent ran with, the script it trained under and,
  * where the env hands them out, its start slot.
  * Generations without a stored record are skipped.
  */

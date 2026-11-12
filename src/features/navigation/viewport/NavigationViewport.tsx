@@ -35,7 +35,7 @@ export function NavigationViewport({ feeds, ultra, onReady }: Props) {
   const onPick = useCallback(
     (ghost: boolean, index: number) => {
       const tags = feeds.ghosts.tags;
-      if (!ghost) useNavigationLab.getState().set({ focus: { kind: 'car', index } });
+      if (!ghost) useNavigationLab.getState().set({ focus: { kind: 'agent', index } });
       else if (tags && index < tags.length) useNavigationLab.getState().set({ focus: { kind: 'ghost', generation: tags[index] } });
     },
     [feeds],

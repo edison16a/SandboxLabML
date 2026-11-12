@@ -16,14 +16,14 @@ export function shownStream(s: { mode: LabState['mode']; view: ViewMode; speed: 
  * best performer. A focus on the other stream falls back to the leader.
  */
 export function focusIndex(focus: Focus, shown: 'population' | 'ghosts', ghostGenerations: readonly number[]): number {
-  if (focus.kind === 'car' && shown === 'population') return focus.index;
+  if (focus.kind === 'agent' && shown === 'population') return focus.index;
   if (focus.kind === 'ghost' && shown === 'ghosts') return ghostGenerations.indexOf(focus.generation);
   return -1;
 }
 
 /** The focus a click on an SUV of the shown stream asks for. */
 export function pickedFocus(index: number, shown: 'population' | 'ghosts', ghostGenerations: readonly number[]): Focus {
-  if (shown === 'population') return { kind: 'car', index };
+  if (shown === 'population') return { kind: 'agent', index };
   const generation = ghostGenerations[index];
   return generation === undefined ? { kind: 'champion' } : { kind: 'ghost', generation };
 }

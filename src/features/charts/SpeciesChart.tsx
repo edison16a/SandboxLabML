@@ -37,7 +37,7 @@ export function speciesShares(records: GenerationRecord[], ids: number[]): Float
 
 /**
  * Stacked species sizes per generation, drawn on a canvas. Each band is one
- * species, in the same color its cars wear in the viewport, so a species
+ * species, in the same color its agents wear in the viewport, so a species
  * taking over the population is visible at a glance.
  */
 export function SpeciesChart({ records, height = 140 }: { records: GenerationRecord[]; height?: number }) {

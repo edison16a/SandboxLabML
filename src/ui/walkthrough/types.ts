@@ -67,7 +67,7 @@ export interface Tour {
   steps: WalkStep[];
   /**
    * True while the lab has its own use for Escape, like backing out of a
-   * followed car. Escape then goes to the lab instead of skipping the tour.
+   * followed agent. Escape then goes to the lab instead of skipping the tour.
    */
   pageOwnsEscape?: () => boolean;
 }
