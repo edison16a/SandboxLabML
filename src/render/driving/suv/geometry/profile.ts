@@ -80,11 +80,11 @@ export function sectionAt(x: number): Section {
 }
 
 /**
- * Round wheel arches, cut 5 cm clear of the tire, so the body wraps the
+ * Round wheel arches, cut 4.7 cm clear of the tire, so the body wraps the
  * big wheels. Over each wheel the side skin stops at a circle round the
  * wheel center; below the center the opening runs straight down to the sill.
  */
-export const ARCH = { radius: WHEEL.radius + 0.05, centerY: WHEEL.radius };
+export const ARCH = { radius: WHEEL.radius + 0.047, centerY: WHEEL.radius };
 export const AXLES = [BODY.axleFront, BODY.axleRear];
 /** Bands low enough to meet the wheels: the sill trim, the lower side and the side up to the shoulder. */
 export const ARCHED_BANDS = 3;
