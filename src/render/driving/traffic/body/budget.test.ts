@@ -16,7 +16,7 @@ const triangles = (g: THREE.BufferGeometry) => (g.index ? g.index.count : g.attr
  * one above it.
  */
 const BODY_BUDGET: Record<DetailName, number> = { high: 3150, medium: 2600, low: 1300 };
-const WHEEL_BUDGET: Record<DetailName, number> = { high: 480, medium: 400, low: 300 };
+const WHEEL_BUDGET: Record<DetailName, number> = { high: 450, medium: 380, low: 170 };
 
 describe('traffic triangle budgets', () => {
   for (let kind = 0; kind < CAR_KINDS; kind++) {

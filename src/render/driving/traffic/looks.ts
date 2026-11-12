@@ -27,10 +27,10 @@ const LOOKS: Record<Look, { color: [number, number, number]; rough: number; meta
   amber: { color: [0.22, 0.1, 0.03], rough: 0.18, metal: 0.1, glow: 0, tint: 0 },
   sign: { color: [0.98, 0.9, 0.62], rough: 0.4, metal: 0, glow: 1.1, tint: 0 },
   tire: { color: [0.022, 0.022, 0.024], rough: 0.9, metal: 0, glow: 0, tint: 0 },
-  wall: { color: [0.046, 0.047, 0.05], rough: 0.8, metal: 0, glow: 0, tint: 0 },
+  wall: { color: [0.034, 0.035, 0.037], rough: 0.85, metal: 0, glow: 0, tint: 0 },
   lip: { color: [0.78, 0.8, 0.82], rough: 0.16, metal: 1, glow: 0, tint: 0 },
   rim: { color: [0.56, 0.58, 0.6], rough: 0.28, metal: 0.95, glow: 0, tint: 0 },
-  hub: { color: [0.08, 0.08, 0.085], rough: 0.4, metal: 0.5, glow: 0, tint: 0 },
+  hub: { color: [0.03, 0.031, 0.034], rough: 0.3, metal: 0.4, glow: 0, tint: 0 },
   gap: { color: [0.012, 0.012, 0.013], rough: 0.7, metal: 0.2, glow: 0, tint: 0 },
 };
 

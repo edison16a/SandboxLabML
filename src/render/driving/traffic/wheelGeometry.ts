@@ -1,60 +1,106 @@
-import type * as THREE from 'three';
-import { gridGeometry, merge, type Vec3 } from '../suv/geometry/grid';
+import * as THREE from 'three';
+import { gridGeometry, merge, polygonGeometry, type Vec3 } from '../suv/geometry/grid';
 import { lathe } from '../suv/geometry/lathe';
-import { bakeLook } from './looks';
+import { bakeLook, type Look } from './looks';
 
 /** Tire width, m. */
 const WIDTH = 0.225;
+/** Share of the tire's radius the rim fills: a slim, dark sidewall band round a large wheel. */
+const RIM_SHARE = 0.7;
+/** How far the dark recess behind the spokes sits below the outer face, m. */
+const DEEP = 0.05;
 
-/** Depth of the rim's dish below the outer face at radius r, m: shallow at the lip, deepest at the hub. */
-const dish = (r: number, rim: number) => 0.008 + 0.024 * (1 - r / rim);
+/** Depth of the wheel's dish below the outer face at radius r, m: shallow at the lip, deepest at the hub. */
+const dish = (r: number, rim: number) => 0.006 + 0.022 * (1 - r / rim);
 
-/**
- * A traffic car wheel centered on its axle, outer face toward +Z: a black
- * tread with rounded shoulders, a lighter satin sidewall, a bright lip
- * round a dished silver rim, and dark openings between slim spokes, so a
- * rolling wheel visibly turns. Ten spokes on the finer tiers, five on Low.
- * Light enough to draw a few hundred at once.
- */
-export function trafficWheelGeometry(radius: number, segments: number): THREE.BufferGeometry {
-  const h = WIDTH / 2;
-  const rim = radius * 0.66;
-  const lip = rim + 0.012;
-  const inner = lathe([[[rim, -h + 0.01], [radius - 0.02, -h]]], segments);
-  const tread = lathe([[[radius - 0.02, -h], [radius, -h + 0.045], [radius, h - 0.045], [radius - 0.02, h]]], segments);
-  const wall = lathe([[[radius - 0.02, h], [radius - 0.06, h + 0.01], [lip, h + 0.002]]], segments);
-  const ring = lathe([[[lip, h + 0.002], [rim - 0.006, h - 0.004]]], segments);
-  const face = lathe([[[rim - 0.006, h - 0.004], [rim * 0.62, h - dish(rim * 0.62, rim)], [rim * 0.26, h - dish(rim * 0.26, rim)]]], segments);
-  const hub = lathe([[[rim * 0.26, h - dish(rim * 0.26, rim) + 0.003], [0.001, h - 0.02]]], Math.max(8, segments >> 1));
-  const spokes = segments >= 16 ? 10 : 5;
-  const holes: THREE.BufferGeometry[] = [];
-  for (let k = 0; k < spokes; k++) holes.push(spokeGap(rim, h, (k / spokes) * Math.PI * 2, spokes));
-  const parts = [bakeLook(inner, ['wall']), bakeLook(tread, ['tire']), bakeLook(wall, ['wall']), bakeLook(ring, ['lip']), bakeLook(face, ['rim']), bakeLook(hub, ['hub']), ...holes.map((g) => bakeLook(g, ['gap']))];
-  const merged = merge(parts);
-  parts.forEach((p) => p.dispose());
+/** A ring of n points at radius r and axial offset z, counterclockwise seen from outside. */
+const ring = (r: number, z: number, n: number): Vec3[] => Array.from({ length: n }, (_, i) => [r * Math.cos((i / n) * Math.PI * 2), r * Math.sin((i / n) * Math.PI * 2), z]);
+
+function baked(parts: Array<[THREE.BufferGeometry, Look]>): THREE.BufferGeometry {
+  const ready = parts.map(([g, look]) => bakeLook(g, [look]));
+  const merged = merge(ready);
+  ready.forEach((p) => p.dispose());
   merged.computeBoundingSphere();
   return merged;
 }
 
 /**
- * One dark opening between two spokes, lying just proud of the dish: wide
- * under the rim, narrowing toward the hub where the spokes crowd together,
- * so the spokes between keep an even width.
+ * A traffic car wheel centered on its axle, outer face toward +Z: a black
+ * tread with rounded shoulders, a slim satin sidewall, a bright lip round
+ * a silver rim, and spokes so a rolling wheel visibly turns. Ten slim
+ * spokes stand over a real recess on the finer tiers; Low paints five dark
+ * openings on a dish and skips what hides behind the liner. Light enough
+ * to draw a few hundred at once.
  */
-function spokeGap(rim: number, h: number, a: number, spokes: number): THREE.BufferGeometry {
+export function trafficWheelGeometry(radius: number, segments: number): THREE.BufferGeometry {
+  const h = WIDTH / 2;
+  const rim = radius * RIM_SHARE;
+  const lip = rim + 0.012;
+  const hubR = rim * 0.3;
+  const fine = segments >= 16;
+  const tread = lathe([[[radius - 0.02, -h], [radius, -h + 0.045], [radius, h - 0.045], [radius - 0.02, h]]], segments);
+  const wall = lathe([fine ? [[radius - 0.02, h], [radius - 0.045, h + 0.008], [lip, h + 0.002]] : [[radius - 0.02, h], [lip, h + 0.002]]], segments);
+  const ringLip = lathe([[[lip, h + 0.002], [rim - 0.006, h - dish(rim - 0.006, rim)]]], segments);
+  const parts: Array<[THREE.BufferGeometry, Look]> = [[tread, 'tire'], [wall, 'wall'], [ringLip, 'lip']];
+  // A silver hub disc and a small dark center cap close the middle flat, so no pinhole shows at the pole.
+  const hubZ = h - dish(hubR, rim) + 0.0015;
+  parts.push([polygonGeometry(ring(hubR, hubZ, 10), [0, 0, 1]), 'rim']);
+  parts.push([polygonGeometry(ring(hubR * 0.5, hubZ + 0.002, 8), [0, 0, 1]), 'hub']);
+  if (!fine) {
+    // Low: a solid dish with five dark openings painted just proud of it.
+    parts.push([lathe([[[rim - 0.006, h - dish(rim - 0.006, rim)], [hubR, h - dish(hubR, rim)]]], segments), 'rim']);
+    for (let k = 0; k < 5; k++) parts.push([paintedGap(rim, h, (k / 5) * Math.PI * 2), 'gap']);
+    return baked(parts);
+  }
+  // The inboard sidewall, the barrel inside the lip and the dark recess the spokes stand over.
+  parts.push([lathe([[[rim, -h + 0.01], [radius - 0.02, -h]]], segments), 'wall']);
+  parts.push([lathe([[[rim - 0.004, h - 0.008], [rim - 0.008, h - DEEP]]], segments), 'hub']);
+  parts.push([polygonGeometry(ring(rim - 0.008, h - DEEP, segments), [0, 0, 1]), 'gap']);
+  for (let k = 0; k < 10; k++) parts.push([spoke(rim, hubR, h, (k / 10) * Math.PI * 2), 'rim']);
+  return baked(parts);
+}
+
+/**
+ * One slim spoke from under the hub cap out under the lip: a top with a
+ * soft ridge down its middle and two side walls dropping into the recess,
+ * so the openings between spokes read as real depth as the wheel turns.
+ */
+function spoke(rim: number, hubR: number, h: number, a: number): THREE.BufferGeometry {
+  const r0 = hubR * 0.9;
+  const r1 = rim;
+  const at = (r: number, half: number, lift: number): Vec3 => {
+    const t = a + half / r;
+    return [r * Math.cos(t), r * Math.sin(t), h - 0.004 - dish(r, rim) + lift];
+  };
+  // Wider out at the rim than at the hub, as cast spokes are.
+  const halfAt = (r: number) => 0.012 + (0.01 * (r - r0)) / (r1 - r0);
+  const top = gridGeometry([r0, r1].map((r) => [at(r, -halfAt(r), 0), at(r, 0, 0.002), at(r, halfAt(r), 0)]));
+  const sides = [-1, 1].map((side) => {
+    const edge = (r: number, down: number): Vec3 => {
+      const p = at(r, side * halfAt(r), 0);
+      return [p[0], p[1], p[2] - down];
+    };
+    const rows = [r0, r1].map((r) => [edge(r, 0), edge(r, 0.03)]);
+    // Columns run down the wall; on the counterclockwise side that order faces the wall outward.
+    return gridGeometry(side > 0 ? rows : rows.map((row) => [...row].reverse()));
+  });
+  const g = merge([top, ...sides], []);
+  [top, ...sides].forEach((p) => p.dispose());
+  return g;
+}
+
+/**
+ * One dark opening between two of Low's five spokes, lying just proud of
+ * the dish: wide under the rim and narrowing toward the hub, so the
+ * spokes between keep an even width.
+ */
+function paintedGap(rim: number, h: number, a: number): THREE.BufferGeometry {
   const r0 = rim * 0.36;
   const r1 = rim * 0.9;
-  const half = (Math.PI / spokes) * (spokes > 5 ? 0.56 : 0.62);
-  const rows: Vec3[][] = [];
-  for (let i = 0; i <= 2; i++) {
-    const r = r0 + ((r1 - r0) * i) / 2;
-    const w = half * (0.45 + 0.55 * (i / 2));
-    const row: Vec3[] = [];
-    for (let j = 0; j <= 2; j++) {
-      const t = a - w + (2 * w * j) / 2;
-      row.push([r * Math.cos(t), r * Math.sin(t), h - dish(r, rim) + 0.0025]);
-    }
-    rows.push(row);
-  }
+  const half = (Math.PI / 5) * 0.62;
+  const rows: Vec3[][] = [r0, r1].map((r, i) => {
+    const w = half * (0.45 + 0.55 * i);
+    return [-w, 0, w].map((d) => [r * Math.cos(a + d), r * Math.sin(a + d), h - dish(r, rim) + 0.0025] as Vec3);
+  });
   return gridGeometry(rows);
 }
