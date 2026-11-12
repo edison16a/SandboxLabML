@@ -3,10 +3,10 @@
 import { useMemo } from 'react';
 import type uPlot from 'uplot';
 import { axis, UPlotChart } from '@/features/charts/UPlotChart';
-import type { TickLog } from './types';
+import type { EpisodeTickLog } from './episode/run';
 
 /** Cumulative reward over time, the curve the brain is trying to push up. Any log with time and total columns fits. */
-export function RewardChart({ log }: { log: Pick<TickLog, 'time' | 'total'> }) {
+export function RewardChart({ log }: { log: Pick<EpisodeTickLog, 'time' | 'total'> }) {
   const options = useMemo<Omit<uPlot.Options, 'width' | 'height'>>(
     () => ({
       legend: { show: false },

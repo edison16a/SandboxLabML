@@ -1,9 +1,7 @@
 import * as Comlink from 'comlink';
 import type { PreviewResult } from '@/engine/lessons/preview/types';
 import type { EpisodeTestResult } from './episode/run';
-import type { MatchTestRequest, MatchTestResult } from './hideseek/types';
 import type { TestRunApi } from './testRun.worker';
-import type { TestRunRequest, TestRunResult } from './types';
 
 /** Starts a test worker. Each caller owns its worker and terminates it when done. */
 export function startTestWorker(name: string): { worker: Worker; api: Comlink.Remote<TestRunApi> } {
@@ -14,10 +12,10 @@ export function startTestWorker(name: string): { worker: Worker; api: Comlink.Re
 type TestWorker = ReturnType<typeof startTestWorker>;
 
 /**
- * The last worker that finished cleanly, kept for the next run. A Hide and
- * Seek match first loads the physics engine and warms up the JIT, which
- * takes about a second; a warm worker skips both and also times ticks more
- * steadily. A worker that was cancelled or failed is never reused.
+ * The last worker that finished cleanly, kept for the next run. A fresh
+ * worker loads the env's module and warms up the JIT first; a warm one
+ * skips both and also times ticks more steadily. A worker that was
+ * cancelled or failed is never reused.
  */
 let warm: TestWorker | null = null;
 
@@ -58,12 +56,7 @@ function inWorker<T>(signal: AbortSignal, call: (api: Comlink.Remote<TestRunApi>
   });
 }
 
-/** Runs one racing test episode in a test worker. */
-export function runInWorker(req: TestRunRequest, signal: AbortSignal): Promise<TestRunResult> {
-  return inWorker<TestRunResult>(signal, async (api) => api.run(req));
-}
-
-/** Runs one test episode of a script for an env added through the registry. */
+/** Runs one test episode of a script, driven by its env's fixed test brain. */
 export function runEpisodeInWorker(source: string, signal: AbortSignal): Promise<EpisodeTestResult> {
   return inWorker<EpisodeTestResult>(signal, async (api) => api.episode(source));
 }
@@ -71,9 +64,4 @@ export function runEpisodeInWorker(source: string, signal: AbortSignal): Promise
 /** Records a script's test episode for a top down replay, the same recording the lesson preview plays. */
 export function recordInWorker(source: string, signal: AbortSignal): Promise<PreviewResult> {
   return inWorker<PreviewResult>(signal, async (api) => api.preview(source));
-}
-
-/** Plays one Hide and Seek test match in a test worker. */
-export function runMatchInWorker(req: MatchTestRequest, signal: AbortSignal): Promise<MatchTestResult> {
-  return inWorker<MatchTestResult>(signal, async (api) => api.match(req));
 }

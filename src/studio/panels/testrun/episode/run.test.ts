@@ -24,7 +24,7 @@ describe('the Studio test run of a registry env', () => {
   });
 
   it('explains a brain of another env instead of running', async () => {
-    const result = await runEpisodeTest(TOY_SCRIPT_ENV.starter.replace('brain toy-basic', 'brain racing-standard'));
-    expect(result).toEqual({ ok: false, message: 'Fix this first. Line 2: racing-standard is a racing brain, but this script is for toy.' });
+    const result = await runEpisodeTest(TOY_SCRIPT_ENV.starter.replace('brain toy-basic', 'brain driving-standard'));
+    expect(result).toEqual({ ok: false, message: 'Fix this first. Line 2: driving-standard is a driving brain, but this script is for toy.' });
   });
 });

@@ -3,27 +3,15 @@ import * as Comlink from 'comlink';
 import '@/workers/shared/loadScripts';
 import { recordPreview } from '@/engine/lessons/preview/record';
 import { previewBuffers, type PreviewResult } from '@/engine/lessons/preview/types';
-import { runTestEpisode } from './episode';
 import { runEpisodeTest, type EpisodeTestResult } from './episode/run';
-import type { MatchTestRequest, MatchTestResult } from './hideseek/types';
-import type { TestRunRequest, TestRunResult } from './types';
 
 /**
  * A small worker for the Studio's Test run tab and the lesson preview. The
- * tab starts one per run and terminates it afterwards, which is also how
- * Cancel works, so a slow script never freezes the editor. The preview
- * keeps one while it is open. Hide and Seek code loads on its first match,
- * since it brings the Rapier physics engine and a racing run never needs it.
+ * tab runs each test here, and Cancel terminates the worker, so a slow
+ * script never freezes the editor. The preview keeps one while it is open.
  */
 const api = {
-  run(req: TestRunRequest): TestRunResult {
-    const result = runTestEpisode(req);
-    if (!result.ok) return result;
-    const { time, reward, total, speed } = result.log;
-    return Comlink.transfer(result, [time.buffer, reward.buffer, total.buffer, speed.buffer] as ArrayBuffer[]);
-  },
-
-  /** One test episode of a script for an env added through the registry. */
+  /** One test episode of a script, driven by its env's fixed test brain. */
   async episode(source: string): Promise<EpisodeTestResult> {
     const result = await runEpisodeTest(source);
     if (!result.ok) return result;
@@ -31,15 +19,7 @@ const api = {
     return Comlink.transfer(result, [time.buffer, reward.buffer, total.buffer] as ArrayBuffer[]);
   },
 
-  async match(req: MatchTestRequest): Promise<MatchTestResult> {
-    const { runTestMatch } = await import('./hideseek/episode');
-    const result = await runTestMatch(req);
-    if (!result.ok) return result;
-    const { time, hiderReward, seekerReward, hiderTotal, seekerTotal } = result.log;
-    return Comlink.transfer(result, [time.buffer, hiderReward.buffer, seekerReward.buffer, hiderTotal.buffer, seekerTotal.buffer] as ArrayBuffer[]);
-  },
-
-  /** Records the drive or match a lesson check runs, for the preview beside the lesson. */
+  /** Records the episode a lesson check runs, for the preview beside the lesson and the test run replay. */
   async preview(source: string): Promise<PreviewResult> {
     const result = await recordPreview(source);
     return result.ok ? Comlink.transfer(result, previewBuffers(result.preview)) : result;
