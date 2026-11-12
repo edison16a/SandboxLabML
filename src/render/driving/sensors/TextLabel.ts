@@ -4,7 +4,9 @@ import * as THREE from 'three';
  * A small text pill drawn into a canvas and shown as a sprite that keeps
  * its size on screen, for the overlay's distance label. The canvas is only
  * redrawn when the text or color changes, which for a whole number of
- * meters is a few times a second at most.
+ * meters is a few times a second at most. It is depth tested, nudged a
+ * little toward the camera, so a building in front hides it rather than a
+ * pill floating over the roofs.
  */
 export class TextLabel {
   readonly sprite: THREE.Sprite;
@@ -20,7 +22,16 @@ export class TextLabel {
     this.canvas.height = 64;
     this.texture = new THREE.CanvasTexture(this.canvas);
     this.texture.colorSpace = THREE.SRGBColorSpace;
-    this.material = new THREE.SpriteMaterial({ map: this.texture, sizeAttenuation: false, depthTest: false, depthWrite: false, transparent: true, toneMapped: false });
+    this.material = new THREE.SpriteMaterial({
+      map: this.texture,
+      sizeAttenuation: false,
+      depthWrite: false,
+      transparent: true,
+      toneMapped: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -4,
+      polygonOffsetUnits: -4,
+    });
     this.sprite = new THREE.Sprite(this.material);
     this.sprite.scale.set(0.075, 0.03, 1);
     this.sprite.renderOrder = 20;

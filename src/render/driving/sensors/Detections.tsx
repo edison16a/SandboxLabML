@@ -1,6 +1,6 @@
 'use client';
 
-import type * as THREE from 'three';
+import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useMemo } from 'react';
 import { HIT_CAR, HIT_PED } from '@/engine/driving/sensors/lidar';
@@ -48,20 +48,29 @@ function bodyEdge(a: number): number {
   return Math.min(c > 1e-6 ? BODY.length / 2 / c : Infinity, s > 1e-6 ? BODY.width / 2 / s : Infinity);
 }
 
+/** True when a point lies inside the camera's view. `v` is scratch and is overwritten. */
+function onScreen(camera: THREE.Camera, v: THREE.Vector3, x: number, y: number, z: number): boolean {
+  v.set(x, y, z).project(camera);
+  return v.z < 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1;
+}
+
 /**
  * What the followed SUV currently senses, boxed: corner brackets round
  * every car its lidar touches and the car ahead it tracks (amber), and
  * round every person (magenta). The nearest one gets a small label with
  * the gap to it, measured from the SUV's own outline along the beam that
  * found it. Brighter boxes are the ones its dedicated sensors report.
+ * The label only shows while the SUV itself is in view, so a free or
+ * orbit camera looking elsewhere never shows a stray distance.
  */
 export function Detections() {
   const { frame } = useDrivingScene();
   const lines = useDisposable(() => new FatLines(MAX_BOXES * 24, 2.2), []);
   const label = useDisposable(() => new TextLabel(), []);
   const marks = useMemo(() => ({ cars: new Uint8Array(MAX_TRAFFIC), peds: new Uint8Array(MAX_PEDS), carGap: new Float32Array(MAX_TRAFFIC), pedGap: new Float32Array(MAX_PEDS) }), []);
+  const scratch = useMemo(() => new THREE.Vector3(), []);
 
-  useFrame(({ size }) => {
+  useFrame(({ size, camera }) => {
     const s = frame.sense;
     const world = frame.world;
     lines.begin();
@@ -131,8 +140,8 @@ export function Detections() {
       }
     }
     lines.finish(size.width, size.height);
-    label.sprite.visible = bKind >= 0;
-    if (bKind < 0) return;
+    label.sprite.visible = bKind >= 0 && onScreen(camera, scratch, frame.pos.x, frame.pos.y + 0.8, frame.pos.z);
+    if (!label.sprite.visible) return;
     label.sprite.position.set(bx, by, bz);
     label.setMeters(Math.round(best), bKind === HIT_PED ? SENSOR_CSS.person : SENSOR_CSS.car);
   }, FRAME_PRIORITY.overlay);
