@@ -8,7 +8,7 @@ export const BLUEPRINT_SCHEMA_VERSION = 1;
 export const MAX_INPUTS = 128;
 export const MAX_OUTPUTS = 8;
 
-export type BlueprintTier = 'tiny' | 'starter' | 'standard' | 'advanced' | 'custom';
+export type BlueprintTier = 'starter' | 'standard' | 'advanced' | 'custom';
 
 interface BlueprintBase {
   id: string;
@@ -32,7 +32,7 @@ interface BlueprintBase {
 }
 
 /**
- * The sensor config of an env added through the registry. Only its module
+ * The sensor config of an env. Only its module
  * reads the groups; every env shares the noise level, which the blueprint
  * form edits for all of them.
  */
@@ -57,8 +57,4 @@ export type Blueprint = EpisodeBlueprint;
 export interface BlueprintIssue {
   field: string;
   message: string;
-}
-
-export function isEnv<E extends EnvId>(b: Blueprint, env: E): b is Extract<Blueprint, { env: E }> {
-  return b.env === env;
 }
