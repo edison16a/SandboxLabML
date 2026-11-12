@@ -6,7 +6,8 @@ import { DRIVING_BENCHMARK_VERSION, DRIVING_ENGINE_VERSION } from '../../../src/
 import { checkpoints } from '../checkpoints';
 import { numberArg, writeReferences, type Args } from '../file';
 import type { JobPool } from '../pool';
-import { pickDrivingModel } from './pick';
+import { keepBetterModels, shippedModels } from './keep';
+import { pickDrivingModel, type PickedDrivingModel } from './pick';
 import { SANDBOX_LEVELS } from './sandboxTrips';
 import type { DrivingReferenceJob, DrivingReferenceResult } from './train';
 
@@ -15,14 +16,14 @@ type DrivingReferences = Omit<BenchReferences, 'models'> & { models: DrivingRefe
 
 const percent = (share: number) => `${Math.round(share * 100)}%`;
 
-/** The model a tier ships (see pickDrivingModel). How reliable it is goes to the log, not the file. */
-async function modelOf(tier: ReferenceTier, runs: DrivingReferenceResult[]): Promise<DrivingReferenceModel> {
-  const { pickShare, checkShares, ...model } = await pickDrivingModel(tier, runs);
-  const levels = SANDBOX_LEVELS.map((l, i) => `level ${l} ${percent(checkShares[i])}`).join(', ');
+/** The model a tier's runs offer (see pickDrivingModel). How reliable it is goes to the log, not the file. */
+async function modelOf(tier: ReferenceTier, runs: DrivingReferenceResult[]): Promise<PickedDrivingModel> {
+  const picked = await pickDrivingModel(tier, runs);
+  const levels = SANDBOX_LEVELS.map((l, i) => `level ${l} ${percent(picked.checkShares[i])}`).join(', ');
   console.log(
-    `${tier} model: seed ${model.seed}, generation ${model.generation}, benchmark ${model.score}, weighted ${percent(pickShare)} on the pick trips, safe on unseen trips at ${levels}`,
+    `${tier} model: seed ${picked.seed}, generation ${picked.generation}, benchmark ${picked.score}, weighted ${percent(picked.pickShare)} on the pick trips, safe on unseen trips at ${levels}`,
   );
-  return model;
+  return picked;
 }
 
 /** Runs from one or more dumps, comma separated, so seeds trained in separate batches build one file. */
@@ -51,13 +52,16 @@ function stableDate(path: string, next: DrivingReferences): DrivingReferences {
  * run uses (Midtown, the automatic curriculum, three trips), benchmarks
  * the champion every few generations, keeps the median and middle half of
  * the scores at each checkpoint, and ships each tier's most reliable
- * champion as a model the Sandbox can drive (see pickDrivingModel).
+ * champion as a model the Sandbox can drive (see pickDrivingModel),
+ * unless the model the file already holds drives better (see
+ * keepBetterModels).
  *
  * Options: --seeds 6, --first-seed 1, --generations 200, --every 10,
  * --population 100, --tiers beginner,intermediate,advanced, --out file,
  * --dump file (every run's checkpoints and screened champions as JSON),
  * --from-dump a.json,b.json (build the file from such dumps without
- * training, for a new pick or seeds trained in batches).
+ * training, for a new pick or seeds trained in batches),
+ * --replace-models (ship the new picks even where the old models drive better).
  * A smoke run: --seeds 1 --generations 4 --every 2 --population 20.
  */
 export async function generateDriving(args: Args, pool: JobPool): Promise<void> {
@@ -86,14 +90,20 @@ export async function generateDriving(args: Args, pool: JobPool): Promise<void> 
   };
   // A dump from an earlier run skips the training and only builds the file again, with the current picking rules.
   const results = args['from-dump'] ? readDumps(args['from-dump']) : await pool.run<DrivingReferenceResult>(jobs, keep);
-  const file = await referenceFile(results, tiers);
+  // The models the file holds now, which a new pick has to beat to replace (see keepBetterModels).
+  const before = args['replace-models'] !== undefined ? [] : shippedModels(out);
+  const file = await referenceFile(results, tiers, before);
   writeReferences(out, stableDate(out, file));
   for (const r of file.references) console.log(`${r.tier}: final median ${r.finalScore}`);
   console.log(`Wrote ${out} in ${((performance.now() - started) / 1000).toFixed(0)} s.`);
 }
 
-/** The reference file from finished runs: each tier's curve, from the median and middle half of its seeds, and its model. */
-async function referenceFile(results: readonly DrivingReferenceResult[], tiers: readonly ReferenceTier[]): Promise<DrivingReferences> {
+/**
+ * The reference file from finished runs: each tier's curve, from the
+ * median and middle half of its seeds, and its model, or the one of
+ * `before` when that one drives better.
+ */
+async function referenceFile(results: readonly DrivingReferenceResult[], tiers: readonly ReferenceTier[], before: readonly DrivingReferenceModel[]): Promise<DrivingReferences> {
   const first = results[0].job;
   const gens = checkpoints(first.generations, first.every);
   const byTier = (tier: ReferenceTier) => results.filter((r) => r.job.tier === tier).sort((a, b) => a.job.seed - b.job.seed);
@@ -106,8 +116,9 @@ async function referenceFile(results: readonly DrivingReferenceResult[], tiers: 
       2,
     ),
   );
-  const models: DrivingReferenceModel[] = [];
-  for (const tier of tiers) models.push(await modelOf(tier, byTier(tier)));
+  const picked: PickedDrivingModel[] = [];
+  for (const tier of tiers) picked.push(await modelOf(tier, byTier(tier)));
+  const models = keepBetterModels(picked, before);
   return {
     env: 'driving',
     benchmarkVersion: DRIVING_BENCHMARK_VERSION,
