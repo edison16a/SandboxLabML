@@ -66,7 +66,7 @@ export function NetworkTab() {
       <div className="flex items-center gap-4 border-b border-border px-4 py-3 text-[12px]">
         <BrainStats genome={record.genome} />
         <label className="ml-auto flex items-center gap-2 text-muted">
-          Disabled
+          Disabled links
           <Switch label="Show disabled links" checked={showDisabled} onChange={setShowDisabled} />
         </label>
       </div>
