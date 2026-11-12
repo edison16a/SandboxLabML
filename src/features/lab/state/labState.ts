@@ -27,6 +27,8 @@ export interface LabState {
   speed: SpeedMode;
   records: GenerationRecord[];
   liveGeneration: number;
+  /** The live generation has streamed since the run opened. Until it does there is no live frame to show, only replays. */
+  streaming: boolean;
   /** Set when stored ghosts cannot be replayed under the current engine. */
   replayBlocked: string | null;
 
@@ -74,6 +76,7 @@ export function labDefaults(camera: string): LabState {
     speed: '1x',
     records: [],
     liveGeneration: 0,
+    streaming: false,
     replayBlocked: null,
     view: 'both',
     ghostSelection: { mode: 'auto' },
@@ -102,6 +105,7 @@ export function openedLabState(run: RunConfig, records: GenerationRecord[], live
     run,
     records,
     liveGeneration,
+    streaming: false,
     status: 'idle',
     replayBlocked: run.engineVersion === engineVersion ? null : 'This run was trained on an older engine, so its generations cannot be replayed.',
     focus: { kind: 'champion' },
@@ -116,7 +120,7 @@ export function openedLabState(run: RunConfig, records: GenerationRecord[], live
 
 /** Shared lab state with no run open: the open run was trashed or deleted, and the lab picks another on its next visit. */
 export function closedLabState(): Partial<LabState> {
-  return { run: null, records: [], liveGeneration: 0, status: 'idle', replayBlocked: null, focus: { kind: 'champion' }, networkGeneration: null, ghostGenerations: [], mode: 'train', lesions: {}, sandboxBrain: null };
+  return { run: null, records: [], liveGeneration: 0, streaming: false, status: 'idle', replayBlocked: null, focus: { kind: 'champion' }, networkGeneration: null, ghostGenerations: [], mode: 'train', lesions: {}, sandboxBrain: null };
 }
 
 /** The records after appending finished generations, oldest first. */

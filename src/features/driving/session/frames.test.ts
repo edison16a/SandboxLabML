@@ -52,6 +52,9 @@ describe('the stream on screen', () => {
     expect(shownStream({ mode: 'train', view: 'both', speed: 'turbo' })).toBe('ghosts');
     expect(shownStream({ mode: 'train', view: 'overlay', speed: '2x' })).toBe('ghosts');
     expect(shownStream({ mode: 'sandbox', view: 'population', speed: '1x' })).toBe('ghosts');
+    // Opened and not yet trained this session, there is no live frame: the champions' replay is the view.
+    expect(shownStream({ mode: 'train', view: 'both', speed: '1x', streaming: false })).toBe('ghosts');
+    expect(shownStream({ mode: 'train', view: 'both', speed: '1x', streaming: true })).toBe('population');
   });
 
   it('follows a picked SUV only in the stream it was picked in', () => {

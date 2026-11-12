@@ -4,11 +4,13 @@ import type { Focus, LabState, ViewMode } from '@/features/lab/state/labState';
 /**
  * Which stream the viewport shows as its population. The live generation
  * streams only at watch speeds; under Turbo and Max (and in the Sandbox,
- * and when the view asks for champions only) the viewport replays past
- * champions instead, so something real is always driving.
+ * when the view asks for champions only, and before the live generation
+ * has streamed at all since the run opened) the viewport replays past
+ * champions instead, so something real is always driving and the camera
+ * always has a champion to follow.
  */
-export function shownStream(s: { mode: LabState['mode']; view: ViewMode; speed: SpeedMode }): 'population' | 'ghosts' {
-  return s.mode === 'sandbox' || s.view === 'overlay' || !isWatchSpeed(s.speed) ? 'ghosts' : 'population';
+export function shownStream(s: { mode: LabState['mode']; view: ViewMode; speed: SpeedMode; streaming?: boolean }): 'population' | 'ghosts' {
+  return s.mode === 'sandbox' || s.view === 'overlay' || !isWatchSpeed(s.speed) || s.streaming === false ? 'ghosts' : 'population';
 }
 
 /**

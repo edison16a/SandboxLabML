@@ -66,7 +66,7 @@ export class SessionEvents {
         h.refreshGhosts(true);
         break;
       case 'live-start':
-        h.set({ liveGeneration: e.generation });
+        h.set({ liveGeneration: e.generation, streaming: true });
         if (h.lab().mode === 'sandbox') break;
         // Ghosts restart with every live generation so they run beside the new agents from the same start.
         h.playGhosts(e.speed);

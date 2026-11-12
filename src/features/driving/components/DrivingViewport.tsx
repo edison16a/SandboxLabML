@@ -37,6 +37,7 @@ export function DrivingViewport({ streams, onReady, ultra = false }: Props) {
   const viewMode = useDrivingLab((s) => s.view);
   const mode = useDrivingLab((s) => s.mode);
   const speed = useDrivingLab((s) => s.speed);
+  const streaming = useDrivingLab((s) => s.streaming);
   const camera = useDrivingLab((s) => s.camera);
   const sensors = useDrivingLab((s) => s.inputsOverlay);
   const focus = useDrivingLab((s) => s.focus);
@@ -50,7 +51,7 @@ export function DrivingViewport({ streams, onReady, ultra = false }: Props) {
   const idle = useDrivingLab((s) => s.status !== 'running' && s.mode === 'train' && isWatchSpeed(s.speed) && s.status !== 'idle');
 
   const frames = useMemo(() => ({ population: new StreamFrames(streams.population), ghosts: new StreamFrames(streams.ghosts), over: new StreamFrames(streams.ghosts) }), [streams]);
-  const shown = shownStream({ mode, view: viewMode, speed });
+  const shown = shownStream({ mode, view: viewMode, speed, streaming });
   const main = shown === 'population' ? frames.population : frames.ghosts;
   // Champions over the live generation only show on the trip it is driving.
   frames.over.match = frames.population;
