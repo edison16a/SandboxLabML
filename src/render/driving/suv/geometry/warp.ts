@@ -20,14 +20,14 @@ export function warp(p: Vec3): Vec3 {
 }
 
 /**
- * The nose in side view: the face leans back 14 degrees from a soft fold
+ * The nose in side view: the face leans back 12 degrees from a soft fold
  * at `apex` up to the hood's edge at `top`, and below the fold the bumper
  * tucks back toward the lip at `under` m per m. The bend starts behind
  * the front wheel arch, so the arch stays round. The fold under the hood's
- * edge turns over about as wide as the hood's own 4 cm roll, so the two
- * read as one rounded edge.
+ * edge turns over about as wide as the hood's own roll, so the two read
+ * as one rounded edge.
  */
-const NOSE_BEND = { from: 1.96, top: 0.9, apex: 0.567, lean: 0.25, under: 0.55, edge: 0.035, fold: 0.045 };
+const NOSE_BEND = { from: 1.96, top: 0.915, apex: 0.58, lean: 0.21, under: 0.58, edge: 0.035, fold: 0.045 };
 
 /** How far the nose face sits ahead of its upright station at height y, m. */
 export function noseLean(y: number): number {

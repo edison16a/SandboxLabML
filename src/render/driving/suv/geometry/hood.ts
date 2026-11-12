@@ -4,7 +4,7 @@ import type { Detail, PartBin } from './parts';
 import { NOSE } from './profile';
 
 /** The hood's shut line runs from the cowl to just behind the leading edge, m. */
-const HOOD = { from: 0.96, to: NOSE - 0.055, gap: 0.0022 };
+const HOOD = { from: 0.98, to: NOSE - 0.06, gap: 0.0022 };
 
 /** Bands of the section that make the hood's top: the fender peak to the valley's edge, and on to the centerline. */
 const TOP = [5, 6];
