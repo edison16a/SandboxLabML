@@ -10,6 +10,9 @@ import type { WorldState } from '@/engine/driving/world/state';
 
 const MAX_BEAMS = 64;
 
+
+/** A car further than this from the nearest route sample in the window was lost by the windowed search, m. */
+const LOST = 3;
 /**
  * What the followed SUV senses this frame, worked out on the main thread
  * with the engine's own sensor code on the blended world. So the beams,
@@ -76,6 +79,8 @@ export function senseFocus(sense: FocusSense, city: City, route: Route | null, w
   let index = hint;
   if (route) {
     route.path.project(x, y, hint, hint > 0 ? 16 : route.path.n, proj);
+    // A slow frame can let the car run past the window round the last match: then search the whole route.
+    if (hint > 0 && proj.distance > LOST) route.path.project(x, y, 0, route.path.n, proj);
     index = proj.index;
     const p = sense.pose;
     p.x = x;
