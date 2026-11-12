@@ -66,19 +66,16 @@ const draws = (page: Page) => page.evaluate(() => window.__glDraws ?? 0);
  * renderer on a busy machine can spend seconds on it.
  */
 async function settleDrawing(page: Page): Promise<number> {
+  // expect.poll checks once straight away, which passed before any wait at all; this loop always waits first.
+  const deadline = Date.now() + 120_000;
   let last = await draws(page);
-  await expect
-    .poll(
-      async () => {
-        const now = await draws(page);
-        const still = now === last;
-        last = now;
-        return still;
-      },
-      { timeout: 120_000, intervals: [8000] },
-    )
-    .toBe(true);
-  return last;
+  for (;;) {
+    await page.waitForTimeout(8000);
+    const now = await draws(page);
+    if (now === last) return now;
+    if (Date.now() > deadline) throw new Error('The hero kept drawing while off screen.');
+    last = now;
+  }
 }
 
 /** The poster frame the live scenes compose their shots for, or null when the hero frames itself. */
