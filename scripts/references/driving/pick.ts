@@ -3,36 +3,34 @@ import type { DrivingReferenceModel } from '../../../src/engine/bench/driving/mo
 import type { ReferenceTier } from '../../../src/engine/bench/types';
 import type { DrivingInputConfig } from '../../../src/engine/driving/sensors/inputConfig';
 import { base64ToBytes, decodeGenome } from '../../../src/engine/neat/serialize';
-import { CHECK_TRIPS, PICK_TRIPS, sandboxShares, SCREEN_TRIPS, weightedShare } from './sandboxTrips';
+import { CHECK_TRIPS, FINAL_TRIPS, PICK_TRIPS, sandboxShares, SCREEN_TRIPS, weightedShare } from './sandboxTrips';
 import { drivingReferenceConfig, type DrivingCandidate, type DrivingReferenceResult } from './train';
 
 /** Champions per tier with the best weighted screen that drive the full pick trips. */
 const SHORTLIST = 16;
 /** Champions added to the shortlist for their screen at traffic and rush hour, where few do well. */
 const BUSY_SHORTLIST = 8;
-/** The level 2 share a shipped model should reach on the pick trips: every newcomer watches it there first. */
-export const LEVEL2_FLOOR = 0.85;
+/**
+ * The best few after the pick trips, which drive the final trips as well.
+ * Twenty five trips leave a share a few points either way, enough to
+ * swap close neighbours, so the last call rests on twice as many.
+ */
+const FINALISTS = 3;
 
-/** A champion's safe share per Sandbox level on the pick trips, with what it is picked on. */
+/** A champion's safe share per Sandbox level on the trips it drove, with its generation for ties. */
 export interface DriverResult {
   shares: number[];
   generation: number;
 }
 
-/**
- * The driver that ships: the best weighted safe share among those that
- * reach LEVEL2_FLOOR at level 2, or among all when none does. A tie goes
- * to the better level 2 share, then the later generation.
- */
-export function chooseDriver<T extends DriverResult>(list: readonly T[]): T {
-  const steady = list.filter((d) => d.shares[0] >= LEVEL2_FLOOR);
-  const pool = steady.length ? steady : list;
-  return [...pool].sort((a, b) => weightedShare(b.shares) - weightedShare(a.shares) || b.shares[0] - a.shares[0] || b.generation - a.generation)[0];
+/** Drivers best first: the weighted safe share, then the level 2 share, then the later generation. */
+export function rankDrivers<T extends DriverResult>(list: readonly T[]): T[] {
+  return [...list].sort((a, b) => weightedShare(b.shares) - weightedShare(a.shares) || b.shares[0] - a.shares[0] || b.generation - a.generation);
 }
 
 /** A shipped model with how it did, for the log and docs/benchmark.md. None of this goes in the file. */
 export interface PickedDrivingModel extends DrivingReferenceModel {
-  /** Weighted safe share on the pick trips. */
+  /** Weighted safe share on the pick and final trips. */
   pickShare: number;
   /** Safe share per Sandbox level on trips the pick never saw. */
   checkShares: number[];
@@ -61,7 +59,8 @@ function candidatesOf(run: DrivingReferenceResult): DrivingCandidate[] {
  * the second half of every seed's training was screened on a few trips
  * per level. The best of those, plus the few that cope with traffic,
  * drive twenty five fresh trips per level, three copies at a time as the
- * Sandbox lines them up, and chooseDriver picks among them. A final
+ * Sandbox lines them up. The best three drive twenty five more, and the
+ * best weighted share over all fifty ships (see LEVEL_WEIGHTS). A final
  * champion, which an early version shipped, won its generation on one
  * lucky score over three trips and often parked short of the first light.
  * The pick's reliability is then measured on a third set of trips, so the
@@ -79,7 +78,13 @@ export async function pickDrivingModel(tier: ReferenceTier, runs: readonly Drivi
     console.log(`  ${tier} seed ${run.job.seed} generation ${candidate.generation} (level ${candidate.level}): ${shares.map((x) => Math.round(x * 100)).join(' ')}`);
     return { entry, shares, generation: candidate.generation };
   });
-  const best = tried.length ? chooseDriver(tried) : null;
+  const finalists = rankDrivers(tried)
+    .slice(0, FINALISTS)
+    .map((t) => {
+      const more = sandboxShares(t.entry.candidate.genome, t.entry.run.champion.inputs as DrivingInputConfig, t.entry.run.job.seed, FINAL_TRIPS);
+      return { ...t, shares: t.shares.map((x, i) => (x + more[i]) / 2) };
+    });
+  const best = finalists.length ? rankDrivers(finalists)[0] : null;
   if (!best) throw new Error(`No ${tier} champion to ship.`);
   const { run, candidate } = best.entry;
   const inputs = run.champion.inputs as DrivingInputConfig;

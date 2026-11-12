@@ -41,6 +41,8 @@ export interface TripSet {
 export const SCREEN_TRIPS: TripSet = { salt: 0x5c, trips: 4 };
 /** The trips the shortlist is judged on. */
 export const PICK_TRIPS: TripSet = { salt: 0x5b, trips: 25 };
+/** More trips for the few best of the shortlist, so the last call rests on fifty per level. */
+export const FINAL_TRIPS: TripSet = { salt: 0x5d, trips: 25 };
 /** Trips no pick ever looks at, which the reported reliability comes from. The shipped model test uses the same salt. */
 export const CHECK_TRIPS: TripSet = { salt: 0x5a, trips: 20 };
 
