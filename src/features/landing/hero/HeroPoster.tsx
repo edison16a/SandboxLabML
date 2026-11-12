@@ -1,10 +1,10 @@
 /**
- * Still frames of the hero's live scenes, captured from the real renderer
- * by scripts/capture-hero-poster.mjs. Wide screens pick one by the width
- * it is drawn at and show the scenes side by side. A squarer window (4:3,
- * 5:4) gets frames shot at that shape, so cropping a wide frame never cuts
- * the car in half; portrait screens, phones and tablets alike, get a
- * portrait frame with the scenes stacked.
+ * Still frames of the hero's live scenes, captured from the real renderers
+ * on their opening tick by scripts/capture-hero-poster.mjs. Wide screens
+ * pick one by the width it is drawn at and show the scenes side by side. A
+ * squarer window (4:3, 5:4) gets frames shot at that shape, so cropping a
+ * wide frame never cuts the SUV in half; portrait screens, phones and
+ * tablets alike, get a portrait frame with the scenes stacked.
  */
 export const POSTER = {
   wide: [

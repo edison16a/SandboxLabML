@@ -6,7 +6,7 @@ import { splitLayout, type SplitLayout } from '@/render/hero/stage/splitLayout';
 /** Whether two layouts would draw the same, so a resize that changes nothing re-renders nothing. */
 function same(a: SplitLayout | null, b: SplitLayout): boolean {
   if (!a || a.stacked !== b.stacked) return false;
-  for (const k of ['car', 'arena'] as const) {
+  for (const k of ['drive', 'run'] as const) {
     const p = a[k];
     const q = b[k];
     if (p.rect.x !== q.rect.x || p.rect.y !== q.rect.y || p.rect.w !== q.rect.w || p.rect.h !== q.rect.h) return false;

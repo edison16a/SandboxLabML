@@ -6,13 +6,13 @@ import { HeroPoster } from './HeroPoster';
 import { useHeroActive } from './useHeroActive';
 import { useHeroMode } from './useHeroMode';
 
-/** The live scenes and everything they need (three.js, the renderers, the worker) load only when asked for. */
+/** The live scenes and everything they need (three.js, the renderers, the simulations) load only when asked for. */
 const HeroLive = lazy(() => import('./live/HeroLive'));
 
 /**
- * The landing hero: the first screen under the header, with the racing
- * scene and the Hide and Seek arena side by side (one above the other on
- * a tall screen). The poster, a still of both, and the centered text are
+ * The landing hero: the first screen under the header, with a trained SUV
+ * driving through the city and a trained runner crossing a course side by
+ * side (one above the other on a tall screen). The poster, a still of both, and the centered text are
  * in the server HTML; on capable devices the live scenes load after first
  * paint and fade in over the poster. The text sits on its own blurred
  * panel rather than under a scrim over the whole picture, so the scenes
