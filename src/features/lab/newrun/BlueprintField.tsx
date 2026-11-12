@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import { blueprintInputCount } from '@/engine/blueprints/shape';
 import type { Blueprint } from '@/engine/blueprints/types';
@@ -27,6 +27,7 @@ export function BlueprintField<B extends Blueprint>({ open, value, onChange, onE
   const { env, module } = useLabContext();
   const [custom, setCustom] = useState<B[]>([]);
   const [editing, setEditingState] = useState(false);
+  const customize = useRef<HTMLButtonElement>(null);
   const setEditing = (on: boolean) => {
     setEditingState(on);
     onEditingChange?.(on);
@@ -53,7 +54,7 @@ export function BlueprintField<B extends Blueprint>({ open, value, onChange, onE
               <span className="text-[11px] text-muted">{blueprintInputCount(b)} inputs. {b.description ? `${b.description.split('.')[0]}.` : 'Custom blueprint.'}</span>
             </button>
           ))}
-          <button type="button" onClick={() => setEditing(true)} className="flex items-center justify-center gap-2 rounded-md border border-dashed border-border p-2.5 text-[13px] text-muted hover:border-border-strong hover:text-fg">
+          <button ref={customize} type="button" onClick={() => setEditing(true)} className="flex items-center justify-center gap-2 rounded-md border border-dashed border-border p-2.5 text-[13px] text-muted hover:border-border-strong hover:text-fg">
             <SlidersHorizontal className="size-4" />
             Customize {short(value)}
           </button>
@@ -66,6 +67,7 @@ export function BlueprintField<B extends Blueprint>({ open, value, onChange, onE
         title="Customize the brain"
         description="Saved as your own blueprint."
         action="Use this blueprint"
+        returnFocus={customize}
         onSave={(b) => {
           setCustom((list) => [b, ...list]);
           onChange(b);

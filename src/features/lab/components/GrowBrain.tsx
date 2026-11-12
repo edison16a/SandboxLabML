@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Sprout } from 'lucide-react';
 import type { Blueprint } from '@/engine/blueprints/types';
 import { BlueprintDialog } from '@/features/blueprints/BlueprintDialog';
@@ -22,6 +22,7 @@ export function GrowBrain() {
   const run = useLab((s) => s.run);
   const schema = useRunSchema();
   const [growing, setGrowing] = useState(false);
+  const opener = useRef<HTMLButtonElement>(null);
   if (!run) return null;
   const own = run.blueprint.env === env;
 
@@ -42,7 +43,7 @@ export function GrowBrain() {
     <>
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
         <p className="text-[12px] text-muted">Add sensors, keep what it learned.</p>
-        <Button size="sm" variant="outline" onClick={() => setGrowing(true)} disabled={!own}>
+        <Button ref={opener} size="sm" variant="outline" onClick={() => setGrowing(true)} disabled={!own}>
           <Sprout />
           Grow this brain
         </Button>
@@ -55,6 +56,7 @@ export function GrowBrain() {
           title="Grow this brain"
           description="Starts a new run from the latest checkpoint. New inputs start unconnected."
           action="Create grown run"
+          returnFocus={opener}
           onSave={(b) => grow(b)}
         />
       )}

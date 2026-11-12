@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type RefObject } from 'react';
 import { blueprintInputCount, blueprintShape, validateBlueprint } from '@/engine/blueprints/shape';
 import type { Blueprint } from '@/engine/blueprints/types';
 import { startingLinks } from '@/engine/neat/startShape';
@@ -20,6 +20,8 @@ interface Props<B extends Blueprint> {
   description: string;
   action: string;
   onSave: (b: B) => void | Promise<void>;
+  /** The control that opened the dialog, which gets focus back once it closes. */
+  returnFocus?: RefObject<HTMLElement | null>;
 }
 
 /** Starting parameter count for a shape, so the dialog can show how big the brain begins. */
@@ -40,7 +42,7 @@ function BlueprintForm<B extends Blueprint>({ value, onChange }: { value: B; onC
 }
 
 /** Edits a copy of a blueprint of any env, shows its size live, and saves it as the user's own. */
-export function BlueprintDialog<B extends Blueprint>({ open, onOpenChange, base, title, description, action, onSave }: Props<B>) {
+export function BlueprintDialog<B extends Blueprint>({ open, onOpenChange, base, title, description, action, onSave, returnFocus }: Props<B>) {
   const [draft, setDraft] = useState<B>(base);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
@@ -63,6 +65,7 @@ export function BlueprintDialog<B extends Blueprint>({ open, onOpenChange, base,
       onOpenChange={onOpenChange}
       title={title}
       description={description}
+      returnFocus={returnFocus}
       className="max-w-2xl"
       footer={
         <>

@@ -2,7 +2,7 @@
 
 import { Dialog as D } from 'radix-ui';
 import { X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import { cn } from '@/ui/cn';
 
 interface DialogProps {
@@ -18,6 +18,12 @@ interface DialogProps {
   /** Called before a click or focus outside closes the dialog; preventDefault keeps it open. */
   onInteractOutside?: D.DialogContentProps['onInteractOutside'];
   /**
+   * Where focus goes once the dialog closes. Radix only returns it to a
+   * Trigger, and a dialog opened from state has none, so focus would drop
+   * to the page body. Left out, Radix decides.
+   */
+  returnFocus?: RefObject<HTMLElement | null>;
+  /**
    * Hides the dialog while a dialog it opened sits on top, so the screen
    * shows one dialog with one set of buttons. It stays mounted and keeps
    * what was typed, and comes back as the one on top closes.
@@ -26,7 +32,7 @@ interface DialogProps {
 }
 
 /** Modal dialog with a title row, scrollable body and an optional footer. */
-export function Dialog({ open, onOpenChange, title, description, children, footer, className, onEscapeKeyDown, onInteractOutside, covered = false }: DialogProps) {
+export function Dialog({ open, onOpenChange, title, description, children, footer, className, onEscapeKeyDown, onInteractOutside, returnFocus, covered = false }: DialogProps) {
   return (
     <D.Root open={open} onOpenChange={onOpenChange}>
       <D.Portal>
@@ -34,6 +40,14 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
         <D.Content
           onEscapeKeyDown={onEscapeKeyDown}
           onInteractOutside={onInteractOutside}
+          onCloseAutoFocus={
+            returnFocus
+              ? (e) => {
+                  e.preventDefault();
+                  returnFocus.current?.focus();
+                }
+              : undefined
+          }
           className={cn(
             'fixed top-1/2 left-1/2 z-50 flex max-h-[88vh] w-[calc(100vw-32px)] max-w-lg -translate-x-1/2 -translate-y-1/2 animate-pop-in flex-col rounded-lg border border-border-strong bg-surface shadow-2xl shadow-black/50 outline-none',
             covered && 'invisible',
