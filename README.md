@@ -49,7 +49,7 @@ Turn the inputs on to see what the followed SUV senses: its lidar beams, boxes r
 
 ### Train runners to reach the finish
 
-A hundred runners start on a straight empty run to a finish line. Once the best of them finish three quarters of their courses, the next level arrives: one crate, then a field of crates, rows of spikes, walls with narrow gaps, crates that slide back and forth, and the Gauntlet, which mixes them all. Every generation runs fresh courses, so the runners learn to navigate rather than memorize a room. The camera follows the champion, and rays show what each runner can see.
+A hundred runners start on a straight empty run to a finish line. Once the best of them finish three quarters of their courses, the next level arrives: one crate, then a field of crates, rows of spikes, walls with narrow gaps, crates that slide back and forth, and the Gauntlet, which mixes them all. Every generation runs fresh courses, so the runners learn to navigate rather than memorize a room. The camera follows the best runner. Turn the inputs on to see what it senses: beams to the walls, spikes and movers around it, an arrow toward the finish, and the path hint as a trail of dots along the shortest way round.
 
 ### Play with what you trained
 
