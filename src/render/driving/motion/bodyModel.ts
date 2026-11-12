@@ -40,8 +40,9 @@ export const FLAT_ROAD: RoadInput = { lift: 0, side: 0, front: 0 };
 /**
  * Steps the body toward where the forces put it. Braking pitches the nose
  * down and acceleration squats it, cornering rolls it toward the outside of
- * the bend, and at the grip limit the tail steps out a few degrees. Kerbs
- * lift the side they touch. Everything goes through damped springs, so
+ * the bend, and at the grip limit the tail steps out a few degrees. A road
+ * input lifts the side it touches; city streets are flat, so the SUV passes
+ * FLAT_ROAD. Everything goes through damped springs, so
  * the body lags, overshoots a touch and settles instead of snapping.
  */
 export function stepBody(b: BodyMotion, m: TickMotion, speed: number, road: RoadInput, dt: number, track = 1.6, wheelbase = 2.7): void {
