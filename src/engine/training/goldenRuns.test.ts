@@ -78,15 +78,19 @@ async function train(c: RunConfig, generations: number): Promise<{ hash: string;
  * Training must stay bit for bit what it was: the shipped reference files
  * and every stored run depend on it. These hashes were taken before the
  * old labs left the code; a change means Driving or Navigation results
- * changed, which needs an engine version bump and new references.
+ * changed, which needs an engine version bump and new references. The
+ * Driving hashes moved once without that: their records gained the
+ * judged safe share and the curriculum keeps a longer window, while
+ * every result and genome stayed the same (stripped of those two fields
+ * the records hash to the old 1e447d57 and 4c439b18).
  */
 describe('golden training runs', () => {
   const driving = (source?: string) => config(DEFAULT_DRIVING_BLUEPRINT, { ...DEFAULT_DRIVING_SETTINGS, trips: 1 }, source);
   const navigation = (source?: string) => config(NAVIGATION_BLUEPRINTS[1], { ...navigationSettings() }, source);
 
   it('Driving matches with the built in reward and with a script that moves the level', async () => {
-    expect(await train(driving(), 4).then((r) => [r.hash, r.contents, r.level])).toEqual(['1e447d57', 4, 1]);
-    expect(await train(driving(DRIVING_SCRIPT), 4).then((r) => [r.hash, r.contents, r.level])).toEqual(['4c439b18', 4, 3]);
+    expect(await train(driving(), 4).then((r) => [r.hash, r.contents, r.level])).toEqual(['989f5ef9', 4, 1]);
+    expect(await train(driving(DRIVING_SCRIPT), 4).then((r) => [r.hash, r.contents, r.level])).toEqual(['e1539224', 4, 3]);
   });
 
   it('Navigation matches with the built in reward and with a script that moves the level', async () => {
