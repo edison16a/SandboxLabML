@@ -13,7 +13,7 @@ import { warp } from './warp';
  * ends, about 3 cm above where the deck would run on, so the roofline
  * turns up at its end. `half` is how far it reaches: the whole tail.
  */
-export const LIP = { root: -2.12, edge: TAIL - 0.002, top: 1.33, crown: 0.03, half: 0.645, edgeDepth: 0.007 };
+export const LIP = { root: -2.12, edge: TAIL - 0.002, top: 1.33, crown: 0.03, half: 0.632, edgeDepth: 0.007 };
 
 /** The deck's top at (x, z) behind the rear glass: the cabin's section there from belt to centerline, read at z. */
 export function deckAt(x: number, z: number): number {
@@ -57,21 +57,27 @@ export function addSpoiler(bin: PartBin, detail: Detail): void {
     const line = deckAt(on, z);
     const rootY = deckAt(LIP.root, z);
     const edgeY = edgeAt(z, line) - 0.0008;
-    // How much of the lip stands at this column, 0 where it has dived into the deck.
-    const k = (edgeY - line) / (LIP.top - deckAt(on, 0));
+    // How much of the lip stands at this column, 0 where it has dived into the deck. Eased, so the lip leaves
+    // the deck on its tangent at each end instead of folding out of it in a ridge.
+    const s = smooth((edgeY - line) / (LIP.top - deckAt(on, 0)));
+    // As the lip dies away its trailing edge moves forward onto the deck, short of the tail's roll, and every
+    // point behind the root sinks to just under the paint, so the end is the deck itself. The root stays on
+    // the deck, where it covers the foot of the rear glass.
+    const back = (x: number) => on + (x - on) * s;
+    const sink = (x: number) => 0.0008 * Math.min(1, Math.max(0, (LIP.root - x) / 0.02));
+    const onDeck = (x: number, y: number): Vec3 => [x, deckAt(x, z) - sink(x) + s * (y - deckAt(x, z) + sink(x)), z];
+    const midY = deckAt(xm, z) + rise * s;
     const col: Vec3[] = [];
-    const stand = Math.max(0, Math.min(1, k));
-    const midY = deckAt(xm, z) + rise * stand;
     // The top: a quadratic from the root on the deck's tangent to the edge.
     for (let j = 0; j <= up; j++) {
       const t = j / up;
-      const x = (1 - t) * (1 - t) * LIP.root + 2 * (1 - t) * t * xm + t * t * LIP.edge;
-      col.push([x, (1 - t) * (1 - t) * rootY + 2 * (1 - t) * t * midY + t * t * edgeY, z]);
+      const x = (1 - t) * (1 - t) * LIP.root + 2 * (1 - t) * t * xm + t * t * back(LIP.edge);
+      col.push(onDeck(x, (1 - t) * (1 - t) * rootY + 2 * (1 - t) * t * midY + t * t * edgeY));
     }
-    const depth = LIP.edgeDepth * stand;
-    col.push([LIP.edge - 0.0006, edgeY - depth, z]);
-    col.push([on - 0.012, line + 0.3 * (edgeY - line) - depth, z]);
-    col.push([on - 0.006, deckAt(on - 0.006, z) - 0.002, z]);
+    const depth = LIP.edgeDepth * s;
+    col.push(onDeck(back(LIP.edge - 0.0006), edgeY - depth));
+    col.push(onDeck(back(on - 0.012), line + 0.3 * (edgeY - line) - depth));
+    col.push(onDeck(back(on - 0.006), deckAt(on - 0.006, z) - 0.002));
     rows.push(col.map(warp));
   }
   // Rows walk across z and each runs from the root back over the edge: walked from +z down, that faces up and out.
