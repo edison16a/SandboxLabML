@@ -4,9 +4,9 @@ import { withHaze } from '../world/atmosphere';
 
 /**
  * Lamps from the car's own flags, per instance: tail lamps glow softly and
- * flare under braking; an indicator blinks at about 1.5 Hz while its flag
- * is set. Flags pack brake (1), left (2) and right (4), as the world
- * snapshot does.
+ * flare under braking, the high brake light lights only then, and an
+ * indicator blinks at about 1.5 Hz while its flag is set. Flags pack brake
+ * (1), left (2) and right (4), as the world snapshot does.
  */
 const LAMPS = /* glsl */ `
 float lampCode = vLamp;
@@ -15,9 +15,10 @@ float leftOn = mod(floor(vFlags / 2.0), 2.0);
 float rightOn = mod(floor(vFlags / 4.0), 2.0);
 float blink = step(0.5, fract(uLampTime * 1.5 + vBlinkPhase));
 vec3 lampGlow = vec3(0.0);
-if (lampCode > 1.5 && lampCode < 2.5) lampGlow = vec3(1.0, 0.06, 0.03) * (0.5 + brake * 3.2);
+if (lampCode > 1.5 && lampCode < 2.5) lampGlow = vec3(1.0, 0.035, 0.018) * (0.45 + brake * 2.8);
 if (lampCode > 2.5 && lampCode < 3.5) lampGlow = vec3(1.0, 0.45, 0.05) * leftOn * blink * 3.0;
 if (lampCode > 3.5 && lampCode < 4.5) lampGlow = vec3(1.0, 0.45, 0.05) * rightOn * blink * 3.0;
+if (lampCode > 5.5) lampGlow = vec3(1.0, 0.035, 0.018) * brake * 2.8;
 totalEmissiveRadiance += lampGlow;`;
 
 /**
