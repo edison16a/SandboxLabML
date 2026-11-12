@@ -17,14 +17,14 @@ export function archFloor(s: CarShape, x: number): number {
 
 /**
  * Stations along the car, tail to nose: through each end's rounding, and
- * an even run between them under the tier's spacing. The panels above the
- * shoulder use these.
+ * an even run of the tier's count between them, so a long van costs no
+ * more than a short hatchback. The panels above the shoulder use these.
  */
 export function upperStations(s: CarShape, d: TrafficDetail): number[] {
   const h = s.length / 2;
   const rear = -h + s.tail.reach;
   const front = h - s.nose.reach;
-  const n = Math.ceil((front - rear) / d.spacing);
+  const n = d.middle;
   const middle = Array.from({ length: n + 1 }, (_, i) => rear + ((front - rear) * i) / n);
   return [...endStations(s, false, d.ends).reverse(), ...middle, ...endStations(s, true, d.ends)];
 }
@@ -102,10 +102,17 @@ export function buildShell(s: CarShape, d: TrafficDetail): Shell {
     const share = planShare(s, x);
     return pts.map(([z, y]) => [warpX(s, x, y), y, z * share] as Vec3);
   };
-  for (const x of lower) sectionPanels(s, x, d).slice(0, 2).forEach((pts, p) => rows[p].push(place(x, pts)));
+  // Inside a wheel opening the black trim shrinks to a point on the opening's edge. Those rows
+  // draw nothing, so only the first and last of each run are kept, to close the opening's sides.
+  const buried = lower.map((x) => archFloor(s, x) >= keysAt(s, x)[1].y);
+  lower.forEach((x, i) => {
+    const panels = sectionPanels(s, x, d);
+    if (!buried[i] || !buried[i - 1] || !buried[i + 1]) rows[0].push(place(x, panels[0]));
+    rows[1].push(place(x, panels[1]));
+  });
   for (const x of upper) rows[2].push(place(x, sectionPanels(s, x, d)[2]));
-  // The underbody only has to close the bottom, so every other station does.
-  const under = upper.filter((_, i) => i % 2 === 0 || i === upper.length - 1).map((x) => {
+  // The underbody only has to close the bottom, so a few stations do.
+  const under = upper.filter((_, i) => i % 3 === 0 || i === upper.length - 1).map((x) => {
     const k0 = keysAt(s, x)[0];
     return place(x, [[0, k0.y + 0.004], [k0.z - 0.01, k0.y + 0.004]]);
   });

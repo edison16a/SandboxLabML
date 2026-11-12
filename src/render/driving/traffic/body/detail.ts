@@ -6,8 +6,8 @@
 export interface TrafficDetail {
   /** Stations through each end's rounding. */
   ends: number;
-  /** Largest gap between stations along the straight middle, m. */
-  spacing: number;
+  /** Even steps along the straight middle, between the ends' roundings. */
+  middle: number;
   /** Stations across each wheel opening. */
   arch: number;
   /** Segments on the lower trim, the two spans of the lower side and the four spans from the shoulder to the centerline. */
@@ -25,7 +25,7 @@ export interface TrafficDetail {
 export type DetailName = 'high' | 'medium' | 'low';
 
 export const TRAFFIC_DETAIL: Record<DetailName, TrafficDetail> = {
-  high: { ends: 7, spacing: 0.34, arch: 7, p0: 1, p1: [1, 2], p2: [2, 2, 2, 2], cells: 1, fine: true, wheel: 20 },
-  medium: { ends: 6, spacing: 0.4, arch: 6, p0: 1, p1: [1, 2], p2: [2, 1, 2, 2], cells: 0.75, fine: true, wheel: 16 },
-  low: { ends: 4, spacing: 0.55, arch: 5, p0: 1, p1: [1, 1], p2: [1, 1, 1, 2], cells: 0.5, fine: false, wheel: 12 },
+  high: { ends: 7, middle: 10, arch: 7, p0: 1, p1: [1, 1], p2: [2, 2, 2, 2], cells: 1, fine: true, wheel: 20 },
+  medium: { ends: 6, middle: 8, arch: 6, p0: 1, p1: [1, 1], p2: [2, 1, 2, 2], cells: 0.75, fine: true, wheel: 16 },
+  low: { ends: 4, middle: 6, arch: 4, p0: 1, p1: [1, 1], p2: [1, 1, 1, 1], cells: 0.5, fine: false, wheel: 12 },
 };

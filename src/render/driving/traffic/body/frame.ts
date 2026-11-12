@@ -56,20 +56,35 @@ export function planShare(s: CarShape, x: number): number {
   return 1;
 }
 
+/** How much a radian of turn counts against a meter of length when spacing end stations. */
+const TURN_WEIGHT = 0.35;
+
 /**
- * Stations through an end's rounding, evenly spaced along its plan
- * outline so the corner gets as many as the face. Returned tip last.
+ * Stations through an end's rounding, spaced by the plan outline's length
+ * plus its turning, so the tight corner gets more of them than the flat
+ * face: each step then turns the surface by about as much, and the
+ * corner's reflections stay smooth. Returned tip last.
  */
 export function endStations(s: CarShape, front: boolean, count: number): number[] {
   const { end, from, tip } = endSpan(s, front);
   const w = s.width / 2;
   const dense: Array<[number, number]> = [];
-  for (let i = 0; i <= 64; i++) {
-    const phi = (Math.PI / 2) * (1 - i / 64);
+  for (let i = 0; i <= 96; i++) {
+    const phi = (Math.PI / 2) * (1 - i / 96);
     dense.push([from + (tip - from) * Math.pow(Math.cos(phi), 2 / end.square), w * Math.pow(Math.sin(phi), 2 / end.square)]);
   }
+  const seg = (i: number) => [dense[i + 1][0] - dense[i][0], dense[i + 1][1] - dense[i][1]];
   const acc = [0];
-  for (let i = 1; i < dense.length; i++) acc.push(acc[i - 1] + Math.hypot(dense[i][0] - dense[i - 1][0], dense[i][1] - dense[i - 1][1]));
+  for (let i = 1; i < dense.length; i++) {
+    const [ax, az] = seg(i - 1);
+    const len = Math.hypot(ax, az);
+    let turn = 0;
+    if (i < dense.length - 1) {
+      const [bx, bz] = seg(i);
+      turn = Math.acos(Math.max(-1, Math.min(1, (ax * bx + az * bz) / (len * Math.hypot(bx, bz) || 1))));
+    }
+    acc.push(acc[i - 1] + len + TURN_WEIGHT * turn);
+  }
   const out: number[] = [];
   for (let k = 1; k <= count; k++) {
     const d = (acc[acc.length - 1] * k) / count;
