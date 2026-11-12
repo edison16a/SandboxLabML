@@ -1,5 +1,5 @@
-import type { QualityTier } from '@/features/racing/state/labStore';
 import type { QualityPin } from '@/features/settings/settingsStore';
+import type { HeroTier } from '@/render/hero/feed/sceneProps';
 
 /** What the device can tell us before anything heavy loads. */
 export interface HeroFacts {
@@ -42,8 +42,7 @@ function isPhone(f: HeroFacts): boolean {
 }
 
 /**
- * Whether this device plays the live hero. Two 3D scenes and a worker are
- * a real load, so the hero stays a still picture for anyone who asked for
+ * Whether this device plays the live hero. Two 3D scenes are a real load, so the hero stays a still picture for anyone who asked for
  * less motion or data, on phones, in windows too small for the brain card,
  * and on machines too small to run them smoothly. Unknown values count as capable, as most
  * browsers that hide them are desktop ones.
@@ -63,7 +62,7 @@ export function heroMode(f: HeroFacts): HeroMode {
  * labs' default: it draws two scenes at once, and a first visit should
  * never stutter.
  */
-export function heroTier(quality: QualityPin, chosen: boolean, weakGpu: boolean): QualityTier {
+export function heroTier(quality: QualityPin, chosen: boolean, weakGpu: boolean): HeroTier {
   if (!chosen) return weakGpu ? 'low' : 'medium';
   return quality === 'ultra' ? 'high' : quality;
 }

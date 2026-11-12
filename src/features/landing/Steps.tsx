@@ -1,8 +1,8 @@
 const STEPS = [
-  ['Pick a brain', 'Choose what the agents sense, from 3 rays to 60 inputs.'],
+  ['Pick a brain', 'Choose what the agents sense, from a few beams to every sensor.'],
   ['Write the rules', 'Rewards and how each generation breeds, as blocks or code.'],
-  ['Watch it evolve', 'NEAT breeds the best brains and grows their networks over time.'],
-  ['Measure it', 'Benchmark the champion on tracks it never saw.'],
+  ['Watch it learn', 'The best brains breed the next generation. Harder levels open as they get better.'],
+  ['Measure it', 'Benchmark the champion in places it never saw.'],
 ];
 
 /** The four step strip explaining the loop. */

@@ -1,40 +1,21 @@
 import type * as THREE from 'three';
-import type { Pane, Rect } from './splitLayout';
+import type { Pane } from './splitLayout';
+
+/** What a scene's camera knows of its pane. The page hands a new one to the scene on every resize, and the camera reads it each frame. */
+export type PaneView = Pane;
 
 /**
- * What a scene's camera knows of its pane, kept in one object that the
- * stage updates in place whenever the hero resizes. Cameras read it every
- * frame, so a resize reframes them without a React render.
- */
-export interface PaneView {
-  /** The pane in CSS px, from the top left of the hero. */
-  rect: Rect;
-  focusX: number;
-  focusY: number;
-  zoneW: number;
-  zoneH: number;
-}
-
-export function createPaneView(): PaneView {
-  return { rect: { x: 0, y: 0, w: 1, h: 1 }, focusX: 0.5, focusY: 0.5, zoneW: 1, zoneH: 1 };
-}
-
-/** Copies a freshly computed pane into the view the cameras hold. */
-export function setPaneView(view: PaneView, pane: Pane): void {
-  Object.assign(view.rect, pane.rect);
-  view.focusX = pane.focusX;
-  view.focusY = pane.focusY;
-  view.zoneW = pane.zoneW;
-  view.zoneH = pane.zoneH;
-}
-
-/**
- * Shifts the lens so that the point the camera looks straight at lands on
- * the pane's focus instead of its middle. A shifted lens keeps verticals
- * upright and the perspective of a camera aimed at its subject, which a
- * camera turned to put the subject off center would not.
+ * Projects the camera onto the pane. The lens is shifted so the point the
+ * camera looks straight at lands on the pane's focus instead of the middle
+ * of its shot: a shifted lens keeps verticals upright and the perspective
+ * of a camera aimed at its subject, which a camera turned to put the
+ * subject off center would not. The canvas then shows only the view part
+ * of the shot, so a window that crops the poster frame crops the scene
+ * the same way. The aspect is the whole shot's, so pixels stay square.
  */
 export function applyLensShift(camera: THREE.PerspectiveCamera, view: PaneView): void {
-  const { w, h } = view.rect;
-  camera.setViewOffset(w, h, (0.5 - view.focusX) * w, (0.5 - view.focusY) * h, w, h);
+  const { w, h } = view.shot;
+  const v = view.view;
+  camera.aspect = w / h;
+  camera.setViewOffset(w, h, (0.5 - view.focusX) * w + v.x, (0.5 - view.focusY) * h + v.y, v.w, v.h);
 }

@@ -6,7 +6,7 @@ import { LogoMark } from '@/ui/brand/Logo';
 /** A quiet text link inside the hero's secondary line. */
 function SubLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    // Lab routes carry three.js and Rapier; prefetching them would make the landing page heavy.
+    // Lab routes carry three.js and the simulations; prefetching them would make the landing page heavy.
     <Link href={href} prefetch={false} className="rounded-sm font-medium text-fg underline decoration-white/30 underline-offset-4 transition-colors hover:decoration-fg">
       {children}
     </Link>
@@ -36,7 +36,7 @@ export function HeroContent({ ref }: { ref?: Ref<HTMLDivElement> }) {
         Train your own model with machine learning, right in your browser.
       </p>
       <Link
-        href="/lab/racing"
+        href="/lab/driving"
         prefetch={false}
         className="mt-7 inline-flex h-12 items-center gap-2 rounded-lg bg-accent px-7 text-[16px] font-semibold text-[#06101f] transition-colors hover:bg-[#62a8ff] focus-visible:outline-fg short:mt-4 short:h-11"
       >
@@ -44,7 +44,7 @@ export function HeroContent({ ref }: { ref?: Ref<HTMLDivElement> }) {
         <ArrowRight className="size-[18px]" aria-hidden="true" />
       </Link>
       <p className="mt-5 text-[14px] text-balance text-fg/85 short:mt-3">
-        Or play <SubLink href="/lab/hide-seek">Hide and Seek</SubLink>, or write your own rules in the <SubLink href="/studio">Studio</SubLink>.
+        Or teach a runner in <SubLink href="/lab/navigation">Navigation</SubLink>, or write your own rules in the <SubLink href="/studio">Studio</SubLink>.
       </p>
     </div>
   );

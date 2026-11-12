@@ -1,10 +1,12 @@
+import { PORTRAIT_MEDIA, STANDARD_MEDIA } from './posterMedia';
+
 /**
- * Still frames of the hero's live scenes, captured from the real renderer
- * by scripts/capture-hero-poster.mjs. Wide screens pick one by the width
- * it is drawn at and show the scenes side by side. A squarer window (4:3,
- * 5:4) gets frames shot at that shape, so cropping a wide frame never cuts
- * the car in half; portrait screens, phones and tablets alike, get a
- * portrait frame with the scenes stacked.
+ * Still frames of the hero's live scenes, captured from the real renderers
+ * on their opening tick by scripts/capture-hero-poster.mjs. Wide screens
+ * pick one by the width it is drawn at and show the scenes side by side. A
+ * squarer window (4:3, 5:4) gets frames shot at that shape, so cropping a
+ * wide frame never cuts the SUV in half; portrait screens, phones and
+ * tablets alike, get a portrait frame with the scenes stacked.
  */
 export const POSTER = {
   wide: [
@@ -19,8 +21,6 @@ export const POSTER = {
   portrait: '/hero/poster-portrait.webp',
 } as const;
 
-/** Windows no wider than 3:2 take the 4:3 frames: a 4:3 hero crops a 16:9 frame too hard at the sides. */
-const STANDARD_MEDIA = '(orientation: landscape) and (max-aspect-ratio: 3/2)';
 const srcSet = (frames: readonly { src: string; width: number }[]) => frames.map((p) => `${p.src} ${p.width}w`).join(', ');
 
 /**
@@ -41,7 +41,7 @@ const STANDARD_SIZES = 'max(100vw, calc((100vh - 3rem) * 4 / 3))';
 export function HeroPoster() {
   return (
     <picture>
-      <source media="(orientation: portrait)" srcSet={POSTER.portrait} type="image/webp" />
+      <source media={PORTRAIT_MEDIA} srcSet={POSTER.portrait} type="image/webp" />
       <source media={STANDARD_MEDIA} srcSet={srcSet(POSTER.standard)} sizes={STANDARD_SIZES} type="image/webp" />
       {/* A plain img: these files are already sized and compressed, and the page must not depend on an image server. */}
       <img
