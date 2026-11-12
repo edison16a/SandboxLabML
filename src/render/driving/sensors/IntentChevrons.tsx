@@ -59,7 +59,7 @@ export function IntentChevrons() {
   }, []);
   const tmp = useMemo(() => ({ m: new THREE.Matrix4(), q: new THREE.Quaternion(), p: new THREE.Vector3(), s: new THREE.Vector3(1, 1, 1), c: new THREE.Color(), up: new THREE.Vector3(0, 1, 0), path: { count: 0, x: new Float64Array(COUNT), y: new Float64Array(COUNT), heading: new Float64Array(COUNT) } as Prediction }), []);
   /** The eased controls the forecast runs on, and which car and episode they belong to. */
-  const eased = useMemo(() => ({ from: { pos: { x: 0, z: 0 }, yaw: 0, speed: 0, steer: 0, pedal: 0 } as PredictFrom, focus: -1, epoch: -1, route: null as unknown, car: { x: 0, y: 0, index: -1 } }), []);
+  const eased = useMemo(() => ({ from: { pos: { x: 0, z: 0 }, yaw: 0, speed: 0, steer: 0, pedal: 0 } as PredictFrom, focus: -1, epoch: -1, route: null as unknown, car: { x: 0, y: 0, speed: 0, index: -1 } }), []);
 
   useFrame((_, dt) => {
     const g = core.current;
@@ -95,6 +95,7 @@ export function IntentChevrons() {
       eased.route = route;
       at.x = frame.pos.x;
       at.y = -frame.pos.z;
+      at.speed = frame.speed;
       alignToRoute(tmp.path, route.path, at, route.destS, FIRST, SPACING, COUNT);
     }
     const color = pedal > DEAD_BAND ? SENSOR.accelerate : pedal < -DEAD_BAND ? SENSOR.brake : SENSOR.coast;
