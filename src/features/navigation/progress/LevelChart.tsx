@@ -6,6 +6,7 @@ import { NAV_LEVELS, TOP_LEVEL } from '@/engine/navigation/course/levels';
 import { NAV_METRIC } from '@/engine/navigation/pipeline/metricSpecs';
 import type { GenerationRecord } from '@/engine/training/records';
 import { axis, generationAxis, UPlotChart } from '@/features/charts/UPlotChart';
+import { canvasFontFamily } from '@/features/network/canvasFont';
 
 const LINE = '#4c9aff';
 const steps = uPlot.paths.stepped?.({ align: 1 });
@@ -25,7 +26,7 @@ function drawNames(u: uPlot): void {
   const ys = u.data[1];
   const ctx = u.ctx;
   ctx.save();
-  ctx.font = `${10 * devicePixelRatio}px var(--font-geist-sans)`;
+  ctx.font = `${10 * devicePixelRatio}px ${canvasFontFamily('sans')}`;
   ctx.fillStyle = '#8a94a7';
   ctx.textBaseline = 'bottom';
   let start = 0;

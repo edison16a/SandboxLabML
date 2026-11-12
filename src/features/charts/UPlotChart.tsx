@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
+import { canvasFontFamily } from '@/features/network/canvasFont';
 
 interface Props {
   options: Omit<uPlot.Options, 'width' | 'height'>;
@@ -53,14 +54,18 @@ export function generationAxis(): uPlot.Axis {
   return { ...axis('Generation'), incrs: GENERATION_STEPS };
 }
 
-/** Axis styling shared by every chart. */
+/**
+ * Axis styling shared by every chart. The fonts name real families, since
+ * uPlot draws on a canvas and a canvas drops any font with var() in it.
+ * That dropped font fell back to 10 device pixels, half size on a HiDPI screen.
+ */
 export function axis(label?: string, side: 0 | 1 | 2 | 3 = 2): uPlot.Axis {
   return {
     side,
     label,
     stroke: '#8a94a7',
-    labelFont: '11px var(--font-geist-sans)',
-    font: '10px var(--font-geist-mono)',
+    labelFont: `11px ${canvasFontFamily('sans')}`,
+    font: `10px ${canvasFontFamily('mono')}`,
     grid: { stroke: '#232a37', width: 1 },
     ticks: { stroke: '#232a37', width: 1, size: 4 },
     size: side === 3 ? 44 : 30,
