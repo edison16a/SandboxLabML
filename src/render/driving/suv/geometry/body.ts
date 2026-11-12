@@ -9,14 +9,14 @@ import { along, resample, span, type Pt } from './section';
 import { warp } from './warp';
 
 /**
- * Bands joined into one smooth grid each: the gloss black sill trim, the
- * lower side, the side up to the shoulder, and everything from the
+ * Bands joined into one smooth grid each: the satin black sill cladding,
+ * the lower side, the side up to the shoulder, and everything from the
  * shoulder crease over the top. Normals come from the surface itself
  * (normals.ts), so the panels shade as one sheet wherever they meet
- * smoothly; only the sill trim keeps the crease at its top edge.
+ * smoothly; only the cladding keeps the crease at its top edge.
  */
 const PANELS: Array<{ bands: number[]; slot: Slot; creased?: boolean }> = [
-  { bands: [0], slot: 'trim' },
+  { bands: [0], slot: 'clad' },
   { bands: [1], slot: 'paint', creased: true },
   { bands: [2], slot: 'paint' },
   { bands: [3, 4, 5, 6], slot: 'paint' },

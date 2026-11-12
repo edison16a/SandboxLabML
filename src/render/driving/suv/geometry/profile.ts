@@ -11,7 +11,8 @@ export { sillY } from './lines';
  * A cross section of the body at x is eight keys from under the sill up
  * and over to the centerline:
  *
- * 0 under the sill, 1 top of the gloss black sill trim, 2 where the lower
+ * 0 under the sill, 1 top of the satin black sill cladding, which stands
+ * nearly upright so it reads from the side as a band, 2 where the lower
  * side starts to tuck under, 3 and 4 either end of the shoulder crease's
  * small radius, 5 the belt where the glass sits (ahead of the windshield,
  * the fender peak), 6 the edge of the hood's valley, 7 the centerline.
@@ -66,8 +67,8 @@ export function sectionAt(x: number): Section {
   // The valley falls from the peak to a floor on the centerline like half a cosine wave: flat at both ends, one U, no ridge.
   const fall = Math.atan((Math.PI / 2) * Math.sin(0.45 * Math.PI) * (v / Math.max(bz, 0.2)));
   const keys: Key[] = [
-    key(w - 0.1, sillY(x), deg(-70)),
-    key(w - 0.05, rockerY(x), deg(-28), deg(-12)),
+    key(w - 0.085, sillY(x), deg(-70)),
+    key(w - 0.032, rockerY(x), deg(-6), deg(-10)),
     key(w - 0.014, tuckY(x), deg(-5)),
     key(w + t * Math.sin(up), ys - t * Math.cos(up), up),
     key(w - t * Math.sin(shelf), ys + t * Math.cos(shelf), shelf),

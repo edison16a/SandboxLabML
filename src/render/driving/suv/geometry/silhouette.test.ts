@@ -52,7 +52,7 @@ const halfWidth = (x: number) => Math.max(...points(['paint']).filter(([px, py])
 describe('SUV silhouette', () => {
   it('draws the nose: lip, fold and hood edge', () => {
     expect(Math.abs(endAt(1, 0.6) - 2.45)).toBeLessThan(0.02);
-    const lip = points(['trim']).filter(([px, , pz]) => px > 2.1 && Math.abs(pz) < 0.3);
+    const lip = points(['clad']).filter(([px, , pz]) => px > 2.1 && Math.abs(pz) < 0.3);
     expect(Math.abs(Math.min(...lip.map(([, py]) => py)) - 0.3)).toBeLessThan(0.02);
     // The hood's leading edge, where the face turns into the hood: x 2.34 at y 0.97.
     expect(Math.abs(endAt(1, 0.97) - 2.34)).toBeLessThan(0.02);

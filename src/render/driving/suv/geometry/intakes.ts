@@ -88,7 +88,7 @@ export function addIntakes(bin: PartBin, detail: Detail): void {
 }
 
 /**
- * A gloss black splitter under the face, carrying the black sill trim
+ * A satin black splitter under the face, carrying the sill cladding
  * round the front. It is a real blade with a top, a front and an
  * underside, wrapping a little way round each corner and tapering back
  * into the bumper at its ends.
@@ -103,5 +103,5 @@ export function addLip(bin: PartBin, detail: Detail): void {
     const k = 1 - (s / half) ** 8;
     rows.push(([[y0 + 0.045, 0.002], [y0 + 0.034, 0.004 + 0.016 * k], [y0 + 0.008, 0.004 + 0.024 * k], [y0, 0.002 + 0.014 * k]] as const).map(([y, lift]) => onCap(1, s, y, lift)));
   }
-  bin.add('trim', facing(gridGeometry(rows), [1, 0, 0]));
+  bin.add('clad', facing(gridGeometry(rows), [1, 0, 0]));
 }
