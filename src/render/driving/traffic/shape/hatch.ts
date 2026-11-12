@@ -59,6 +59,7 @@ function hatchDecals(s: CarShape): Decal[] {
     { region: strip('front', [[0, 0.4], [0.42, 0.405], [0.56, 0.43]], [[0, 0.54], [0.44, 0.54], [0.53, 0.51]]), look: 'grille', kind: 'float', cells: [4, 1] },
     // Tail lamps run out under the glass and wrap round onto the sides; the indicator is their inner end.
     { region: strip('rear', [[0.44, 0.92], [0.66, 0.915], [0.84, 0.93]], [[0.44, 1.005], [0.66, 1.015], [0.83, 1.005]]), look: 'tail', lamp: LAMP.tail, cells: [5, 1] },
+    { region: strip('side', [[-1.9, 0.924], [-1.8, 0.932], [-1.7, 0.945]], [[-1.9, 1.008], [-1.8, 1.0], [-1.7, 0.958]]), look: 'tail', kind: 'float', lamp: LAMP.tail, cells: [3, 1] },
     { region: strip('rear', [[0.45, 0.93], [0.53, 0.928]], 0.028), look: 'amber', kind: 'float', lamp: LAMP.right, cells: [2, 1] },
     { region: strip('rear', [[0, 0.62], [0.26, 0.62]], 0.11), look: 'plate', kind: 'float', cells: [4, 1] },
     { region: shutLine(-0.1, 0.29, -0.13, 0.97), look: 'seam', kind: 'float', cells: [5, 1], fine: true },

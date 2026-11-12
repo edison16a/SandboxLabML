@@ -60,6 +60,8 @@ export function saloonDecals(s: CarShape): Decal[] {
     { region: strip('front', [[0, 0.4], [0.5, 0.405], [0.62, 0.43]], [[0, 0.52], [0.48, 0.52], [0.58, 0.5]]), look: 'grille', kind: 'float', cells: [4, 1] },
     // Tail lamps wrap round the corners; the indicator is their inner end.
     { region: strip('rear', [[0.4, 0.862], [0.6, 0.856], [0.82, 0.862], [0.905, 0.88]], [[0.38, 0.918], [0.6, 0.928], [0.82, 0.928], [0.9, 0.916]]), look: 'tail', lamp: LAMP.tail, cells: [5, 1] },
+    // The wrap onto the side, drawn from the side where the rear view only grazes, tapering to a point.
+    { region: strip('side', [[-2.13, 0.866], [-2.0, 0.876], [-1.88, 0.889]], [[-2.13, 0.924], [-2.0, 0.917], [-1.88, 0.895]]), look: 'tail', kind: 'float', lamp: LAMP.tail, cells: [3, 1] },
     { region: strip('rear', [[0.3, 0.868], [0.39, 0.865]], 0.03), look: 'amber', kind: 'float', lamp: LAMP.right, cells: [2, 1] },
     { region: strip('rear', [[0, 0.55], [0.26, 0.55]], 0.11), look: 'plate', kind: 'float', cells: [4, 1] },
     { region: shutLine(-0.07, 0.29, -0.1, 0.97), look: 'seam', kind: 'float', cells: [5, 1], fine: true },

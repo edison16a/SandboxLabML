@@ -22,6 +22,15 @@ interface Tri {
   pieces: Piece[];
 }
 
+/**
+ * How squarely a shell triangle must face a view to take a stamp from it.
+ * Nearer grazing, a ray lands on a different surface than the drawing
+ * meant, and whole triangles drop in or out along the outline's edge as
+ * saw teeth. Anything that wraps a corner past this is drawn again from
+ * the view that faces it.
+ */
+const MIN_FACING = 0.3;
+
 /** A view's plane axes, the axis it looks along, and which way along it faces the viewer. */
 const AXES: Record<View, { u: number; v: number; w: number; s: number }> = {
   side: { u: 0, v: 1, w: 2, s: 1 },
@@ -73,16 +82,17 @@ export class Imprint {
 
   /**
    * Stamps a closed outline seen from `view` onto the shell. Only pieces
-   * the view actually sees take the look: a piece must face the viewer and
-   * be the first surface `proj` meets along its ray, so a rear lamp drawn
-   * from behind never lands on a door that happens to lean back a little.
+   * the view actually sees take the look: a piece must face the viewer
+   * squarely enough (MIN_FACING) and be the first surface `proj` meets
+   * along its ray, so a rear lamp drawn from behind never lands on a door
+   * that happens to lean back a little.
    */
   stamp(loop: Pt[], view: View, look: Look, lamp: number, proj: Projector): void {
     const { u, v, w, s } = AXES[view];
     const box = bounds(loop);
     const edges = loop.map((a, i) => ({ a, b: loop[(i + 1) % loop.length], box: bounds([a, loop[(i + 1) % loop.length]]) }));
     for (const t of this.tris) {
-      if (t.face[w] * s <= 1e-4) continue;
+      if (t.face[w] * s < MIN_FACING) continue;
       const tu = t.p.map((q) => q[u]);
       const tv = t.p.map((q) => q[v]);
       const tb = bounds(tu.map((x, k) => [x, tv[k]] as Pt));
