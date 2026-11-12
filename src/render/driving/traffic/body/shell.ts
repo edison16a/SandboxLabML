@@ -111,10 +111,11 @@ export function buildShell(s: CarShape, d: TrafficDetail): Shell {
     rows[1].push(place(x, panels[1]));
   });
   for (const x of upper) rows[2].push(place(x, sectionPanels(s, x, d)[2]));
-  // The underbody only has to close the bottom, so a few stations do.
-  const under = upper.filter((_, i) => i % 3 === 0 || i === upper.length - 1).map((x) => {
+  // The underbody closes the bottom along the sill's own edge. Through the ends, where the sill
+  // curves up, it takes every station so it meets the skin exactly; the flat middle needs few.
+  const under = upper.filter((x, i) => i % 3 === 0 || i === upper.length - 1 || planShare(s, x) < 1).map((x) => {
     const k0 = keysAt(s, x)[0];
-    return place(x, [[0, k0.y + 0.004], [k0.z - 0.01, k0.y + 0.004]]);
+    return place(x, [[0, k0.y], [k0.z, k0.y]]);
   });
   const panels = rows.map((r) => centerNormals(gridGeometry(r)));
   return { panels, underbody: centerNormals(gridGeometry(under)), stations: { lower, upper } };
