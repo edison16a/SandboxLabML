@@ -2,10 +2,12 @@
 import * as Comlink from 'comlink';
 import '@/workers/shared/loadScripts';
 import type { EpisodeSetup } from '@/engine/env/episode';
+import { loadEpisodeModule } from '@/engine/env/registry';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { runBenchmark } from '@/engine/bench';
 import type { Genome } from '@/engine/neat/types';
 import { StreamSender } from '../shared/streamPort';
+import { rehearseScene } from './ghostEnvs';
 import { GhostPlayer, type GhostSpec } from './ghostPlayer';
 
 /**
@@ -38,6 +40,13 @@ const api = {
   },
   stopGhosts() {
     ghosts?.stop();
+  },
+  /**
+   * Plays a scene to the end off screen and gives each ghost's result, so
+   * a lab can check a scene before it shows it. It leaves the replay alone.
+   */
+  async rehearse(env: string, setup: EpisodeSetup, specs: GhostSpec[]) {
+    return rehearseScene(await loadEpisodeModule(env), setup, specs);
   },
   /**
    * Scores a champion on the benchmark at low priority: the exam pauses

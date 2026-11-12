@@ -1,24 +1,11 @@
-import { mixSeed } from '@/engine/core/rng';
-import type { AnyEpisodeModule, EpisodeEnv, EpisodeSetup } from '@/engine/env/episode';
+import type { AnyEpisodeModule, EpisodeSetup } from '@/engine/env/episode';
 import { loadEpisodeModule } from '@/engine/env/registry';
-import { Network } from '@/engine/neat/network';
-import type { Genome } from '@/engine/neat/types';
-import { hostFor } from '@/engine/training/scriptHost';
 import { Pacer } from '../shared/pacer';
 import type { StreamSender } from '../shared/streamPort';
 import { GhostFrames, type GhostGroup } from './ghostFrames';
+import { ghostGroups, type GhostSpec } from './ghostEnvs';
 
-export interface GhostSpec {
-  generation: number;
-  genome: Genome;
-  seed: number;
-  scriptSource: string | null;
-  /** Start grid slot. Left out, the ghost starts where it trained. */
-  slot?: number;
-}
-
-/** Salt of a ghost's controller seed. Script rand() in a tick draws from the agent's own stream, so it does not change a run. */
-const GHOST_CONTROLLER_SALT = 0x9405;
+export type { GhostSpec } from './ghostEnvs';
 
 /**
  * Re-simulates stored champions of any episode env as ghosts. Ghosts are
@@ -130,25 +117,7 @@ export class GhostPlayer {
     this.pacer = null;
   }
 
-  private makeEnv(ghosts: GhostSpec[]): EpisodeEnv {
-    const envModule = this.module as AnyEpisodeModule;
-    const source = ghosts[0]?.scriptSource ?? null;
-    const env = envModule.createEnv({ ...(this.setup as EpisodeSetup), scriptSource: source }, hostFor(source), mixSeed(GHOST_CONTROLLER_SALT));
-    env.reset(
-      ghosts.map((g) => new Network(g.genome)),
-      ghosts.map((g) => g.seed),
-      ghosts.map((g) => g.slot ?? 0),
-    );
-    return env;
-  }
-
   private build(): void {
-    const groups = new Map<string | null, number[]>();
-    this.ghosts.forEach((g, i) => {
-      const list = groups.get(g.scriptSource);
-      if (list) list.push(i);
-      else groups.set(g.scriptSource, [i]);
-    });
-    this.envs = [...groups.values()].map((order) => ({ env: this.makeEnv(order.map((i) => this.ghosts[i])), order }));
+    this.envs = ghostGroups(this.module as AnyEpisodeModule, this.setup as EpisodeSetup, this.ghosts);
   }
 }

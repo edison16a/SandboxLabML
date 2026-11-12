@@ -114,7 +114,7 @@ The renderer (`src/render/driving`) builds the city, the SUV and the traffic in 
 
 The sensor overlay draws what the followed SUV senses and plans: its lidar beams with a dot where each one hits (cyan for curbs and walls, amber for cars, magenta for people), boxes round what it detected, the light it is reading and the line it means to stop at, the route ahead as a ribbon on the road, chevrons where it will be over the next few seconds, and the destination zone. The overlay runs the engine's own lidar on the drawn world, so every beam is one the brain really has.
 
-The Driving Sandbox drives stored champions or the shipped trained model on any city, level and trip through the replay worker, and training never sees it. Up to 8 SUVs line up nose to tail on the first lane of the route. A destination clicked on the map replaces the seeded one. Training puts every SUV on the same spot, slot 0, so a lone champion replays its trip exactly.
+The Driving Sandbox drives stored champions or the shipped trained model on any city, level and trip through the replay worker, and training never sees it. Up to 8 SUVs line up nose to tail on the first lane of the route. A destination clicked on the map replaces the seeded one. Training puts every SUV on the same spot, slot 0, so a lone champion replays its trip exactly. A run with nothing trained yet opens on three copies of the shipped model. Before they drive, the replay worker's `rehearse` plays that first trip off screen, and the Sandbox moves to another route (up to 12 tries) until every copy arrives safely, so the first thing a newcomer sees is skilled driving. Routes the user picks are driven as they come.
 
 ## Navigation
 

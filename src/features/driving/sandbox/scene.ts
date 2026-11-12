@@ -2,13 +2,13 @@ import { loadDrivingModels } from '@/engine/bench/driving/models';
 import { drivingInputsOf } from '@/engine/driving/run/inputs';
 import type { DrivingRunSetup } from '@/engine/driving/run/setup';
 import { sandboxCapacity, sandboxSetup, type SandboxTrip } from '@/engine/driving/sandbox';
-import type { GhostSpec } from '@/workers/replay/ghostPlayer';
 import type { WorkerPool } from '@/workers/client/workerPool';
 import { isWatchSpeed, WATCH_SPEEDS } from '@/workers/shared/protocol';
 import { selectGhosts } from '@/features/lab/session/ghostSelection';
 import { useDrivingLab } from '../state/labStore';
 import { fieldFromGenerations, fieldScene, STARTING_FIELD } from './field';
-import { pickModel, trainedModel, type TrainedModel } from './model';
+import { checkedTrip, modelSpecs } from './firstTrip';
+import { pickModel, trainedModel } from './model';
 import { firstSandbox, type DrivingSandbox } from './state';
 
 const store = () => useDrivingLab.getState();
@@ -76,9 +76,19 @@ function replaySpeed(): number {
   return isWatchSpeed(speed) ? WATCH_SPEEDS[speed] : 1;
 }
 
-/** Copies of the trained model, front to back. They run the built in rules, as every preset's reward does. */
-function modelSpecs(t: TrainedModel, copies: number): GhostSpec[] {
-  return Array.from({ length: copies }, (_, slot) => ({ generation: t.model.generation, genome: t.genome, seed: t.model.seed, scriptSource: null, slot }));
+/**
+ * Moves a first trip that still needs a check onto a route every copy of
+ * the trained model arrives on. Gives the Sandbox to send, or null when
+ * the Sandbox changed during the check, since the change sends its own scene.
+ */
+async function checkFirstTrip(pool: WorkerPool, sb: DrivingSandbox): Promise<DrivingSandbox | null> {
+  const trained = store().trained;
+  if (!sb.checkTrip || !sb.model || !trained) return sb;
+  const trip = await checkedTrip(sb.trip, trained, sb.modelCopies, (setup, specs) => pool.replay.rehearse('driving', setup, specs));
+  if (store().mode !== 'sandbox' || store().sandbox !== sb) return null;
+  const checked = { ...sb, trip, checkTrip: false };
+  store().set({ sandbox: checked });
+  return checked;
 }
 
 /**
@@ -87,9 +97,10 @@ function modelSpecs(t: TrainedModel, copies: number): GhostSpec[] {
  * notes in the store what the viewport has to build for it.
  */
 export async function sendSandboxScene(pool: WorkerPool): Promise<void> {
+  if (store().mode !== 'sandbox' || !store().sandbox) return;
+  const sb = await checkFirstTrip(pool, store().sandbox as DrivingSandbox);
   const s = store();
-  if (s.mode !== 'sandbox' || !s.run || !s.sandbox) return;
-  const sb = s.sandbox;
+  if (!sb || !s.run) return;
   const cap = sandboxCapacity(sb.trip);
   const trained = sb.model ? s.trained : null;
   const specs = trained ? modelSpecs(trained, Math.min(cap, sb.modelCopies)) : fieldScene(s.run, s.records, sb.field, cap).specs;
@@ -141,7 +152,7 @@ export function sandboxControls(pool: WorkerPool): SandboxControls {
     update,
     setTrip(patch) {
       const sb = store().sandbox;
-      if (sb) update({ trip: { ...sb.trip, ...patch } });
+      if (sb) update({ trip: { ...sb.trip, ...patch }, checkTrip: false });
     },
   };
 }

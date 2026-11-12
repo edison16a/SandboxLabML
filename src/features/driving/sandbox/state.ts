@@ -16,6 +16,12 @@ export interface DrivingSandbox {
   model: boolean;
   /** Copies of the trained model that line up. */
   modelCopies: number;
+  /**
+   * The trip still has to be checked before the trained model drives it.
+   * Only the first trip a run opens on the model is checked: a route the
+   * user picks is driven as it comes.
+   */
+  checkTrip: boolean;
 }
 
 /** Copies of the trained model the Sandbox starts with: one in front, two behind, so the start shows how it reacts to a queue. */
@@ -24,7 +30,8 @@ export const STARTING_MODEL_COPIES = 3;
 /**
  * The first Sandbox for a run: the city and level training is on now, a
  * fresh route, and the given champions. A run with nothing trained yet
- * starts on the trained model, so there is always something skilled to see.
+ * starts on the trained model, on a route it is known to drive well, so
+ * there is always something skilled to see.
  */
 export function firstSandbox(content: DrivingContent | null, field: FieldEntry[]): DrivingSandbox {
   return {
@@ -32,5 +39,6 @@ export function firstSandbox(content: DrivingContent | null, field: FieldEntry[]
     field,
     model: field.length === 0,
     modelCopies: STARTING_MODEL_COPIES,
+    checkTrip: field.length === 0,
   };
 }
