@@ -11,12 +11,14 @@ const triangles = (g: THREE.BufferGeometry) => (g.index ? g.index.count : g.attr
 
 /**
  * Traffic is drawn many times at once, so each body type stays near three
- * thousand triangles on High and twelve hundred on Low (a little over for
- * the longest body and the cab's sign), and every tier is lighter than the
- * one above it.
+ * thousand triangles on High, and every tier is lighter than the one above
+ * it. Each car also draws four wheels, so the whole car has a budget too:
+ * on Low the light wheel (about 150) pays for a smoother roofline, and a
+ * car costs about 2,000 there, down from 2,360 with the old 272 wheel.
  */
-const BODY_BUDGET: Record<DetailName, number> = { high: 3150, medium: 2600, low: 1300 };
+const BODY_BUDGET: Record<DetailName, number> = { high: 3150, medium: 2600, low: 1400 };
 const WHEEL_BUDGET: Record<DetailName, number> = { high: 450, medium: 380, low: 170 };
+const CAR_BUDGET: Record<DetailName, number> = { high: 4900, medium: 4050, low: 2050 };
 
 describe('traffic triangle budgets', () => {
   for (let kind = 0; kind < CAR_KINDS; kind++) {
@@ -24,8 +26,11 @@ describe('traffic triangle budgets', () => {
       const counts = (['high', 'medium', 'low'] as const).map((tier) => {
         const { geometry } = buildTrafficBody(CAR_SHAPES[kind], TRAFFIC_DETAIL[tier]);
         const n = triangles(geometry);
+        const wheel = trafficWheelGeometry(WHEEL_BUILT, TRAFFIC_DETAIL[tier].wheel);
         geometry.dispose();
         expect(n, tier).toBeLessThan(BODY_BUDGET[tier]);
+        expect(n + 4 * triangles(wheel), tier).toBeLessThan(CAR_BUDGET[tier]);
+        wheel.dispose();
         return n;
       });
       expect(counts[1]).toBeLessThan(counts[0]);

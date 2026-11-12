@@ -27,5 +27,5 @@ export type DetailName = 'high' | 'medium' | 'low';
 export const TRAFFIC_DETAIL: Record<DetailName, TrafficDetail> = {
   high: { ends: 6, middle: 10, arch: 7, p0: 1, p1: [1, 1], p2: [2, 1, 2, 3], cells: 1, fine: true, wheel: 20 },
   medium: { ends: 5, middle: 8, arch: 6, p0: 1, p1: [1, 1], p2: [2, 1, 2, 2], cells: 0.75, fine: true, wheel: 16 },
-  low: { ends: 4, middle: 5, arch: 4, p0: 1, p1: [1, 1], p2: [1, 1, 1, 1], cells: 0.5, fine: false, wheel: 10 },
+  low: { ends: 4, middle: 7, arch: 4, p0: 1, p1: [1, 1], p2: [1, 1, 1, 1], cells: 0.5, fine: false, wheel: 10 },
 };
