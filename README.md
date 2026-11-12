@@ -5,7 +5,7 @@
 <h1 align="center">SandboxLabML</h1>
 
 <p align="center">
-  A live machine learning lab in your browser, where you watch neural networks learn to race and play hide and seek in 3D.<br />
+  A live machine learning lab in your browser, where you watch neural networks learn to drive an SUV through a city and to run a course to the finish line, in 3D.<br />
   <a href="https://sandboxlabs.vercel.app/">sandboxlabs.vercel.app</a>
 </p>
 
@@ -17,47 +17,47 @@
 
 ## What it is
 
-SandboxLabML lets you see machine learning happen. Press Train and a population of neural networks starts learning right in front of you. Cars find the racing line and learn where to brake. Hiders grab crates for cover and lock them in place. Seekers can push a ramp against a wall and jump right over it.
+SandboxLabML lets you see machine learning happen. Press Train and a population of neural networks starts learning right in front of you. A hundred SUVs learn to follow a route through a city: when to go, when to stop at a red light, when to wait for someone on the crossing and which corner to turn at. A hundred little runners learn to reach a finish line, first on an empty floor and then round crates, through gaps in walls, past spikes and between sliding blocks.
 
-None of it is a canned animation. Every car and every agent is driven by a real network that evolved seconds ago, inside a real physics simulation, on your own machine. Open any brain and its neurons light up as it decides. Change the rewards, the inputs or the brain itself, and the next generation shows you what that change did. Even the home screen plays real brains: a trained car laps the Grand Prix beside a live hide and seek match.
+None of it is a canned animation. Every SUV and every runner is driven by a real network that evolved seconds ago, inside a real simulation, on your own machine. Open any brain and its neurons light up as it decides. Change the rewards, the inputs or the brain itself, and the next generation shows you what that change did. Even the home screen plays real brains: a trained SUV drives the city beside a trained runner crossing its courses.
 
 This is the loop that makes machine learning click. You shape the goal and press Train, then watch behavior appear that nobody programmed.
 
 ## Screenshots
 
-![Racing lab: the chase camera behind the leading car while the champion's network lights up live](assets/screenshots/racing-lab.png)
+![Driving lab: the chase camera behind the leading SUV, with its lidar beams, the route drawn on the road and arrows where it plans to go](assets/screenshots/driving-chase.png)
 
 | | |
 | --- | --- |
-| ![Hide and Seek: the close action shot in the Shelter room, with the seeker's vision cone](assets/screenshots/hideseek-showcase.png) | ![Hide and Seek: 25 matches of one round at once, each marked hidden or seen](assets/screenshots/hideseek-grid.png) |
-| ![Hide and Seek Sandbox: three hiders and three seekers in the Shelter room](assets/screenshots/hideseek-sandbox.png) | ![Racing Sandbox: eight champions racing the Oval](assets/screenshots/racing-sandbox.png) |
-| ![The home screen: a trained car and a live hide and seek match side by side, each with its brain](assets/screenshots/landing.png) | ![The first run walkthrough explaining the champion network as it drives](assets/screenshots/walkthrough.png) |
-| ![Racing lab, orbit view: tire smoke as a car slides through a corner](assets/screenshots/racing-orbit.png) | ![Script Studio, blocks view](assets/screenshots/studio-blocks.png) |
-| ![Racing Model tab: download the champion brain or the whole run, with the rest of the generation as ghosts at the start](assets/screenshots/racing-model.png) | ![Brain setup: start with up to three hidden layers](assets/screenshots/brain-setup.png) |
+| ![Driving lab from a street corner at rush hour, with crowds on the crossings and traffic at the lights](assets/screenshots/driving-rush-hour.png) | ![Navigation lab following the champion runner through the Gauntlet, past spikes and moving blocks](assets/screenshots/navigation-gauntlet.png) |
+| ![Driving Sandbox: three copies of the trained model lined up on a trip, with the city map to pick where they go](assets/screenshots/driving-sandbox.png) | ![Navigation Sandbox: eight trained runners on a course with walls and spikes](assets/screenshots/navigation-sandbox.png) |
+| ![Navigation course editor: a course drawn with crates, walls, spikes and a mover](assets/screenshots/navigation-editor.png) | ![The home screen: a trained SUV in the city and a trained runner on its course, each with its brain](assets/screenshots/landing.png) |
+| ![The first run walkthrough explaining a part of the Driving lab](assets/screenshots/walkthrough.png) | ![Script Studio, blocks view, with the Driving Beginner preset](assets/screenshots/studio-blocks.png) |
+| ![Model tab: download the champion brain or the whole run, and grow the brain](assets/screenshots/model-tab.png) | ![Brain setup: pick the sensors and start with up to three hidden layers](assets/screenshots/brain-setup.png) |
 
 ## What you can do
 
 ### Learn as you go
 
-The first time you open a lab, a short walkthrough points at each part and explains it in plain words: how the cars learn, and how a trained brain drives. Skip it anytime, or replay it from the help menu.
+The first time you open a lab, a short walkthrough points at each part and explains it in plain words: how the agents learn and how a trained brain decides. Skip it anytime, or replay it from the help menu.
 
-### Train cars to race
+### Train an SUV to drive a city
 
-A hundred hypercars learn to drive a circuit through sunlit hills, from nothing. The tires have a real grip limit, so braking and turning fight over the same grip and the cars have to discover braking points on their own. Ghosts of earlier champions drive beside the live generation. A speed trace and a brake map show the braking points move later as they learn.
+A hundred SUVs share a city with traffic lights, people on the sidewalks and crossings, and other cars. Every SUV drives the same trips, and the best drivers breed the next generation. A curriculum moves them up as they master each level, from empty streets to traffic lights, then people, then other cars, and finally rush hour, with crowds that cross late or away from the crossings. The tires have a real grip limit, so braking and turning share the same grip.
 
-The chase camera follows the car in the lead and glides on its own springs, so it stays smooth even when a car twitches or the lead changes hands. The rest of the generation rides along as see through ghosts. You can also watch trackside, top down or from a free camera.
+Turn the inputs on to see what the followed SUV senses: its lidar beams, boxes round the cars and people it has detected, the light it is reading with the line it means to stop at, the route ahead drawn on the road and arrows where it will be over the next few seconds. The chase camera follows the leading SUV on its own springs, so it stays smooth when a car twitches or the lead changes hands. You can also watch from an orbit, a street corner, top down or a free camera.
 
-### Train hiders and seekers
+### Train runners to reach the finish
 
-Two teams co-evolve in a physics arena. Agents grab crates, carry them and lock them for their team, and a lock only opens for the team that made it. Ramps let an agent run up and vault a wall, so a fort is only safe if the seekers cannot get a ramp to it. Watch all 50 matches of a round at once, then click one to follow it up close. Vision cones show what each agent can see, and a first person camera looks through its eyes.
+A hundred runners start on a straight empty run to a finish line. Once the best of them finish three quarters of their courses, the next level arrives: one crate, then a field of crates, rows of spikes, walls with narrow gaps, crates that slide back and forth, and the Gauntlet, which mixes them all. Every generation runs fresh courses, so the runners learn to navigate rather than memorize a room. The camera follows the champion, and rays show what each runner can see.
 
 ### Play with what you trained
 
-Every trained model can leave training and go into the Sandbox. In Racing, pick a track from the gallery or draw your own, then line up a field of up to 16 champions. In Hide and Seek, choose a room or build one on a grid with walls, crates and ramps, then spawn up to eight hiders and eight seekers and let them play.
+Every trained model can leave training and go into the Sandbox. In Driving, pick a city, a level and a trip, or click any street on the map to drive there, then line up to eight champions or copies of a trained model. In Navigation, pick a level, a named course, or draw your own with crates, walls, spikes and movers, then send up to forty runners across it. Both Sandboxes ship a trained model, so there is something skilled to watch before you train anything.
 
 ### Write the training loop yourself
 
-Training is driven by a small, safe script language called SBL. Edit it as blocks or as code, since both views edit the same script. It comes with docs, autocorrect and a test run that plays one episode tick by tick. Thirteen guided lessons across both games teach it step by step beside a live preview. The lab toolbar always names the script a run is training with.
+Training is driven by a small, safe script language called SBL. Edit it as blocks or as code, since both views edit the same script. Each lab comes with three preset scripts (Beginner, Intermediate and Advanced), docs, autocorrect and a test run that plays one episode and replays it tick by tick. Thirteen guided lessons across both labs teach it step by step beside a live preview. The lab toolbar always names the script a run is training with.
 
 ### Take your model with you
 
@@ -70,14 +70,15 @@ Population size, brain shape, sensors, sensor noise, rewards and training speed 
 ## Why you can trust what you see
 
 * **Real neuroevolution.** Brains evolve with NEAT, which starts from tiny networks and grows them. Mutations add links and neurons, and speciation protects new ideas long enough to improve.
-* **Real physics.** Racing uses a tire model with a grip limit. Hide and Seek runs on the Rapier physics engine, so crates are pushed and blocked by real contacts.
-* **Fully reproducible.** Every random number is seeded and every weight is stored exactly. Replays are re-simulated from stored brains instead of recorded video, and a test checks a replay matches its training run tick for tick.
-* **Benchmarked.** A built-in benchmark scores any model on held-out tracks or against fixed reference champions, so you can tell real learning from overfitting.
+* **Real rules.** The SUV has a grip limit, lights cycle on a plan, people cross when the signal lets them, and other cars keep their lanes and stop at red. A runner has a speed and a turn rate and slides along walls. Nothing bends the rules for a brain.
+* **Fully reproducible.** Every random number is seeded and every weight is stored exactly. Replays are re-simulated from stored brains instead of recorded video, and tests check that a replay matches its training run tick for tick.
+* **Benchmarked.** A built-in benchmark scores any champion in cities and courses it never trained on, next to reference curves trained from several seeds, so you can tell real learning from luck. See [docs/benchmark.md](docs/benchmark.md).
 * **Private by default.** Everything runs locally in Web Workers. Runs are saved in your browser and can be exported as a file to share.
 
 ## How it works
 
-* **Simulate lean, render rich.** Racing simulates in 2D at 30 Hz with a kinematic bicycle model. Hide and Seek simulates with Rapier. The renderer only reads snapshots and interpolates them, so quality settings never change a training result.
+* **Simulate lean, render rich.** Both labs simulate in 2D at 30 Hz. The SUV is a kinematic bicycle model on a street grid. A runner is a small body that moves, turns and slides. The renderer only reads snapshots and interpolates them, so quality settings never change a training result.
+* **One pipeline, two labs.** Driving and Navigation plug into the same training, replay, storage, benchmark and lesson code. A new environment is a set of modules plus one entry per layer.
 * **Threads.** A coordinator worker runs evolution, sim workers run episodes on every spare core, and a replay worker drives ghosts and the Sandbox. Snapshots stream to the renderer as transferable buffers.
 * **Live networks.** The network graph draws every neuron and link of the current champion and lights them with real activations each tick. A model card tracks parameters and size as the brain grows.
 * **Scripts are data.** SBL is parsed, checked against an API registry (names, units and scopes) and compiled into closure trees. Nothing ever evaluates generated JavaScript, so an imported run cannot carry code that runs on open.
@@ -113,32 +114,35 @@ The app is a standard Next.js project with no server code or environment variabl
 | `npm run dev` | Development server with hot reload |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript, strict |
-| `npm test` | Vitest unit tests for the engine, storage and logic |
+| `npm test` | Vitest unit tests for the engine, workers, storage and logic |
 | `npm run e2e` | Playwright browser tests (run `npm run build` first) |
-| `npm run refs` | Regenerates the benchmark reference results |
+| `npm run format` | Prettier |
+| `npm run refs` | Retrains the benchmark references and the Sandbox models (`-- --env driving` or `navigation` for one lab) |
 | `npm run icons` | Re-renders the PNG app icons from the SVG |
-| `npm run hero:car` | Trains the car the landing page shows driving |
-| `npm run hero:poster` | Captures the landing page poster from the live scene (needs a running build) |
+| `npm run hero:driver` | Trains the SUV the landing page shows and picks its trips |
+| `npm run hero:navigator` | Trains the runner the landing page shows and picks its courses |
+| `npm run hero:poster` | Captures the landing page posters from the live scenes (needs a running build) |
 
 ### Project layout
 
 ```
-app/               Next.js routes (landing, labs, Studio, Runs)
-src/engine/        Pure TypeScript: NEAT, Racing, Hide and Seek, SBL, benchmarks, lessons
+app/               Next.js routes (landing, the two labs, Studio, Runs)
+src/engine/        Pure TypeScript: NEAT, the env pipeline, Driving, Navigation, SBL, benchmarks, lessons, the hero loops
 src/workers/       Coordinator, sim and replay workers, plus the main thread client
-src/render/        React Three Fiber scenes and shared render helpers
-src/features/      Lab pages, Sandboxes, charts, network graph, model card, runs, landing
+src/render/        React Three Fiber scenes: the city and the SUV, the courses and runners, the hero stage
+src/features/      Lab pages, Sandboxes, charts, network graph, model card, runs, landing, walkthroughs
 src/studio/        Script Studio
-src/storage/       IndexedDB (Dexie): runs, generations, checkpoints, scripts, tracks, rooms
-src/ui/            Design system on Radix primitives, loading states, the walkthrough, logo and GitHub button
-content/lessons/   Lesson content
-public/references/ Benchmark reference results
-public/hero/       The landing page's trained car and its poster stills
+src/storage/       IndexedDB (Dexie): runs, generations, checkpoints, scripts, blueprints, courses
+src/ui/            Design system on Radix primitives, loading states, the walkthrough engine, logo and GitHub button
+content/lessons/   Lesson content for both labs
+scripts/           Reference, hero and poster generators
+public/references/ Benchmark reference curves and the Sandbox models
+public/hero/       The landing page's trained brains and its poster stills
 ```
 
 ### Stack
 
-Next.js 16, React 19, TypeScript, Tailwind CSS 4, three.js with React Three Fiber, drei and postprocessing, Rapier, Comlink, Zustand, Dexie, uPlot, CodeMirror 6, Vitest and Playwright.
+Next.js 16, React 19, TypeScript, Tailwind CSS 4, three.js with React Three Fiber, drei and postprocessing, Comlink, Zustand, Dexie, uPlot, CodeMirror 6, Vitest and Playwright.
 
 ## License
 
