@@ -6,13 +6,10 @@ import type { DrivingInputConfig } from '../../driving/sensors/inputConfig';
 import { drivingEnvOptions, type DrivingSetup } from '../../driving/setup';
 import { LIGHT_RED } from '../../driving/signals/plan';
 import { Network } from '../../neat/network';
+import { carAtCamera } from './camera';
+import { PERSON_NEAR, RED_NEAR, STILL } from './status';
 import type { Genome } from '../../neat/types';
 
-/** Standing still means slower than this, m/s. */
-const STILL = 0.6;
-/** A red light or a person this close ahead, m, is what the SUV stands still for. */
-const RED_NEAR = 14;
-const PERSON_NEAR = 14;
 
 /** How one hero trip went, from a headless drive of the whole trip. */
 export interface TripReport {
@@ -34,13 +31,21 @@ export interface TripReport {
   laneDeparture: number;
 }
 
+/** True when any bit of a contact set is on. */
+const touching = (words: Uint32Array) => words.some((w) => w !== 0);
+
 /**
  * The rule a learner broke on its latest tick, if any. The hero SUV must
  * never crash, hit a person, run a red, roll over a stop line on red,
- * drive the wrong way or put a wheel over the curb.
+ * drive the wrong way or put a wheel over the curb. Traffic and people
+ * cannot see the SUV and pass through it without it counting as a crash,
+ * which looks broken on screen, so the hero also asks that nothing ever
+ * touches it.
  */
 export function brokenRule(l: DrivingLearner): string | null {
   if (l.crashed) return 'crashed';
+  if (touching(l.carContacts)) return 'touched a car';
+  if (touching(l.pedContacts)) return 'touched a person';
   if (l.hitPedestrian) return 'hit a person';
   if (l.ranRedLight) return 'ran a red light';
   if (l.overranStopLine) return 'rolled over a stop line';
@@ -71,7 +76,7 @@ export function judgeTrip(genome: Genome, inputs: DrivingInputConfig, brainSeed:
   let lastSteer = 0;
   while (l.status === STATUS_DRIVING) {
     env.step();
-    broke ??= brokenRule(l);
+    broke ??= brokenRule(l) ?? (carAtCamera(env) ? 'had a car at the camera' : null);
     const still = l.car.speed < STILL;
     const atRed = still && l.sense.light === LIGHT_RED && l.sense.lightDistance < RED_NEAR;
     if (atRed && red === 0) redStops++;

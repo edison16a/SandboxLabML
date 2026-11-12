@@ -5,10 +5,10 @@ import { LIGHT_RED, LIGHT_YELLOW } from '../../driving/signals/plan';
 export type DriverStatus = 'drive' | 'red' | 'slowing' | 'person' | 'car' | 'left' | 'right' | 'arrived';
 
 /** Standing still means slower than this, m/s. */
-const STILL = 0.8;
-/** How near a red light, a person or a car has to be to explain a stop, m. */
-const RED_NEAR = 20;
-const PERSON_NEAR = 16;
+export const STILL = 0.8;
+/** How near a red light, a person or a car has to be to explain a stop, m. The trip judge counts stops the same way. */
+export const RED_NEAR = 20;
+export const PERSON_NEAR = 16;
 const CAR_NEAR = 12;
 /** How near a red light has to be for braking toward it to count, m. */
 const SLOWING_NEAR = 40;
