@@ -1,29 +1,16 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { CircleHelp, Play } from 'lucide-react';
 import { Button } from '@/ui/primitives/Button';
 import { Kbd } from '@/ui/primitives/Kbd';
 import { Popover } from '@/ui/primitives/Popover';
-import { openWalkthrough } from '@/ui/walkthrough/walkStore';
+import { useTourReplay } from './useTourReplay';
 
 /** A lab's help menu: its keyboard shortcuts and a button that replays the lab's tour. */
 export function LabHelpMenu({ tour, shortcuts }: { tour: string; shortcuts: ReadonlyArray<readonly [string, string]> }) {
   const [open, setOpen] = useState(false);
-  const button = useRef<HTMLButtonElement>(null);
-  const replaying = useRef(false);
-  // The tour opens once the menu has closed, in place of the menu handing focus back to its button.
-  // Opening it any sooner, the menu could take focus back from the tour's card a moment later.
-  const onCloseAutoFocus = (event: Event) => {
-    if (!replaying.current) return;
-    replaying.current = false;
-    event.preventDefault();
-    openWalkthrough(tour, button.current);
-  };
-  const replay = () => {
-    replaying.current = true;
-    setOpen(false);
-  };
+  const { button, onCloseAutoFocus, replay } = useTourReplay(tour);
   return (
     <Popover
       side="top"
@@ -51,7 +38,7 @@ export function LabHelpMenu({ tour, shortcuts }: { tour: string; shortcuts: Read
             </div>
           ))}
         </dl>
-        <Button size="sm" variant="outline" onClick={replay}>
+        <Button size="sm" variant="outline" onClick={() => replay(() => setOpen(false))}>
           <Play />
           Replay the tour
         </Button>

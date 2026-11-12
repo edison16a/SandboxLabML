@@ -1,11 +1,8 @@
 'use client';
 
-import { FlaskConical } from 'lucide-react';
 import { LabToolbar as SharedToolbar } from '@/features/lab/components/LabToolbar';
-import { LabHelpMenu } from '@/features/onboarding/LabHelpMenu';
+import type { SandboxSwitch } from '@/features/lab/components/SandboxButton';
 import { DRIVING_TOUR } from '@/features/onboarding/drivingTour';
-import { Button } from '@/ui/primitives/Button';
-import { Tooltip } from '@/ui/primitives/Tooltip';
 import { drivingSession } from '../session/DrivingSession';
 import { useDrivingLab } from '../state/labStore';
 
@@ -22,25 +19,15 @@ const SHORTCUTS: Array<[string, string]> = [
   ['R', 'In the Sandbox: restart the trip'],
 ];
 
-/**
- * Opens and closes the Sandbox. It works before any training: the Sandbox
- * then starts on the shipped trained model.
- */
-function SandboxButton() {
-  const mode = useDrivingLab((s) => s.mode);
-  const hasRun = useDrivingLab((s) => s.run !== null);
+/** The Sandbox switch. It works before any training: the Sandbox then starts on the shipped trained model. */
+function useSandboxSwitch(): SandboxSwitch {
+  const open = useDrivingLab((s) => s.mode === 'sandbox');
+  const disabled = useDrivingLab((s) => s.run === null);
   const session = drivingSession();
-  return (
-    <Tooltip content="Drive champions or a trained model on any trip">
-      <Button data-tour="sandbox" variant={mode === 'sandbox' ? 'primary' : 'outline'} onClick={() => void (mode === 'sandbox' ? session.exitSandbox() : session.enterSandbox())} disabled={!hasRun} aria-label="Sandbox">
-        <FlaskConical />
-        <span className="@max-[52rem]:hidden">Sandbox</span>
-      </Button>
-    </Tooltip>
-  );
+  return { open, disabled, hint: 'Drive champions or a trained model on any trip', toggle: () => void (open ? session.exitSandbox() : session.enterSandbox()) };
 }
 
-/** The shared lab toolbar with Driving's Sandbox button and help menu. */
+/** The shared lab toolbar with Driving's Sandbox, shortcuts and tour. */
 export function LabToolbar({ onNewRun }: { onNewRun: () => void }) {
-  return <SharedToolbar onNewRun={onNewRun} help={<LabHelpMenu tour={DRIVING_TOUR.id} shortcuts={SHORTCUTS} />} extra={<SandboxButton />} />;
+  return <SharedToolbar onNewRun={onNewRun} tour={DRIVING_TOUR.id} shortcuts={SHORTCUTS} sandbox={useSandboxSwitch()} />;
 }
