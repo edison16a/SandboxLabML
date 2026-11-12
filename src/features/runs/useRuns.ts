@@ -5,7 +5,6 @@ import { decodeGenome } from '@/engine/neat/serialize';
 import { modelMetrics, type ModelMetrics } from '@/engine/neat/metrics';
 import { db, type RunRow } from '@/storage/db';
 import { listRuns, listTrash } from '@/storage/runs';
-import { shownRuns } from './labRuns';
 
 export interface RunSummary {
   row: RunRow;
@@ -23,10 +22,10 @@ export function useRuns() {
   const [runs, setRuns] = useState<RunSummary[] | null>(null);
   const [trash, setTrash] = useState<RunRow[]>([]);
   const reload = useCallback(async () => {
-    const rows = shownRuns(await listRuns());
+    const rows = await listRuns();
     const summaries = await Promise.all(rows.map(async (row) => ({ row, model: await latestModel(row) })));
     setRuns(summaries);
-    setTrash(shownRuns(await listTrash()));
+    setTrash(await listTrash());
   }, []);
   useEffect(() => {
     void reload();

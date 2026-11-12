@@ -1,7 +1,5 @@
 import type { EnvId } from '@/engine/env/types';
 import { check, costToMicros, estimateCost, hasErrors, lint, parse, sortDiagnostics, type CheckResult, type Diagnostic, type ParseResult } from '@/engine/script';
-import { isLabEnv } from '@/features/shell/labs';
-import { labEnvDiagnostics } from './labEnv';
 
 /**
  * Microseconds one agent costs per tick with the built-in reward: physics,
@@ -19,7 +17,7 @@ export interface Analysis {
   diagnostics: Diagnostic[];
   /** The first syntax error. While there is one, the blocks view is read only. */
   syntaxError: Diagnostic | null;
-  /** The env the header names, when the app has a lab for it. */
+  /** The env the header names, when this build has it. */
   env: EnvId | null;
   counts: { error: number; warning: number; info: number };
   /** Abstract cost per agent per tick, or null while the script has errors. */
@@ -41,7 +39,7 @@ export function analyze(source: string): Analysis {
   if (hit) return hit;
   const parsed = parse(source);
   const checked = check(parsed.program);
-  const early = labEnvDiagnostics(parsed.program.header, [...parsed.diagnostics, ...checked.diagnostics]);
+  const early = [...parsed.diagnostics, ...checked.diagnostics];
   const clean = !hasErrors(early);
   const diagnostics = sortDiagnostics(clean ? [...early, ...lint(checked)] : early);
   const counts = { error: 0, warning: 0, info: 0 };
@@ -54,7 +52,7 @@ export function analyze(source: string): Analysis {
     checked,
     diagnostics,
     syntaxError: parsed.diagnostics.find((d) => d.severity === 'error') ?? null,
-    env: checked.env && isLabEnv(checked.env) ? checked.env : null,
+    env: checked.env,
     counts,
     cost,
     micros,

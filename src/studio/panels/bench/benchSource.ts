@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { episodeInfo } from '@/engine/env/registry';
 import type { Genome } from '@/engine/neat/types';
-import { isLabEnv } from '@/features/shell/labs';
 import type { RunRow } from '@/storage/db';
 import { listGenerationNumbers } from '@/storage/generationIndex';
 import { loadChampion, setGenerationBenchmark } from '@/storage/generations';
@@ -16,9 +15,9 @@ export interface BenchSource {
   latest: number;
 }
 
-/** A run of a lab with a champion, whose env has a benchmark and whose brain belongs to that env. */
+/** A run with a champion, whose env has a benchmark and whose brain belongs to that env. listRuns already leaves out runs of removed labs. */
 function benchable(r: RunRow): boolean {
-  return r.generation > 0 && r.config.blueprint.env === r.env && isLabEnv(r.env) && !!episodeInfo(r.env)?.bench;
+  return r.generation > 0 && r.config.blueprint.env === r.env && !!episodeInfo(r.env)?.bench;
 }
 
 /** Runs in IndexedDB that the Bench tab can score, newest first. */

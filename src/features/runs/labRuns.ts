@@ -3,30 +3,22 @@ import type { CustomSensorSpec, EnvId } from '@/engine/env/types';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { isLabEnv, labPath } from '@/features/shell/labs';
 import type { RunRow } from '@/storage/db';
-import { importRun, ImportError } from '@/storage/exportImport';
 import { forkRun } from '@/storage/forkRun';
 import { destroyRun, listTrash } from '@/storage/runs';
 
 /**
  * What the app says about a run of a lab this version does not have. The
- * same sentence the import refuses with once the engine forgets the env.
+ * same sentence the import refuses such a file with.
  */
 export const RETIRED_RUN = 'This run is from a lab this version does not have.';
 
 /**
- * The runs the app shows: only those of a lab this version has. Runs of a
- * removed lab stay in the browser's storage, untouched, but never show.
- */
-export function shownRuns<T extends Pick<RunRow, 'env'>>(rows: readonly T[]): T[] {
-  return rows.filter((r) => isLabEnv(r.env));
-}
-
-/**
  * Empties the Trash the Runs page shows. A trashed run of a removed lab
- * never shows there, so it stays stored like that lab's other runs.
+ * never shows there (listTrash leaves it out), so it stays stored like
+ * that lab's other runs.
  */
 export async function emptyLabTrash(): Promise<void> {
-  for (const row of shownRuns(await listTrash())) await destroyRun(row.id);
+  for (const row of await listTrash()) await destroyRun(row.id);
 }
 
 /**
@@ -42,27 +34,6 @@ export function requireLabRun<T extends Pick<RunRow, 'env'>>(row: T): T {
 /** Forks a run into a new one with a bigger brain, refusing a run of a removed lab. */
 export async function forkLabRun(run: Pick<RunConfig, 'id' | 'env'>, blueprint: Blueprint, custom: CustomSensorSpec[] = []): Promise<RunConfig> {
   return forkRun(requireLabRun(run).id, blueprint, custom);
-}
-
-/** The env a run file names, read without importing it, or null when the file says none. */
-export function runFileEnv(text: string): string | null {
-  try {
-    const env = (JSON.parse(text) as { config?: { env?: unknown } } | null)?.config?.env;
-    return typeof env === 'string' ? env : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Imports a run file, turning away one of a lab this version does not
- * have before anything is stored. Any other problem keeps the import's own
- * message, such as a file that is not JSON.
- */
-export async function importLabRun(text: string): Promise<RunConfig> {
-  const env = runFileEnv(text);
-  if (env !== null && !isLabEnv(env)) throw new ImportError(RETIRED_RUN);
-  return importRun(text);
 }
 
 /** What a run link does in a lab: open here, move to the lab the run belongs to, or explain why it cannot open. */

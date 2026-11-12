@@ -69,9 +69,9 @@ export async function openScript(id: string, opts: { force?: boolean } = {}): Pr
   return true;
 }
 
-/** Opens the script a newcomer starts on, the Driving Beginner preset, or the first preset shown if that one is missing. */
+/** Opens the script a newcomer starts on, the Driving Beginner preset, or the first preset if that one is missing. */
 async function openStarter(): Promise<void> {
-  const id = (await getScript(STARTER_SCRIPT_ID)) ? STARTER_SCRIPT_ID : listPresets().find(shownScript)?.id;
+  const id = (await getScript(STARTER_SCRIPT_ID)) ? STARTER_SCRIPT_ID : listPresets()[0]?.id;
   if (id) await openScript(id, { force: true });
 }
 

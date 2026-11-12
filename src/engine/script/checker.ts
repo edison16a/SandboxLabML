@@ -65,7 +65,9 @@ function checkHeader(ctx: CheckContext, h: Header | null): void {
   if (!(SCRIPT_ENVS as readonly string[]).includes(h.env)) {
     const found = suggest(h.env, SCRIPT_ENVS);
     const hint = found.length > 0 ? ` Did you mean ${found[0].name}?` : ` Use ${SCRIPT_ENVS.join(' or ')}.`;
-    ctx.error('unknown-env', `There is no environment called ${h.env}.${hint}`, h.envSpan, suggestionFixes(found, h.envSpan));
+    // Nothing close, such as the env of a lab a later version removed: offer every env this build has.
+    const fixes = found.length > 0 ? suggestionFixes(found, h.envSpan) : SCRIPT_ENVS.map((env) => replaceFix(`Change to ${env}`, h.envSpan, env));
+    ctx.error('unknown-env', `There is no environment called ${h.env}.${hint}`, h.envSpan, fixes);
   }
   if (h.version !== SCRIPT_API_VERSION) {
     const span: Span = { from: h.span.to - `v${h.version}`.length, to: h.span.to };

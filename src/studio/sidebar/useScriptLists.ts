@@ -25,5 +25,5 @@ export function useScriptLists(): { mine: ScriptEntry[]; presets: ScriptEntry[];
       live = false;
     };
   }, [filter, version]);
-  return { mine, presets: listPresets(filter === 'all' ? undefined : filter).filter(shownScript), loading };
+  return { mine, presets: listPresets(filter === 'all' ? undefined : filter), loading };
 }

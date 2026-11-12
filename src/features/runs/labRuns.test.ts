@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_DRIVING_BLUEPRINT } from '@/engine/driving/blueprints';
 import { defaultDrivingRun } from '@/features/driving/hooks/defaultRun';
 import { SandboxDb, setDb, db, type RunRow } from '@/storage/db';
-import { EXPORT_FORMAT, ImportError, exportRun } from '@/storage/exportImport';
+import { EXPORT_FORMAT, ImportError, exportRun, importRun } from '@/storage/exportImport';
 import { createRun, getRun, listRuns, trashRun } from '@/storage/runs';
-import { emptyLabTrash, forkLabRun, importLabRun, requireLabRun, RETIRED_RUN, runFileEnv, runLink, shownRuns } from './labRuns';
+import { emptyLabTrash, forkLabRun, requireLabRun, RETIRED_RUN, runLink } from './labRuns';
 
 let n = 0;
 beforeEach(() => setDb(new SandboxDb(`lab-runs-${n++}`)));
@@ -28,7 +28,7 @@ describe('runs of removed labs', () => {
     await storedOldRun('racing');
     await storedOldRun('hideseek');
     expect((await db().runs.count())).toBe(3);
-    expect(shownRuns(await listRuns()).map((r) => r.id)).toEqual([kept.id]);
+    expect((await listRuns()).map((r) => r.id)).toEqual([kept.id]);
   });
 
   it('stay stored when the Trash the page shows is emptied', async () => {
@@ -42,18 +42,14 @@ describe('runs of removed labs', () => {
   });
 
   it('turn away an old export file with one plain sentence and store nothing', async () => {
-    for (const env of ['racing', 'hideseek']) {
-      expect(runFileEnv(oldExport(env))).toBe(env);
-      await expect(importLabRun(oldExport(env))).rejects.toThrow(new ImportError(RETIRED_RUN));
-    }
+    for (const env of ['racing', 'hideseek']) await expect(importRun(oldExport(env))).rejects.toThrow(new ImportError(RETIRED_RUN));
     expect(await db().runs.count()).toBe(0);
   });
 
   it('keep the import message for a broken file and import a Driving run', async () => {
-    expect(runFileEnv('not json')).toBeNull();
-    await expect(importLabRun('not json')).rejects.toThrow('This file is not valid JSON.');
+    await expect(importRun('not json')).rejects.toThrow('This file is not valid JSON.');
     const original = await createRun(defaultDrivingRun());
-    const imported = await importLabRun(JSON.stringify(await exportRun(original.id)));
+    const imported = await importRun(JSON.stringify(await exportRun(original.id)));
     expect(imported.env).toBe('driving');
     expect(imported.name).toBe('First drives (imported)');
   });
