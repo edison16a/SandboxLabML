@@ -77,9 +77,9 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
     led: new THREE.MeshBasicMaterial({ color: new THREE.Color(4.2, 4.2, 3.9), toneMapped: false }),
     liner: new THREE.MeshStandardMaterial({ color: '#050506', roughness: 0.95 }),
     metal: new THREE.MeshStandardMaterial({ color: '#cfd3d8', metalness: 1, roughness: 0.16 }),
-    // Satin rubber a shade lighter than the black well, with a soft sheen that lights the rounded shoulder
-    // where it turns away from the eye, so the full 0.8 m tire reads against the dark arch.
-    tire: new THREE.MeshPhysicalMaterial({ color: '#232529', roughness: 0.68, sheen: d === 'low' ? 0 : 0.8, sheenRoughness: 0.5, sheenColor: '#7d838c' }),
+    // Rubber in a clear dark grey, well above the black well, with a soft sheen that lights the rounded
+    // shoulder where it turns away from the eye, so the full 0.8 m tire reads against the dark arch.
+    tire: new THREE.MeshPhysicalMaterial({ color: '#2e3135', roughness: 0.78, sheen: d === 'low' ? 0 : 0.8, sheenRoughness: 0.5, sheenColor: '#a3a9b1' }),
     rim: new THREE.MeshPhysicalMaterial({ color: '#2c2f34', metalness: 0.75, roughness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.08 }),
     face: new THREE.MeshPhysicalMaterial({ color: '#c3c7cc', metalness: 1, roughness: 0.27, clearcoat: 0.6, clearcoatRoughness: 0.12 }),
     caliper: new THREE.MeshPhysicalMaterial({ color: '#b01c14', roughness: 0.3, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.06 }),

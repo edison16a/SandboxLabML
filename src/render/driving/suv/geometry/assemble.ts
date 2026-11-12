@@ -41,7 +41,7 @@ const LOOK: Record<Slot, { color: [number, number, number]; rough: number; metal
   tail: { color: [1, 0.06, 0.04], rough: 0.4, metal: 0, glow: 1.5 },
   liner: { color: [0.012, 0.012, 0.013], rough: 0.95, metal: 0 },
   metal: { color: [0.7, 0.72, 0.75], rough: 0.2, metal: 1 },
-  tire: { color: [0.034, 0.035, 0.039], rough: 0.68, metal: 0 },
+  tire: { color: [0.034, 0.036, 0.04], rough: 0.78, metal: 0 },
   rim: { color: [0.16, 0.165, 0.18], rough: 0.35, metal: 0.8 },
   face: { color: [0.62, 0.63, 0.65], rough: 0.3, metal: 0.95 },
   disc: { color: [0.25, 0.25, 0.26], rough: 0.5, metal: 0.5 },
