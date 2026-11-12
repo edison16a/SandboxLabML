@@ -18,8 +18,12 @@ export interface SuvMaterials {
   dispose(): void;
 }
 
-/** How strongly each slot mirrors the environment: paint and glass glossy, tires and liners dull. */
-const REFLECT: Partial<Record<Slot, number>> = { paint: 0.75, glass: 1.05, trim: 0.9, clad: 0.6, grille: 0.45, metal: 1, rim: 0.9, face: 1, caliper: 0.8, disc: 0.5, tire: 0.6, liner: 0.25, tail: 0.6 };
+/**
+ * How strongly each slot takes the environment's light: paint and glass
+ * glossy, liners dull. The cladding and tires take it in full, or the
+ * dark base would sink into the shadow under the car.
+ */
+const REFLECT: Partial<Record<Slot, number>> = { paint: 0.75, glass: 1.05, trim: 0.9, clad: 1, grille: 0.45, metal: 1, rim: 0.9, face: 1, caliper: 0.8, disc: 0.5, tire: 0.9, liner: 0.25, tail: 0.6 };
 
 /**
  * Tail lamp glow at rest and under braking. The lamps skip tone mapping,
@@ -68,8 +72,8 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
     tail,
     glass: new THREE.MeshPhysicalMaterial({ color: '#0b0f14', metalness: 0.1, roughness: 0.05, clearcoat: 0.6, clearcoatRoughness: 0.03 }),
     trim: new THREE.MeshPhysicalMaterial({ color: '#08090b', metalness: 0.2, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.04 }),
-    // Satin, a shade off black: it catches the sky, so it reads as trim on the body and never merges with the shadow under it.
-    clad: new THREE.MeshStandardMaterial({ color: '#1b1d20', roughness: 0.5, metalness: 0.05 }),
+    // Satin, a shade off black: its rolled top catches the sky, so it reads as trim on the body and never merges with the shadow under it.
+    clad: new THREE.MeshStandardMaterial({ color: '#202327', roughness: 0.3, metalness: 0.05 }),
     led: new THREE.MeshBasicMaterial({ color: new THREE.Color(4.2, 4.2, 3.9), toneMapped: false }),
     liner: new THREE.MeshStandardMaterial({ color: '#050506', roughness: 0.95 }),
     metal: new THREE.MeshStandardMaterial({ color: '#cfd3d8', metalness: 1, roughness: 0.16 }),
