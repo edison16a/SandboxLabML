@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { listCheckpoints, saveCheckpoint } from './checkpoints';
-import { SandboxDb, setDb } from './db';
+import { db, SandboxDb, setDb, type RunRow } from './db';
 import { alignHistory, pickResumeCheckpoint } from './resume';
 import { WriteQueue } from './writeQueue';
 
@@ -41,6 +41,8 @@ describe('WriteQueue', () => {
 describe('alignHistory', () => {
   it('resumes from the reachable checkpoint and clears what comes after it', async () => {
     setDb(new SandboxDb('resume-test'));
+    // A checkpoint only lands on a run that is stored.
+    await db().runs.put({ id: 'run', name: 'run', env: 'driving', createdAt: 0, updatedAt: 0, generation: 0, bestFitness: 0 } as RunRow);
     for (const g of [10, 20, 30]) await saveCheckpoint('run', g, { g });
     const deleted: number[] = [];
     const history = range(25).map((generation) => ({ generation }));

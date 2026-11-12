@@ -114,6 +114,11 @@ export function openedLabState(run: RunConfig, records: GenerationRecord[], live
   return opened;
 }
 
+/** Shared lab state with no run open: the open run was trashed or deleted, and the lab picks another on its next visit. */
+export function closedLabState(): Partial<LabState> {
+  return { run: null, records: [], liveGeneration: 0, status: 'idle', replayBlocked: null, focus: { kind: 'champion' }, networkGeneration: null, ghostGenerations: [], mode: 'train', lesions: {}, sandboxBrain: null };
+}
+
 /** The records after appending finished generations, oldest first. */
 export function withRecords<R extends GenerationRecord>(records: R[], batch: R[]): { records: R[]; liveGeneration: number } | null {
   if (!batch.length) return null;

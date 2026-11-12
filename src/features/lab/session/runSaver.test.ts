@@ -7,7 +7,8 @@ import { listCheckpoints } from '@/storage/checkpoints';
 import { SandboxDb, setDb } from '@/storage/db';
 import * as generations from '@/storage/generations';
 import { loadHistory } from '@/storage/generations';
-import { createRun, getRun } from '@/storage/runs';
+import { onRunsRemoved } from '@/storage/runEvents';
+import { createRun, destroyRun, getRun, trashRun } from '@/storage/runs';
 import { toyModule } from '@/engine/env/tests/toyEnv';
 import { RunSaver, SAVE_BACKLOG } from './runSaver';
 
@@ -83,6 +84,47 @@ describe('RunSaver', () => {
     await saver.checkpoint(config.id, 25, trainer.toState());
     expect(order).toEqual(['generations 1', 'generations 24', 'checkpoint 25']);
     expect((await listCheckpoints(config.id)).map((c) => c.generation)).toEqual([25]);
+  });
+
+  it('leaves nothing behind for a run deleted while its backlog waits', async () => {
+    const { config, trainer } = await toyRun();
+    let open = () => {};
+    const gate = new Promise<void>((resolve) => (open = resolve));
+    const save = generations.saveGenerations;
+    let calls = 0;
+    vi.spyOn(generations, 'saveGenerations').mockImplementation(async (records) => {
+      if (calls++ === 0) await gate;
+      await save(records);
+    });
+    const saver = new RunSaver();
+    const first = saver.generation(toyGeneration(trainer));
+    for (let i = 1; i < 12; i++) void saver.generation(toyGeneration(trainer));
+    const last = saver.checkpoint(config.id, 12, trainer.toState());
+    const heard: unknown[] = [];
+    const stop = onRunsRemoved((removed) => heard.push(removed));
+    await destroyRun(config.id);
+    stop();
+    open();
+    await first;
+    await last;
+    expect(heard).toEqual([[config.id]]);
+    expect(await getRun(config.id)).toBeUndefined();
+    expect(await loadHistory(config.id)).toEqual([]);
+    expect(await listCheckpoints(config.id)).toEqual([]);
+  });
+
+  it('still saves a trashed run, which can come back from Trash', async () => {
+    const { config, trainer } = await toyRun();
+    const heard: unknown[] = [];
+    const stop = onRunsRemoved((removed) => heard.push(removed));
+    await trashRun(config.id);
+    stop();
+    const saver = new RunSaver();
+    await saver.generation(toyGeneration(trainer));
+    await saver.checkpoint(config.id, 1, trainer.toState());
+    expect(heard).toEqual([[config.id]]);
+    expect((await loadHistory(config.id)).map((r) => r.generation)).toEqual([0]);
+    expect((await listCheckpoints(config.id)).map((c) => c.generation)).toEqual([1]);
   });
 
   it('tells subscribers when the backlog changes', async () => {

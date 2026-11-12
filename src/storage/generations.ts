@@ -38,15 +38,19 @@ export async function saveGeneration(r: GenerationRecord): Promise<void> {
  * Saves finished generations in one transaction and refreshes each run's
  * summary once. On Turbo and Max many generations finish each second, and
  * three small writes per generation fell far behind on a busy machine.
+ * Records of a run whose row is gone (deleted for good while its backlog
+ * waited) are dropped: nothing would ever clean them up.
  */
 export async function saveGenerations(records: readonly GenerationRecord[]): Promise<void> {
   if (records.length === 0) return;
   const d = db();
   await d.transaction('rw', d.generations, d.runs, async () => {
-    await d.generations.bulkPut(records.map(toRow));
     for (const runId of new Set(records.map((r) => r.runId))) {
       const run = await d.runs.get(runId);
-      if (run) await d.runs.update(runId, { ...foldSummary(run, records.filter((r) => r.runId === runId)), updatedAt: Date.now() });
+      if (!run) continue;
+      const mine = records.filter((r) => r.runId === runId);
+      await d.generations.bulkPut(mine.map(toRow));
+      await d.runs.update(runId, { ...foldSummary(run, mine), updatedAt: Date.now() });
     }
   });
 }

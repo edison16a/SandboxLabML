@@ -1,16 +1,16 @@
 import type { StoreApi } from 'zustand';
-import type { EpisodeSetup } from '@/engine/env/episode';
-import { loadEpisodeModule, requireEpisodeInfo, requireEpisodeModule } from '@/engine/env/registry';
+import { loadEpisodeModule, requireEpisodeInfo } from '@/engine/env/registry';
 import type { EnvId } from '@/engine/env/types';
 import type { EpisodeTrainerState } from '@/engine/training/episodeTrainer';
 import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
+import { isRemoved, onRunsRemoved } from '@/storage/runEvents';
 import { createRun, getRun } from '@/storage/runs';
 import { createWorkerPool, type WorkerPool } from '@/workers/client/workerPool';
 import { isWatchSpeed, WATCH_SPEEDS, type SpeedMode } from '@/workers/shared/protocol';
-import { openedLabState, viewportHeld, withRecords, type LabState, type LabStoreApi } from '../state/labState';
+import { closedLabState, openedLabState, viewportHeld, withRecords, type LabState, type LabStoreApi } from '../state/labState';
 import { maybeBenchmark } from './backgroundBench';
-import { ghostSpecs, selectGhosts } from './ghostSelection';
+import { GhostSession } from './GhostSession';
 import { guardPage } from './pageGuard';
 import { restoreHistory } from './restoreRun';
 import type { RunSaver } from './runSaver';
@@ -18,17 +18,14 @@ import { SessionEvents } from './sessionEvents';
 
 /**
  * Main thread glue for a single population lab: owns the workers, saves
- * what the coordinator produces and keeps the ghost replay in step with
- * training. One instance per lab lives for the whole browser session, so
- * training keeps going while the user looks at other pages. A lab extends
- * it through the protected hooks (its Sandbox, its own store fields).
+ * what the coordinator produces and keeps the ghost replay (GhostSession)
+ * in step with training. One instance per lab lives for the whole browser
+ * session, so training keeps going while the user looks at other pages. A
+ * lab extends it through the protected hooks (its Sandbox, its own store
+ * fields).
  */
-export class EpisodeSession<S extends LabState = LabState> {
-  protected pool: WorkerPool | null = null;
+export class EpisodeSession<S extends LabState = LabState> extends GhostSession<S> {
   private ready: Promise<WorkerPool> | null = null;
-  protected ghostKey = '';
-  /** What the population trains on, from the coordinator. Null until the run loads. */
-  protected content: unknown = null;
   /** Saves and batches what the coordinator sends (see sessionEvents.ts). */
   protected readonly events = new SessionEvents({
     lab: () => this.store,
@@ -48,23 +45,18 @@ export class EpisodeSession<S extends LabState = LabState> {
     playGhosts: (speed) => void this.playGhosts(speed, false),
   });
 
-  constructor(
-    readonly env: EnvId,
-    protected readonly api: StoreApi<S>,
-  ) {}
-
-  protected get store(): S {
-    return this.api.getState();
-  }
-
-  protected set(patch: Partial<S>): void {
-    this.api.setState(patch);
+  constructor(env: EnvId, api: StoreApi<S>) {
+    super(env, api);
   }
 
   /** Starts the workers and loads the env's module, which the ghost setup needs on this thread. */
   async init(): Promise<WorkerPool> {
     if (!this.ready) {
       guardPage({ saves: this.saves, training: () => this.store.status === 'running', saveNow: () => this.saveNow() });
+      onRunsRemoved((removed) => {
+        const run = this.store.run;
+        if (run && isRemoved(removed, run.id)) void this.closeRun();
+      });
       this.ready = Promise.all([createWorkerPool((e) => this.events.apply(e)), loadEpisodeModule(this.env)]).then(([p]) => (this.pool = p));
     }
     return this.ready;
@@ -89,18 +81,38 @@ export class EpisodeSession<S extends LabState = LabState> {
 
   protected async load(config: RunConfig, history: GenerationRecord[], state?: EpisodeTrainerState): Promise<void> {
     const pool = await this.init();
+    await this.teardown(pool);
+    const generation = await pool.coordinator.load(config, state);
+    this.ghostKey = '';
+    this.set(this.openedState(config, history, generation));
+    await pool.coordinator.setSpeed(this.store.speed);
+    await this.refreshGhosts();
+  }
+
+  /** Stops training and clears what the open run left in the workers and the lab. */
+  private async teardown(pool: WorkerPool): Promise<void> {
     await pool.coordinator.pause();
     this.events.clear();
     pool.population.clear();
     pool.ghosts.clear();
     await pool.replay.stopGhosts();
     this.content = null;
-    this.beforeLoad();
-    const generation = await pool.coordinator.load(config, state);
     this.ghostKey = '';
-    this.set(this.openedState(config, history, generation));
-    await pool.coordinator.setSpeed(this.store.speed);
-    await this.refreshGhosts();
+    this.beforeLoad();
+  }
+
+  /**
+   * The open run went to Trash or was deleted (see runEvents). Training
+   * stops and the lab lets go of it, so the next visit opens another run.
+   * A last checkpoint keeps a trashed run whole, should the user restore it.
+   */
+  private async closeRun(): Promise<void> {
+    const pool = this.pool;
+    if (!pool) return;
+    await pool.coordinator.pause();
+    await this.saveNow();
+    await this.teardown(pool);
+    this.set(closedLabState() as Partial<S>);
   }
 
   /** Clears lab fields that belong to the run being replaced. */
@@ -162,48 +174,4 @@ export class EpisodeSession<S extends LabState = LabState> {
     this.ghostKey = '';
     await this.refreshGhosts(true);
   }
-
-  /** Call after a lesion or a Sandbox edit. Labs with a Sandbox resend its scene. */
-  sandboxChanged(): void {}
-
-  /**
-   * What ghosts replay on. By default it is the content training is on
-   * now, so old champions run beside the new agents on the same course. A lab
-   * that wants a champion's own episode returns the content its record
-   * kept (see contentOnRecords). Every ghost of a scene shares it.
-   */
-  protected ghostContent(run: RunConfig, _generations: readonly number[]): unknown {
-    return this.content ?? requireEpisodeModule(this.env).initialContent(run);
-  }
-
-  /** The setup ghosts replay on, built from ghostContent. */
-  protected ghostSetup(run: RunConfig, generations: readonly number[]): EpisodeSetup {
-    return requireEpisodeModule(this.env).createSetup({ config: run, content: this.ghostContent(run, generations), scriptSource: null });
-  }
-
-  /** Rebuilds the ghost list from the current selection and restarts the replay if it changed. */
-  async refreshGhosts(force = false): Promise<void> {
-    const pool = this.pool;
-    const { run, records, ghostSelection, replayBlocked, speed, mode } = this.store;
-    if (!pool || !run || replayBlocked || viewportHeld(this.store)) return;
-    if (mode === 'sandbox') return this.sandboxChanged();
-    const gens = selectGhosts(ghostSelection, records.length);
-    const key = `${run.id}:${gens.join(',')}`;
-    if (key === this.ghostKey && !force) return;
-    this.ghostKey = key;
-    await pool.replay.setGhostScene(this.env, this.ghostSetup(run, gens), ghostSpecs(run, records, gens));
-    this.set({ ghostGenerations: gens } as Partial<S>);
-    if (!isWatchSpeed(speed) || this.store.status !== 'running') await this.playGhosts(isWatchSpeed(speed) ? WATCH_SPEEDS[speed] : 1, true);
-    await this.afterGhosts(pool);
-  }
-
-  /** Runs once a new ghost scene plays, for a lab that fetches something per scene. */
-  protected async afterGhosts(_pool: WorkerPool): Promise<void> {}
-
-  protected async playGhosts(speed: number, loop: boolean): Promise<void> {
-    await this.pool?.replay.playGhosts(speed, loop);
-  }
-
-  /** The content changed (Driving: the curriculum moved up a level). Labs mirror it into their store. */
-  protected onContent(_content: unknown): void {}
 }

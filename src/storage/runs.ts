@@ -1,6 +1,7 @@
 import { isEpisodeEnv } from '@/engine/env/registry';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { db, type RunRow } from './db';
+import { runsRemoved } from './runEvents';
 
 export const TRASH_DAYS = 7;
 const DAY = 24 * 60 * 60 * 1000;
@@ -58,6 +59,7 @@ export async function renameRun(id: string, name: string): Promise<void> {
 /** Moves a run to Trash. It can be restored for 7 days. */
 export async function trashRun(id: string): Promise<void> {
   await db().runs.update(id, { deletedAt: Date.now() });
+  runsRemoved([id]);
 }
 
 export async function restoreRun(id: string): Promise<void> {
@@ -76,6 +78,7 @@ export async function destroyRun(id: string): Promise<void> {
     await d.benchmarks.where('runId').equals(id).delete();
     await d.runs.delete(id);
   });
+  runsRemoved([id]);
 }
 
 /** Removes trashed runs older than the undo window. Called once on load. */
@@ -89,4 +92,5 @@ export async function purgeTrash(now = Date.now()): Promise<number> {
 export async function deleteAllData(): Promise<void> {
   const d = db();
   await Promise.all(d.tables.map((t) => t.clear()));
+  runsRemoved('all');
 }

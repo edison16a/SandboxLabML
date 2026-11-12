@@ -54,7 +54,8 @@ export class SessionEvents {
         break;
       }
       case 'generation':
-        this.batcher.push(e.record);
+        // A record of a run that just closed is still saved (it may come back from Trash) but stays out of the lab.
+        if (run && e.record.runId === run.id) this.batcher.push(e.record);
         void this.saves.generation(e.record);
         break;
       case 'checkpoint':
