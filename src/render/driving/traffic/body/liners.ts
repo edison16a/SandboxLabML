@@ -36,7 +36,7 @@ export function wheelLiners(s: CarShape, d: TrafficDetail): THREE.BufferGeometry
   for (const axle of axles(s)) {
     const outline = openingOutline(s, axle, stations);
     const rows: Vec3[][] = outline.map(([x, y]) => [
-      [x, y, sideZ(s, x, Math.max(y, keysAt(s, x)[0].y)) - 0.004],
+      [x, y, sideZ(s, x, Math.max(y, keysAt(s, x)[0].y))],
       [x, y, inner],
     ]);
     parts.push(gridGeometry(rows));

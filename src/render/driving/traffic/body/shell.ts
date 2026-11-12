@@ -120,10 +120,10 @@ function centerNormals(g: THREE.BufferGeometry): THREE.BufferGeometry {
   return g;
 }
 
-/** The uncut outline from the sill to the shoulder crease at x, at full width, finely sampled. */
+/** The uncut outline from the sill to the shoulder crease at x, at full width, sampled as finely as the panels cut at an opening. */
 export function lowerOutline(s: CarShape, x: number): Pt[] {
   const k = keysAt(s, x);
-  return [...span(k[0], k[1], 12), ...through([{ ...k[1], a: deg(-6) }, k[2], k[3]], [16, 16]).slice(1)];
+  return [...span(k[0], k[1], 16), ...through([{ ...k[1], a: deg(-6) }, k[2], k[3]], [16, 16]).slice(1)];
 }
 
 /** How far out the body side is at (x, y) below the shoulder, m. */
