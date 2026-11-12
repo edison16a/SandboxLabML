@@ -12,10 +12,11 @@ export { sillY } from './lines';
  * and over to the centerline:
  *
  * 0 under the sill, 1 top of the satin black sill cladding, which stands
- * nearly upright so it reads from the side as a band, 2 where the lower
- * side starts to tuck under, 3 and 4 either end of the shoulder crease's
- * small radius, 5 the belt where the glass sits (ahead of the windshield,
- * the fender peak), 6 the edge of the hood's valley, 7 the centerline.
+ * nearly upright so it reads from the side as a band and rolls in at its
+ * top (rockerLean), 2 where the lower side starts to tuck under, 3 and 4
+ * either end of the shoulder crease's small radius, 5 the belt where the
+ * glass sits (ahead of the windshield, the fender peak), 6 the edge of the
+ * hood's valley, 7 the centerline.
  *
  * The spans between keys are smooth curves. Below the shoulder the side
  * stands nearly upright and only gently full; above it a shelf leans in
@@ -28,6 +29,17 @@ export interface Section {
 
 /** The shoulder crease's radius, m. */
 const SHOULDER_R = 0.015;
+
+/**
+ * How far the sill cladding's top leans in where it meets the paint. The
+ * cladding swells out low and rolls back in at the top, so its upper part
+ * faces the sky and shows a satin sheen above the dark shadow under the
+ * car instead of merging with it. The roll fades out round the ends, so
+ * the lip and the diffuser keep their own shape.
+ */
+function rockerLean(x: number): number {
+  return deg(-6 + 28 * smooth((2.2 - x) / 0.25) * smooth((x + 2.15) / 0.25));
+}
 
 /** The belt line at x as (z, y), after the end rounding: where the cabin's glass sits on the body. */
 export function beltAt(x: number): [number, number] {
@@ -68,7 +80,7 @@ export function sectionAt(x: number): Section {
   const fall = Math.atan((Math.PI / 2) * Math.sin(0.45 * Math.PI) * (v / Math.max(bz, 0.2)));
   const keys: Key[] = [
     key(w - 0.085, sillY(x), deg(-70)),
-    key(w - 0.032, rockerY(x), deg(-6), deg(-10)),
+    key(w - 0.032, rockerY(x), rockerLean(x), deg(-10)),
     key(w - 0.014, tuckY(x), deg(-5)),
     key(w + t * Math.sin(up), ys - t * Math.cos(up), up),
     key(w - t * Math.sin(shelf), ys + t * Math.cos(shelf), shelf),
