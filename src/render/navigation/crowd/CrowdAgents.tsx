@@ -29,8 +29,14 @@ const CRUSH_FLASH = new THREE.Color(NAV_COLORS.senseMover);
 /** Crowd members closer than this to the champion, or in front of it toward the camera (see hidesChampion), fade back, m, so the one the view follows never hides in the pack. */
 const CLEAR_RADIUS = 0.85;
 const CLEAR_RADIUS_ENDED = 1.6;
-/** How far they fade, and how fast they fade out and back in, 1/s. */
-const CLEAR_ALPHA = 0.22;
+/** How far they fade, and how fast they fade out and back in, 1/s. Nearly out: see-through bodies over the champion read as a smear. */
+const CLEAR_ALPHA = 0.08;
+/**
+ * Members this close to one drawn before them fade the same way, m. The
+ * Sandbox's copies of one brain run the same line, and two bodies on one
+ * spot read as one body with two heads.
+ */
+const SAME_SPOT = 0.45;
 const CLEAR_OUT = 12;
 const CLEAR_IN = 5;
 
@@ -68,6 +74,9 @@ export function CrowdAgents() {
       stop: createStopPose(),
       phase: new Float32Array(MAX_AGENTS),
       clear: new Float32Array(MAX_AGENTS).fill(1),
+      /** Where each member drawn in full stands this frame, for the same spot test. */
+      xs: new Float32Array(MAX_AGENTS),
+      zs: new Float32Array(MAX_AGENTS),
       m: new THREE.Matrix4(),
       p: new THREE.Vector3(),
       q: new THREE.Quaternion(),
@@ -111,6 +120,7 @@ export function CrowdAgents() {
     const dl = Math.hypot(dx, dz);
     dx = dl > 1e-3 ? dx / dl : 0;
     dz = dl > 1e-3 ? dz / dl : 1;
+    let placed = 0;
     for (let i = 0; i < count; i++) {
       if (i === frame.leader) continue;
       const o = i * STRIDE;
@@ -118,7 +128,12 @@ export function CrowdAgents() {
       const st = t.stop;
       blendAgent(frame.prev, curr, i, frame.alpha, t.pose);
       // Eased per agent on wall time, so one walking past the champion melts away and back instead of popping.
-      const near = frame.leader >= 0 && hidesChampion(t.pose.x, t.pose.z, lp.x, lp.z, dx, dz, clearRadius);
+      let near = frame.leader >= 0 && hidesChampion(t.pose.x, t.pose.z, lp.x, lp.z, dx, dz, clearRadius);
+      for (let j = 0; j < placed && !near; j++) near = Math.abs(t.xs[j] - t.pose.x) < SAME_SPOT && Math.abs(t.zs[j] - t.pose.z) < SAME_SPOT;
+      if (!near) {
+        t.xs[placed] = t.pose.x;
+        t.zs[placed++] = t.pose.z;
+      }
       const goal = near ? CLEAR_ALPHA : 1;
       t.clear[i] += (goal - t.clear[i]) * Math.min(1, (goal < t.clear[i] ? CLEAR_OUT : CLEAR_IN) * Math.min(dt, 0.1));
       const alpha = st.alpha * t.clear[i];
