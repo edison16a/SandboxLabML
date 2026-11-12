@@ -7,14 +7,21 @@ export interface Rect {
 }
 
 /**
- * One scene's share of the hero. The focus is where its subject (the SUV,
- * the runner) should sit, and the zone is how much of the pane
- * is free of the centered text, both as shares of the pane from its top
- * left. The cameras aim at the subject and shift the lens to put it on the
- * focus, and size their shot to the zone.
+ * One scene's share of the hero. The shot is the picture its camera
+ * composes, in its own px; the canvas at `rect` shows the part `view` of
+ * it. When the hero frames itself the shot is the canvas and the view is
+ * all of it. When it follows a poster frame (see framedLayout), the shot
+ * is the pane as the poster was shot and the view is what the window
+ * keeps of it. The focus is where the subject (the SUV, the runner)
+ * should sit and the zone is how much of the shot is free of the centered
+ * text, both as shares of the shot from its top left. The cameras aim at
+ * the subject, shift the lens to put it on the focus, and size the shot
+ * to the zone.
  */
 export interface Pane {
   rect: Rect;
+  shot: { w: number; h: number };
+  view: Rect;
   focusX: number;
   focusY: number;
   zoneW: number;
@@ -38,11 +45,17 @@ const SIDE_FOCUS_Y = 0.46;
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
+/** A pane whose shot is exactly its canvas. */
+function pane(rect: Rect, focusX: number, focusY: number, zoneW: number, zoneH: number): Pane {
+  return { rect, shot: { w: rect.w, h: rect.h }, view: { x: 0, y: 0, w: rect.w, h: rect.h }, focusX, focusY, zoneW, zoneH };
+}
+
 /**
  * Splits the hero between the two scenes. A wide hero puts the city on
  * the left and the course on the right, a tall one the city on top. Each
  * subject goes in the middle of the part of its pane the text panel
- * leaves free, so the words never sit on the SUV or the runner. Without a panel (not measured yet) the subjects sit centered.
+ * leaves free, so the words never sit on the SUV or the runner. Without a
+ * panel (not measured yet) the subjects sit centered.
  */
 export function splitLayout(width: number, height: number, panel: Rect | null): SplitLayout {
   const stacked = height > width;
@@ -55,8 +68,8 @@ export function splitLayout(width: number, height: number, panel: Rect | null): 
     const runW = Math.max(1, width - half);
     return {
       stacked,
-      drive: { rect: { x: 0, y: 0, w: driveW, h: height }, focusX: clamp(freeLeft / 2 / driveW, EDGE, 0.5), focusY: SIDE_FOCUS_Y, zoneW: clamp(freeLeft / driveW, 2 * EDGE, 1), zoneH: 1 },
-      run: { rect: { x: half, y: 0, w: runW, h: height }, focusX: clamp(1 - freeRight / 2 / runW, 0.5, 1 - EDGE), focusY: SIDE_FOCUS_Y, zoneW: clamp(freeRight / runW, 2 * EDGE, 1), zoneH: 1 },
+      drive: pane({ x: 0, y: 0, w: driveW, h: height }, clamp(freeLeft / 2 / driveW, EDGE, 0.5), SIDE_FOCUS_Y, clamp(freeLeft / driveW, 2 * EDGE, 1), 1),
+      run: pane({ x: half, y: 0, w: runW, h: height }, clamp(1 - freeRight / 2 / runW, 0.5, 1 - EDGE), SIDE_FOCUS_Y, clamp(freeRight / runW, 2 * EDGE, 1), 1),
     };
   }
   const half = Math.floor(height / 2);
@@ -66,7 +79,7 @@ export function splitLayout(width: number, height: number, panel: Rect | null): 
   const runH = Math.max(1, height - half);
   return {
     stacked,
-    drive: { rect: { x: 0, y: 0, w: width, h: driveH }, focusX: 0.5, focusY: clamp(freeTop / 2 / driveH, EDGE, 0.5), zoneW: 1, zoneH: clamp(freeTop / driveH, 2 * EDGE, 1) },
-    run: { rect: { x: 0, y: half, w: width, h: runH }, focusX: 0.5, focusY: clamp(1 - freeBottom / 2 / runH, 0.5, 1 - EDGE), zoneW: 1, zoneH: clamp(freeBottom / runH, 2 * EDGE, 1) },
+    drive: pane({ x: 0, y: 0, w: width, h: driveH }, 0.5, clamp(freeTop / 2 / driveH, EDGE, 0.5), 1, clamp(freeTop / driveH, 2 * EDGE, 1)),
+    run: pane({ x: 0, y: half, w: width, h: runH }, 0.5, clamp(1 - freeBottom / 2 / runH, 0.5, 1 - EDGE), 1, clamp(freeBottom / runH, 2 * EDGE, 1)),
   };
 }

@@ -48,9 +48,9 @@ export function heroChase(): HeroChase {
   return { anchor: chaseAnchor(), x: s(), y: s(), z: s(), yaw: 0, look: new THREE.Vector3(), epoch: -1 };
 }
 
-/** How far back the camera stands so the SUV fills its share of the part of the pane the page text leaves free. */
+/** How far back the camera stands so the SUV fills its share of the part of the shot the page text leaves free. */
 export function chaseDistance(pane: PaneView, fovDeg: number): number {
-  const { w, h } = pane.rect;
+  const { w, h } = pane.shot;
   const lens = h / 2 / Math.tan((fovDeg * Math.PI) / 360);
   const zone = Math.max(80, Math.min(pane.zoneW * w, pane.zoneH * h));
   return THREE.MathUtils.clamp((CHASE.span * lens) / (CHASE.fill * zone), CHASE.near, CHASE.far);

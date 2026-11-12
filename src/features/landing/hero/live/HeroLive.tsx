@@ -44,7 +44,8 @@ export default function HeroLive({ active, hero, panel }: HeroLiveProps) {
   const weakGpu = useSettings((s) => s.weakGpu === true);
   const tier = heroTier(quality, chosen, weakGpu);
   const feeds = useHeroFeeds(params.get('hero') === 'still');
-  const layout = useSplitLayout(hero, panel);
+  const split = useSplitLayout(hero, panel);
+  const layout = split?.layout ?? null;
   const [shown, setShown] = useState<SceneReady>({ drive: false, run: false });
   const [waited, setWaited] = useState(false);
   const driveDip = useRef<HTMLDivElement>(null);
@@ -65,8 +66,13 @@ export default function HeroLive({ active, hero, panel }: HeroLiveProps) {
   return (
     <>
       <HeroLoading loading={waiting} />
-      {/* The data attribute says which scenes are on screen, for the browser tests and the poster capture. */}
-      <div aria-hidden="true" data-hero-shown={[shown.drive && 'drive', shown.run && 'run'].filter(Boolean).join(' ')} className="pointer-events-none absolute inset-0">
+      {/* The data attributes say which scenes are on screen and which poster frame they follow, for the browser tests and the poster capture. */}
+      <div
+        aria-hidden="true"
+        data-hero-shown={[shown.drive && 'drive', shown.run && 'run'].filter(Boolean).join(' ')}
+        data-hero-frame={split ? JSON.stringify(split.frame) : undefined}
+        className="pointer-events-none absolute inset-0"
+      >
         {layout && feeds.drive && (
           <HeroPane rect={layout.drive.rect} shown={shown.drive} dip={driveDip} scene="drive">
             <SceneBoundary>

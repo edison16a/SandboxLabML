@@ -3,8 +3,8 @@ import { stepSpring, type Spring } from '@/render/shared/interpolate';
 import type { PaneView } from '../stage/paneView';
 
 /**
- * CSS px per meter of floor in the free part of the pane, so the runner
- * keeps one size on screen whatever the pane's shape: close enough that
+ * Px of shot per meter of floor in the free part of the shot, so the
+ * runner keeps one size whatever the pane's shape: close enough that
  * its face reads, the lab's follow view. The span it gives stays between
  * a tight 6 m and a 12 m that shows a stretch of the course.
  */
@@ -12,9 +12,9 @@ export const PX_PER_M = 72;
 const SPAN_MIN = 6;
 const SPAN_MAX = 12;
 
-/** How far the camera stands from its aim, m, so the free part of the pane shows a span of floor at PX_PER_M, across and deep. */
+/** How far the camera stands from its aim, m, so the free part of the shot shows a span of floor at PX_PER_M, across and deep. */
 export function followDistance(pane: PaneView, fovDeg: number): number {
-  const { w, h } = pane.rect;
+  const { w, h } = pane.shot;
   const zw = pane.zoneW * w;
   const zh = pane.zoneH * h;
   const span = Math.min(SPAN_MAX, Math.max(SPAN_MIN, Math.min(zw, zh) / PX_PER_M));
