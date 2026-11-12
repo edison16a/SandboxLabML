@@ -20,7 +20,7 @@ function point(i: number, count: number, value: number): [number, number] {
 /**
  * Benchmark axes as a small inline SVG radar, each from 0 at the center to
  * 1 at the rim. The axes come from the result's environment (see
- * radarValues), so Racing and Hide and Seek share the chart.
+ * radarValues), so Driving and Navigation share the chart.
  */
 export function Radar({ axes }: { axes: ReadonlyArray<RadarAxis & { value: number }> }) {
   const n = axes.length;

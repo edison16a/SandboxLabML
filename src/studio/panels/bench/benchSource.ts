@@ -3,24 +3,22 @@
 import { useEffect, useState } from 'react';
 import type { BenchModel } from '@/engine/bench';
 import { episodeInfo } from '@/engine/env/registry';
+import { isLabEnv } from '@/features/shell/labs';
 import type { RunRow } from '@/storage/db';
-import { listGenerationNumbers, listHideSeekGenerationNumbers } from '@/storage/generationIndex';
+import { listGenerationNumbers } from '@/storage/generationIndex';
 import { loadChampion, setGenerationBenchmark } from '@/storage/generations';
-import { loadHideSeekChampions, setHideSeekGenerationBenchmark } from '@/storage/hideSeekGenerations';
 import { listRuns } from '@/storage/runs';
 
-/** A run of either environment that has finished at least one generation, so it has a champion to score. */
+/** A run that has finished at least one generation, so it has a champion to score. */
 export interface BenchSource {
   run: RunRow;
   /** Generation of the latest champion. */
   latest: number;
 }
 
-/** A run with a champion whose env has a benchmark and whose brain belongs to that env. */
+/** A run of a lab with a champion, whose env has a benchmark and whose brain belongs to that env. */
 function benchable(r: RunRow): boolean {
-  if (r.generation <= 0 || r.config.blueprint.env !== r.env) return false;
-  if (r.env === 'hideseek') return true;
-  return !!episodeInfo(r.env)?.bench && (r.env !== 'racing' || !!r.config.racing);
+  return r.generation > 0 && r.config.blueprint.env === r.env && isLabEnv(r.env) && !!episodeInfo(r.env)?.bench;
 }
 
 /** Runs in IndexedDB that the Bench tab can score, newest first. */
@@ -40,17 +38,17 @@ export function useBenchSources(): { sources: BenchSource[]; loading: boolean } 
   return { sources, loading };
 }
 
-/** Stored generation numbers of a run, oldest first. Each environment keeps its generations in its own table. */
+/** Stored generation numbers of a run, oldest first. */
 export function generationsOf(run: RunRow): Promise<number[]> {
-  return run.env === 'hideseek' ? listHideSeekGenerationNumbers(run.id) : listGenerationNumbers(run.id);
+  return listGenerationNumbers(run.id);
 }
 
-/** What the benchmark scores for a generation: the Racing champion, or both Hide and Seek champions. */
+/** What the benchmark scores for a generation: its champion. */
 export async function loadModel(run: RunRow, generation: number): Promise<BenchModel | null> {
-  return run.env === 'hideseek' ? loadHideSeekChampions(run.id, generation) : loadChampion(run.id, generation);
+  return loadChampion(run.id, generation);
 }
 
 /** Keeps the score on the generation, so the run's charts and model card see it too. */
 export function saveScore(run: RunRow, generation: number, score: number): Promise<void> {
-  return run.env === 'hideseek' ? setHideSeekGenerationBenchmark(run.id, generation, score) : setGenerationBenchmark(run.id, generation, score);
+  return setGenerationBenchmark(run.id, generation, score);
 }

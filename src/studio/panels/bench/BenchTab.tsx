@@ -11,13 +11,12 @@ import { Select } from '@/ui/primitives/Select';
 import { BenchResultCard } from './BenchResultCard';
 import { generationsOf, loadModel, saveScore, useBenchSources } from './benchSource';
 
-
 type Outcome = { kind: 'result'; result: BenchResult; references: BenchReferences | null; generation: number } | { kind: 'message'; text: string };
 
 /**
- * Scores a stored champion on the benchmark for its environment and shows
- * how it compares with the reference presets. A Racing run is scored by
- * its champion, a Hide and Seek run by the champion pair of a generation.
+ * Scores a stored champion on the benchmark for its lab and shows how it
+ * compares with the reference presets: trips through two cities it never
+ * trained in for Driving, held-out courses for Navigation.
  */
 export default function BenchTab() {
   const { sources, loading } = useBenchSources();
@@ -80,7 +79,7 @@ export default function BenchTab() {
       <Field label="Run">
         <Select label="Run" value={source?.run.id ?? ''} disabled={progress !== null} onChange={(id) => setRunId(id)} options={sources.map((s) => ({ value: s.run.id, label: s.run.name, hint: `${envLabel(s.run.env)}, ${s.latest + 1} generations` }))} />
       </Field>
-      <Field label="Champion of generation" hint={source?.run.env === 'hideseek' ? 'Its hider and seeker play as a pair.' : undefined}>
+      <Field label="Champion of generation">
         <Select
           label="Generation"
           value={generation === null ? '' : String(generation)}

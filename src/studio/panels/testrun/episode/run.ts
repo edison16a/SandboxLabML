@@ -1,5 +1,5 @@
 import { loadTestEpisode, lessonsOf } from '@/engine/lessons/episode/run';
-import { prepareScript, type PreparedEpisode } from '@/engine/lessons/prepare';
+import { prepareScript, type PreparedEpisode, type PreparedScript } from '@/engine/lessons/prepare';
 import { requireEpisodeInfo } from '@/engine/env/registry';
 
 /** Per tick columns of an episode test, as typed arrays so the worker hands them over without copying. */
@@ -14,6 +14,11 @@ export type EpisodeTestResult =
   | { ok: true; ticks: number; log: EpisodeTickLog; stopReason: string; totalReward: number; metrics: Array<{ label: string; value: string }>; blueprint: string; tickHz: number }
   | { ok: false; message: string };
 
+/** True for a script of an env added through the registry. The removed built-in games carried a track or match rules instead. */
+function isEpisodeScript(p: PreparedScript): p is PreparedEpisode {
+  return !('track' in p) && !('rules' in p);
+}
+
 /**
  * One test episode of a script for an env added through the registry,
  * driven by the env's fixed lesson test brain: the same episode a lesson's
@@ -22,8 +27,9 @@ export type EpisodeTestResult =
 export async function runEpisodeTest(source: string): Promise<EpisodeTestResult> {
   const prepared = prepareScript(source);
   if (!prepared.ok) return { ok: false, message: prepared.message };
-  if (prepared.value.env === 'racing' || prepared.value.env === 'hideseek') return { ok: false, message: 'This script has its own test run.' };
-  const p: PreparedEpisode = prepared.value;
+  // The Studio flags a removed lab's header as an error first, so this only meets a script run from elsewhere.
+  if (!isEpisodeScript(prepared.value)) return { ok: false, message: 'That script is for a lab this version does not have.' };
+  const p = prepared.value;
   const envModule = requireEpisodeInfo(p.env);
   if (!envModule.lessons) return { ok: false, message: `${envModule.label} scripts cannot be test run yet.` };
   if (!p.blueprint) return { ok: false, message: `Test runs need a ${envModule.label} brain, such as brain ${envModule.lessons.brain}.` };

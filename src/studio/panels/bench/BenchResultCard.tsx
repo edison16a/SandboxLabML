@@ -2,7 +2,6 @@ import { radarValues } from '@/engine/bench/radar';
 import type { BenchReferences, BenchResult } from '@/engine/bench/types';
 import { Stat } from '@/ui/primitives/Panel';
 import { DrivingDetails } from './DrivingDetails';
-import { HideSeekDetails } from './HideSeekDetails';
 import { bandAt, percentileIn } from './percentile';
 import { Radar } from './Radar';
 
@@ -32,8 +31,8 @@ interface Props {
 /**
  * A benchmark score next to the reference scripts: final scores side by
  * side, the percentile among reference runs at the same generation, the
- * radar of the four axes, and the score per 100 parameters. Hide and Seek
- * adds its rating and the games against each reference champion.
+ * radar of the four axes, and the score per 100 parameters. Driving adds
+ * its score per level.
  */
 export function BenchResultCard({ result, references, generation }: Props) {
   const refs = references && references.benchmarkVersion === result.benchmarkVersion ? references.references : [];
@@ -42,7 +41,7 @@ export function BenchResultCard({ result, references, generation }: Props) {
     <div className="flex flex-col gap-5 rounded-lg border border-border bg-surface-2 p-4">
       <div className="grid grid-cols-2 gap-3">
         <Stat label="Score" value={Math.round(result.score)} hint="0 to 100, independent of the training reward" />
-        <Stat label="Per 100 parameters" value={result.scorePer100Params.toFixed(1)} hint={result.env === 'hideseek' ? 'Score for each 100 weights in both brains together' : 'Score for each 100 weights in the brain'} />
+        <Stat label="Per 100 parameters" value={result.scorePer100Params.toFixed(1)} hint="Score for each 100 weights in the brain" />
       </div>
       <section className="flex flex-col gap-2">
         <h4 className="text-[12px] font-semibold tracking-wide text-muted uppercase">Compared with the presets</h4>
@@ -80,7 +79,6 @@ export function BenchResultCard({ result, references, generation }: Props) {
           </table>
         </section>
       )}
-      {result.env === 'hideseek' && <HideSeekDetails result={result} references={references} />}
       {result.env === 'driving' && <DrivingDetails result={result} />}
       <Radar axes={radarValues(result.env, result.radar)} />
     </div>
