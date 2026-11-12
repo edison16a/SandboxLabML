@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { archCut, bandCurve } from './body';
 import { bothSides, gridGeometry, polygonGeometry, type Vec3 } from './grid';
 import { flareRows, skinAt } from './flares';
-import type { Detail, PartBin } from './parts';
+import { lightest, type Detail, type PartBin } from './parts';
 import { ARCH, ARCHED_BANDS, archFloor, AXLES, sectionAt, sillY } from './profile';
 import { warp } from './warp';
 
@@ -52,8 +52,9 @@ export function addArches(bin: PartBin, detail: Detail): void {
   for (const axle of AXLES) {
     const xs = Array.from({ length: n + 1 }, (_, i) => axle - Math.cos((Math.PI * i) / n) * (ARCH.radius - 0.001));
     const cuts = xs.map((x) => archCut(x) ?? ([0.95, archFloor(x)] as [number, number]));
-    // Below the hub the opening drops straight to the sill, and the edge follows it down on both sides.
-    const legs = Math.max(2, Math.round(n / 5));
+    // Below the hub the opening drops straight to the sill, and the edge follows it down on both sides. The lightest
+    // population car spends its triangles on a rounder arch instead and takes each straight leg in one step.
+    const legs = lightest(detail) ? 1 : Math.max(2, Math.round(n / 5));
     const leg = (x: number, out: number) =>
       Array.from({ length: legs }, (_, k) => {
         const y = ARCH.centerY - ((ARCH.centerY - sillY(x)) * (legs - k)) / legs;
