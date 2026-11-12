@@ -3,7 +3,7 @@ import { DIR_X, DIR_Y, LANE_OFFSET, STOP_LINE } from '@/engine/driving/city/dime
 import { cityFor } from '@/engine/driving/city/buildCity';
 import { builtInCity, DEFAULT_CITY_ID } from '@/engine/driving/city/presets';
 import { buildDrivingWorld, createDrivingSetup } from '@/engine/driving/setup';
-import { pickCornerSpot, rankArrivalSpots, rankCornerSpots } from './cornerSight';
+import { CLUTTER, pickCornerSpot, rankArrivalSpots, rankCornerSpots } from './cornerSight';
 import { NEAR_HEIGHT, streetscapeFor } from '../city/streetscape/layout';
 import { crowdedLens, sees, sightWorld } from './sightLines';
 
@@ -68,7 +68,7 @@ describe('arrival spots', () => {
       const s = rankArrivalSpots(city, route)[0];
       const dest = route.path.sample(route.destS, { x: 0, y: 0, tx: 1, ty: 0, k: 0, index: 0 });
       expect(crowdedLens(world, s.x, s.y, s.height), `seed ${seed}`).toBe(false);
-      if (sees(world, s.x, s.y, s.height, dest.x, dest.y, 1, 0.9)) clear++;
+      if (sees(world, s.x, s.y, s.height, dest.x, dest.y, 1, CLUTTER)) clear++;
     }
     expect(clear).toBeGreaterThanOrEqual(trips - 1);
   });

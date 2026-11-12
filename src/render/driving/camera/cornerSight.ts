@@ -21,7 +21,7 @@ const EXIT = [0, 6, 12];
  * a trunk or a crown grazing the line a few meters out fills the frame.
  * The camera uses the same margin to decide it has lost the car.
  */
-export const CLUTTER = 0.9;
+export const CLUTTER = 1.4;
 /** Where the camera may wait for the car's arrival: this far past the destination, looking back down the street, m. */
 const PAST_DEST = [14, 10, 18, 22];
 /** Points before the destination it must see, m. */
