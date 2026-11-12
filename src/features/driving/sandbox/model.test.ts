@@ -8,7 +8,7 @@ import type { DrivingRunResult } from '@/engine/driving/run/results';
 import { DEFAULT_DRIVING_SETTINGS } from '@/engine/driving/run/settings';
 import { createEpisodeRunConfig } from '@/engine/training/newRun';
 import { rehearseScene } from '@/workers/replay/ghostEnvs';
-import { checkedTrip, modelSetup, type Rehearse } from './firstTrip';
+import { checkedTrip, modelSetup, sandboxScene, type Rehearse } from './firstTrip';
 import { pickModel, trainedModel } from './model';
 import { firstSandbox, STARTING_MODEL_COPIES } from './state';
 
@@ -59,7 +59,8 @@ describe('the shipped trained model', () => {
   it('moves a first trip it would fail onto one every copy arrives on safely', async () => {
     for (let k = 0; k < 8; k++) {
       const trip = await checkedTrip({ ...first.trip, seed: mixSeed(0x5c, k) }, trained, STARTING_MODEL_COPIES, rehearse);
-      const { setup, specs } = modelSetup(trip, trained, STARTING_MODEL_COPIES);
+      // Drive the scene the Sandbox plays, not a copy of the rehearsed lineup.
+      const { setup, specs } = sandboxScene({ ...first, trip, checkTrip: false }, trained.run, [], trained, {});
       const results = (await rehearse(setup, specs)) as DrivingRunResult[];
       expect(results.every((r) => r.safeArrivals === 1)).toBe(true);
     }

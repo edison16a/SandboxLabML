@@ -1,13 +1,11 @@
 import { loadDrivingModels } from '@/engine/bench/driving/models';
-import { drivingInputsOf } from '@/engine/driving/run/inputs';
-import type { DrivingRunSetup } from '@/engine/driving/run/setup';
-import { sandboxCapacity, sandboxSetup, type SandboxTrip } from '@/engine/driving/sandbox';
+import type { SandboxTrip } from '@/engine/driving/sandbox';
 import type { WorkerPool } from '@/workers/client/workerPool';
 import { isWatchSpeed, WATCH_SPEEDS } from '@/workers/shared/protocol';
 import { selectGhosts } from '@/features/lab/session/ghostSelection';
 import { useDrivingLab } from '../state/labStore';
-import { fieldFromGenerations, fieldScene, STARTING_FIELD } from './field';
-import { checkedTrip, modelSpecs } from './firstTrip';
+import { fieldFromGenerations, STARTING_FIELD } from './field';
+import { checkedTrip, sandboxScene } from './firstTrip';
 import { pickModel, trainedModel } from './model';
 import { firstSandbox, type DrivingSandbox } from './state';
 
@@ -101,20 +99,15 @@ export async function sendSandboxScene(pool: WorkerPool): Promise<void> {
   const sb = await checkFirstTrip(pool, store().sandbox as DrivingSandbox);
   const s = store();
   if (!sb || !s.run) return;
-  const cap = sandboxCapacity(sb.trip);
   const trained = sb.model ? s.trained : null;
-  const specs = trained ? modelSpecs(trained, Math.min(cap, sb.modelCopies)) : fieldScene(s.run, s.records, sb.field, cap).specs;
-  const inputs = trained ? trained.model.inputs : drivingInputsOf(s.run);
-  const trip = sandboxSetup(sb.trip, Math.max(1, specs.length));
-  const lesion = Object.entries(s.lesions).map(([k, v]) => [Number(k), v] as [number, number]);
-  const setup: DrivingRunSetup = { trips: [trip], inputs, scriptSource: null, lesion: lesion.length ? lesion : undefined };
+  const { setup, specs } = sandboxScene(sb, s.run, s.records, trained, s.lesions);
   await pool.replay.setGhostScene('driving', setup, specs);
   // The Sandbox may have closed while the scene loaded.
   if (store().mode !== 'sandbox') return;
   store().set({
     ghostGenerations: specs.map((g) => g.generation),
-    sandboxSetup: trip,
-    sandboxInputs: inputs,
+    sandboxSetup: setup.trips[0],
+    sandboxInputs: setup.inputs,
     sandboxBrain: trained ? { run: trained.run, genome: trained.genome, label: trained.label } : null,
     sandboxPaused: false,
   });
