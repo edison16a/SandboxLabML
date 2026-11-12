@@ -37,12 +37,15 @@ export function hoodY(x: number): number {
 }
 
 /**
- * How far the hood's centerline sits below the fender peaks: 5 cm at the
- * cowl easing to 6 cm at the lamps. Behind the cowl the body top hides
- * under the glass; there it domes a little (negative) so the tail deck crowns.
+ * How far the hood's centerline sits below the fender peaks: 5.5 cm all
+ * the way from the cowl to the lamps. A depth that grew along the
+ * hood's falling centerline made a saddle on each half, which broke the
+ * sky's reflection into a floating island. Behind the cowl the body top
+ * hides under the glass; there it domes a little (negative) so the tail
+ * deck crowns.
  */
 export function valleyDepth(x: number): number {
-  const hood = 0.05 + 0.01 * smooth((x - COWL.x) / 1.1);
+  const hood = 0.055;
   const dome = -0.045 * smooth((-x - 0.5) / 1.8);
   const w = smooth((x - 0.2) / 0.5);
   return hood * w + dome * (1 - w);

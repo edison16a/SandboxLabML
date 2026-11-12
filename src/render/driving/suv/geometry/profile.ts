@@ -92,8 +92,10 @@ export function sectionAt(x: number): Section {
   // Along the cabin the shelf ends under the glass; on the hood it crests flat at the fender peak, and the tail's deck flattens too.
   const crest = deg(72 + 18 * onHood(x) + 8 * smooth((-x - 2.0) / 0.3));
   // On the hood the peak is a soft crease, so a line of light runs along each fender from the A pillar to the
-  // lamp. Over the lamp it melts into a round crest, so the hood's leading edge has no notch where it meets.
-  const crease = deg(12) * smooth((x - 0.9) / 0.45) * (1 - smooth((x - NOSE + ROUND.nose.plan) / 0.3));
+  // lamp. It melts into a round crest only inside the hood's last 6 cm, where the edge rolls down into the face:
+  // the lamp's top then has no notch, and the hood keeps one cross section all the way, so its reflections run
+  // through to the nose instead of pooling in an island where the crease used to fade.
+  const crease = deg(12) * smooth((x - 0.9) / 0.45) * (1 - smooth((x - NOSE + 0.06) / 0.06));
   // The valley falls from the peak to a floor on the centerline like half a cosine wave: flat at both ends, one U, no ridge.
   const fall = Math.atan((Math.PI / 2) * Math.sin(0.45 * Math.PI) * (v / Math.max(bz, 0.2)));
   const keys: Key[] = [
