@@ -52,8 +52,8 @@ describe('procedural SUV', () => {
       // Mirrors stand a little proud of the 2 m box, as on any car.
       expect(box.max.z - box.min.z).toBeLessThan(SUV_SIZE.width + 0.3);
       expect(box.max.z + box.min.z).toBeCloseTo(0, 3);
-      expect(box.max.y).toBeGreaterThan(1.58);
-      expect(box.max.y).toBeLessThan(1.66);
+      expect(box.max.y).toBeGreaterThan(1.64);
+      expect(box.max.y).toBeLessThan(1.7);
     }
   });
 

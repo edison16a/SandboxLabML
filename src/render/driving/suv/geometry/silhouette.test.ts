@@ -51,52 +51,56 @@ const halfWidth = (x: number) => Math.max(...points(['paint']).filter(([px, py])
 
 describe('SUV silhouette', () => {
   it('draws the nose: lip, fold and hood edge', () => {
-    expect(Math.abs(endAt(1, 0.55) - 2.45)).toBeLessThan(0.02);
+    expect(Math.abs(endAt(1, 0.6) - 2.45)).toBeLessThan(0.02);
     const lip = points(['trim']).filter(([px, , pz]) => px > 2.1 && Math.abs(pz) < 0.3);
     expect(Math.abs(Math.min(...lip.map(([, py]) => py)) - 0.3)).toBeLessThan(0.02);
-    // The hood's leading edge, where the face turns into the hood: x 2.36 at y 0.90.
-    expect(Math.abs(endAt(1, 0.9) - 2.36)).toBeLessThan(0.02);
-    expect(Math.abs(topAt(2.36) - 0.9)).toBeLessThan(0.02);
+    // The hood's leading edge, where the face turns into the hood: x 2.34 at y 0.97.
+    expect(Math.abs(endAt(1, 0.97) - 2.34)).toBeLessThan(0.02);
+    expect(Math.abs(topAt(2.34) - 0.97)).toBeLessThan(0.02);
   });
 
   it('rises along the hood to the cowl and over the roof to the lip', () => {
-    expect(Math.abs(topAt(0.95) - 1.06)).toBeLessThan(0.02);
-    expect(Math.abs(topAt(-0.35) - 1.65)).toBeLessThan(0.015);
-    expect(Math.abs(topAt(-1.4) - 1.5)).toBeLessThan(0.02);
-    expect(Math.abs(topAt(-0.05) - 1.6)).toBeLessThan(0.02);
+    expect(Math.abs(topAt(0.95) - 1.12)).toBeLessThan(0.02);
+    expect(Math.abs(topAt(-0.1) - 1.66)).toBeLessThan(0.02);
+    expect(Math.abs(topAt(-0.45) - 1.68)).toBeLessThan(0.015);
+    // A coupe roof that falls late: within 2 cm of the peak over the rear seats.
+    for (const x of [-0.7, -1.0]) expect(topAt(x)).toBeGreaterThan(1.66);
+    expect(Math.abs(topAt(-1.3) - 1.62)).toBeLessThan(0.02);
+    expect(Math.abs(topAt(-1.85) - 1.52)).toBeLessThan(0.02);
   });
 
-  it('ends the roofline in a lip spoiler at x -2.30, y 1.22, standing about 3 cm above the deck', () => {
+  it('ends the roofline in a lip spoiler at x -2.30, y 1.33, standing about 3 cm above the deck', () => {
     // The rearmost paint above the tail face's top: the lip's trailing edge.
-    const lip = points(['paint']).filter(([px, py, pz]) => px < -2.2 && py > 1.21 && Math.abs(pz) < 0.02);
+    const lip = points(['paint']).filter(([px, py, pz]) => px < -2.2 && py > 1.27 && Math.abs(pz) < 0.02);
     const back = Math.min(...lip.map(([px]) => px));
     // The top of the crisp edge there, which draws the silhouette.
     const edge = lip.filter(([px]) => px < back + 0.006).reduce((m, p) => (p[1] > m[1] ? p : m));
     expect(Math.abs(edge[0] + 2.3)).toBeLessThan(0.02);
-    expect(Math.abs(edge[1] - 1.22)).toBeLessThan(0.02);
+    expect(Math.abs(edge[1] - 1.33)).toBeLessThan(0.02);
     const standOut = edge[1] - deckAt(LIP.edge + 0.027, 0);
     expect(standOut).toBeGreaterThan(0.02);
     expect(standOut).toBeLessThan(0.04);
   });
 
-  it('draws the tail: tailgate, bumper top and diffuser', () => {
-    expect(Math.abs(endAt(-1, 0.95) + 2.42)).toBeLessThan(0.02);
-    expect(Math.abs(endAt(-1, 0.85) + 2.45)).toBeLessThan(0.02);
+  it('draws the tail: tailgate, light bar, bumper top and diffuser', () => {
+    expect(Math.abs(endAt(-1, 1.085) + 2.42)).toBeLessThan(0.02);
+    expect(Math.abs(endAt(-1, 0.92) + 2.45)).toBeLessThan(0.02);
     const tail = shell.filter(([px, , pz]) => px < -2.2 && Math.abs(pz) < 0.3);
-    expect(Math.abs(Math.min(...tail.map(([, py]) => py)) - 0.32)).toBeLessThan(0.02);
+    expect(Math.abs(Math.min(...tail.map(([, py]) => py)) - 0.34)).toBeLessThan(0.02);
   });
 
   it('sets the window line on the belt, kicking up at its rear point', () => {
     // The gloss black window graphic's lower edge, as built.
     const graphicFoot = (x: number) => Math.min(...points(['trim']).filter(([px, py, pz]) => near(px, x, 0.02) && py > 1.02 && pz > 0.6).map(([, py]) => py));
-    expect(Math.abs(graphicFoot(0.85) - 1.08)).toBeLessThan(0.015);
-    expect(Math.abs(graphicFoot(-1.7) - 1.14)).toBeLessThan(0.015);
-    expect(Math.abs(graphicFoot(-2.0) - 1.2)).toBeLessThan(0.025);
+    expect(Math.abs(graphicFoot(0.85) - 1.13)).toBeLessThan(0.015);
+    expect(Math.abs(graphicFoot(-1.7) - 1.18)).toBeLessThan(0.015);
+    expect(Math.abs(graphicFoot(-2.0) - 1.25)).toBeLessThan(0.025);
     expect(DLO.point).toBeCloseTo(-2.0, 2);
     expect(Math.abs(beltAt(-0.45)[0] - 0.84)).toBeLessThan(0.015);
-    // About 0.42 m of glass at the B pillar, between the bright surround's two strips.
+    // About 0.46 m of glass at the B pillar, between the bright surround's two strips, its top about 6 cm under the roofline.
     const surround = points(['metal']).filter(([px, py, pz]) => near(px, -0.45, 0.02) && py > 1 && pz > 0.6).map(([, py]) => py);
-    expect(Math.abs(Math.max(...surround) - Math.min(...surround) - 0.42)).toBeLessThan(0.03);
+    expect(Math.abs(Math.max(...surround) - Math.min(...surround) - 0.46)).toBeLessThan(0.03);
+    expect(Math.abs(topAt(-0.45) - Math.max(...surround) - 0.06)).toBeLessThan(0.02);
   });
 
   it('ends the C pillar fin on the rear glass line', () => {
@@ -105,8 +109,8 @@ describe('SUV silhouette', () => {
   });
 
   it('stands on real ground clearance with the wheels filling their arches', () => {
-    const between = shell.filter(([px]) => px > -0.9 && px < 0.95);
-    expect(Math.abs(Math.min(...between.map(([, py]) => py)) - 0.21)).toBeLessThan(0.01);
+    const between = points(['paint', 'trim', 'glass', 'clad']).filter(([px]) => px > -0.9 && px < 0.95);
+    expect(Math.abs(Math.min(...between.map(([, py]) => py)) - 0.22)).toBeLessThan(0.01);
     for (const axle of AXLES) {
       // The arch's painted edge over the wheel's top, as built.
       const edge = Math.min(...points(['paint']).filter(([px, py, pz]) => near(px, axle, 0.01) && pz > 0.8 && py > 0.6 && py < 0.95).map(([, py]) => py));
