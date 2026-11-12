@@ -1,5 +1,5 @@
 import type * as THREE from 'three';
-import { bothSides, merge, mirrorZ } from '../suv/geometry/grid';
+import { bothSides, merge } from '../suv/geometry/grid';
 import type { TrafficDetail } from './body/detail';
 import { doorMirror, roofSign } from './body/fittings';
 import { Imprint } from './body/imprint';
@@ -26,16 +26,24 @@ const RING_LIFT = 0.006;
  */
 const RING_DENSITY = 1;
 
-/** The right half's copy of the left: its indicators are the right indicators. */
-function mirrorHalf(g: THREE.BufferGeometry): THREE.BufferGeometry {
-  const m = mirrorZ(g);
-  const lamp = m.attributes.lamp;
-  for (let i = 0; i < lamp.count; i++) {
-    const v = lamp.getX(i);
-    if (v === LAMP.left) lamp.setX(i, LAMP.right);
-    else if (v === LAMP.right) lamp.setX(i, LAMP.left);
+/**
+ * The left half and its mirror image as one geometry. Indicators on the
+ * mirrored half are the right indicators, so every triangle on the right
+ * (z below zero) swaps its indicator code.
+ */
+function withMirror(g: THREE.BufferGeometry): THREE.BufferGeometry {
+  const both = bothSides(g);
+  const pos = both.attributes.position;
+  const lamp = both.attributes.lamp;
+  for (let i = 0; i < pos.count; i += 3) {
+    if (pos.getZ(i) + pos.getZ(i + 1) + pos.getZ(i + 2) >= 0) continue;
+    for (let k = i; k < i + 3; k++) {
+      const v = lamp.getX(k);
+      if (v === LAMP.left) lamp.setX(k, LAMP.right);
+      else if (v === LAMP.right) lamp.setX(k, LAMP.left);
+    }
   }
-  return m;
+  return both;
 }
 
 /**
@@ -71,7 +79,7 @@ export function buildTrafficBody(s: CarShape, d: TrafficDetail): { geometry: THR
   }
   const half = merge([imprint.geometry(), ...laid]);
   laid.forEach((g) => g.dispose());
-  const parts = [half, mirrorHalf(half), bothSides(bakeLook(wheelLiners(s, d), ['well'])), bothSides(doorMirror(s, proj, d.fine))];
+  const parts = [withMirror(half), bothSides(bakeLook(wheelLiners(s, d), ['well'])), bothSides(doorMirror(s, proj, d.fine))];
   if (s.roofSign) parts.push(roofSign(s, proj));
   shell.panels.forEach((g) => g.dispose());
   shell.underbody.dispose();
