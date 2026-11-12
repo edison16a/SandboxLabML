@@ -85,10 +85,6 @@ export async function purgeTrash(now = Date.now()): Promise<number> {
   return old.length;
 }
 
-export async function emptyTrash(): Promise<void> {
-  for (const r of await allTrash()) await destroyRun(r.id);
-}
-
 /** Wipes every table. The UI asks for typed confirmation first. */
 export async function deleteAllData(): Promise<void> {
   const d = db();
