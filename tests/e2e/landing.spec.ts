@@ -4,6 +4,8 @@ declare global {
   interface Window {
     /** Every WebGL context the page created, in order, recorded by the init script below. */
     __glContexts?: Array<WebGLRenderingContext | WebGL2RenderingContext>;
+    /** Draw calls made so far on any WebGL 2 context, counted by the same script. */
+    __glDraws?: number;
   }
 }
 
@@ -28,11 +30,20 @@ function cardsOverText(): string[] {
   return covered;
 }
 
-/** Records every WebGL context the page makes and skips the lab walkthroughs. */
+/** Records every WebGL context the page makes, counts its draw calls, and skips the lab walkthroughs. */
 async function watchContexts(page: Page) {
   await page.addInitScript(() => {
     const contexts: Array<WebGLRenderingContext | WebGL2RenderingContext> = [];
     window.__glContexts = contexts;
+    window.__glDraws = 0;
+    const proto = WebGL2RenderingContext.prototype as unknown as Record<string, (...a: unknown[]) => unknown>;
+    for (const name of ['drawElements', 'drawArrays', 'drawElementsInstanced', 'drawArraysInstanced']) {
+      const draw = proto[name];
+      proto[name] = function (this: unknown, ...a: unknown[]) {
+        window.__glDraws = (window.__glDraws ?? 0) + 1;
+        return draw.apply(this, a);
+      };
+    }
     const original = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...rest: unknown[]) {
       const ctx = (original as (...a: unknown[]) => RenderingContext | null).call(this, type, ...rest);
@@ -45,6 +56,30 @@ async function watchContexts(page: Page) {
 
 /** The runner card's clock, which only moves while the hero plays. */
 const runnerClock = (page: Page) => page.locator('[data-hero-card="run"] [data-hero-detail]').textContent();
+
+/** Draw calls the page has made so far. */
+const draws = (page: Page) => page.evaluate(() => window.__glDraws ?? 0);
+
+/**
+ * Waits until nothing has drawn for a few seconds. A frame already under
+ * way when the hero left the screen can still land, and a software
+ * renderer on a busy machine may take seconds over one.
+ */
+async function settleDrawing(page: Page): Promise<number> {
+  let last = await draws(page);
+  await expect
+    .poll(
+      async () => {
+        const now = await draws(page);
+        const still = now === last;
+        last = now;
+        return still;
+      },
+      { timeout: 90_000, intervals: [4000] },
+    )
+    .toBe(true);
+  return last;
+}
 
 /** The poster frame the live scenes compose their shots for, or null when the hero frames itself. */
 const posterFrame = async (page: Page) => JSON.parse((await page.locator('[data-hero-frame]').getAttribute('data-hero-frame')) ?? 'null') as { kind: string } | null;
@@ -94,13 +129,15 @@ test.describe('Landing hero', () => {
     // The scenes are composed like the wide poster under them, so nothing jumps as they fade in.
     expect((await posterFrame(page))?.kind).toBe('wide');
 
-    // Scrolled away, the scenes and their simulations stand still; back on screen, they carry on.
+    // Scrolled away, the scenes draw nothing and their simulations stand still; back on screen, they carry on.
     await page.locator('footer').scrollIntoViewIfNeeded();
-    await page.waitForTimeout(2000);
+    const drawn = await settleDrawing(page);
     const held = await runnerClock(page);
-    await page.waitForTimeout(6000);
+    await page.waitForTimeout(8000);
+    expect(await draws(page)).toBe(drawn);
     expect(await runnerClock(page)).toBe(held);
     await page.locator('section[aria-labelledby="hero-title"]').scrollIntoViewIfNeeded();
+    await expect.poll(() => draws(page), { timeout: 60_000 }).toBeGreaterThan(drawn);
     await expect.poll(() => runnerClock(page), { timeout: 120_000 }).not.toBe(held);
 
     // On a small laptop the corner cards stay clear of the centered words and the button.
