@@ -1,20 +1,20 @@
-import { BookOpen, Boxes, Car, Code2, FlaskConical, Gauge, Users, Waypoints } from 'lucide-react';
+import { BookOpen, Boxes, Car, Code2, FlaskConical, Footprints, Gauge, ScanEye } from 'lucide-react';
 
 const FEATURES = [
   {
     icon: Car,
-    title: 'Racing with real grip',
-    body: 'Braking and turning share the same tire grip, so cars must learn to brake before corners.',
+    title: 'Self-driving in a city',
+    body: 'Traffic lights, people and other cars share the streets. The SUV learns when to go and when to wait.',
   },
   {
-    icon: Waypoints,
-    title: 'Overlay generations',
-    body: 'Past champions drive as ghosts beside the live cars, so you see the laps get faster.',
+    icon: Footprints,
+    title: 'Learn to navigate',
+    body: 'A runner starts on a straight run. Crates, walls, spikes and moving blocks arrive as it improves.',
   },
   {
-    icon: Users,
-    title: 'Hide and Seek in 3D',
-    body: 'Hiders lock boxes into forts. Seekers push ramps to jump the walls.',
+    icon: ScanEye,
+    title: 'Sensors you can see',
+    body: 'Lidar beams, the route ahead and arrows for where the SUV plans to go.',
   },
   {
     icon: Code2,
@@ -28,18 +28,18 @@ const FEATURES = [
   },
   {
     icon: BookOpen,
-    title: 'Guided courses',
+    title: 'Guided lessons',
     body: 'Short lessons that build a training script step by step.',
   },
   {
     icon: Gauge,
     title: 'A fair benchmark',
-    body: 'Scores a champion on tracks it never trained on, so runs compare fairly.',
+    body: 'Champions are scored in cities and rooms they never trained in, so runs compare fairly.',
   },
   {
     icon: FlaskConical,
     title: 'Sandboxes',
-    body: 'Race your champions on a track you draw, or drop them in a room you build.',
+    body: 'Pick a trip or draw a course, then watch your champions or a trained model take it on.',
   },
 ];
 
