@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Pause, Play, RotateCcw } from 'lucide-react';
+import { LoaderCircle, Pause, Play, RotateCcw } from 'lucide-react';
 import { STATUS_ARRIVED, STATUS_DRIVING } from '@/engine/driving/agent/learner';
 import { DRIVING_SNAPSHOT, SNAP } from '@/engine/driving/snapshotLayout';
 import { Button } from '@/ui/primitives/Button';
@@ -45,6 +45,7 @@ export function SandboxBar() {
   const paused = useDrivingLab((s) => s.sandboxPaused);
   // The trained model is on its way: say so rather than that nothing drives.
   const waiting = useDrivingLab((s) => (s.sandbox?.model ?? false) && s.trained === null && s.trainedLoad !== 'failed');
+  const checking = useDrivingLab((s) => s.sandboxChecking);
   const trip = useTrip();
   const controls = () => drivingSession().sandbox;
   return (
@@ -59,8 +60,13 @@ export function SandboxBar() {
           <RotateCcw />
         </Button>
       </Tooltip>
-      {trip.total === 0 ? (
-        <span className="ml-auto text-[12px] text-white/60">{waiting ? 'Loading the trained model' : 'Nothing to drive yet'}</span>
+      {checking || (waiting && trip.total === 0) ? (
+        <span className="ml-auto flex items-center gap-1.5 text-[12px] text-white/70">
+          <LoaderCircle className="size-3.5 animate-spin" aria-hidden />
+          {checking ? 'Finding a good first trip' : 'Loading the trained model'}
+        </span>
+      ) : trip.total === 0 ? (
+        <span className="ml-auto text-[12px] text-white/60">Nothing to drive yet</span>
       ) : (
         <div className="ml-auto flex items-baseline gap-3 text-[12px] text-white/60">
           <span>

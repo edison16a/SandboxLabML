@@ -78,11 +78,21 @@ function replaySpeed(): number {
  * Moves a first trip that still needs a check onto a route every copy of
  * the trained model arrives on. Gives the Sandbox to send, or null when
  * the Sandbox changed during the check, since the change sends its own scene.
+ * While it checks, the replay training left behind stops and clears, so
+ * no stale SUV drives on screen, and the Sandbox bar says what it is doing.
  */
 async function checkFirstTrip(pool: WorkerPool, sb: DrivingSandbox): Promise<DrivingSandbox | null> {
   const trained = store().trained;
   if (!sb.checkTrip || !sb.model || !trained) return sb;
-  const trip = await checkedTrip(sb.trip, trained, sb.modelCopies, (setup, specs) => pool.replay.rehearse('driving', setup, specs));
+  store().set({ sandboxChecking: true });
+  let trip: SandboxTrip;
+  try {
+    await pool.replay.stopGhosts();
+    pool.ghosts.clear();
+    trip = await checkedTrip(sb.trip, trained, sb.modelCopies, (setup, specs) => pool.replay.rehearse('driving', setup, specs));
+  } finally {
+    store().set({ sandboxChecking: false });
+  }
   if (store().mode !== 'sandbox' || store().sandbox !== sb) return null;
   const checked = { ...sb, trip, checkTrip: false };
   store().set({ sandbox: checked });

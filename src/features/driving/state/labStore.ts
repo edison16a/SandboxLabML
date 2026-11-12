@@ -32,6 +32,8 @@ export interface DrivingLabState extends LabState {
   /** The trip the Sandbox replay drives and the inputs its SUVs sense, so the viewport builds those streets and that lidar. */
   sandboxSetup: DrivingSetup | null;
   sandboxInputs: DrivingInputConfig | null;
+  /** True while the Sandbox rehearses routes off screen for the trained model's first trip. */
+  sandboxChecking: boolean;
   /** The shipped trained model, once loaded; null before, or when the build ships none. */
   trained: TrainedModel | null;
   /** Where loading the trained model stands, so the Sandbox can say it failed rather than wait forever. */
@@ -60,6 +62,7 @@ export const useDrivingLab = create<DrivingLabState>((set) => ({
   sandboxPaused: false,
   sandboxSetup: null,
   sandboxInputs: null,
+  sandboxChecking: false,
   trained: null,
   trainedLoad: 'idle',
   set: (patch) => set(patch),
