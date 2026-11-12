@@ -6,6 +6,7 @@ import { branchRun, duplicateRun, resetRun, rewindRun } from '@/storage/runActio
 import { destroyRun, renameRun, restoreRun, trashRun } from '@/storage/runs';
 import type { RunRow } from '@/storage/db';
 import { labPath as labRoute } from '@/features/shell/labs';
+import { requireLabRun } from './labRuns';
 import { toast } from '@/ui/toast/toastStore';
 
 function labPath(env: RunRow['env'], id: string): string {
@@ -34,17 +35,17 @@ export function useRunActions(reload: () => Promise<void>) {
     rename: (run: RunRow, name: string) => guard(async () => { await renameRun(run.id, name); await done('Renamed'); })(),
     exportFile: (run: RunRow) =>
       guard(async () => {
-        downloadJson(runFileName(run.name), await exportRun(run.id));
+        downloadJson(runFileName(run.name), await exportRun(requireLabRun(run).id));
       })(),
     branch: (run: RunRow, gen: number) =>
       guard(async () => {
-        const c = await branchRun(run.id, gen);
+        const c = await branchRun(requireLabRun(run).id, gen);
         await done(`Branched from generation ${gen + 1}`);
         router.push(labPath(c.env, c.id));
       })(),
     rewind: (run: RunRow, gen: number) =>
       guard(async () => {
-        const c = await rewindRun(run.id, gen);
+        const c = await rewindRun(requireLabRun(run).id, gen);
         await done(`Rewound to generation ${gen + 1}`, async () => {
           await restoreRun(run.id);
           await trashRun(c.id);
@@ -52,13 +53,13 @@ export function useRunActions(reload: () => Promise<void>) {
       })(),
     reset: (run: RunRow) =>
       guard(async () => {
-        const c = await resetRun(run.id);
+        const c = await resetRun(requireLabRun(run).id);
         await done('Started over', async () => {
           await restoreRun(run.id);
           await destroyRun(c.id);
         });
       })(),
-    duplicate: (run: RunRow) => guard(async () => { await duplicateRun(run.id, Math.floor(Math.random() * 1e9)); await done('Duplicated'); })(),
+    duplicate: (run: RunRow) => guard(async () => { await duplicateRun(requireLabRun(run).id, Math.floor(Math.random() * 1e9)); await done('Duplicated'); })(),
     trash: (run: RunRow) => guard(async () => { await trashRun(run.id); await done(`Moved "${run.name}" to Trash`, () => restoreRun(run.id)); })(),
   };
 }

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Sprout } from 'lucide-react';
 import type { Blueprint } from '@/engine/blueprints/types';
 import { BlueprintDialog } from '@/features/blueprints/BlueprintDialog';
-import { forkRun } from '@/storage/forkRun';
+import { forkLabRun } from '@/features/runs/labRuns';
 import { setSetting } from '@/storage/settings';
 import { Button } from '@/ui/primitives/Button';
 import { toast } from '@/ui/toast/toastStore';
@@ -29,7 +29,7 @@ export function GrowBrain() {
     try {
       await session.pause();
       const custom = schema.filter((s) => s.group === 'custom').map((s) => ({ key: s.key.replace('custom:', ''), label: s.label, unit: s.unit, min: s.offset, max: s.offset + s.scale }));
-      const config = await forkRun(run.id, blueprint, custom);
+      const config = await forkLabRun(run, blueprint, custom);
       await session.openRun(config.id);
       await setSetting(lastRunKey, config.id);
       toast.success('Brain grown');
