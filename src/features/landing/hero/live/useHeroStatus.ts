@@ -35,7 +35,11 @@ export interface StatusLine {
  * shown change, a few times a second at most.
  */
 export function useDriveStatus(feed: DriveFeed): StatusLine {
-  const [line, setLine] = useState<StatusLine>({ status: DRIVER_WORDS.drive, detail: '0 km/h' });
+  // Read at once, like the runner's line, so the first paint shows the real words and speed.
+  const [line, setLine] = useState<StatusLine>(() => ({
+    status: DRIVER_WORDS[driverStatus(feed.loop.learner)],
+    detail: `${Math.round(Math.abs(feed.loop.learner.car.speed) * 3.6)} km/h`,
+  }));
   useEffect(() => {
     // The first read shows what is happening at once: on the poster capture nothing ticks after it.
     const first = driverStatus(feed.loop.learner);
@@ -60,20 +64,28 @@ export function useDriveStatus(feed: DriveFeed): StatusLine {
   return line;
 }
 
-/** The runner's status line: the course it is on and its clock, which stops at the line. */
+/** The runner's line right now: the course it is on and its clock, which stops at the line. */
+function runLine(feed: RunFeed): StatusLine {
+  const a = feed.loop.agent;
+  const done = a.status === NAV_FINISHED;
+  return {
+    status: done ? 'Finished' : feed.loop.course.spec.name,
+    detail: done ? `${a.finishTime.toFixed(1)} s` : `${Math.floor(a.time)} s`,
+  };
+}
+
+/** The runner's status line, kept in step with its ticks. */
 export function useRunStatus(feed: RunFeed): StatusLine {
-  const [line, setLine] = useState<StatusLine>({ status: '', detail: '' });
+  // Read at once, so the card's first paint already names the course. A busy page can paint many frames before the effect runs.
+  const [line, setLine] = useState<StatusLine>(() => runLine(feed));
   useEffect(() => {
     let last = '';
     const read = () => {
-      const a = feed.loop.agent;
-      const done = a.status === NAV_FINISHED;
-      const status = done ? 'Finished' : feed.loop.course.spec.name;
-      const detail = done ? `${a.finishTime.toFixed(1)} s` : `${Math.floor(a.time)} s`;
-      const key = status + detail;
+      const next = runLine(feed);
+      const key = next.status + next.detail;
       if (key === last) return;
       last = key;
-      setLine({ status, detail });
+      setLine(next);
     };
     read();
     return feed.onTick(read);
