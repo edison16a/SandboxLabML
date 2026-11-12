@@ -27,12 +27,28 @@ const ALPHA_NEW = 0.5;
 /** Ghosts in front of the followed runner fade further back, as the crowd does. */
 const CLEAR_RADIUS = 0.85;
 const CLEAR_ALPHA = 0.3;
+/**
+ * Copies of one brain run the same line, and drawn on top of each other
+ * they read as one body with several heads. A ghost this close to the
+ * followed runner, or to a ghost drawn before it, fades out, fully by the
+ * near distance, so they merge into one and part again smoothly, m.
+ */
+const MERGE_NEAR = 0.3;
+const MERGE_FAR = 0.75;
+
+/** 0 at `a` or closer, 1 at `b` or further, smooth between. */
+function smoothstep(a: number, b: number, x: number): number {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+}
 
 /**
  * Past champions replayed as see-through runners in one instanced draw
  * call: the older the generation, the cooler and fainter. They walk,
  * fall and celebrate like the crowd, on the replay's own clock, and the
- * one the view follows is left to the champion character.
+ * one the view follows is left to the champion character. Ghosts that
+ * run on top of it or of each other (copies of one brain do) fade into
+ * one.
  */
 export function GhostRunners() {
   const { frame, onPick } = useNavScene();
@@ -59,6 +75,9 @@ export function GhostRunners() {
       c: new THREE.Color(),
       /** The ghost each instance draws, for clicks. */
       ids: new Int16Array(MAX_GHOSTS),
+      /** Where each drawn ghost stands this frame, for the merge fade. */
+      xs: new Float32Array(MAX_GHOSTS),
+      zs: new Float32Array(MAX_GHOSTS),
     }),
     [],
   );
@@ -92,8 +111,12 @@ export function GhostRunners() {
       blendAgent(g.prev, curr, i, g.alpha, t.pose);
       const rank = count > 1 ? i / (count - 1) : 1;
       const near = frame.leader >= 0 && hidesChampion(t.pose.x, t.pose.z, lp.x, lp.z, dx, dz, CLEAR_RADIUS);
-      const alpha = st.alpha * (ALPHA_OLD + (ALPHA_NEW - ALPHA_OLD) * rank) * (near ? CLEAR_ALPHA : 1);
+      let gap = frame.leader >= 0 ? Math.hypot(t.pose.x - lp.x, t.pose.z - lp.z) : Infinity;
+      for (let j = 0; j < n && gap > MERGE_NEAR; j++) gap = Math.min(gap, Math.hypot(t.pose.x - t.xs[j], t.pose.z - t.zs[j]));
+      const alpha = st.alpha * (ALPHA_OLD + (ALPHA_NEW - ALPHA_OLD) * rank) * (near ? CLEAR_ALPHA : 1) * smoothstep(MERGE_NEAR, MERGE_FAR, gap);
       if (alpha <= 0.01) continue;
+      t.xs[n] = t.pose.x;
+      t.zs[n] = t.pose.z;
       const speed = Math.abs(curr[o + SNAP_SPEED]);
       const run = Math.min(1, speed / 3);
       const stride = (t.phase[i] = (t.phase[i] + step * cadence(speed) * Math.PI * 2) % (Math.PI * 2));
