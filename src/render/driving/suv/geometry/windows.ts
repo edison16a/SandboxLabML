@@ -10,10 +10,10 @@ import type { Detail, PartBin } from './parts';
  * under the rear quarter window. Inside it the pillars are gloss black,
  * so the glass reads as one band and the painted roof seems to float.
  */
-export const DLO = { front: CABIN.front, kick: -1.7, drop: -1.56, point: -2.0 };
+export const DLO = { front: CABIN.front, kick: -1.7, drop: -1.32, point: -2.0 };
 /** Pillar and divider spans along the car, m. */
 const B_PILLAR = { from: -0.5, to: -0.4 };
-const DIVIDER = { from: -1.58, to: -1.54 };
+const DIVIDER = { from: -1.36, to: -1.32 };
 /** The bright surround's width and the glass's margin inside the graphic, m. */
 const SURROUND = 0.012;
 const MARGIN = 0.017;
