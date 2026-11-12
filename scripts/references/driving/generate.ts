@@ -68,19 +68,24 @@ export async function generateDriving(args: Args, pool: JobPool): Promise<void> 
   const population = numberArg(args, 'population', 100);
   const out = args.out ?? 'public/references/driving.json';
   const tiers = args.tiers ? (args.tiers.split(',') as ReferenceTier[]) : [...REFERENCE_TIERS];
-  // Advanced first: runs that climb further drive busier streets and take longer, so they start early.
-  const jobs: DrivingReferenceJob[] = [...tiers]
-    .reverse()
-    .flatMap((tier) => Array.from({ length: seeds }, (_, i) => ({ kind: 'driving' as const, tier, seed: firstSeed + i, generations, every, population })));
+  // Seed by seed, so a run stopped early still holds whole seeds. Within a seed Advanced
+  // goes first: runs that climb further drive busier streets and take longer.
+  const jobs: DrivingReferenceJob[] = Array.from({ length: seeds }, (_, i) =>
+    [...tiers].reverse().map((tier) => ({ kind: 'driving' as const, tier, seed: firstSeed + i, generations, every, population })),
+  ).flat();
   if (!args['from-dump']) console.log(`Driving reference runs: ${tiers.length} tiers x ${seeds} seeds, ${generations} generations, population ${population}.`);
   const started = performance.now();
+  const done: DrivingReferenceResult[] = [];
+  // The dump grows as runs finish, so a stopped run keeps the ones it trained.
+  const keep = (r: DrivingReferenceResult) => {
+    done.push(r);
+    if (args.dump) writeFileSync(args.dump, JSON.stringify(done));
+    console.log(
+      `${r.job.tier} seed ${r.job.seed}: final ${r.scores[r.scores.length - 1].toFixed(1)}, level ${r.levels[r.levels.length - 1]}, ${r.candidates?.length ?? 0} candidates, in ${r.seconds.toFixed(0)} s`,
+    );
+  };
   // A dump from an earlier run skips the training and only builds the file again, with the current picking rules.
-  const results = args['from-dump']
-    ? readDumps(args['from-dump'])
-    : await pool.run<DrivingReferenceResult>(jobs, (r) =>
-        console.log(`${r.job.tier} seed ${r.job.seed}: final ${r.scores[r.scores.length - 1].toFixed(1)}, level ${r.levels[r.levels.length - 1]}, in ${r.seconds.toFixed(0)} s`),
-      );
-  if (args.dump) writeFileSync(args.dump, JSON.stringify(results));
+  const results = args['from-dump'] ? readDumps(args['from-dump']) : await pool.run<DrivingReferenceResult>(jobs, keep);
   const file = await referenceFile(results, tiers);
   writeReferences(out, stableDate(out, file));
   for (const r of file.references) console.log(`${r.tier}: final median ${r.finalScore}`);
