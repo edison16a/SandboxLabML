@@ -1,18 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { STANDARD_HIDESEEK_INPUTS } from '@/engine/hideseek/inputConfig';
-import { hideSeekInputSchema } from '@/engine/hideseek/sensing/inputSchema';
+import { SUV } from '@/engine/driving/car/params';
+import { FULL_DRIVING_INPUTS } from '@/engine/driving/sensors/inputConfig';
+import { drivingInputSchema } from '@/engine/driving/sensors/inputSchema';
+import { STANDARD_NAVIGATION_INPUTS } from '@/engine/navigation/sensors/inputConfig';
+import { navigationInputSchema } from '@/engine/navigation/sensors/inputSchema';
 import { isSignedInput } from './signedInputs';
 
 describe('signed input bars', () => {
-  it('draw the ramp offsets, facing and lock owner both ways from zero, and distances one way', () => {
-    const schema = hideSeekInputSchema({ ...STANDARD_HIDESEEK_INPUTS, nearestBoxes: 1 });
-    const signed = schema.filter(isSignedInput).map((s) => s.key);
-    expect(signed).toEqual(['sideSpeed', 'opponentLastSeen', 'box:1:ahead', 'box:1:right', 'ramp:ahead', 'ramp:right', 'ramp:uphill', 'ramp:lock']);
+  it('draw the SUV offsets, bends, turn side and relative speed both ways from zero', () => {
+    const signed = drivingInputSchema(FULL_DRIVING_INPUTS, SUV).filter(isSignedInput).map((s) => s.key);
+    expect(signed).toEqual(['laneOffset', 'headingError', 'aim', 'curveNear', 'curveFar', 'nextTurn', 'carRelSpeed', 'pedLateral']);
   });
 
-  it('keeps the racing ones it always had', () => {
-    for (const key of ['headingError', 'steerAngle', 'curvatureNear']) expect(isSignedInput({ group: 'scalar', key })).toBe(true);
-    expect(isSignedInput({ group: 'scalar', key: 'speed' })).toBe(false);
+  it('draw the runner bearings and sideways speed both ways, and distances one way', () => {
+    const signed = navigationInputSchema(STANDARD_NAVIGATION_INPUTS).filter(isSignedInput).map((s) => s.key);
+    expect(signed).toEqual(['goalBearing', 'pathHint', 'sideSpeed']);
+    expect(isSignedInput({ group: 'scalar', key: 'goalDistance' })).toBe(false);
     expect(isSignedInput({ group: 'ray', key: 'ray:0' })).toBe(false);
   });
 });
