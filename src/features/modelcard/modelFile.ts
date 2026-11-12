@@ -17,8 +17,6 @@ export interface ModelFile {
   version: 1;
   exportedAt: string;
   env: RunConfig['env'];
-  /** Which side the brain plays in Hide and Seek. */
-  team?: 'hider' | 'seeker';
   run: { id: string; name: string };
   generation: number;
   fitness: number;
@@ -41,7 +39,6 @@ export interface ModelSource {
   fitness: number;
   inputLabels: readonly string[];
   outputLabels: readonly string[];
-  team?: 'hider' | 'seeker';
 }
 
 /** Builds the downloadable file for one champion brain. */
@@ -56,7 +53,6 @@ export function modelFile(s: ModelSource): ModelFile {
     version: 1,
     exportedAt: new Date().toISOString(),
     env: s.run.env,
-    ...(s.team ? { team: s.team } : {}),
     run: { id: s.run.id, name: s.run.name },
     generation: s.generation,
     fitness: s.fitness,
@@ -71,8 +67,8 @@ export function modelFile(s: ModelSource): ModelFile {
   };
 }
 
-/** A file name such as oval-laps-gen-42-hider.model.json. */
-export function modelFileName(runName: string, generation: number, team?: string): string {
+/** A file name such as city-trips-gen-42.model.json. */
+export function modelFileName(runName: string, generation: number): string {
   const slug = runName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'model';
-  return `${slug}-gen-${generation + 1}${team ? `-${team}` : ''}.model.json`;
+  return `${slug}-gen-${generation + 1}.model.json`;
 }

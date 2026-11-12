@@ -1,27 +1,36 @@
 import { describe, expect, it } from 'vitest';
-import { HIDESEEK_BLUEPRINTS } from '@/engine/blueprints/presets';
-import { hideSeekInputSchema } from '@/engine/hideseek/sensing/inputSchema';
+import { SUV } from '@/engine/driving/car/params';
+import { FULL_DRIVING_INPUTS } from '@/engine/driving/sensors/inputConfig';
+import { drivingInputSchema } from '@/engine/driving/sensors/inputSchema';
+import { STANDARD_NAVIGATION_INPUTS } from '@/engine/navigation/sensors/inputConfig';
+import { navigationInputSchema } from '@/engine/navigation/sensors/inputSchema';
 import { inputGroups } from './inputGroups';
 
 describe('model card input groups', () => {
-  it('fold the Advanced brain into a few named groups with the ramp last', () => {
-    const advanced = HIDESEEK_BLUEPRINTS.find((b) => b.id === 'hideseek-advanced')!;
-    const groups = inputGroups(hideSeekInputSchema(advanced.inputs));
-    expect(groups.map((g) => [g.label, g.count])).toEqual([
-      ['Ray distances', 16],
-      ['Ray hit types', 32],
-      ['Forward speed', 1],
-      ['Sideways speed (left)', 1],
-      ['Holding a box', 1],
-      ['Prep phase', 1],
-      ['Time left', 1],
-      ['Opponent in sight', 1],
-      ['Bearing to last sighting', 1],
-      ['Nearest crates', 8],
-      ['Nearest ramp', 6],
+  it('fold the full Driving brain into its lidar groups and named sensors', () => {
+    const groups = inputGroups(drivingInputSchema(FULL_DRIVING_INPUTS, SUV));
+    expect(groups.slice(0, 2).map((g) => [g.label, g.count])).toEqual([
+      ['Lidar beams', 15],
+      ['Lidar hit types', 15],
     ]);
-    expect(groups.reduce((n, g) => n + g.count, 0)).toBe(69);
-    expect(groups[groups.length - 1].inputs).toContain('Facing up the ramp');
+    expect(groups.slice(2).every((g) => g.count === 1)).toBe(true);
+    expect(groups.map((g) => g.label)).toContain('Light ahead');
+    expect(groups[0].inputs).toContain('Lidar ahead');
+  });
+
+  it('fold the Navigation rays and their hit types into three groups', () => {
+    const groups = inputGroups(navigationInputSchema(STANDARD_NAVIGATION_INPUTS));
+    expect(groups.map((g) => [g.label, g.count])).toEqual([
+      ['Ray distances', 12],
+      ['Spikes on each ray', 12],
+      ['Movers on each ray', 12],
+      ['Finish bearing', 1],
+      ['Finish distance', 1],
+      ['Path hint', 1],
+      ['Forward speed', 1],
+      ['Side speed', 1],
+      ['Time left', 1],
+    ]);
   });
 
   it('keep script sensors together', () => {

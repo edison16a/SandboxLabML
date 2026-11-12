@@ -10,7 +10,7 @@ function genome() {
   return createGenome(template, tracker, new Rng(5), 0);
 }
 
-const run = { id: 'r1', name: 'Oval laps', env: 'racing' } as RunConfig;
+const run = { id: 'r1', name: 'City trips', env: 'driving' } as RunConfig;
 
 /** Runs the file's own description of the network, the way code outside the app would. */
 function runFile(file: ReturnType<typeof modelFile>, inputs: number[]): number[] {
@@ -46,8 +46,8 @@ describe('the model file', () => {
     expect(byHand[1]).toBeCloseTo(out[1], 5);
   });
 
-  it('names the file after the run, the generation and the team', () => {
-    expect(modelFileName('Oval laps!', 41)).toBe('oval-laps-gen-42.model.json');
-    expect(modelFileName('Shelter', 0, 'hider')).toBe('shelter-gen-1-hider.model.json');
+  it('names the file after the run and the generation', () => {
+    expect(modelFileName('City trips!', 41)).toBe('city-trips-gen-42.model.json');
+    expect(modelFileName('***', 0)).toBe('model-gen-1.model.json');
   });
 });

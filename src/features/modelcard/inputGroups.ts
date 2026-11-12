@@ -9,17 +9,18 @@ export interface InputGroup {
 
 /** Keys that belong together, by pattern. Anything else is a group of its own under its label. */
 const GROUPS: ReadonlyArray<[RegExp, string]> = [
-  [/^ray:\d+$/, 'Ray distances'],
-  [/^ray:\d+:(box|agent)$/, 'Ray hit types'],
-  [/^box:\d+:/, 'Nearest crates'],
-  [/^ramp:/, 'Nearest ramp'],
+  [/^lidar:-?[\d.]+$/, 'Lidar beams'],
+  [/^lidarKind:-?[\d.]+$/, 'Lidar hit types'],
+  [/^ray:-?[\d.]+$/, 'Ray distances'],
+  [/^ray:-?[\d.]+:spikes$/, 'Spikes on each ray'],
+  [/^ray:-?[\d.]+:mover$/, 'Movers on each ray'],
   [/^custom:/, 'Script sensors'],
 ];
 
 /**
  * A brain's inputs folded into groups, in schema order, so the model card
- * can say what the brain senses in a few lines: 16 ray distances, the
- * nearest ramp's 6 inputs and so on, with every label one hover away.
+ * can say what the brain senses in a few lines: 15 lidar beams, the lane
+ * offset, the light ahead and so on, with every label one hover away.
  */
 export function inputGroups(schema: ReadonlyArray<Pick<InputSpec, 'key' | 'label'>>): InputGroup[] {
   const out: InputGroup[] = [];

@@ -14,7 +14,7 @@ import { modelFile, modelFileName, type ModelSource } from './modelFile';
  */
 export function ModelDownloads({ source }: { source: ModelSource }) {
   const saveModel = () => {
-    downloadJson(modelFileName(source.run.name, source.generation, source.team), modelFile(source));
+    downloadJson(modelFileName(source.run.name, source.generation), modelFile(source));
     toast.success('Model downloaded');
   };
   const saveRun = async () => {
