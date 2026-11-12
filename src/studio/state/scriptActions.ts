@@ -77,9 +77,10 @@ async function openStarter(): Promise<void> {
 
 /**
  * Opens ?script=, else the last script, else the starter preset. A script
- * of a removed lab is skipped; a link to one says so.
+ * of a removed lab is skipped; a link to one says so. Returns true on a
+ * first visit, when the Studio has never opened a script here.
  */
-export async function openInitial(requested: string | null): Promise<void> {
+export async function openInitial(requested: string | null): Promise<boolean> {
   const last = await getSetting<string>(LAST_SCRIPT_KEY).catch(() => null);
   for (const id of [requested, last]) {
     const entry = id ? await getScript(id) : undefined;
@@ -89,9 +90,10 @@ export async function openInitial(requested: string | null): Promise<void> {
       continue;
     }
     await openScript(entry.id, { force: true });
-    return;
+    return false;
   }
   await openStarter();
+  return last === null && requested === null;
 }
 
 export async function saveCurrent(): Promise<boolean> {

@@ -14,7 +14,8 @@ import { useStudio } from './state/studioStore';
 /**
  * The Studio: scripts on the left, the editor in the middle, panels on
  * the right. On narrow screens the three stack and the page scrolls.
- * `?script=<id>` opens a script and `?lesson=<id>` opens a lesson.
+ * `?script=<id>` opens a script and `?lesson=<id>` opens a lesson. A first
+ * visit opens the Driving Beginner preset beside the Driving lessons.
  */
 export function StudioApp() {
   const params = useSearchParams();
@@ -23,7 +24,9 @@ export function StudioApp() {
   useStudioShortcuts();
 
   useEffect(() => {
-    void openInitial(scriptParam);
+    void openInitial(scriptParam).then((first) => {
+      if (first && !lessonParam) useStudio.setState({ panel: 'learn' });
+    });
     // Only the first load follows the URL. Later script switches write the URL themselves.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
