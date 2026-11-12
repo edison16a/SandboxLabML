@@ -7,9 +7,11 @@ import { navigationInputSchema } from '@/engine/navigation/sensors/inputSchema';
 import { isSignedInput } from './signedInputs';
 
 describe('signed input bars', () => {
-  it('draw the SUV offsets, bends, turn side and relative speed both ways from zero', () => {
+  it('draw the SUV offsets, turn side and relative speed both ways from zero, and the bends one way', () => {
     const signed = drivingInputSchema(FULL_DRIVING_INPUTS, SUV).filter(isSignedInput).map((s) => s.key);
-    expect(signed).toEqual(['laneOffset', 'headingError', 'aim', 'curveNear', 'curveFar', 'nextTurn', 'carRelSpeed', 'pedLateral']);
+    expect(signed).toEqual(['laneOffset', 'headingError', 'aim', 'nextTurn', 'carRelSpeed', 'pedLateral']);
+    // The observation writes how sharp a bend is, never which way, so a centered bar would hide half its range.
+    expect(isSignedInput({ group: 'scalar', key: 'curveNear' })).toBe(false);
   });
 
   it('draw the runner bearings and sideways speed both ways, and distances one way', () => {
