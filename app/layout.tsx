@@ -9,7 +9,13 @@ export const metadata: Metadata = {
     default: 'SandboxLabML',
     template: '%s | SandboxLabML',
   },
-  description: 'Watch neural networks evolve to race cars and play hide and seek, then write your own training scripts.',
+  description: 'Watch neural networks learn to drive an SUV through a city and run a course to the finish line, then write your own training scripts.',
+  openGraph: {
+    title: 'SandboxLabML',
+    description: 'Train your own model with machine learning, right in your browser: a self-driving SUV in a city and runners that learn to reach the finish line.',
+    siteName: 'SandboxLabML',
+    type: 'website',
+  },
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },

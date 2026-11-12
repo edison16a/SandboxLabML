@@ -5,7 +5,7 @@ import { StudioApp } from '@/studio/StudioApp';
 
 export const metadata: Metadata = {
   title: 'Studio',
-  description: 'Write training scripts in SBL as code or blocks, test them on a track and learn the language step by step.',
+  description: 'Write training scripts in SBL as code or blocks, test them on a city trip or a course, and learn the language step by step.',
 };
 
 export default function StudioPage() {
