@@ -71,13 +71,20 @@ export function resample(pts: Pt[], steps: number): Pt[] {
  * grow past its own outline.
  */
 export function pointAt(pts: Pt[], t: number): Pt {
-  if (pts.length === 1) return [pts[0][0], pts[0][1]];
+  return sampler(pts)(t);
+}
+
+/** pointAt for one polyline, with its lengths measured once, for curves sampled many times. */
+export function sampler(pts: Pt[]): (t: number) => Pt {
+  if (pts.length === 1) return () => [pts[0][0], pts[0][1]];
   const acc = [0];
   for (let i = 1; i < pts.length; i++) acc.push(acc[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
   const total = acc[acc.length - 1] || 1;
-  const d = t * total;
-  let j = 0;
-  while (j < pts.length - 2 && acc[j + 1] < d) j++;
-  const f = (d - acc[j]) / (acc[j + 1] - acc[j] || 1);
-  return [pts[j][0] + (pts[j + 1][0] - pts[j][0]) * f, pts[j][1] + (pts[j + 1][1] - pts[j][1]) * f];
+  return (t) => {
+    const d = t * total;
+    let j = 0;
+    while (j < pts.length - 2 && acc[j + 1] < d) j++;
+    const f = (d - acc[j]) / (acc[j + 1] - acc[j] || 1);
+    return [pts[j][0] + (pts[j + 1][0] - pts[j][0]) * f, pts[j][1] + (pts[j + 1][1] - pts[j][1]) * f];
+  };
 }

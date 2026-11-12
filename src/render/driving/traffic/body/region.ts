@@ -1,6 +1,6 @@
 import type { Region } from '../shape/types';
 import type { Projector } from './project';
-import { pointAt, type Pt } from './section';
+import { sampler, type Pt } from './section';
 
 /**
  * A Coons patch over a region: rows run along the bottom and top curves
@@ -13,14 +13,18 @@ export function regionGrid(r: Region, us: readonly number[], vs: readonly number
   const l = r.left ?? [b[0], t[0]];
   const rt = r.right ?? [b[b.length - 1], t[t.length - 1]];
   const b0 = b[0], b1 = b[b.length - 1], t0 = t[0], t1 = t[t.length - 1];
+  const [sb, st, sl, sr] = [b, t, l, rt].map(sampler);
+  const left = vs.map(sl);
+  const right = vs.map(sr);
   const rows: Pt[][] = [];
   for (const u of us) {
-    const cb = pointAt(b, u);
-    const ct = pointAt(t, u);
+    const cb = sb(u);
+    const ct = st(u);
     const row: Pt[] = [];
-    for (const v of vs) {
-      const dl = pointAt(l, v);
-      const dr = pointAt(rt, v);
+    for (let j = 0; j < vs.length; j++) {
+      const v = vs[j];
+      const dl = left[j];
+      const dr = right[j];
       const p: Pt = [0, 0];
       for (let k = 0; k < 2; k++) {
         const corner = (1 - u) * (1 - v) * b0[k] + u * (1 - v) * b1[k] + (1 - u) * v * t0[k] + u * v * t1[k];

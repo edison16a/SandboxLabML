@@ -19,9 +19,11 @@ interface Buckets {
   cells: number[][];
 }
 
+/** A surface point, its smooth normal and which shell triangle it lies on. */
 export interface Hit {
   p: Vec3;
   n: Vec3;
+  tri: number;
 }
 
 /**
@@ -79,6 +81,35 @@ export class Projector {
     return b;
   }
 
+  /**
+   * Parameters in (0, 1) along the segment from a to b, in a view's plane,
+   * where the surface under it passes from one shell triangle to the next:
+   * the creases a flat sheet laid along it must bend at.
+   */
+  creases(view: View, a: readonly [number, number], b: readonly [number, number], samples = 12): number[] {
+    const at = (t: number) => this.hit(view, a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)?.tri ?? -1;
+    const out: number[] = [];
+    let t0 = 0;
+    let k0 = at(0);
+    for (let i = 1; i <= samples; i++) {
+      const t1 = i / samples;
+      const k1 = at(t1);
+      if (k1 !== k0) {
+        let lo = t0;
+        let hi = t1;
+        for (let j = 0; j < 10; j++) {
+          const mid = (lo + hi) / 2;
+          if (at(mid) === k0) lo = mid;
+          else hi = mid;
+        }
+        out.push((lo + hi) / 2);
+      }
+      t0 = t1;
+      k0 = k1;
+    }
+    return out;
+  }
+
   /** The first surface point a ray meets at (a, b) in the view's plane, with its smooth normal, or null if it misses. */
   hit(view: View, a: number, b: number): Hit | null {
     const { u, v, w, max } = AXES[view];
@@ -120,6 +151,6 @@ export class Projector {
       nn[k] = l0 * n[o + k] + l1 * n[o + 3 + k] + l2 * n[o + 6 + k];
     }
     const len = Math.hypot(nn[0], nn[1], nn[2]) || 1;
-    return { p: out, n: [nn[0] / len, nn[1] / len, nn[2] / len] };
+    return { p: out, n: [nn[0] / len, nn[1] / len, nn[2] / len], tri: best };
   }
 }

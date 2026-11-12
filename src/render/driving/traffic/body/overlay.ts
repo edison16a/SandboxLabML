@@ -41,13 +41,28 @@ function lay(proj: Projector, r: Region, flat: Pt[][], lift: number): { geometry
   return { geometry: g, misses };
 }
 
+const lerp = (a: Pt, b: Pt, t: number): Pt => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+
 /**
  * A small piece laid just proud of the body as its own thin sheet: a lit
  * strip inside a lamp, a plate, a shut line. Cheaper than stamping for
  * thin shapes, and safe where the paint under it is gently curved.
  */
 export function floatDecal(proj: Projector, r: Region, nu: number, nv: number, lift: number): { geometry: THREE.BufferGeometry; misses: number } {
-  return lay(proj, r, regionGrid(r, laidParams(proj, r, nu, true), laidParams(proj, r, nv, false)), lift);
+  const us = laidParams(proj, r, nu, true);
+  // Add a row wherever the middle of the strip crosses a shell crease, so the sheet bends with the paint.
+  const fine = Array.from({ length: 4 * nu + 1 }, (_, i) => i / (4 * nu));
+  const mid = regionGrid(r, fine, [0.5]).map((row) => row[0]);
+  for (let i = 0; i < fine.length - 1; i++) for (const t of proj.creases(r.view, mid[i], mid[i + 1], 3)) us.push(fine[i] + t * (fine[i + 1] - fine[i]));
+  return lay(proj, r, regionGrid(r, tidy(us), laidParams(proj, r, nv, false)), lift);
+}
+
+/** Sorted parameters with near duplicates dropped. */
+function tidy(ts: number[]): number[] {
+  const out: number[] = [];
+  for (const t of [...ts].sort((a, b) => a - b)) if (!out.length || t - out[out.length - 1] > 0.004) out.push(t);
+  if (1 - out[out.length - 1] > 1e-9) out[out.length - 1] = 1;
+  return out;
 }
 
 /**
@@ -70,7 +85,16 @@ export function ringDecal(proj: Projector, r: Region, nu: number, nv: number, gr
     return [...g.map((row) => row[0]), ...g[a].slice(1), ...g.slice(0, a).reverse().map((row) => row[b]), ...g[0].slice(1, b).reverse()];
   };
   const lo = loop(outer);
-  const rows = loop(inner).map((p, k) => [p, lo[k]]);
+  const li = loop(inner);
+  // Each edge of the frame gains a point wherever its inner edge crosses a shell crease.
+  const rows: Pt[][] = [];
+  li.forEach((p, k) => {
+    const q = li[(k + 1) % li.length];
+    const po = lo[k];
+    const qo = lo[(k + 1) % lo.length];
+    rows.push([p, po]);
+    for (const t of proj.creases(r.view, p, q, 3)) rows.push([lerp(p, q, t), lerp(po, qo, t)]);
+  });
   // No frame runs along the centerline, where the glass meets its own mirror image: start the
   // strip just after that stretch and stop just before it, so the frame is open there.
   const onCenter = (k: number) => zi !== null && rows[k][1][zi] < 1e-4 && rows[(k + 1) % rows.length][1][zi] < 1e-4;

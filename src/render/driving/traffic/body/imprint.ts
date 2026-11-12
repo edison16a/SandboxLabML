@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { Vec3 } from '../../suv/geometry/grid';
 import { bakeLook, LAMP, type Look } from '../looks';
 import type { View } from '../shape/types';
+import type { Projector } from './project';
 import type { Pt } from './section';
 
 /** Barycentric coordinates in one shell triangle. */
@@ -70,8 +71,13 @@ export class Imprint {
     }
   }
 
-  /** Stamps a closed outline seen from `view` onto every shell triangle facing that way. */
-  stamp(loop: Pt[], view: View, look: Look, lamp: number = LAMP.none): void {
+  /**
+   * Stamps a closed outline seen from `view` onto the shell. Only pieces
+   * the view actually sees take the look: a piece must face the viewer and
+   * be the first surface `proj` meets along its ray, so a rear lamp drawn
+   * from behind never lands on a door that happens to lean back a little.
+   */
+  stamp(loop: Pt[], view: View, look: Look, lamp: number, proj: Projector): void {
     const { u, v, w, s } = AXES[view];
     const box = bounds(loop);
     const edges = loop.map((a, i) => ({ a, b: loop[(i + 1) % loop.length], box: bounds([a, loop[(i + 1) % loop.length]]) }));
@@ -89,7 +95,7 @@ export class Imprint {
       }
       for (const pc of pieces) {
         const c = pc.poly.reduce<Pt>((acc, b) => { const q = flat(b); return [acc[0] + q[0] / pc.poly.length, acc[1] + q[1] / pc.poly.length]; }, [0, 0]);
-        if (inside(c, loop)) {
+        if (inside(c, loop) && seen(t, pc, view, proj)) {
           pc.look = look;
           pc.lamp = lamp;
         }
@@ -123,6 +129,14 @@ export class Imprint {
     g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
     return bakeLook(g, looks, lamps);
   }
+}
+
+/** Whether the middle of a piece is the first surface its view's ray meets there. */
+function seen(t: Tri, pc: Piece, view: View, proj: Projector): boolean {
+  const { u, v, w } = AXES[view];
+  const c = [0, 1, 2].map((k) => pc.poly.reduce((acc, b) => acc + (b[0] * t.p[0][k] + b[1] * t.p[1][k] + b[2] * t.p[2][k]) / pc.poly.length, 0));
+  const hit = proj.hit(view, c[u], c[v]);
+  return !hit || Math.abs(hit.p[w] - c[w]) < 0.02;
 }
 
 type Box = [number, number, number, number];
