@@ -46,7 +46,9 @@ const towardWheel = (rows: Vec3[][]) => gridGeometry(rows.map((row) => [...row].
  * see into the hollow body.
  */
 export function addArches(bin: PartBin, detail: Detail): void {
-  const n = Math.max(6, Math.round(detail.archSteps * 1.6));
+  // The far population walks the arch on the body's own stations, so the flare's roll lies on the skin's cut and
+  // no sliver of paint shows inside it between two coarse stations.
+  const n = detail.brakes ? Math.max(6, Math.round(detail.archSteps * 1.6)) : detail.archSteps;
   for (const axle of AXLES) {
     const xs = Array.from({ length: n + 1 }, (_, i) => axle - Math.cos((Math.PI * i) / n) * (ARCH.radius - 0.001));
     const cuts = xs.map((x) => archCut(x) ?? ([0.95, archFloor(x)] as [number, number]));
