@@ -1,11 +1,12 @@
 import 'fake-indexeddb/auto';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { RACING_BLUEPRINTS } from '@/engine/blueprints/presets';
-import { BUILT_IN_TRACKS } from '@/engine/racing/track/presets';
-import { evaluateRacing } from '@/engine/racing/episode';
-import { envOptionsFor, TrackCache } from '@/engine/training/racingSetup';
-import { RacingTrainer } from '@/engine/training/racingTrainer';
-import { createRacingRunConfig } from '@/engine/training/runConfig';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import type { AnyEpisodeModule } from '@/engine/env/episode';
+import { loadEpisodeModule } from '@/engine/env/registry';
+import { NAVIGATION_BLUEPRINTS } from '@/engine/navigation/pipeline/blueprints';
+import { navigationSettings } from '@/engine/navigation/pipeline/settings';
+import { Network } from '@/engine/neat/network';
+import { EpisodeTrainer, trainingControllerSeed } from '@/engine/training/episodeTrainer';
+import { createEpisodeRunConfig } from '@/engine/training/newRun';
 import { latestCheckpoint, saveCheckpoint, listCheckpoints } from './checkpoints';
 import { SandboxDb, setDb } from './db';
 import { exportRun, importRun } from './exportImport';
@@ -14,18 +15,30 @@ import { branchRun, resetRun } from './runActions';
 import { createRun, getRun, listRuns, listTrash, purgeTrash, restoreRun, trashRun } from './runs';
 
 let n = 0;
+let navigation: AnyEpisodeModule;
+beforeAll(async () => {
+  navigation = await loadEpisodeModule('navigation');
+});
 beforeEach(() => setDb(new SandboxDb(`test-${n++}`)));
 
+/** One generation the way the sim workers run it, without the threads. */
+function generation(t: EpisodeTrainer) {
+  const env = navigation.createEnv(t.setup() as never, t.host(), trainingControllerSeed(t.generation));
+  env.reset(
+    t.genomes.map((g) => new Network(g)),
+    t.seeds(),
+    t.slots(),
+  );
+  while (!env.done) env.step();
+  return t.complete(env.results() as never, 1);
+}
+
+/** A stored Navigation run with its history and a checkpoint, the way the lab leaves one. */
 async function trainedRun(generations = 3) {
-  const config = createRacingRunConfig({ name: 'r', seed: 4, blueprint: RACING_BLUEPRINTS[2], track: BUILT_IN_TRACKS[0], carPreset: 'standard', populationSize: 20 });
+  const config = createEpisodeRunConfig({ env: 'navigation', name: 'r', seed: 4, blueprint: NAVIGATION_BLUEPRINTS[1], populationSize: 20, settings: { ...navigationSettings() } });
   await createRun(config);
-  const t = new RacingTrainer(config);
-  const cache = new TrackCache();
-  for (let i = 0; i < generations; i++) {
-    const setup = t.setup();
-    const results = evaluateRacing(t.genomes, envOptionsFor(setup, cache.get(setup.track), t.host(), 0), t.seeds());
-    await saveGeneration(t.complete(results, 1));
-  }
+  const t = new EpisodeTrainer(navigation, config);
+  for (let i = 0; i < generations; i++) await saveGeneration(generation(t));
   await saveCheckpoint(config.id, t.generation, t.toState());
   return { config, trainer: t };
 }
@@ -107,13 +120,10 @@ describe('grow a brain', () => {
   it('forks a trained run onto a bigger blueprint and keeps training', async () => {
     const { forkRun } = await import('./forkRun');
     const { config } = await trainedRun(2);
-    const grown = await forkRun(config.id, RACING_BLUEPRINTS[3]);
+    const grown = await forkRun(config.id, NAVIGATION_BLUEPRINTS[2]);
     const cp = await latestCheckpoint(grown.id);
-    const t = new RacingTrainer(grown, cp!.state as never);
-    expect(t.genomes[0].inputs).toHaveLength(15);
-    const cache = new TrackCache();
-    const setup = t.setup();
-    const results = evaluateRacing(t.genomes, envOptionsFor(setup, cache.get(setup.track), t.host(), 0), t.seeds());
-    expect(t.complete(results, 1).generation).toBe(2);
+    const t = new EpisodeTrainer(navigation, grown, cp!.state as never);
+    expect(t.genomes[0].inputs).toHaveLength(navigation.inputCount(NAVIGATION_BLUEPRINTS[2].inputs));
+    expect(generation(t).generation).toBe(2);
   });
 });

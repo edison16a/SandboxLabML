@@ -4,7 +4,7 @@ import { summaryMetric } from '@/engine/env/metrics';
 import { registerEpisodeModule } from '@/engine/env/registry';
 import { racingInfo } from '@/engine/racing/info';
 import { TOY_BLUEPRINT, toyModule } from '@/engine/env/tests/toyEnv';
-import { RACING_BLUEPRINTS } from '@/engine/blueprints/presets';
+import { NAVIGATION_BLUEPRINTS } from '@/engine/navigation/pipeline/blueprints';
 import type { Blueprint } from '@/engine/blueprints/types';
 import { EpisodeTrainer, type EpisodeTrainerState } from '@/engine/training/episodeTrainer';
 import { toyConfig, toyGeneration, toyTrainer } from '@/engine/env/tests/toyRun';
@@ -85,6 +85,6 @@ describe('runs of a registry env', () => {
     // The grown run resumes on the new inputs and its brains read all three.
     const resumed = new EpisodeTrainer(toyModule, grown, state);
     expect(toyGeneration(resumed).generation).toBe(3);
-    await expect(forkRun(config.id, RACING_BLUEPRINTS[0])).rejects.toThrow('not a toy one');
+    await expect(forkRun(config.id, NAVIGATION_BLUEPRINTS[0])).rejects.toThrow('not a toy one');
   });
 });

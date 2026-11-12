@@ -1,14 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { RACING_BLUEPRINTS } from '@/engine/blueprints/presets';
-import { RACING_SNAPSHOT } from '@/engine/racing/env';
-import { BUILT_IN_TRACKS } from '@/engine/racing/track/presets';
-import { RacingTrainer } from '@/engine/training/racingTrainer';
-import { createRacingRunConfig } from '@/engine/training/runConfig';
+import { mixSeed } from '@/engine/core/rng';
+import { loadEpisodeModule } from '@/engine/env/registry';
+import { NAVIGATION_BLUEPRINTS } from '@/engine/navigation/pipeline/blueprints';
+import { navigationSettings } from '@/engine/navigation/pipeline/settings';
+import { NAVIGATION_SNAPSHOT, SNAP_X, SNAP_Z } from '@/engine/navigation/snapshot';
+import { Network } from '@/engine/neat/network';
+import { EpisodeTrainer } from '@/engine/training/episodeTrainer';
+import { createEpisodeRunConfig } from '@/engine/training/newRun';
+import { builtinHost } from '@/engine/training/scriptHost';
 import type { StreamOut } from '../shared/protocol';
 import { StreamSender } from '../shared/streamPort';
 import { GhostPlayer, type GhostSpec } from './ghostPlayer';
 
-const STRIDE = RACING_SNAPSHOT.stride;
+const STRIDE = NAVIGATION_SNAPSHOT.stride;
 
 /** A stream whose frames are copied out and whose buffers go straight back, like the main thread does. */
 function capture() {
@@ -29,64 +33,68 @@ function capture() {
   return { sender, frames, ticks, starts };
 }
 
-function scene() {
-  const config = createRacingRunConfig({ name: 'g', seed: 5, blueprint: RACING_BLUEPRINTS[2], track: BUILT_IN_TRACKS[0], carPreset: 'standard', populationSize: 10 });
-  const trainer = new RacingTrainer(config);
+/** Champions of a fresh Navigation run on its first course, each ghost on the start slot asked for. */
+async function scene() {
+  const config = createEpisodeRunConfig({ env: 'navigation', name: 'g', seed: 5, blueprint: NAVIGATION_BLUEPRINTS[1], populationSize: 10, settings: { ...navigationSettings() } });
+  const trainer = new EpisodeTrainer(await loadEpisodeModule('navigation'), config);
   const ghost = (generation: number, slot: number): GhostSpec => ({ generation, genome: trainer.genomes[generation], seed: 40 + generation, scriptSource: null, slot });
   return { setup: trainer.setup(), ghost };
 }
 
-describe('ghost player grid', () => {
-  it('draws one telemetry line per car, in stream order, with its grid slot', async () => {
-    const { setup, ghost } = scene();
-    const field = new GhostPlayer(capture().sender);
-    await field.setScene('racing', setup, [ghost(1, 3), ghost(2, 2), ghost(2, 1), ghost(2, 0)]);
-    const lone = new GhostPlayer(capture().sender);
-    await lone.setScene('racing', setup, [ghost(2, 0)]);
-    const lines = field.telemetry();
-    expect(lines.map((t) => [t.generation, t.slot])).toEqual([[1, 3], [2, 2], [2, 1], [2, 0]]);
-    // The pole car drives exactly the lap it would drive alone, and back slots start behind the line.
-    expect(Array.from(lines[3].distance)).toEqual(Array.from(lone.telemetry()[0].distance));
-    expect(lines[0].distance[0]).toBeLessThan(-10);
-    // A crash carries the meters the car drove from its own slot, which is what the crash label shows.
-    const crashed = lines.filter((t) => t.crash);
-    expect(crashed.length).toBeGreaterThan(0);
-    for (const t of crashed) expect(t.crash?.driven).toBeCloseTo(Math.max(0, t.distance[t.distance.length - 1] - t.distance[0]), 4);
-  });
+/** Plays until the first frames arrive. The first frame waits for a timer slice; poll rather than guess how long a busy machine takes. */
+async function firstFrames(player: GhostPlayer, frames: Float32Array[], warmup = 0) {
+  player.play(1, false, warmup);
+  for (let waited = 0; frames.length === 0 && waited < 5000; waited += 20) await new Promise((r) => setTimeout(r, 20));
+  player.stop();
+}
 
-  it('starts copies of one champion on separate grid slots', async () => {
-    const { setup, ghost } = scene();
+describe('ghost player grid', () => {
+  it('starts copies of one champion on separate start slots', async () => {
+    const { setup, ghost } = await scene();
     const { sender, frames } = capture();
     const player = new GhostPlayer(sender);
-    await player.setScene('racing', setup, [ghost(3, 2), ghost(3, 1), ghost(3, 0)]);
-    player.play(1, false);
-    // The first frame waits for a timer slice; poll rather than guess how long a busy machine takes.
-    for (let waited = 0; frames.length === 0 && waited < 5000; waited += 20) await new Promise((r) => setTimeout(r, 20));
-    player.stop();
+    await player.setScene('navigation', setup, [ghost(3, 2), ghost(3, 1), ghost(3, 0)]);
+    await firstFrames(player, frames);
     const first = frames[0];
     for (let a = 0; a < 3; a++) {
       for (let b = a + 1; b < 3; b++) {
-        const d = Math.hypot(first[a * STRIDE] - first[b * STRIDE], first[a * STRIDE + 1] - first[b * STRIDE + 1]);
-        expect(d).toBeGreaterThan(4.5);
+        const d = Math.hypot(first[a * STRIDE + SNAP_X] - first[b * STRIDE + SNAP_X], first[a * STRIDE + SNAP_Z] - first[b * STRIDE + SNAP_Z]);
+        expect(d).toBeGreaterThan(0.5);
       }
     }
+  });
+
+  it('runs a ghost in a crowd exactly as it runs alone', async () => {
+    const { setup, ghost } = await scene();
+    const crowd = capture();
+    const field = new GhostPlayer(crowd.sender);
+    await field.setScene('navigation', setup, [ghost(1, 3), ghost(2, 2), ghost(2, 0)]);
+    await firstFrames(field, crowd.frames, 60);
+    const lone = capture();
+    const alone = new GhostPlayer(lone.sender);
+    await alone.setScene('navigation', setup, [ghost(2, 0)]);
+    await firstFrames(alone, lone.frames, 60);
+    expect(crowd.ticks[0]).toBe(lone.ticks[0]);
+    expect(Array.from(crowd.frames[0].subarray(2 * STRIDE, 3 * STRIDE))).toEqual(Array.from(lone.frames[0].subarray(0, STRIDE)));
   });
 });
 
 describe('ghost player warm up', () => {
-  it('opens part way into the lap on the very tick a cold start reaches', async () => {
-    const { setup, ghost } = scene();
-    const { sender, frames, ticks } = capture();
-    const player = new GhostPlayer(sender);
-    await player.setScene('racing', setup, [ghost(2, 0)]);
-    const lap = player.telemetry()[0];
-    const warmup = Math.min(40, lap.distance.length - 1);
-    player.play(1, false, warmup);
-    for (let waited = 0; frames.length === 0 && waited < 5000; waited += 20) await new Promise((r) => setTimeout(r, 20));
-    player.stop();
-    expect(ticks[0]).toBeGreaterThanOrEqual(warmup);
-    // Telemetry index k is the car after tick k + 1, and progress is the last field of a snapshot.
-    expect(frames[0][STRIDE - 1]).toBeCloseTo(lap.distance[ticks[0] - 1], 4);
+  it('opens part way into the run on the very tick a cold start reaches', async () => {
+    const { setup, ghost } = await scene();
+    const warm = capture();
+    const player = new GhostPlayer(warm.sender);
+    await player.setScene('navigation', setup, [ghost(2, 0)]);
+    await firstFrames(player, warm.frames, 40);
+    expect(warm.ticks[0]).toBeGreaterThanOrEqual(40);
+    // The same ghost run cold, headless, the way the player builds it: no script and the ghost controller seed.
+    const env = (await loadEpisodeModule('navigation')).createEnv({ ...setup, scriptSource: null }, builtinHost, mixSeed(0x9405));
+    const g = ghost(2, 0);
+    env.reset([new Network(g.genome)], [g.seed], [0]);
+    while (env.tick < warm.ticks[0]) env.step();
+    const cold = new Float32Array(STRIDE);
+    env.writeSnapshot(cold);
+    expect(Array.from(warm.frames[0].subarray(0, STRIDE))).toEqual(Array.from(cold));
   });
 });
 
@@ -95,16 +103,16 @@ describe('ghost player loop', () => {
 
   /** One ghost that loops. Its first run goes flat out, so it ends within a few fake milliseconds and the 1200 ms gap starts. */
   async function finishedFirstRun() {
+    const { setup, ghost } = await scene();
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
-    const { setup, ghost } = scene();
     const out = capture();
     const player = new GhostPlayer(out.sender);
-    await player.setScene('racing', setup, [ghost(4, 0)]);
+    await player.setScene('navigation', setup, [ghost(4, 0)]);
     player.play(Infinity, true);
     vi.advanceTimersByTime(100);
     expect(out.starts.count).toBe(1);
     expect(out.ticks.length).toBeGreaterThan(0);
-    return { player, out, length: player.telemetry()[0].distance.length };
+    return { player, out, length: out.ticks.at(-1)! };
   }
 
   it('cancels a loop restart still waiting out the gap when the replay stops', async () => {
@@ -126,7 +134,7 @@ describe('ghost player loop', () => {
     vi.advanceTimersByTime(2000);
     expect(out.ticks.length).toBe(framesBefore);
 
-    // Unpaused, it drives at the speed picked during the gap: about 15 ticks in a quarter second at 2x.
+    // Unpaused, it runs at the speed picked during the gap: about 15 ticks in a quarter second at 2x.
     expect(length).toBeGreaterThan(20);
     player.setPaused(false);
     vi.advanceTimersByTime(250);
