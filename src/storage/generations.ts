@@ -2,8 +2,7 @@ import { decodeGenome, encodeGenome } from '@/engine/neat/serialize';
 import type { Genome } from '@/engine/neat/types';
 import type { GenerationRecord } from '@/engine/training/records';
 import { db, type GenerationRow } from './db';
-import { summaryAfter } from './runBest';
-import { updateRun } from './runs';
+import { foldSummary } from './runBest';
 
 export { summaryAfter } from './runBest';
 
@@ -32,10 +31,24 @@ export function fromRow(row: GenerationRow): GenerationRecord {
 
 /** Saves a finished generation and refreshes the run's summary on the Runs page. */
 export async function saveGeneration(r: GenerationRecord): Promise<void> {
-  await db().generations.put(toRow(r));
-  const run = await db().runs.get(r.runId);
-  if (!run) return;
-  await updateRun(r.runId, summaryAfter(run, r));
+  await saveGenerations([r]);
+}
+
+/**
+ * Saves finished generations in one transaction and refreshes each run's
+ * summary once. On Turbo and Max many generations finish each second, and
+ * three small writes per generation fell far behind on a busy machine.
+ */
+export async function saveGenerations(records: readonly GenerationRecord[]): Promise<void> {
+  if (records.length === 0) return;
+  const d = db();
+  await d.transaction('rw', d.generations, d.runs, async () => {
+    await d.generations.bulkPut(records.map(toRow));
+    for (const runId of new Set(records.map((r) => r.runId))) {
+      const run = await d.runs.get(runId);
+      if (run) await d.runs.update(runId, { ...foldSummary(run, records.filter((r) => r.runId === runId)), updatedAt: Date.now() });
+    }
+  });
 }
 
 export async function loadHistory(runId: string): Promise<GenerationRecord[]> {

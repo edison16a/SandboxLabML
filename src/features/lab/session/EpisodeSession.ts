@@ -5,14 +5,15 @@ import type { EnvId } from '@/engine/env/types';
 import type { EpisodeTrainerState } from '@/engine/training/episodeTrainer';
 import type { GenerationRecord } from '@/engine/training/records';
 import type { RunConfig } from '@/engine/training/runConfig';
-import { saveCheckpoint } from '@/storage/checkpoints';
 import { createRun, getRun } from '@/storage/runs';
 import { createWorkerPool, type WorkerPool } from '@/workers/client/workerPool';
 import { isWatchSpeed, WATCH_SPEEDS, type SpeedMode } from '@/workers/shared/protocol';
 import { openedLabState, viewportHeld, withRecords, type LabState, type LabStoreApi } from '../state/labState';
 import { maybeBenchmark } from './backgroundBench';
 import { ghostSpecs, selectGhosts } from './ghostSelection';
+import { guardPage } from './pageGuard';
 import { restoreHistory } from './restoreRun';
+import type { RunSaver } from './runSaver';
 import { SessionEvents } from './sessionEvents';
 
 /**
@@ -62,7 +63,10 @@ export class EpisodeSession<S extends LabState = LabState> {
 
   /** Starts the workers and loads the env's module, which the ghost setup needs on this thread. */
   async init(): Promise<WorkerPool> {
-    if (!this.ready) this.ready = Promise.all([createWorkerPool((e) => this.events.apply(e)), loadEpisodeModule(this.env)]).then(([p]) => (this.pool = p));
+    if (!this.ready) {
+      guardPage({ saves: this.saves, training: () => this.store.status === 'running', saveNow: () => this.saveNow() });
+      this.ready = Promise.all([createWorkerPool((e) => this.events.apply(e)), loadEpisodeModule(this.env)]).then(([p]) => (this.pool = p));
+    }
     return this.ready;
   }
 
@@ -138,13 +142,18 @@ export class EpisodeSession<S extends LabState = LabState> {
     else if (wasWatch) await this.playGhosts(1, true);
   }
 
-  /** Saves a checkpoint right now, e.g. on pause or when the tab is hidden. */
+  /** Saves a checkpoint right now: on pause, and when the tab is hidden mid training (see pageGuard). */
   async saveNow(): Promise<void> {
     const pool = this.pool;
     const run = this.store.run;
     if (!pool || !run) return;
     const state = await pool.coordinator.checkpoint();
-    if (state) await this.events.writes.push(() => saveCheckpoint(run.id, state.population.generation, state));
+    if (state) await this.events.saves.checkpoint(run.id, state.population.generation, state);
+  }
+
+  /** What is still waiting to be saved, for the lab's Saving chip and its guard on closing the tab. */
+  get saves(): RunSaver {
+    return this.events.saves;
   }
 
   /** Leaves the Sandbox and brings the training ghosts back. Labs with a Sandbox reset their own fields too. */

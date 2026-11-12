@@ -1,11 +1,9 @@
 import type { GenerationRecord } from '@/engine/training/records';
-import { saveCheckpoint } from '@/storage/checkpoints';
-import { saveGeneration } from '@/storage/generations';
-import { WriteQueue } from '@/storage/writeQueue';
 import { toast } from '@/ui/toast/toastStore';
 import type { CoordinatorEvent } from '@/workers/coordinator/events';
 import { viewportHeld, type LabState } from '../state/labState';
 import { RecordBatcher } from './recordBatcher';
+import { RunSaver } from './runSaver';
 
 /**
  * The parts of a lab's session that the coordinator's events touch, as
@@ -26,11 +24,12 @@ export interface SessionEventHooks {
 
 /**
  * Applies coordinator events to a lab: its store, its saved run and its
- * ghosts. Saves go through one queue, so they land in the order they were
- * asked for, and records reach the store in batches (see RecordBatcher).
+ * ghosts. Saves go through one RunSaver, so they land in order and a
+ * backlog is written in one go, and records reach the store in batches
+ * (see RecordBatcher).
  */
 export class SessionEvents {
-  readonly writes = new WriteQueue();
+  readonly saves = new RunSaver();
   private readonly batcher: RecordBatcher;
 
   constructor(private readonly h: SessionEventHooks) {
@@ -56,10 +55,10 @@ export class SessionEvents {
       }
       case 'generation':
         this.batcher.push(e.record);
-        void this.writes.push(() => saveGeneration(e.record));
+        void this.saves.generation(e.record);
         break;
       case 'checkpoint':
-        if (run) void this.writes.push(() => saveCheckpoint(run.id, e.generation, e.state));
+        if (run) void this.saves.checkpoint(run.id, e.generation, e.state);
         break;
       case 'content':
         h.content(e.content);

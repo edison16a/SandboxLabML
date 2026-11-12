@@ -8,6 +8,7 @@ import { RunScriptBadge } from '@/features/scripts/RunScriptBadge';
 import { useLab, useLabContext } from '../LabContext';
 import { SpeedBar } from './SpeedBar';
 import { RunSwitcher } from './RunSwitcher';
+import { SavingChip } from './SavingChip';
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds.toFixed(0)} s`;
@@ -72,6 +73,7 @@ export function LabToolbar({ onNewRun, help, extra }: Props) {
         </div>
         {status === 'error' && <Badge tone="danger">Stopped on an error</Badge>}
       </div>
+      <SavingChip />
       <RunScriptBadge run={run} generation={gen} running={running} />
       <div className="ml-auto flex min-w-0 items-center gap-2">
         <RunSwitcher />

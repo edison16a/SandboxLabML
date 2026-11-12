@@ -7,11 +7,14 @@ import type { EnvId } from '@/engine/env/types';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
 import type { SpeedMode } from '@/workers/shared/protocol';
+import type { RunSaver } from './session/runSaver';
 import type { LabState, LabStoreApi } from './state/labState';
 
 /** The parts of a lab's session the shared components call. Every EpisodeSession has them. */
 export interface LabSession {
   readonly streams: { population: SnapshotStream; ghosts: SnapshotStream } | null;
+  /** What is still waiting to be saved. */
+  readonly saves: Pick<RunSaver, 'backlog' | 'subscribe'>;
   /** Starts the workers. Safe to call again; it starts them once. */
   init(): Promise<unknown>;
   newRun(config: RunConfig): Promise<void>;
