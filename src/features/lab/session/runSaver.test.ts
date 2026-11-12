@@ -127,6 +127,29 @@ describe('RunSaver', () => {
     expect((await listCheckpoints(config.id)).map((c) => c.generation)).toEqual([1]);
   });
 
+  it('keeps a benchmark score that arrives while its generation still waits', async () => {
+    const { config, trainer } = await toyRun();
+    let open = () => {};
+    const gate = new Promise<void>((resolve) => (open = resolve));
+    const save = generations.saveGenerations;
+    let calls = 0;
+    vi.spyOn(generations, 'saveGenerations').mockImplementation(async (records) => {
+      if (calls++ === 0) await gate;
+      await save(records);
+    });
+    const saver = new RunSaver();
+    const first = saver.generation(toyGeneration(trainer));
+    for (let i = 1; i < 6; i++) void saver.generation(toyGeneration(trainer));
+    const scored = saver.benchmark(config.id, 5, 0.87);
+    open();
+    await first;
+    await scored;
+    const history = await loadHistory(config.id);
+    expect(history.map((r) => r.generation)).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(history[5].benchmark).toBe(0.87);
+    expect((await getRun(config.id))?.benchmark).toBe(0.87);
+  });
+
   it('tells subscribers when the backlog changes', async () => {
     const { trainer } = await toyRun();
     const saver = new RunSaver();

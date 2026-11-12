@@ -1,6 +1,7 @@
 import type { GenerationRecord } from '@/engine/training/records';
 import { saveCheckpoint } from '@/storage/checkpoints';
-import { saveGenerations } from '@/storage/generations';
+import { saveGenerations, setGenerationBenchmark } from '@/storage/generations';
+import { updateRun } from '@/storage/runs';
 import { WriteQueue } from '@/storage/writeQueue';
 
 /** Unsaved generations at which the lab shows "Saving" and asks before the tab closes. */
@@ -45,6 +46,18 @@ export class RunSaver {
   checkpoint(runId: string, generation: number, state: unknown): Promise<void> {
     this.checkpoints.set(runId, { generation, state });
     return this.schedule();
+  }
+
+  /**
+   * Puts a benchmark score on a generation. It waits behind the writes
+   * already queued, so a score for a generation still in the backlog lands
+   * on its row once that row exists, instead of updating nothing.
+   */
+  benchmark(runId: string, generation: number, score: number): Promise<void> {
+    return this.queue.push(async () => {
+      await setGenerationBenchmark(runId, generation, score);
+      await updateRun(runId, { benchmark: score });
+    });
   }
 
   /** Calls `listener` whenever the backlog changes. Returns the unsubscribe. */

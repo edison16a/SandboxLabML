@@ -34,7 +34,7 @@ export class EpisodeSession<S extends LabState = LabState> extends GhostSession<
       const next = withRecords(this.store.records, batch);
       if (next) this.set(next as Partial<S>);
       // Benchmark once the records are in the store, so each score has a row to land on.
-      if (this.pool) for (const r of batch) maybeBenchmark(this.pool, this.api as unknown as LabStoreApi, r);
+      if (this.pool) for (const r of batch) maybeBenchmark(this.pool, this.api as unknown as LabStoreApi, this.saves, r);
       void this.refreshGhosts();
     },
     content: (content) => {
