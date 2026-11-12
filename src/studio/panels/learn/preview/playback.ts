@@ -1,4 +1,4 @@
-/** Ticks per second of Racing and Hide and Seek, so playing 30 ticks a second is real time. Registry envs pass their own rate. */
+/** Ticks per second when a preview names no rate of its own, so playing 30 ticks a second is real time. */
 export const TICKS_PER_SECOND = 30;
 /** How long the last frame stays up before the replay starts over, s. */
 export const HOLD_SECONDS = 1.5;

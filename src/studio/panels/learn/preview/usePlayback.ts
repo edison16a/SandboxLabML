@@ -1,16 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import type { LessonPreview } from '@/engine/lessons/preview/types';
-import { driveReadout, drawDrive } from './drawDrive';
-import { drawMatch, matchReadout } from './drawMatch';
 import { previewDrawer } from './episode/drawers';
 import { advance } from './playback';
 import { prepareCanvas } from './view';
 
-/** The readout line of a preview at the playhead. Registry envs read theirs from their drawer. */
+/** The readout line of a preview at the playhead, from its env's drawer. Only episode previews draw. */
 function readoutOf(preview: LessonPreview, pos: number): string {
-  if (preview.kind === 'racing') return driveReadout(preview, pos);
-  if (preview.kind === 'hideseek') return matchReadout(preview, pos);
-  return previewDrawer(preview.env).readout(preview, pos);
+  return preview.kind === 'episode' ? previewDrawer(preview.env).readout(preview, pos) : '';
 }
 
 /** Draws the frame at `pos` and sets the readout, or clears both when there is nothing to show. Waits until the canvas has a size. */
@@ -18,9 +14,7 @@ function paint(canvas: HTMLCanvasElement | null, readout: HTMLElement | null, pr
   const ctx = canvas ? prepareCanvas(canvas) : null;
   if (readout) readout.textContent = preview ? readoutOf(preview, pos) : '';
   if (!ctx) return;
-  if (!preview) ctx.g.clearRect(0, 0, ctx.w, ctx.h);
-  else if (preview.kind === 'racing') drawDrive(ctx.g, ctx.w, ctx.h, preview, pos);
-  else if (preview.kind === 'hideseek') drawMatch(ctx.g, ctx.w, ctx.h, preview, pos);
+  if (!preview || preview.kind !== 'episode') ctx.g.clearRect(0, 0, ctx.w, ctx.h);
   else previewDrawer(preview.env).draw(ctx.g, ctx.w, ctx.h, preview, pos);
 }
 

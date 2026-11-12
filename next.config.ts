@@ -25,6 +25,13 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   transpilePackages: ['three'],
+  /** The two first labs gave way to Driving and Navigation; old links land on their successors. */
+  async redirects() {
+    return [
+      { source: '/lab/racing', destination: '/lab/driving', permanent: true },
+      { source: '/lab/hide-seek', destination: '/lab/navigation', permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

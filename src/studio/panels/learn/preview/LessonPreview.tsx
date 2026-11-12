@@ -3,7 +3,6 @@
 import { useRef } from 'react';
 import { Pause, Play, RotateCcw } from 'lucide-react';
 import { envLabel } from '@/engine/env/registry';
-import type { EnvId } from '@/engine/env/types';
 import type { Lesson, LessonStep } from '@/engine/lessons/types';
 import { LoadingCover } from '@/ui/feedback/LoadingCover';
 import { Loading, Spinner } from '@/ui/feedback/Spinner';
@@ -12,19 +11,6 @@ import { analyze } from '../../../doc/analyze';
 import { previewDrawer } from './episode/drawers';
 import { usePlayback } from './usePlayback';
 import { usePreview } from './usePreview';
-
-/** Words for the preview of Racing and Hide and Seek. Registry envs take theirs from their preview drawer. */
-const CAPTION: Partial<Record<EnvId, string>> = {
-  racing: 'The drive a check runs, with a fixed test brain.',
-  hideseek: 'The match a check plays, with fixed test players. Hider blue, seeker red.',
-};
-
-const GAME: Partial<Record<EnvId, string>> = { racing: 'racing', hideseek: 'Hide and Seek' };
-
-const LABEL: Partial<Record<EnvId, string>> = {
-  racing: 'Top view of the test drive: the track, the car, its trail and its rays',
-  hideseek: "Top view of the test match: the room, the boxes, both players and the seeker's view",
-};
 
 interface Props {
   lesson: Lesson;
@@ -62,7 +48,7 @@ export function LessonPreview({ lesson, step, text }: Props) {
         </Button>
       </div>
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md border border-border bg-bg">
-        <canvas ref={canvas} className="absolute inset-0 h-full w-full" role="img" aria-label={LABEL[lesson.course] ?? previewDrawer(lesson.course).label} />
+        <canvas ref={canvas} className="absolute inset-0 h-full w-full" role="img" aria-label={previewDrawer(lesson.course).label} />
         {!state.preview &&
           (state.message || state.broken ? (
             <p className="absolute inset-0 flex items-center justify-center p-4 text-center text-[12px] text-muted">{state.message ?? 'Fix the errors in the script to see it play.'}</p>
@@ -74,8 +60,8 @@ export function LessonPreview({ lesson, step, text }: Props) {
         <span ref={readout} className="tabular pointer-events-none absolute bottom-1.5 left-1.5 rounded bg-bg/80 px-1.5 py-0.5 font-mono text-[11px] text-muted empty:hidden" aria-hidden="true" />
       </div>
       <p className="text-[11px] text-subtle">
-        {CAPTION[lesson.course] ?? previewDrawer(lesson.course).caption}
-        {!own && ` Playing the starter, since the editor holds no ${GAME[lesson.course] ?? envLabel(lesson.course)} script.`}
+        {previewDrawer(lesson.course).caption}
+        {!own && ` Playing the starter, since the editor holds no ${envLabel(lesson.course)} script.`}
       </p>
     </section>
   );

@@ -1,4 +1,4 @@
-/** World bounds in meters. Racing calls the second axis y, Hide and Seek calls it z. */
+/** World bounds in meters. The second axis is the world's y or z, whichever lies on the ground. */
 export interface Bounds {
   minX: number;
   minY: number;
@@ -7,9 +7,9 @@ export interface Bounds {
 }
 
 /**
- * Maps world meters to canvas pixels. Racing's y runs up the screen, like
- * a map, so it is flipped. Hide and Seek's z already runs down the screen
- * when the room is seen from above.
+ * Maps world meters to canvas pixels. A world whose second axis runs up
+ * the screen, like a map, is flipped; one whose z already runs down the
+ * screen when seen from above is not.
  */
 export interface View {
   scale: number;

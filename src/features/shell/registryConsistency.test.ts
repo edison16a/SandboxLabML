@@ -8,6 +8,9 @@ import { LABS } from './labs';
 
 const ROOT = resolve(__dirname, '../../..');
 
+/** Envs the engine still registers but no screen shows. Engine removal deletes their rows, and then this list. */
+const RETIRED = ['racing', 'hideseek'];
+
 /**
  * A new env adds one entry per layer. These checks make the entries agree,
  * so a missing row fails here instead of quietly sending links to /runs or
@@ -19,8 +22,13 @@ describe('the per layer entries of every env', () => {
     const labs = LABS.map((lab) => lab.env);
     for (const env of episodeEnvIds()) {
       expect(scripted, `${env} has no SCRIPT_ENV_TABLE row`).toContain(env);
-      expect(labs, `${env} has no LABS row`).toContain(env);
+      if (!RETIRED.includes(env)) expect(labs, `${env} has no LABS row`).toContain(env);
     }
+  });
+
+  it('show only Driving and Navigation, in that order', () => {
+    expect(LABS.map((lab) => lab.env)).toEqual(['driving', 'navigation']);
+    for (const env of RETIRED) expect(LABS.some((lab) => lab.env === env)).toBe(false);
   });
 
   it('keep every script row on its own slice, with a starter that compiles', () => {

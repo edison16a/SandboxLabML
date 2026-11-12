@@ -5,7 +5,6 @@ import { Copy, Download, GitBranch, MoreHorizontal, Pencil, RotateCcw, Trash2, U
 import { summaryMetric } from '@/engine/env/metrics';
 import { episodeInfo } from '@/engine/env/registry';
 import { formatBytes } from '@/engine/neat/metrics';
-import { TrackThumb } from '@/features/racing/components/TrackThumb';
 import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
 import { Menu } from '@/ui/primitives/Menu';
@@ -32,21 +31,18 @@ function Metric({ label, value }: { label: string; value: React.ReactNode }) {
 /** One run on the Runs page: what it is, how far it got, how big its brain is, and its actions. */
 export function RunCard({ summary, onAction }: { summary: RunSummary; onAction: (a: RunAction) => void }) {
   const { row, model } = summary;
-  const racing = row.env === 'racing';
-  const hideseek = row.env === 'hideseek';
   // Branching and rewinding rebuild a single population from stored champions and checkpoints.
   const info = episodeInfo(row.env);
   const episode = info !== undefined;
-  // The env's own headline number, such as Racing's best lap or the share of routes driven.
+  // The env's own headline number, such as the share of trips that arrive safely.
   const headline = info && summaryMetric(info.metrics);
   const best = headline ? runBest(row, headline) : NaN;
-  const track = row.config.racing?.track;
   const lab = labOf(row.env);
   const Icon = lab?.icon;
   return (
     <article className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong sm:flex-row sm:items-center">
       <div className="flex size-16 shrink-0 items-center justify-center rounded-md bg-surface-2 text-accent">
-        {racing && track ? <TrackThumb spec={track} size={56} /> : Icon ? <Icon className={hideseek ? 'size-6 text-seeker' : 'size-6'} /> : null}
+        {Icon ? <Icon className="size-6" /> : null}
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
@@ -63,9 +59,8 @@ export function RunCard({ summary, onAction }: { summary: RunSummary; onAction: 
         </div>
         <div className="grid grid-cols-3 gap-x-6 gap-y-2 sm:grid-cols-6">
           <Metric label="Generations" value={row.generation} />
-          <Metric label={hideseek ? 'Hider best' : 'Best fitness'} value={row.bestFitness.toFixed(1)} />
+          <Metric label="Best fitness" value={row.bestFitness.toFixed(1)} />
           {headline && <Metric label={headline.label} value={Number.isFinite(best) ? headline.format(best) : '-'} />}
-          {hideseek && <Metric label="Hidden" value={row.hiddenShare !== undefined ? `${Math.round(row.hiddenShare * 100)}%` : '-'} />}
           <Metric label="Benchmark" value={row.benchmark !== undefined ? row.benchmark.toFixed(0) : '-'} />
           <Metric label="Parameters" value={model ? model.parameters : '-'} />
           <Metric label="Brain size" value={model ? formatBytes(model.bytes) : '-'} />

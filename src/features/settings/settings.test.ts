@@ -1,6 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { hideSeekTier } from '@/features/hideseek/hooks/useHideSeekQuality';
-import { gridCapped } from '@/features/hideseek/state/hideSeekStore';
 import { fpsCap, parseQualityPin, qualityChosen, resolvedQuality, useSettings } from './settingsStore';
 
 describe('resolvedQuality', () => {
@@ -17,30 +15,19 @@ describe('resolvedQuality', () => {
   });
 });
 
-describe('gridCapped', () => {
-  it('caps a weak GPU only until a quality is chosen', () => {
-    expect(gridCapped({ weakGpu: true, quality: null, pinned: null })).toBe(true);
-    expect(gridCapped({ weakGpu: true, quality: 'high', pinned: null })).toBe(false);
-    expect(gridCapped({ weakGpu: true, quality: null, pinned: 'low' })).toBe(false);
-    expect(gridCapped({ weakGpu: false, quality: null, pinned: null })).toBe(false);
+describe('qualityChosen', () => {
+  it('is false until someone picks a quality or pins one', () => {
     expect(qualityChosen({ quality: null, pinned: null })).toBe(false);
+    expect(qualityChosen({ quality: 'high', pinned: null })).toBe(true);
+    expect(qualityChosen({ quality: null, pinned: 'low' })).toBe(true);
   });
 
-  it('lifts the cap when the shown default is picked', () => {
+  it('counts picking the shown default as a choice', () => {
     useSettings.setState({ weakGpu: true, quality: null, pinned: null });
     expect(resolvedQuality(useSettings.getState())).toBe('medium');
-    expect(gridCapped(useSettings.getState())).toBe(true);
+    expect(qualityChosen(useSettings.getState())).toBe(false);
     useSettings.getState().setQuality('medium');
-    expect(gridCapped(useSettings.getState())).toBe(false);
-  });
-});
-
-describe('hideSeekTier', () => {
-  it('keeps High at high and steps it up to ultra only in photo mode', () => {
-    expect(hideSeekTier('high', false)).toBe('high');
-    expect(hideSeekTier('high', true)).toBe('ultra');
-    expect(hideSeekTier('medium', true)).toBe('medium');
-    expect(hideSeekTier('ultra', false)).toBe('ultra');
+    expect(qualityChosen(useSettings.getState())).toBe(true);
   });
 });
 
