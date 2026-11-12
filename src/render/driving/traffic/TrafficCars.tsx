@@ -11,7 +11,9 @@ import { FadeSplit } from '../population/fadeSplit';
 import { detailTier } from '../quality';
 import { withCarSurface } from '../suv/materials/carSurface';
 import { useCarReflections } from '../suv/materials/useCarReflections';
+import { TRAFFIC_DETAIL } from './body/detail';
 import { carBodyGeometry } from './carGeometry';
+import { contactShadowMatrix, createContactShadow } from './contactShadow';
 import { TAXI_PAINT, TRAFFIC_PAINTS } from './looks';
 import { CAR_SHAPES } from './shapes';
 import { overlapsFocus } from './focusOverlap';
@@ -29,8 +31,9 @@ function finish(mesh: THREE.InstancedMesh | null, count: number): void {
 }
 
 /**
- * The city's other cars: one instanced draw call per body type plus one
- * for every wheel. Paint is picked per car and stays with it; brake lights,
+ * The city's other cars: one instanced draw call per body type, one for
+ * every wheel and one for the soft dark patches that sit each solid car
+ * on the road. Paint is picked per car and stays with it; brake lights,
  * indicators and rolling wheels come from the world snapshot. Traffic
  * cannot see the learners, so a car that rolls into the followed SUV
  * (waiting at a light, say) melts to a ghost, wheels and all, while the
@@ -44,17 +47,17 @@ export function TrafficCars() {
   const fading = useRef<Array<THREE.InstancedMesh | null>>([]);
   const wheels = useRef<THREE.InstancedMesh>(null);
   const fadingWheels = useRef<THREE.InstancedMesh>(null);
+  const shadowPatches = useRef<THREE.InstancedMesh>(null);
   const built = useDisposable(() => {
-    const count = d === 'high' ? 40 : d === 'medium' ? 28 : 18;
-    const steps = d === 'low' ? 1 : 2;
+    const detail = TRAFFIC_DETAIL[d];
     const bodies = Array.from({ length: CAR_KINDS }, (_, k) => {
-      const geometry = carBodyGeometry(CAR_SHAPES[k], count, steps);
+      const geometry = carBodyGeometry(CAR_SHAPES[k], detail);
       geometry.setAttribute('aFlags', new THREE.InstancedBufferAttribute(new Float32Array(MAX_TRAFFIC), 1).setUsage(THREE.DynamicDrawUsage));
       const fadeGeometry = geometry.clone();
       fadeGeometry.setAttribute('aFlags', new THREE.InstancedBufferAttribute(new Float32Array(MAX_TRAFFIC), 1).setUsage(THREE.DynamicDrawUsage));
       return { geometry, fadeGeometry, opacity: attachOpacity(fadeGeometry, MAX_TRAFFIC) };
     });
-    const wheel = trafficWheelGeometry(WHEEL_BUILT, d === 'low' ? 10 : 16);
+    const wheel = trafficWheelGeometry(WHEEL_BUILT, detail.wheel);
     // Fading cars keep their wheels: a second wheel mesh that fades with them.
     const fadeWheel = wheel.clone();
     const wheelOpacity = attachOpacity(fadeWheel, MAX_TRAFFIC * 4);
@@ -62,20 +65,22 @@ export function TrafficCars() {
     const ghost = withInstanceOpacity(createTrafficMaterial(time));
     const wheelMat = withCarSurface(new THREE.MeshStandardMaterial({ vertexColors: true }));
     const ghostWheelMat = withInstanceOpacity(withCarSurface(new THREE.MeshStandardMaterial({ vertexColors: true })));
-    const all = [...bodies.flatMap((b) => [b.geometry, b.fadeGeometry]), wheel, fadeWheel, body, ghost, wheelMat, ghostWheelMat];
-    return { bodies, wheel, fadeWheel, wheelOpacity, body, ghost, wheelMat, ghostWheelMat, dispose: () => all.forEach((x) => x.dispose()) };
+    const contact = createContactShadow(d === 'low');
+    const all = [...bodies.flatMap((b) => [b.geometry, b.fadeGeometry]), wheel, fadeWheel, body, ghost, wheelMat, ghostWheelMat, contact];
+    return { bodies, wheel, fadeWheel, wheelOpacity, body, ghost, wheelMat, ghostWheelMat, contact, dispose: () => all.forEach((x) => x.dispose()) };
   }, [d, time]);
   useCarReflections([built.body, built.ghost, built.wheelMat, built.ghostWheelMat]);
   const motion = useMemo(() => new TrafficMotion(), []);
   const split = useMemo(() => new FadeSplit(MAX_TRAFFIC), []);
-  const tmp = useMemo(() => ({ m: new THREE.Matrix4(), c: new THREE.Color(), counts: new Int32Array(CAR_KINDS), fades: new Int32Array(CAR_KINDS) }), []);
+  const tmp = useMemo(() => ({ m: new THREE.Matrix4(), s: new THREE.Matrix4(), c: new THREE.Color(), counts: new Int32Array(CAR_KINDS), fades: new Int32Array(CAR_KINDS) }), []);
 
   useFrame((_, dt) => {
     const world = frame.world;
     const w = wheels.current;
     const fw = fadingWheels.current;
+    const patches = shadowPatches.current;
     time.value += Math.min(dt, 0.1);
-    if (!world || !w || !fw) return;
+    if (!world || !w || !fw || !patches) return;
     motion.update(world, Math.min(dt, 0.1));
     tmp.counts.fill(0);
     tmp.fades.fill(0);
@@ -98,8 +103,11 @@ export function TrafficCars() {
       const geo = isSolid ? built.bodies[k].geometry : built.bodies[k].fadeGeometry;
       (geo.attributes.aFlags as THREE.InstancedBufferAttribute).setX(slot, world.carFlags[i]);
       if (!isSolid) built.bodies[k].opacity.setX(slot, opacity);
-      if (isSolid) wheelCount = placeWheels(motion, i, world, tmp.m, w, wheelCount);
-      else {
+      if (isSolid) {
+        // The patch's slot is the car's wheel slot over four, so it needs no counter of its own.
+        patches.setMatrixAt(wheelCount >> 2, contactShadowMatrix(tmp.m, CAR_SHAPES[k], tmp.s));
+        wheelCount = placeWheels(motion, i, world, tmp.m, w, wheelCount);
+      } else {
         for (let k4 = 0; k4 < 4; k4++) built.wheelOpacity.setX(fadeWheelCount + k4, opacity);
         fadeWheelCount = placeWheels(motion, i, world, tmp.m, fw, fadeWheelCount);
       }
@@ -109,6 +117,8 @@ export function TrafficCars() {
       finish(fading.current[k], tmp.fades[k]);
       built.bodies[k].opacity.needsUpdate = true;
     }
+    patches.count = wheelCount >> 2;
+    patches.instanceMatrix.needsUpdate = true;
     w.count = wheelCount;
     w.instanceMatrix.needsUpdate = true;
     fw.count = fadeWheelCount;
@@ -125,6 +135,7 @@ export function TrafficCars() {
           <instancedMesh ref={(el) => void (fading.current[k] = el)} args={[b.fadeGeometry, built.ghost, MAX_TRAFFIC]} frustumCulled={false} renderOrder={2} />
         </group>
       ))}
+      <instancedMesh ref={shadowPatches} args={[built.contact.geometry, built.contact.material, MAX_TRAFFIC]} frustumCulled={false} renderOrder={-1} />
       <instancedMesh ref={wheels} args={[built.wheel, built.wheelMat, MAX_TRAFFIC * 4]} castShadow={shadows} receiveShadow frustumCulled={false} />
       <instancedMesh ref={fadingWheels} args={[built.fadeWheel, built.ghostWheelMat, MAX_TRAFFIC * 4]} frustumCulled={false} renderOrder={2} />
     </group>

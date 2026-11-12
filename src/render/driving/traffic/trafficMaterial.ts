@@ -4,20 +4,30 @@ import { withHaze } from '../world/atmosphere';
 
 /**
  * Lamps from the car's own flags, per instance: tail lamps glow softly and
- * flare under braking; an indicator blinks at about 1.5 Hz while its flag
- * is set. Flags pack brake (1), left (2) and right (4), as the world
- * snapshot does.
+ * flare under braking, the high brake light lights only then, and an
+ * indicator blinks at about 1.5 Hz while its flag is set. Flags pack brake
+ * (1), left (2) and right (4), as the world snapshot does.
+ *
+ * ACES tone mapping leaks some red into green and blue before its curve,
+ * so a bright pure red comes out peach and a bright amber comes out cream.
+ * The lamp colors carry a little negative green and blue that cancels that
+ * leak, so a lamp gets brighter without changing hue, on Low (tone mapped
+ * in the material) and in the post chain alike. The brake peak is high
+ * enough to reach the bloom threshold on High, as the hero's brake does.
  */
 const LAMPS = /* glsl */ `
+const vec3 LAMP_RED = vec3(1.0, -0.084, -0.021);
+const vec3 LAMP_AMBER = vec3(1.0, 0.12, -0.03);
 float lampCode = vLamp;
 float brake = mod(vFlags, 2.0);
 float leftOn = mod(floor(vFlags / 2.0), 2.0);
 float rightOn = mod(floor(vFlags / 4.0), 2.0);
 float blink = step(0.5, fract(uLampTime * 1.5 + vBlinkPhase));
 vec3 lampGlow = vec3(0.0);
-if (lampCode > 1.5 && lampCode < 2.5) lampGlow = vec3(1.0, 0.06, 0.03) * (0.5 + brake * 3.2);
-if (lampCode > 2.5 && lampCode < 3.5) lampGlow = vec3(1.0, 0.45, 0.05) * leftOn * blink * 3.0;
-if (lampCode > 3.5 && lampCode < 4.5) lampGlow = vec3(1.0, 0.45, 0.05) * rightOn * blink * 3.0;
+if (lampCode > 1.5 && lampCode < 2.5) lampGlow = LAMP_RED * (0.22 + brake * 8.0);
+if (lampCode > 2.5 && lampCode < 3.5) lampGlow = LAMP_AMBER * leftOn * blink * 1.6;
+if (lampCode > 3.5 && lampCode < 4.5) lampGlow = LAMP_AMBER * rightOn * blink * 1.6;
+if (lampCode > 5.5) lampGlow = LAMP_RED * brake * 8.0;
 totalEmissiveRadiance += lampGlow;`;
 
 /**

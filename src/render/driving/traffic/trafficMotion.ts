@@ -3,7 +3,7 @@ import { MAX_TRAFFIC, type WorldState } from '@/engine/driving/world/state';
 import { CAR_SHAPES } from './shapes';
 
 /** Radius the shared wheel mesh is built at, m. */
-export const WHEEL_BUILT = 0.32;
+export const WHEEL_BUILT = 0.34;
 const Y = new THREE.Vector3(0, 1, 0);
 const Z = new THREE.Vector3(0, 0, 1);
 
@@ -46,17 +46,24 @@ export class TrafficMotion {
     return out.compose(this.p, this.q, this.s);
   }
 
-  /** Wheel w of car i (front pair first, left then right) relative to the body. */
+  /**
+   * Wheel w of car i relative to the body: 0 front left, 1 front right,
+   * 2 rear left, 3 rear right. The car's right side is local +z, so the
+   * left wheels sit at -track.
+   */
   wheel(i: number, w: number, world: WorldState, out: THREE.Matrix4): THREE.Matrix4 {
     const shape = CAR_SHAPES[world.carKind[i]];
     const front = w < 2;
-    const left = w % 2 === 0;
-    this.p.set(front ? shape.wheelbase / 2 : -shape.wheelbase / 2, shape.wheelRadius, (left ? 1 : -1) * (shape.width / 2 - 0.13));
-    // Right wheels turn round to face out; then the front pair steers and every wheel rolls.
-    this.q.setFromAxisAngle(Y, (front ? this.steer[i] : 0) + (left ? 0 : Math.PI));
-    this.q2.setFromAxisAngle(Z, left ? -this.spin[i] : this.spin[i]);
+    // The wheel mesh's outer face looks toward +z, the right side; left wheels turn round to face out.
+    const right = w % 2 === 1;
+    // The axles' own formula rather than axles(), which builds an array: this runs per wheel per frame.
+    const axle = (front ? shape.wheelbase : -shape.wheelbase) / 2 + shape.axleShift;
+    this.p.set(axle, shape.wheelRadius, (right ? 1 : -1) * shape.track);
+    // Then the front pair steers and every wheel rolls forward (clockwise seen from the right).
+    this.q.setFromAxisAngle(Y, (front ? this.steer[i] : 0) + (right ? 0 : Math.PI));
+    this.q2.setFromAxisAngle(Z, right ? -this.spin[i] : this.spin[i]);
     this.q.multiply(this.q2);
-    // The wheel mesh is built at 0.32 m; each body type scales it to its own wheels.
+    // The wheel mesh is built at WHEEL_BUILT; each body type scales it to its own wheels.
     const k = shape.wheelRadius / WHEEL_BUILT;
     this.local.compose(this.p, this.q, this.ws.set(k, k, 1));
     return out.multiplyMatrices(this.body, this.local);
