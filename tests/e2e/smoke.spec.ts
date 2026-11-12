@@ -10,10 +10,10 @@ test('landing page links to every section', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'View on GitHub' }).first()).toHaveAttribute('href', /github\.com/);
 });
 
-test('Go Train opens the Racing lab', async ({ page }) => {
+test('Go Train opens the Driving lab', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: 'Go Train' }).click();
-  await expect(page).toHaveURL(/\/lab\/racing$/);
+  await expect(page).toHaveURL(/\/lab\/driving$/);
   await expect(page.getByRole('button', { name: 'Train' })).toBeVisible({ timeout: 60_000 });
 });
 
