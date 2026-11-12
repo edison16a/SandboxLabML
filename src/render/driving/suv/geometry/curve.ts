@@ -2,6 +2,13 @@
 export const smooth = (t: number) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 
 /**
+ * A smooth max(t, 0): t far above zero, 0 far below, rounded over about
+ * `r` either side. Summing a few of these draws a profile out of straight
+ * runs joined by soft folds, the way a stylist sketches a bumper.
+ */
+export const hinge = (t: number, r: number) => (t + Math.sqrt(t * t + r * r)) / 2;
+
+/**
  * 1 between `a` and `b`, easing to 0 over `ramp` meters outside them. Used to
  * switch a feature (a scoop, a flare) on along part of the car's length.
  */
