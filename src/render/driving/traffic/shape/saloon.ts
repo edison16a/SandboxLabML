@@ -63,7 +63,7 @@ export function saloonDecals(s: CarShape): Decal[] {
     { region: strip('rear', [[0.3, 0.868], [0.39, 0.865]], 0.03), look: 'amber', kind: 'float', lamp: LAMP.left, cells: [2, 1] },
     { region: strip('rear', [[0, 0.55], [0.26, 0.55]], 0.11), look: 'plate', kind: 'float', cells: [4, 1] },
     { region: shutLine(-0.07, 0.29, -0.1, 0.97), look: 'seam', kind: 'float', cells: [5, 1], fine: true },
-    { region: shutLine(-0.96, 0.29, -1.22, 0.99), look: 'seam', kind: 'float', cells: [5, 1], fine: true },
+    { region: shutLine(-0.94, 0.3, -1.2, 0.98), look: 'seam', kind: 'float', cells: [5, 1], fine: true },
   ];
 }
 

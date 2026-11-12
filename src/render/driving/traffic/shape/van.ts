@@ -42,8 +42,8 @@ function vanDecals(s: CarShape): Decal[] {
   const screen = topGlass(s, { low: 1.97, high: 1.12, bow: 0.08, margin: 0.035 });
   const back = strip('rear', [[0, 1.3], [0.74, 1.3]], [[0, 1.78], [0.7, 1.78]]);
   return [
-    { region: side, look: 'trim', kind: 'ring', grow: 0.022, cells: [10, 2], fine: true },
-    { region: side, look: 'glass', cells: [10, 2] },
+    { region: side, look: 'trim', kind: 'ring', grow: 0.022, cells: [8, 2], fine: true },
+    { region: side, look: 'glass', cells: [8, 2] },
     { region: pillar(s, 0.93, 0.1, 0.02), look: 'trim', kind: 'float', cells: [1, 3], fine: true },
     { region: pillar(s, -0.42, 0.13, 0), look: 'trim', kind: 'float', cells: [1, 3], fine: true },
     { region: screen, look: 'trim', kind: 'ring', grow: 0.022, cells: [3, 4], fine: true },
@@ -52,7 +52,7 @@ function vanDecals(s: CarShape): Decal[] {
     { region: back, look: 'glass', cells: [3, 4] },
     { region: strip('rear', [[0, 1.82], [0.2, 1.82]], 0.02), look: 'tail', kind: 'float', lamp: LAMP.brake, cells: [2, 1], fine: true },
     // Head lamps sit where the nose rolls up into the hood, wrapping round each corner.
-    { region: strip('front', [[0.46, 0.85], [0.66, 0.85], [0.82, 0.87], [0.92, 0.9]], [[0.44, 0.95], [0.66, 0.97], [0.82, 0.975], [0.9, 0.965]]), look: 'head', cells: [6, 1] },
+    { region: strip('front', [[0.46, 0.85], [0.66, 0.85], [0.82, 0.87], [0.92, 0.9]], [[0.44, 0.95], [0.66, 0.97], [0.82, 0.975], [0.9, 0.965]]), look: 'head', cells: [5, 1] },
     { region: strip('front', [[0.48, 0.928], [0.66, 0.945], [0.82, 0.948], [0.89, 0.94]], 0.011), look: 'drl', kind: 'float', lamp: LAMP.head, cells: [7, 1] },
     { region: strip('front', [[0.5, 0.865], [0.7, 0.868]], 0.04), look: 'lens', kind: 'float', cells: [3, 1], fine: true },
     { region: strip('front', [[0.8, 0.88], [0.91, 0.905]], 0.022), look: 'amber', kind: 'float', lamp: LAMP.left, cells: [3, 1] },
@@ -63,10 +63,9 @@ function vanDecals(s: CarShape): Decal[] {
     { region: strip('rear', [[0.81, 0.83], [0.95, 0.84]], 0.06), look: 'amber', kind: 'float', lamp: LAMP.left, cells: [2, 1] },
     { region: strip('rear', [[0, 0.66], [0.26, 0.66]], 0.11), look: 'plate', kind: 'float', cells: [4, 1] },
     // The sliding door: its front and rear edges and the rail it runs on under the rear glass.
-    { region: shutLine(1.3, 0.46, 1.86, 1.07), look: 'seam', kind: 'float', cells: [5, 1], fine: true },
     { region: shutLine(0.9, 0.46, 0.92, 1.1), look: 'seam', kind: 'float', cells: [5, 1], fine: true },
     { region: shutLine(-0.36, 0.46, -0.36, 1.1), look: 'seam', kind: 'float', cells: [5, 1], fine: true },
-    { region: strip('side', [[-2.2, 1.075], [-0.36, 1.075]], 0.02), look: 'trim', kind: 'float', cells: [6, 1], fine: true },
+    { region: strip('side', [[-2.2, 1.075], [-0.36, 1.075]], 0.02), look: 'trim', kind: 'float', cells: [3, 1], fine: true },
   ];
 }
 
