@@ -6,10 +6,10 @@ type Live = ReturnType<typeof startTestWorker> & { reject: ((err: Error) => void
 
 /**
  * The lesson preview's worker. It stays up while the preview is open, so
- * Rapier loads once and later matches start at once. A new request while
- * one is still running terminates the worker and starts a fresh one: the
- * old result is no longer wanted, and a script stuck in a long loop must
- * not hold the preview up.
+ * the env's module loads once and later previews start at once. A new
+ * request while one is still running terminates the worker and starts a
+ * fresh one: the old result is no longer wanted, and a script stuck in a
+ * long loop must not hold the preview up.
  */
 export class PreviewRunner {
   private live: Live | null = null;

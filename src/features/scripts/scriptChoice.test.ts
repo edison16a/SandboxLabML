@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { presetsOf } from '@/engine/script';
+import { choiceFromPreset, choiceFromSource } from './scriptChoice';
 
 const DRIVING_PRESETS = presetsOf('driving');
 const NAVIGATION_PRESETS = presetsOf('navigation');
-import { choiceFromPreset, choiceFromSource } from './scriptChoice';
 
 describe('script choices', () => {
   it('compiles every preset and finds its blueprint', () => {
