@@ -7,13 +7,13 @@ import { warp } from './warp';
 
 /**
  * The lip spoiler where the roofline ends, before the bend, m. Its root
- * lies on the painted deck behind the rear glass and its top rises out
- * of the roof's own line to a crisp trailing edge at the tail. The edge
+ * lies on the painted deck just behind the rear glass and its top runs
+ * on from the roof's own line to a crisp trailing edge at the tail. The edge
  * runs on one gentle arch, `top` at the middle falling `crown` to the
  * ends, about 3 cm above where the deck would run on, so the roofline
  * turns up at its end. `half` is how far it reaches: the whole tail.
  */
-export const LIP = { root: -2.2, edge: TAIL - 0.002, top: 1.33, crown: 0.03, half: 0.645, edgeDepth: 0.007 };
+export const LIP = { root: -2.12, edge: TAIL - 0.002, top: 1.33, crown: 0.03, half: 0.645, edgeDepth: 0.007 };
 
 /** The deck's top at (x, z) behind the rear glass: the cabin's section there from belt to centerline, read at z. */
 export function deckAt(x: number, z: number): number {
@@ -44,6 +44,12 @@ export function addSpoiler(bin: PartBin, detail: Detail): void {
   const up = detail.fine ? 4 : detail.brakes ? 3 : 1;
   // Where the deck would run on, just before it rolls down into the tail face.
   const on = LIP.edge + 0.027;
+  // The top leaves the deck on the deck's own slope at the root and flattens toward the edge, so from the side it
+  // carries the roofline on to the lip instead of flicking up at the very end. `rise` is how far its middle
+  // handle stands above the deck at the middle of the car.
+  const xm = (LIP.root + LIP.edge) / 2;
+  const slope = (deckAt(LIP.root, 0) - deckAt(LIP.root - 0.01, 0)) / 0.01;
+  const rise = deckAt(LIP.root, 0) - slope * (LIP.root - xm) - deckAt(xm, 0);
   const rows: Vec3[][] = [];
   for (let i = 0; i <= n; i++) {
     // Columns bunch up toward the ends, where the lip dives into the deck over a short run.
@@ -54,13 +60,15 @@ export function addSpoiler(bin: PartBin, detail: Detail): void {
     // How much of the lip stands at this column, 0 where it has dived into the deck.
     const k = (edgeY - line) / (LIP.top - deckAt(on, 0));
     const col: Vec3[] = [];
-    // The top: a quadratic from the root, held to the deck's line, up to the edge.
+    const stand = Math.max(0, Math.min(1, k));
+    const midY = deckAt(xm, z) + rise * stand;
+    // The top: a quadratic from the root on the deck's tangent to the edge.
     for (let j = 0; j <= up; j++) {
       const t = j / up;
-      const x = (1 - t) * (1 - t) * LIP.root + 2 * (1 - t) * t * on + t * t * LIP.edge;
-      col.push([x, (1 - t) * (1 - t) * rootY + 2 * (1 - t) * t * line + t * t * edgeY, z]);
+      const x = (1 - t) * (1 - t) * LIP.root + 2 * (1 - t) * t * xm + t * t * LIP.edge;
+      col.push([x, (1 - t) * (1 - t) * rootY + 2 * (1 - t) * t * midY + t * t * edgeY, z]);
     }
-    const depth = LIP.edgeDepth * Math.max(0, Math.min(1, k));
+    const depth = LIP.edgeDepth * stand;
     col.push([LIP.edge - 0.0006, edgeY - depth, z]);
     col.push([on - 0.012, line + 0.3 * (edgeY - line) - depth, z]);
     col.push([on - 0.006, deckAt(on - 0.006, z) - 0.002, z]);
