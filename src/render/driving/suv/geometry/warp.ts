@@ -48,17 +48,19 @@ function noseBow(z: number): number {
 }
 
 /**
- * The tail in side view: from the roof's lip at `lip` the tailgate leans
- * out and down to the bumper's top at `bumper`, the bumper stands upright,
- * and below `diffuser` it tucks back in to the diffuser's floor. Above the
- * lip nothing moves, so the roofline is exactly the cabin's.
+ * The tail in side view: from the roof's lip at `lip` a short tailgate
+ * face leans out and down at `gate` m per m to the light bar at `knee`,
+ * stands steeper (`low`) down to the bumper's top at `bumper`, the bumper
+ * stands upright, and below `diffuser` it tucks back in to the diffuser's
+ * floor. Above the lip nothing moves, so the roofline is exactly the cabin's.
  */
-const TAIL_BEND = { from: -1.9, lip: 1.22, bumper: 0.885, diffuser: 0.55, gate: 0.444, tuck: 0.66 };
+const TAIL_BEND = { from: -1.9, lip: 1.28, knee: 1.11, bumper: 0.92, diffuser: 0.58, gate: 0.718, low: 0.16, tuck: 0.625 };
 
 /** How far the tail sits behind its upright station at height y, m. */
 export function tailLean(y: number): number {
   const b = TAIL_BEND;
-  return b.gate * (hinge(b.lip - y, 0.02) - hinge(b.bumper - y, 0.03)) - b.tuck * hinge(b.diffuser - y, 0.05);
+  const face = b.gate * hinge(b.lip - y, 0.02) - (b.gate - b.low) * hinge(b.knee - y, 0.04) - b.low * hinge(b.bumper - y, 0.03);
+  return face - b.tuck * hinge(b.diffuser - y, 0.05);
 }
 
 /**
@@ -67,7 +69,7 @@ export function tailLean(y: number): number {
  * as its own volume. It runs across the tailgate and fades out before the
  * corners, where the face curls into the sides.
  */
-export const LEDGE = { y: 0.6, step: 0.01, r: 0.008, half: 0.45, fade: 0.15 };
+export const LEDGE = { y: 0.635, step: 0.01, r: 0.008, half: 0.45, fade: 0.15 };
 
 function ledge(y: number, z: number): number {
   const across = smooth((LEDGE.half + LEDGE.fade - Math.abs(z)) / LEDGE.fade);

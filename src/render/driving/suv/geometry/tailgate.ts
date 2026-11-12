@@ -15,7 +15,7 @@ import { LEDGE } from './warp';
 const GATE = { side: 0.6, bottom: LEDGE.y + LEDGE.r, corner: 0.06 };
 
 /** The plate's pocket in the tailgate's lower half: a rounded rectangle, 1.5 cm deep. */
-const PLATE = { half: 0.265, y0: 0.66, y1: 0.79, corner: 0.016, depth: 0.015 };
+const PLATE = { half: 0.265, y0: 0.695, y1: 0.825, corner: 0.016, depth: 0.015 };
 
 /** The hole the tail face leaves for the plate's pocket. */
 export const plateCut = (): FaceCut => ({ y0: PLATE.y0, y1: PLATE.y1, half: () => PLATE.half });
