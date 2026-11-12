@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BODY, WHEEL } from '../dimensions';
 import { buildBody } from './assemble';
+import { bandCurve } from './body';
 import { DLO } from './windows';
 import { DETAIL, type Slot } from './parts';
 import { CABIN } from './cabin';
@@ -129,6 +130,11 @@ describe('SUV silhouette', () => {
     const strip = points(['metal']).filter(([px, py, pz]) => px > -0.8 && px < 0.9 && pz > 0.8 && py < 0.5).map(([, py]) => py);
     expect(strip.length).toBeGreaterThan(0);
     for (const py of strip) expect(Math.abs(py - 0.39)).toBeLessThan(0.02);
+    // The face you see from the side looks up at the sky: by 0.32 m it already leans in at least 12 degrees.
+    const face = bandCurve(0, 0, 200);
+    const i = face.findIndex(([, py]) => py >= 0.32);
+    const lean = (Math.atan2(face[i - 1][0] - face[i][0], face[i][1] - face[i - 1][1]) * 180) / Math.PI;
+    expect(lean).toBeGreaterThan(12);
     // Over each wheel the flare frames the arch with 4 to 5 cm of satin black on the paint.
     for (const axle of AXLES) {
       const flare = points(['clad']).filter(([px, py, pz]) => near(px, axle, 0.03) && py > 0.8 && pz > 0.8).map(([, py]) => py);
