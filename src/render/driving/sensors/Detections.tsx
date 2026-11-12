@@ -11,6 +11,7 @@ import { useDrivingScene } from '../frame/sceneContext';
 import { BODY } from '../suv/dimensions';
 import { overlapsFocus } from '../traffic/focusOverlap';
 import { FatLines } from './fatLines';
+import { PERSON_BOX_TOP, PERSON_PILL_Y, carBoxTop, carPillY } from './labelPlace';
 import { SENSOR, SENSOR_CSS } from './palette';
 import { TextLabel } from './TextLabel';
 
@@ -112,13 +113,13 @@ export function Detections() {
         if (!marks.cars[i] || overlapsFocus(world, i, frame.pos.x, -frame.pos.z, frame.yaw)) continue;
         const x = world.carX[i];
         const z = -world.carY[i];
-        bracketBox(lines, x, z, world.carHeading[i], world.carLength[i] / 2 + 0.12, world.carWidth[i] / 2 + 0.12, 0.05, 1.55, SENSOR.car, marks.cars[i] === 2 ? 0.95 : 0.55);
+        bracketBox(lines, x, z, world.carHeading[i], world.carLength[i] / 2 + 0.12, world.carWidth[i] / 2 + 0.12, 0.05, carBoxTop(world.carKind[i]), SENSOR.car, marks.cars[i] === 2 ? 0.95 : 0.55);
         boxes++;
         const d = marks.carGap[i];
         if (d < best) {
           best = d;
           bx = x;
-          by = 1.9;
+          by = carPillY(world.carKind[i]);
           bz = z;
           bKind = HIT_CAR;
         }
@@ -127,13 +128,13 @@ export function Detections() {
         if (!marks.peds[i]) continue;
         const x = world.pedX[i];
         const z = -world.pedY[i];
-        bracketBox(lines, x, z, world.pedHeading[i], 0.32, 0.32, 0.12, 1.95, SENSOR.person, marks.peds[i] === 2 ? 1.0 : 0.6);
+        bracketBox(lines, x, z, world.pedHeading[i], 0.32, 0.32, 0.12, PERSON_BOX_TOP, SENSOR.person, marks.peds[i] === 2 ? 1.0 : 0.6);
         boxes++;
         const d = marks.pedGap[i];
         if (d < best) {
           best = d;
           bx = x;
-          by = 2.25;
+          by = PERSON_PILL_Y;
           bz = z;
           bKind = HIT_PED;
         }
