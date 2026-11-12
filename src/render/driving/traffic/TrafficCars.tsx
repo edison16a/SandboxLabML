@@ -11,6 +11,7 @@ import { FadeSplit } from '../population/fadeSplit';
 import { detailTier } from '../quality';
 import { withCarSurface } from '../suv/materials/carSurface';
 import { useCarReflections } from '../suv/materials/useCarReflections';
+import { TRAFFIC_DETAIL } from './body/detail';
 import { carBodyGeometry } from './carGeometry';
 import { TAXI_PAINT, TRAFFIC_PAINTS } from './looks';
 import { CAR_SHAPES } from './shapes';
@@ -45,16 +46,15 @@ export function TrafficCars() {
   const wheels = useRef<THREE.InstancedMesh>(null);
   const fadingWheels = useRef<THREE.InstancedMesh>(null);
   const built = useDisposable(() => {
-    const count = d === 'high' ? 40 : d === 'medium' ? 28 : 18;
-    const steps = d === 'low' ? 1 : 2;
+    const detail = TRAFFIC_DETAIL[d];
     const bodies = Array.from({ length: CAR_KINDS }, (_, k) => {
-      const geometry = carBodyGeometry(CAR_SHAPES[k], count, steps);
+      const geometry = carBodyGeometry(CAR_SHAPES[k], detail);
       geometry.setAttribute('aFlags', new THREE.InstancedBufferAttribute(new Float32Array(MAX_TRAFFIC), 1).setUsage(THREE.DynamicDrawUsage));
       const fadeGeometry = geometry.clone();
       fadeGeometry.setAttribute('aFlags', new THREE.InstancedBufferAttribute(new Float32Array(MAX_TRAFFIC), 1).setUsage(THREE.DynamicDrawUsage));
       return { geometry, fadeGeometry, opacity: attachOpacity(fadeGeometry, MAX_TRAFFIC) };
     });
-    const wheel = trafficWheelGeometry(WHEEL_BUILT, d === 'low' ? 10 : 16);
+    const wheel = trafficWheelGeometry(WHEEL_BUILT, detail.wheel);
     // Fading cars keep their wheels: a second wheel mesh that fades with them.
     const fadeWheel = wheel.clone();
     const wheelOpacity = attachOpacity(fadeWheel, MAX_TRAFFIC * 4);

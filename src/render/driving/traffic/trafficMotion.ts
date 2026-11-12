@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { MAX_TRAFFIC, type WorldState } from '@/engine/driving/world/state';
+import { axles } from './body/frame';
 import { CAR_SHAPES } from './shapes';
 
 /** Radius the shared wheel mesh is built at, m. */
-export const WHEEL_BUILT = 0.32;
+export const WHEEL_BUILT = 0.34;
 const Y = new THREE.Vector3(0, 1, 0);
 const Z = new THREE.Vector3(0, 0, 1);
 
@@ -51,12 +52,13 @@ export class TrafficMotion {
     const shape = CAR_SHAPES[world.carKind[i]];
     const front = w < 2;
     const left = w % 2 === 0;
-    this.p.set(front ? shape.wheelbase / 2 : -shape.wheelbase / 2, shape.wheelRadius, (left ? 1 : -1) * (shape.width / 2 - 0.13));
+    const [ahead, behind] = axles(shape);
+    this.p.set(front ? ahead : behind, shape.wheelRadius, (left ? 1 : -1) * shape.track);
     // Right wheels turn round to face out; then the front pair steers and every wheel rolls.
     this.q.setFromAxisAngle(Y, (front ? this.steer[i] : 0) + (left ? 0 : Math.PI));
     this.q2.setFromAxisAngle(Z, left ? -this.spin[i] : this.spin[i]);
     this.q.multiply(this.q2);
-    // The wheel mesh is built at 0.32 m; each body type scales it to its own wheels.
+    // The wheel mesh is built at WHEEL_BUILT; each body type scales it to its own wheels.
     const k = shape.wheelRadius / WHEEL_BUILT;
     this.local.compose(this.p, this.q, this.ws.set(k, k, 1));
     return out.multiplyMatrices(this.body, this.local);
