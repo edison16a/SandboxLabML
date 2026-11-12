@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { STATUS_ARRIVED, STATUS_DRIVING } from '../../driving/agent/learner';
 import { parseHeroDriver } from './file';
+import { carAtCamera } from './camera';
 import { brokenRule } from './judge';
 import { HeroDriveLoop } from './loop';
 
@@ -29,7 +30,7 @@ describe('the hero driver file', () => {
 });
 
 describe('the hero drive loop', () => {
-  it('never crashes, runs a red or hits a person, and arrives on every trip, for minutes on end', () => {
+  it('never crashes, runs a red, hits a person or lets traffic through it, and arrives on every trip, for minutes on end', () => {
     const driver = parseHeroDriver(shipped());
     if (!driver) throw new Error('The shipped hero driver did not parse.');
     const loop = new HeroDriveLoop(driver, driver.file.opening);
@@ -53,7 +54,7 @@ describe('the hero drive loop', () => {
       }
       const l = loop.learner;
       if (wasDriving) {
-        const broke = brokenRule(l);
+        const broke = brokenRule(l) ?? (carAtCamera(loop.env) ? 'had a car at the camera' : null);
         if (broke) throw new Error(`Trip ${loop.trip} ${broke} at ${l.time.toFixed(1)} s.`);
       }
       if (wasDriving && l.status !== STATUS_DRIVING) {
