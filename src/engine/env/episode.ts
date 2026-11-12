@@ -19,11 +19,11 @@ import type { Network } from '../neat/network';
 import type { GenerationDirectives, ScriptHost } from '../training/scriptHost';
 import type { ChampionRecord } from '../training/records';
 import type { RunConfig } from '../training/runConfig';
-import type { EpisodeBench, EpisodeLessons, EpisodeLessonsInfo, GhostTrace } from './hooks';
+import type { EpisodeBench, EpisodeLessons, EpisodeLessonsInfo } from './hooks';
 import type { MetricSpec } from './metrics';
 import type { CustomSensorSpec, EnvId, InputSpec, OutputSpec, SnapshotLayout } from './types';
 
-export type { EpisodeBench, EpisodeLessons, EpisodeLessonsInfo, GhostTrace } from './hooks';
+export type { EpisodeBench, EpisodeLessons, EpisodeLessonsInfo } from './hooks';
 
 /** Per agent outcome of one episode. Envs add their own fields. */
 export interface EpisodeResult {
@@ -198,7 +198,6 @@ export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Con
   /** Stats over the whole generation, keyed like `metrics` with source 'generation'. */
   generationMetrics?(results: readonly R[], content: Content): Record<string, number>;
 
-  telemetry?: GhostTrace<R>;
   lessons?: EpisodeLessons<R>;
 }
 

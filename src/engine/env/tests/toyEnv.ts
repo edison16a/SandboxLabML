@@ -95,14 +95,4 @@ export const toyModule: EpisodeEnvModule<ToySetup, { level: number }, ToyResult,
     // The toy builds every episode as a ToyEnv, so the cast only names what createEnv returned.
     preview: { scene: (env) => ({ goal: (env as ToyEnv).goal }) },
   },
-  telemetry: {
-    sample: (env, i, out) => {
-      const snap = new Float32Array(env.agentCount * 2);
-      env.writeSnapshot(snap);
-      out[0] = snap[i * 2];
-      out[1] = 0;
-      out[2] = 0;
-    },
-    crash: () => null,
-  },
 };

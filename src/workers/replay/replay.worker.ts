@@ -47,13 +47,6 @@ const api = {
     const result = await runBenchmark(config, model);
     return result ? { score: result.score, radar: result.radar } : null;
   },
-  ghostTelemetry() {
-    const t = ghosts?.telemetry() ?? [];
-    return Comlink.transfer(
-      t,
-      t.flatMap((g) => [g.distance.buffer as ArrayBuffer, g.speed.buffer as ArrayBuffer, g.brake.buffer as ArrayBuffer]),
-    );
-  },
 };
 
 export type ReplayApi = typeof api;

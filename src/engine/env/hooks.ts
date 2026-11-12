@@ -1,7 +1,7 @@
 /**
- * The optional hooks of an env module: benchmark, ghost telemetry and
- * lessons. Lessons come in a light half, which the env's info carries for
- * the main thread, and a runtime half that only the module has.
+ * The optional hooks of an env module: benchmark and lessons. Lessons
+ * come in a light half, which the env's info carries for the main
+ * thread, and a runtime half that only the module has.
  */
 import type { BenchOptions, BenchResult } from '../bench/types';
 import type { Genome, GenomeShape } from '../neat/types';
@@ -24,17 +24,6 @@ export interface EpisodeBench {
   /** What the chart says before the first score lands, in one sentence. */
   about: string;
   run(config: RunConfig, genome: Genome, opts?: BenchOptions): Promise<BenchResult | null>;
-}
-
-/**
- * Per tick numbers for a ghost's telemetry line (the speed strip and the
- * brake map). Optional: an env without it shows no telemetry.
- */
-export interface GhostTrace<R extends EpisodeResult> {
-  /** Writes [distance along the course in m, speed in m/s, brake from 0 to 1] for agent i after the latest tick. */
-  sample(env: EpisodeEnv<R>, i: number, out: Float64Array): void;
-  /** Where the agent's run ended in a crash, in world x and y, or null. */
-  crash(result: R): { x: number; y: number } | null;
 }
 
 /**

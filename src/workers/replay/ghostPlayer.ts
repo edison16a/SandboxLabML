@@ -7,9 +7,6 @@ import { hostFor } from '@/engine/training/scriptHost';
 import { Pacer } from '../shared/pacer';
 import type { StreamSender } from '../shared/streamPort';
 import { GhostFrames, type GhostGroup } from './ghostFrames';
-import { traceGhost, type GhostTelemetry } from './ghostTrace';
-
-export type { GhostTelemetry } from './ghostTrace';
 
 export interface GhostSpec {
   generation: number;
@@ -131,18 +128,6 @@ export class GhostPlayer {
     this.run++;
     this.pacer?.stop();
     this.pacer = null;
-  }
-
-  /**
-   * Distance, speed and brake for every ghost, computed headless in one
-   * pass. One line per agent, in stream order, so a line's color matches
-   * its agent even when a Sandbox grid holds several copies of one
-   * champion. Empty for an env without telemetry.
-   */
-  telemetry(): GhostTelemetry[] {
-    const trace = this.module?.telemetry;
-    if (!trace || !this.setup) return [];
-    return this.ghosts.map((g) => traceGhost(this.makeEnv([g]), trace, g.generation, g.slot ?? 0));
   }
 
   private makeEnv(ghosts: GhostSpec[]): EpisodeEnv {

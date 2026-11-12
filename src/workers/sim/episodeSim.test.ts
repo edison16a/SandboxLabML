@@ -74,22 +74,26 @@ describe('episode sim with a toy env', () => {
     const t = trainer();
     const champion = t.genomes[3];
     const seed = t.seeds()[3];
-    const player = new GhostPlayer(capture('ghosts').sender);
+    const { sender, messages } = capture('ghosts');
+    const player = new GhostPlayer(sender);
     await player.setScene(TOY_ENV, t.setup(), [{ generation: 0, genome: champion, seed, scriptSource: null }]);
-    const [line] = player.telemetry();
+    player.play(Infinity, false);
+    for (let waited = 0; !messages.some((m) => m.kind === 'end') && waited < 5000; waited += 20) await new Promise((r) => setTimeout(r, 20));
     // Replayed alone, the champion walks exactly as it did among the whole population.
     const env = toyModule.createEnv(t.setup(), t.host(), 0);
     env.reset(
       t.genomes.map((g) => new Network(g)),
       t.seeds(),
     );
-    const xs: number[] = [];
+    const xs = new Map<number, number>();
     const snap = new Float32Array(t.genomes.length * 2);
     while (!env.done) {
       env.step();
       env.writeSnapshot(snap);
-      if (xs.length < line.distance.length) xs.push(snap[3 * 2]);
+      xs.set(env.tick, snap[3 * 2]);
     }
-    expect(Array.from(line.distance)).toEqual(xs);
+    const frames = messages.filter((m) => m.kind === 'frame');
+    expect(frames.length).toBeGreaterThan(0);
+    for (const f of frames) if (f.kind === 'frame' && xs.has(f.tick)) expect(f.buffer[0]).toBe(xs.get(f.tick));
   });
 });
