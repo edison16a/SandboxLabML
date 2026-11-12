@@ -20,10 +20,10 @@ export const SANDBOX_LEVELS = [2, 3, 4, 5] as const;
 /**
  * How much each level counts when models are compared. Every newcomer
  * sees level 2 first, so it weighs the most. Reference runs spend their
- * last generations at level 4, so a trained run opens there more often
- * than on level 3 or rush hour.
+ * last generations at level 4, so a trained run opens there far more often
+ * than on level 3, which runs pass through, or rush hour, which few reach.
  */
-export const LEVEL_WEIGHTS = [0.4, 0.2, 0.25, 0.15] as const;
+export const LEVEL_WEIGHTS = [0.4, 0.15, 0.35, 0.1] as const;
 
 /** Copies of the model the Sandbox lines up, as STARTING_MODEL_COPIES in src/features/driving/sandbox/state.ts. */
 export const MODEL_COPIES = 3;
@@ -40,7 +40,7 @@ export interface TripSet {
 /** A quick look at every champion during training, to shortlist the promising ones. */
 export const SCREEN_TRIPS: TripSet = { salt: 0x5c, trips: 4 };
 /** The trips the shortlist is judged on. */
-export const PICK_TRIPS: TripSet = { salt: 0x5b, trips: 30 };
+export const PICK_TRIPS: TripSet = { salt: 0x5b, trips: 25 };
 /** Trips no pick ever looks at, which the reported reliability comes from. The shipped model test uses the same salt. */
 export const CHECK_TRIPS: TripSet = { salt: 0x5a, trips: 20 };
 
