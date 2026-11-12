@@ -46,6 +46,9 @@ async function watchContexts(page: Page) {
 /** The runner card's clock, which only moves while the hero plays. */
 const runnerClock = (page: Page) => page.locator('[data-hero-card="run"] [data-hero-detail]').textContent();
 
+/** The poster frame the live scenes compose their shots for, or null when the hero frames itself. */
+const posterFrame = async (page: Page) => JSON.parse((await page.locator('[data-hero-frame]').getAttribute('data-hero-frame')) ?? 'null') as { kind: string } | null;
+
 test.describe('Landing hero', () => {
   test.setTimeout(420_000);
 
@@ -88,6 +91,8 @@ test.describe('Landing hero', () => {
     await expect(page.locator('[data-hero-card="run"]')).toContainText('Runner brain');
     // Both simulations run on the page itself: no worker starts for the hero.
     expect(workers).toHaveLength(0);
+    // The scenes are composed like the wide poster under them, so nothing jumps as they fade in.
+    expect((await posterFrame(page))?.kind).toBe('wide');
 
     // Scrolled away, the scenes and their simulations stand still; back on screen, they carry on.
     await page.locator('footer').scrollIntoViewIfNeeded();
@@ -102,6 +107,8 @@ test.describe('Landing hero', () => {
     await page.setViewportSize({ width: 1024, height: 768 });
     await expect(page.locator('[data-hero-panels]')).toBeVisible();
     await expect.poll(() => page.evaluate(cardsOverText)).toEqual([]);
+    // A 4:3 window gets the 4:3 poster, and the scenes follow it.
+    await expect.poll(async () => (await posterFrame(page))?.kind).toBe('standard');
     await page.setViewportSize({ width: 1440, height: 900 });
     // Each scene draws in a canvas of its own. Off-page contexts belong to libraries that keep one for the
     // whole visit (the text renderer measures glyphs on one), so they are not the hero's to release.
