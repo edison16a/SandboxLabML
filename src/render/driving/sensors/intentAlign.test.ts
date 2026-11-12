@@ -29,7 +29,7 @@ describe('intent chevrons on the route', () => {
     const raw = heldLeft();
     // Held for seconds, one tick's full lock curls the raw forecast far across the center line.
     expect(Math.max(...Array.from(raw.y.subarray(0, raw.count)))).toBeGreaterThan(4);
-    const aligned = alignToRoute(heldLeft(), lane, { x: 20, y: 0, progress: 20, index: 10 }, 190, FIRST, SPACING, COUNT);
+    const aligned = alignToRoute(heldLeft(), lane, { x: 20, y: 0, index: -1 }, 190, FIRST, SPACING, COUNT);
     expect(aligned.count).toBeGreaterThan(0);
     // Marks that would still lie across the line after the pull are dropped, not drawn there.
     for (let k = 0; k < aligned.count; k++) expect(Math.abs(aligned.y[k])).toBeLessThan(2.4);
@@ -38,7 +38,7 @@ describe('intent chevrons on the route', () => {
   it('bends a gentle correction back onto the lane ahead', () => {
     const raw = heldLeft(0.15);
     expect(raw.y[raw.count - 1]).toBeGreaterThan(1.5);
-    const aligned = alignToRoute(heldLeft(0.15), lane, { x: 20, y: 0, progress: 20, index: 10 }, 190, FIRST, SPACING, COUNT);
+    const aligned = alignToRoute(heldLeft(0.15), lane, { x: 20, y: 0, index: -1 }, 190, FIRST, SPACING, COUNT);
     expect(aligned.count).toBe(raw.count);
     // The nearest mark still shows the car easing left; the furthest lies on the lane and points down it.
     const last = aligned.count - 1;
@@ -50,7 +50,7 @@ describe('intent chevrons on the route', () => {
   it('leaves a straight forecast on the lane where it was', () => {
     const p = predictPath({ pos: { x: 20, z: 0 }, yaw: 0, speed: 9, steer: 0, pedal: 0.3 }, SUV, FIRST, SPACING, COUNT, fresh());
     const xs = Array.from(p.x.subarray(0, p.count));
-    alignToRoute(p, lane, { x: 20, y: 0, progress: 20, index: 10 }, 190, FIRST, SPACING, COUNT);
+    alignToRoute(p, lane, { x: 20, y: 0, index: -1 }, 190, FIRST, SPACING, COUNT);
     expect(p.count).toBe(xs.length);
     for (let k = 0; k < p.count; k++) {
       expect(p.x[k]).toBeCloseTo(xs[k], 6);
@@ -60,14 +60,14 @@ describe('intent chevrons on the route', () => {
 
   it('draws nothing past the destination', () => {
     const p = predictPath({ pos: { x: 20, z: 0 }, yaw: 0, speed: 9, steer: 0, pedal: 0.3 }, SUV, FIRST, SPACING, COUNT, fresh());
-    alignToRoute(p, lane, { x: 20, y: 0, progress: 20, index: 10 }, 20 + FIRST + SPACING * 2.5, FIRST, SPACING, COUNT);
+    alignToRoute(p, lane, { x: 20, y: 0, index: -1 }, 20 + FIRST + SPACING * 2.5, FIRST, SPACING, COUNT);
     expect(p.count).toBe(3);
   });
 
   it('trusts the forecast alone for a car well off its route', () => {
     const p = heldLeft();
     const before = Array.from(p.y.subarray(0, p.count));
-    alignToRoute(p, lane, { x: 20, y: 6, progress: 20, index: 10 }, 190, FIRST, SPACING, COUNT);
+    alignToRoute(p, lane, { x: 20, y: 6, index: -1 }, 190, FIRST, SPACING, COUNT);
     expect(Array.from(p.y.subarray(0, p.count))).toEqual(before);
   });
 });

@@ -1,4 +1,4 @@
-import { pathPoint, type Path } from '@/engine/driving/geometry/path';
+import { pathPoint, projection, type Path } from '@/engine/driving/geometry/path';
 import type { Prediction } from './intentPath';
 
 /** Share of the route lane the first chevron takes, before the next ones lean on it more and more. */
@@ -10,7 +10,11 @@ const LANE_HALF = 2.4;
 /** A car further than this from its route is off it (a wrong turn, a spin): the forecast alone shows where it heads, m. */
 const OFF_ROUTE = 3.5;
 
+/** Route samples searched either side of the last match when the car is found again on its route. */
+const WINDOW = 24;
+
 const at = pathPoint();
+const proj = projection();
 
 /**
  * Leans a raw forecast onto the route the SUV follows. A brain steers in
@@ -23,14 +27,21 @@ const at = pathPoint();
  * dropped, so the arrows never point across the center line or into a
  * wall. Allocation free; edits `pred` in place.
  *
- * `car` is the SUV's position and route arc length (sim meters), with the
- * route sample it is at as a search hint. `first` and `spacing` are the
- * forecast's arc lengths and `total` how many marks a full forecast has.
+ * `car` is the SUV's position in sim meters. It is found on the route by
+ * projecting it there, searching round `car.index`, the sample it matched
+ * last time (-1 searches the whole route, for a new car or a new trip);
+ * the match is written back. `first` and `spacing` are the forecast's arc
+ * lengths and `total` how many marks a full forecast has.
  */
-export function alignToRoute(pred: Prediction, path: Path, car: { x: number; y: number; progress: number; index: number }, destS: number, first: number, spacing: number, total: number): Prediction {
-  path.sample(car.progress, at, Math.max(0, car.index - 2));
-  if (Math.abs((car.x - at.x) * -at.ty + (car.y - at.y) * at.tx) > OFF_ROUTE) return pred;
-  const progress = car.progress;
+export function alignToRoute(pred: Prediction, path: Path, car: { x: number; y: number; index: number }, destS: number, first: number, spacing: number, total: number): Prediction {
+  const full = car.index < 0;
+  path.project(car.x, car.y, full ? 0 : car.index, full ? path.n : WINDOW, proj);
+  // A slow frame can let the car run past the window round the last match: then search the whole route.
+  if (!full && proj.distance > OFF_ROUTE) path.project(car.x, car.y, 0, path.n, proj);
+  car.index = proj.index;
+  if (Math.abs(proj.lateral) > OFF_ROUTE) return pred;
+  const progress = proj.s;
+  at.index = Math.max(0, proj.index - 1);
   let n = 0;
   for (let k = 0; k < pred.count; k++) {
     const s = progress + first + k * spacing;
