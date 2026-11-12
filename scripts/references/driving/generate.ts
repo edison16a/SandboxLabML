@@ -19,7 +19,9 @@ const percent = (share: number) => `${Math.round(share * 100)}%`;
 async function modelOf(tier: ReferenceTier, runs: DrivingReferenceResult[]): Promise<DrivingReferenceModel> {
   const { pickShare, checkShares, ...model } = await pickDrivingModel(tier, runs);
   const levels = SANDBOX_LEVELS.map((l, i) => `level ${l} ${percent(checkShares[i])}`).join(', ');
-  console.log(`${tier} model: seed ${model.seed}, generation ${model.generation}, benchmark ${model.score}, weighted ${percent(pickShare)} on the pick trips, safe on unseen trips at ${levels}`);
+  console.log(
+    `${tier} model: seed ${model.seed}, generation ${model.generation}, benchmark ${model.score}, weighted ${percent(pickShare)} on the pick trips, safe on unseen trips at ${levels}`,
+  );
   return model;
 }
 
@@ -67,7 +69,9 @@ export async function generateDriving(args: Args, pool: JobPool): Promise<void> 
   const out = args.out ?? 'public/references/driving.json';
   const tiers = args.tiers ? (args.tiers.split(',') as ReferenceTier[]) : [...REFERENCE_TIERS];
   // Advanced first: runs that climb further drive busier streets and take longer, so they start early.
-  const jobs: DrivingReferenceJob[] = [...tiers].reverse().flatMap((tier) => Array.from({ length: seeds }, (_, i) => ({ kind: 'driving' as const, tier, seed: firstSeed + i, generations, every, population })));
+  const jobs: DrivingReferenceJob[] = [...tiers]
+    .reverse()
+    .flatMap((tier) => Array.from({ length: seeds }, (_, i) => ({ kind: 'driving' as const, tier, seed: firstSeed + i, generations, every, population })));
   if (!args['from-dump']) console.log(`Driving reference runs: ${tiers.length} tiers x ${seeds} seeds, ${generations} generations, population ${population}.`);
   const started = performance.now();
   // A dump from an earlier run skips the training and only builds the file again, with the current picking rules.
@@ -89,7 +93,14 @@ async function referenceFile(results: readonly DrivingReferenceResult[], tiers: 
   const gens = checkpoints(first.generations, first.every);
   const byTier = (tier: ReferenceTier) => results.filter((r) => r.job.tier === tier).sort((a, b) => a.job.seed - b.job.seed);
   // The last two checkpoints: the curriculum keeps moving the level, so one checkpoint alone swings with it.
-  const references = tiers.map((tier) => summarizeCurve(tier, gens, byTier(tier).map((r) => r.scores), 2));
+  const references = tiers.map((tier) =>
+    summarizeCurve(
+      tier,
+      gens,
+      byTier(tier).map((r) => r.scores),
+      2,
+    ),
+  );
   const models: DrivingReferenceModel[] = [];
   for (const tier of tiers) models.push(await modelOf(tier, byTier(tier)));
   return {

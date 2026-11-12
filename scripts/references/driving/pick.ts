@@ -48,7 +48,9 @@ function candidatesOf(run: DrivingReferenceResult): DrivingCandidate[] {
  */
 export async function pickDrivingModel(tier: ReferenceTier, runs: readonly DrivingReferenceResult[]): Promise<PickedDrivingModel> {
   const entries: Entry[] = runs.flatMap((run) => candidatesOf(run).map((candidate) => ({ run, candidate })));
-  const shortlist = entries.sort((a, b) => weightedShare(b.candidate.screen) - weightedShare(a.candidate.screen) || b.candidate.generation - a.candidate.generation).slice(0, SHORTLIST);
+  const shortlist = entries
+    .sort((a, b) => weightedShare(b.candidate.screen) - weightedShare(a.candidate.screen) || b.candidate.generation - a.candidate.generation)
+    .slice(0, SHORTLIST);
   let best: { entry: Entry; share: number } | null = null;
   for (const entry of shortlist) {
     const { run, candidate } = entry;
