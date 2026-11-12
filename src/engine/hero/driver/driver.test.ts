@@ -5,6 +5,7 @@ import { parseHeroDriver } from './file';
 import { carAtCamera } from './camera';
 import { brokenRule } from './judge';
 import { HeroDriveLoop } from './loop';
+import { parkedClash } from './parked';
 
 const shipped = () => JSON.parse(readFileSync('public/hero/driver.json', 'utf8')) as Record<string, unknown>;
 /** Simulated time the loop is watched for at least, s. */
@@ -56,6 +57,10 @@ describe('the hero drive loop', () => {
       if (wasDriving) {
         const broke = brokenRule(l) ?? (carAtCamera(loop.env) ? 'had a car at the camera' : null);
         if (broke) throw new Error(`Trip ${loop.trip} ${broke} at ${l.time.toFixed(1)} s.`);
+      } else if (loop.clock.darkness(-1) < 1) {
+        // Parked at its destination and still on screen: the city must not run through it or the lens.
+        const clash = parkedClash(loop.env);
+        if (clash) throw new Error(`Trip ${loop.trip} ${clash}.`);
       }
       if (wasDriving && l.status !== STATUS_DRIVING) {
         expect(l.status, `trip ${loop.trip} stopped: ${l.stopReason}`).toBe(STATUS_ARRIVED);

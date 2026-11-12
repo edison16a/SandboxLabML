@@ -6,10 +6,10 @@ import type { DrivingInputConfig } from '../../driving/sensors/inputConfig';
 import { drivingEnvOptions, type DrivingSetup } from '../../driving/setup';
 import { LIGHT_RED } from '../../driving/signals/plan';
 import { Network } from '../../neat/network';
-import { carAtCamera } from './camera';
-import { PERSON_NEAR, RED_NEAR, STILL } from './status';
 import type { Genome } from '../../neat/types';
-
+import { carAtCamera } from './camera';
+import { parkedClash, PARKED_TICKS } from './parked';
+import { PERSON_NEAR, RED_NEAR, STILL } from './status';
 
 /** How one hero trip went, from a headless drive of the whole trip. */
 export interface TripReport {
@@ -62,7 +62,11 @@ export function tripEnv(brain: DrivingBrain, inputs: DrivingInputConfig, brainSe
   return env;
 }
 
-/** Drives one trip to its end, alone, and reports how it went. */
+/**
+ * Drives one trip to its end, alone, and reports how it went. The city
+ * runs on through the hold after the arrival too, as it does on the page,
+ * so nothing may touch the parked SUV or pass the camera then either.
+ */
 export function judgeTrip(genome: Genome, inputs: DrivingInputConfig, brainSeed: number, setup: DrivingSetup): TripReport {
   const env = tripEnv(new Network(genome), inputs, brainSeed, setup);
   const l = env.learners[0];
@@ -88,7 +92,12 @@ export function judgeTrip(genome: Genome, inputs: DrivingInputConfig, brainSeed:
     lastSteer = l.car.steerCmd;
   }
   const arrived = l.status === STATUS_ARRIVED;
+  const ticks = env.tick;
   if (!arrived) broke ??= `stopped: ${l.stopReason ?? 'unknown'}`;
+  for (let k = 0; k < PARKED_TICKS && broke === null; k++) {
+    env.step();
+    broke = parkedClash(env);
+  }
   const dt = 1 / 30;
   return {
     arrived,
@@ -98,7 +107,7 @@ export function judgeTrip(genome: Genome, inputs: DrivingInputConfig, brainSeed:
     redWait: redWait * dt,
     personWait: personWait * dt,
     turns: env.opts.route.turns.filter((t) => t.turn !== 0).length,
-    weave: weave / Math.max(1, env.tick),
+    weave: weave / Math.max(1, ticks),
     laneDeparture: l.laneDepartureTime,
   };
 }
