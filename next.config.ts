@@ -3,15 +3,14 @@ import type { NextConfig } from 'next';
 /**
  * The app is fully client side: training runs in Web Workers and data lives in
  * IndexedDB, so the config mostly adds security headers. Scripts never run
- * through eval, which lets the CSP leave out 'unsafe-eval' in production.
- * 'wasm-unsafe-eval' lets the old landing showcase load its physics WASM;
- * neither lab needs it, so it goes when that showcase does.
+ * through eval, which lets the CSP leave out 'unsafe-eval' in production,
+ * and nothing loads WebAssembly, so 'wasm-unsafe-eval' stays out too.
  */
 const isDev = process.env.NODE_ENV !== 'production';
 
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ''}`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
