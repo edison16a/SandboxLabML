@@ -42,7 +42,8 @@ export function LabHelpMenu({ tour, shortcuts }: { tour: string; shortcuts: Read
         <h3 className="text-[13px] font-semibold">Keyboard shortcuts</h3>
         <dl className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1.5 text-[12px]">
           {shortcuts.map(([key, label]) => (
-            <div key={key} className="contents">
+            // A key can appear twice (Space trains, and plays the Sandbox), so the row is keyed by both.
+            <div key={`${key}:${label}`} className="contents">
               <dt>
                 <Kbd>{key}</Kbd>
               </dt>

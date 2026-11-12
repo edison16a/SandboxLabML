@@ -68,7 +68,7 @@ export const NAVIGATION_TOUR: Tour = {
       prefer: ['bottom', 'right'],
       prepare: () => void keepNavigationTraining(),
       title: 'Harder courses as they learn',
-      body: 'Level 0 is an empty room. Once the best fifth finishes three quarters of their courses, over two generations, the next level adds crates, spikes, walls or moving blocks.',
+      body: 'Level 0 is a straight run across an empty room. Once the best fifth finishes three quarters of their courses, over two generations, the next level adds crates, spikes, walls or moving blocks.',
     },
     {
       id: 'progress',
@@ -164,6 +164,7 @@ export const NAVIGATION_TOUR: Tour = {
       prefer: ['bottom'],
       title: 'Write the rules yourself',
       body: 'In the Studio you write the training script: what earns fitness, when a run ends and when the level goes up. Replay this tour from the ? button.',
+      links: [{ label: 'Start the first lesson', href: '/studio?lesson=navigation-01-first-run' }],
     },
   ],
 };

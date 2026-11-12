@@ -44,7 +44,7 @@ export const DRIVING_TOUR: Tour = {
         then: {
           target: '[data-tour="viewport"]',
           title: 'Fitness is the score',
-          body: 'Each SUV scores for new ground on its route, and most for arriving. A crash, the curb, a wrong turn or a red light ends its trip.',
+          body: 'Each SUV scores for new ground on its route, and most for arriving. Hitting anything, leaving the road, a wrong turn or a red light ends its trip.',
         },
       },
     },
@@ -71,7 +71,7 @@ export const DRIVING_TOUR: Tour = {
       prefer: ['bottom', 'right'],
       prepare: () => void keepDrivingTraining(),
       title: 'One level at a time',
-      body: 'Training starts on empty streets. Once the best fifth arrives safely, the city adds traffic lights, then people, then traffic.',
+      body: 'Training starts on empty streets. When half of the best fifth arrives safely, averaged over three generations, the city adds traffic lights, then people, traffic and rush hour.',
       terms: [{ term: 'Curriculum', meaning: 'Lessons in order, each a little harder than the last.' }],
     },
     {

@@ -17,8 +17,9 @@ const SHORTCUTS: Array<[string, string]> = [
   ['V', 'Population, overlay or both'],
   ['C', 'Next camera'],
   ['N', 'New run'],
-  ['R', 'Restart the Sandbox trip'],
   ['Esc', 'Follow the leader again'],
+  ['Space', 'In the Sandbox: play or pause'],
+  ['R', 'In the Sandbox: restart the trip'],
 ];
 
 /**
