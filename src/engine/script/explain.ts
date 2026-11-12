@@ -52,8 +52,8 @@ export function explainExpr(e: Expr, env: EnvId | null): string {
 const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 /**
- * One statement in plain English for the Explain toggle, such as "Give +1
- * when the car passes a checkpoint". Nested blocks are explained by calling
+ * One statement in plain English for the Explain toggle, such as "Give +10
+ * when the SUV arrives". Nested blocks are explained by calling
  * this on each of their statements.
  */
 export function explainStmt(s: Stmt, env: EnvId | null): string {

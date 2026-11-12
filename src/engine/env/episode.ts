@@ -36,7 +36,7 @@ export interface EpisodeResult {
 /**
  * Every setup carries the script it runs under, so a worker can compile it
  * and a ghost player can swap it per ghost. The rest is the env's own plain
- * data (a track, a city, a course), posted between threads as is.
+ * data (a city and a trip, a course), posted between threads as is.
  */
 export interface EpisodeSetup {
   scriptSource: string | null;

@@ -8,7 +8,7 @@ export interface Suggestion {
 
 /**
  * Close matches for a misspelled name, best first. Case slips count as
- * nearly free ("car.offtrack" finds "car.offTrack"), and a bare last part
+ * nearly free ("car.offroad" finds "car.offRoad"), and a bare last part
  * finds the full dotted name ("speed" finds "car.speed").
  */
 export function suggest(word: string, candidates: Iterable<string>, limit = 3): Suggestion[] {

@@ -6,7 +6,7 @@ import type { EnvId } from '../env/types';
  * highlights, a check, a hint ladder and a solution.
  */
 export type LessonCheck =
-  /** The script must contain these constructs (e.g. a reward that reads checkpoint.passed). */
+  /** The script must contain these constructs (e.g. a reward that reads car.arrived). */
   | { kind: 'astContains'; anyOf: AstPattern[]; message: string }
   /** One headless episode with a random or given brain must satisfy a metric comparison. */
   | { kind: 'testRun'; metric: string; op: '>' | '>=' | '<' | '<=' | '=='; value: number; message: string }
@@ -25,7 +25,7 @@ export interface AstPattern {
   stmt: 'reward' | 'stop' | 'call' | 'sensor' | 'let' | 'if';
   /** Block the statement must live in. */
   scope?: 'tick' | 'generation' | 'top';
-  /** Registry names the statement must reference, e.g. ["checkpoint.passed"]. */
+  /** Registry names the statement must reference, e.g. ["car.arrived"]. */
   uses?: string[];
   /** For calls: the function name, e.g. "drive" or "speciate". */
   callee?: string;

@@ -64,7 +64,7 @@ export class GhostPlayer {
   /**
    * Restarts every ghost from its grid slot at `speed` times real time.
    * `warmup` ticks are simulated before the first frame, so a showcase can
-   * open on a car already at speed. The ticks are the same ones a cold
+   * open on an agent already under way. The ticks are the same ones a cold
    * start would run, so the run itself does not change.
    */
   play(speed: number, loop: boolean, warmup = 0): void {

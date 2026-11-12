@@ -10,7 +10,7 @@ export function sourceHash(program: Program): string {
 }
 
 /**
- * Hash of everything that changes the genome shape or what a car does:
+ * Hash of everything that changes the genome shape or what an agent does:
  * the environment, the brain, the script sensors (but not their labels)
  * and the part of each tick that decides actions. Rewards and stop rules
  * are left out, because they change which brains win, not how a stored

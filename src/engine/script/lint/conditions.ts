@@ -15,8 +15,8 @@ function rangedEntry(check: CheckResult, e: Expr): RegistryEntry | null {
 
 /**
  * Whether a comparison between a sensor with a known range and a constant
- * can ever be true, such as `car.speed > 100 m/s` when the car tops out at
- * 35 m/s. Returns the sensor when it cannot.
+ * can ever be true, such as `car.speed > 100 m/s` when the SUV tops out at
+ * 24 m/s. Returns the sensor when it cannot.
  */
 function impossible(check: CheckResult, e: BinaryExpr): RegistryEntry | null {
   const lv = check.exprs.get(e.left)?.value;

@@ -104,7 +104,7 @@ describe('training checks', () => {
   });
 
   it('name the metrics they know when asked for another', async () => {
-    const out = await evaluateCheck({ ...check, metric: 'laps' }, TOY_SCRIPT_ENV.starter);
+    const out = await evaluateCheck({ ...check, metric: 'smiles' }, TOY_SCRIPT_ENV.starter);
     expect(out.passed).toBe(false);
     expect(out.message).toContain('reachedShare');
   });

@@ -1,6 +1,6 @@
 /**
  * Units as dimension vectors over meters, seconds and radians. The checker
- * multiplies and compares these, so `car.distance + 5 s` is caught before a
+ * multiplies and compares these, so `route.remaining + 5 s` is caught before a
  * run starts instead of quietly training on nonsense.
  */
 

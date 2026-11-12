@@ -77,8 +77,8 @@ describe('lessons of an env added through the registry', () => {
   it('run a test run check with the env lesson brain', async () => {
     const passed = await evaluateCheck({ kind: 'testRun', metric: 'distance', op: '>', value: 1, message: 'Walk.' }, STARTER);
     expect(passed).toMatchObject({ passed: true });
-    const unknown = await evaluateCheck({ kind: 'testRun', metric: 'laps', op: '>', value: 1, message: 'Walk.' }, STARTER);
-    expect(unknown.message).toContain('Test walk cannot measure laps');
+    const unknown = await evaluateCheck({ kind: 'testRun', metric: 'smiles', op: '>', value: 1, message: 'Walk.' }, STARTER);
+    expect(unknown.message).toContain('Test walk cannot measure smiles');
   });
 
   it('run a training check on a module metric', async () => {
@@ -88,7 +88,7 @@ describe('lessons of an env added through the registry', () => {
 
   it('validate lesson files against the module lesson info', () => {
     const step = (id: string, metric: string) => ({ id, title: 'Walk', body: 'Walk to the goal.', starter: STARTER, solution: STARTER, hints: ['Walk.', 'Walk on.'], check: { kind: 'testRun', metric, op: '>', value: 1, message: 'Walk.' } });
-    const lesson = { id: 'toy-walk', course: 'toy', order: 1, title: 'Walk', summary: 'Walk to the goal.', minutes: 5, steps: [step('one', 'distance'), step('two', 'ticks'), step('three', 'laps')] } as unknown as Lesson;
-    expect(validateLesson(lesson)).toEqual(['step 3 (three): a test walk cannot measure laps']);
+    const lesson = { id: 'toy-walk', course: 'toy', order: 1, title: 'Walk', summary: 'Walk to the goal.', minutes: 5, steps: [step('one', 'distance'), step('two', 'ticks'), step('three', 'smiles')] } as unknown as Lesson;
+    expect(validateLesson(lesson)).toEqual(['step 3 (three): a test walk cannot measure smiles']);
   });
 });
