@@ -5,12 +5,12 @@ import { useRef, useState } from 'react';
 import { FileUp, Trash2 } from 'lucide-react';
 import type { EnvId } from '@/engine/env/types';
 import { LABS } from '@/features/shell/labs';
-import { destroyRun, emptyTrash, restoreRun } from '@/storage/runs';
+import { destroyRun, restoreRun } from '@/storage/runs';
 import type { RunRow } from '@/storage/db';
 import { Button } from '@/ui/primitives/Button';
 import { Segmented } from '@/ui/primitives/Segmented';
 import { toast } from '@/ui/toast/toastStore';
-import { importLabRun } from './labRuns';
+import { emptyLabTrash, importLabRun } from './labRuns';
 import { RunCard, type RunAction } from './RunCard';
 import { RunsDialogs, type OpenDialog } from './RunsDialogs';
 import { StorageMeter } from './StorageMeter';
@@ -120,7 +120,7 @@ export function RunsPage() {
           rows={trash}
           onRestore={(id) => void restoreRun(id).then(reload)}
           onDestroy={(id) => void destroyRun(id).then(reload)}
-          onEmpty={() => void emptyTrash().then(reload)}
+          onEmpty={() => void emptyLabTrash().then(reload)}
         />
 
         <section className="flex flex-col gap-2 border-t border-border pt-6">

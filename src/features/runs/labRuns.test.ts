@@ -5,7 +5,7 @@ import { defaultDrivingRun } from '@/features/driving/hooks/defaultRun';
 import { SandboxDb, setDb, db, type RunRow } from '@/storage/db';
 import { EXPORT_FORMAT, ImportError, exportRun } from '@/storage/exportImport';
 import { createRun, getRun, listRuns, trashRun } from '@/storage/runs';
-import { forkLabRun, importLabRun, requireLabRun, RETIRED_RUN, runFileEnv, runLink, shownRuns } from './labRuns';
+import { emptyLabTrash, forkLabRun, importLabRun, requireLabRun, RETIRED_RUN, runFileEnv, runLink, shownRuns } from './labRuns';
 
 let n = 0;
 beforeEach(() => setDb(new SandboxDb(`lab-runs-${n++}`)));
@@ -29,6 +29,16 @@ describe('runs of removed labs', () => {
     await storedOldRun('hideseek');
     expect((await db().runs.count())).toBe(3);
     expect(shownRuns(await listRuns()).map((r) => r.id)).toEqual([kept.id]);
+  });
+
+  it('stay stored when the Trash the page shows is emptied', async () => {
+    const shown = await createRun(defaultDrivingRun());
+    await trashRun(shown.id);
+    const old = await storedOldRun('hideseek');
+    await trashRun(old.id);
+    await emptyLabTrash();
+    expect(await getRun(shown.id)).toBeUndefined();
+    expect((await getRun(old.id))?.deletedAt).toBeGreaterThan(0);
   });
 
   it('turn away an old export file with one plain sentence and store nothing', async () => {
