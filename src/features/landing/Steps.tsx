@@ -1,7 +1,7 @@
 const STEPS = [
   ['Pick a brain', 'Choose what the agents sense, from a few beams to every sensor.'],
   ['Write the rules', 'Rewards and how each generation breeds, as blocks or code.'],
-  ['Watch it learn', 'NEAT breeds the best brains. Harder levels open as they improve.'],
+  ['Watch it learn', 'The best brains breed the next generation. Harder levels open as they get better.'],
   ['Measure it', 'Benchmark the champion in places it never saw.'],
 ];
 
