@@ -15,16 +15,22 @@ interface Props<B extends Blueprint> {
   open: boolean;
   value: B;
   onChange: (b: B) => void;
+  /** Told when the customize dialog opens and closes, so the dialog this field sits in can step aside. */
+  onEditingChange?: (editing: boolean) => void;
 }
 
 /**
  * The brain picker of a new run: the env's preset blueprints and the
  * user's own, plus a tile that customizes the selected one into a copy.
  */
-export function BlueprintField<B extends Blueprint>({ open, value, onChange }: Props<B>) {
+export function BlueprintField<B extends Blueprint>({ open, value, onChange, onEditingChange }: Props<B>) {
   const { env, module } = useLabContext();
   const [custom, setCustom] = useState<B[]>([]);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditingState] = useState(false);
+  const setEditing = (on: boolean) => {
+    setEditingState(on);
+    onEditingChange?.(on);
+  };
   useEffect(() => {
     if (open) void listBlueprints(env).then((list) => setCustom(list.filter((b): b is B => b.env === env)));
   }, [open, env]);

@@ -54,6 +54,8 @@ export function NewRunShell<B extends Blueprint>({ open, onOpenChange, title, de
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1e6));
   const [script, setScript] = useState<ScriptChoice<B>>({ kind: 'builtin' });
   const [busy, setBusy] = useState(false);
+  // The brain's customize dialog takes this one's place while it is open.
+  const [covered, setCovered] = useState(false);
   useEffect(() => {
     if (open && initialScript) {
       setScript(initialScript);
@@ -84,6 +86,7 @@ export function NewRunShell<B extends Blueprint>({ open, onOpenChange, title, de
       title={title}
       description="Fixed once the run starts."
       className="max-w-2xl"
+      covered={open && covered}
       footer={
         <>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
@@ -102,7 +105,7 @@ export function NewRunShell<B extends Blueprint>({ open, onOpenChange, title, de
         {children}
         {/* The picker hands back the blueprint type of the lab's env, which is B. */}
         <ScriptPicker env={env} value={script as ScriptChoice<BlueprintOf<typeof env>>} onChange={(v) => setScript(v as ScriptChoice<B>)} />
-        {script.kind === 'builtin' && <BlueprintField open={open} value={blueprint} onChange={setBlueprint} />}
+        {script.kind === 'builtin' && <BlueprintField open={open} value={blueprint} onChange={setBlueprint} onEditingChange={setCovered} />}
         <div className={besideSeed ? 'grid grid-cols-1 gap-4 sm:grid-cols-3' : 'grid grid-cols-1 gap-4 sm:grid-cols-2'}>
           {besideSeed}
           <Field label="Population">
