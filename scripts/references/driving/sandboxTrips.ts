@@ -19,9 +19,10 @@ export const SANDBOX_LEVELS = [2, 3, 4, 5] as const;
 
 /**
  * How much each level counts when models are compared. Every newcomer
- * sees level 2 first, so it weighs the most. Reference runs spend their
- * last generations at level 4, so a trained run opens there far more often
- * than on level 3, which runs pass through, or rush hour, which few reach.
+ * sees level 2 first, so it weighs the most. A trained run opens on the
+ * level its training reached, and reference runs that climb spend longer
+ * at level 4 than at any other level past 2: level 3 is passed through,
+ * and rush hour only comes after generation 280.
  */
 export const LEVEL_WEIGHTS = [0.4, 0.15, 0.35, 0.1] as const;
 
