@@ -73,7 +73,8 @@ export function addIntakes(bin: PartBin, detail: Detail): void {
   else center.throat.dispose();
   bin.add('grille', center.mesh);
   const side = rounded(SIDE, 0.03, corner);
-  bin.add('grille', bothSides(capFill(1, offset(side, -0.004), 0.0012, rings, step)));
+  // The far population lifts its flat mesh a little more and keeps finer steps, so the curl never swallows it.
+  bin.add('grille', bothSides(capFill(1, offset(side, -0.004), open ? 0.0012 : 0.004, rings, Math.min(step, 0.05))));
   if (!open) return;
   const mid = onCap(1, 0.64, 0.515, 0);
   const inward = (p: Vec3): Vec3 => [mid[0] - p[0], mid[1] - p[1], mid[2] - p[2]];
