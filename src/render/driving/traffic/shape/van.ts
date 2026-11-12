@@ -1,6 +1,6 @@
 import { CAR_DIMENSIONS, CAR_VAN } from '@/engine/driving/world/state';
 import { LAMP } from '../looks';
-import { pillar, shutLine, sideGlass, strip, topGlass } from './outlines';
+import { pillar, shutLine, sideGlass, strip, uprightGlass } from './outlines';
 import type { CarShape, Decal } from './types';
 
 const [length, width] = CAR_DIMENSIONS[CAR_VAN];
@@ -38,16 +38,18 @@ const BASE: CarShape = {
 };
 
 function vanDecals(s: CarShape): Decal[] {
-  const side = sideGlass(s, { cTop: -2.22, rearTip: -2.22, gap: 0.016, drop: 0.03 });
-  const screen = topGlass(s, { low: 1.97, high: 1.12, bow: 0.08, margin: 0.085 });
+  // The front door glass stops in an upright edge at the mirror, where the steep A pillar meets the door.
+  const side = sideGlass(s, { cTop: -2.22, rearTip: -2.22, gap: 0.016, drop: 0.03, front: 1.8 });
+  // The windshield is steep, so it is drawn from the front, kept inboard of where the A pillar turns away.
+  const screen = uprightGlass('front', { low: 1.21, high: 1.885, lowHalf: 0.75, highHalf: 0.71, bow: 0.07 });
   const back = strip('rear', [[0, 1.3], [0.74, 1.3]], [[0, 1.78], [0.7, 1.78]]);
   return [
     { region: side, look: 'trim', kind: 'ring', grow: 0.022, cells: [8, 2], fine: true },
     { region: side, look: 'glass', cells: [8, 2] },
     { region: pillar(s, 0.93, 0.1, 0.02), look: 'trim', kind: 'float', cells: [1, 3], fine: true },
     { region: pillar(s, -0.42, 0.13, 0), look: 'trim', kind: 'float', cells: [1, 3], fine: true },
-    { region: screen, look: 'trim', kind: 'ring', grow: 0.022, cells: [3, 4], fine: true },
-    { region: screen, look: 'glass', cells: [3, 4] },
+    { region: screen, look: 'trim', kind: 'ring', grow: 0.022, cells: [6, 4], fine: true },
+    { region: screen, look: 'glass', cells: [6, 4] },
     { region: back, look: 'trim', kind: 'ring', grow: 0.025, cells: [3, 4], fine: true },
     { region: back, look: 'glass', cells: [3, 4] },
     { region: strip('rear', [[0, 1.82], [0.2, 1.82]], 0.02), look: 'tail', kind: 'float', lamp: LAMP.brake, cells: [2, 1], fine: true },

@@ -15,20 +15,33 @@ const steps = (a: number, b: number, n: number) => Array.from({ length: n + 1 },
  * above, from where the A pillar meets the belt back to a C pillar that
  * runs from `cTop` on the rail down to `rearTip` on the belt. The front
  * tip is found where the rail comes down to meet the belt, so the glass
- * always closes to a point under the A pillar.
+ * closes to a point under the A pillar, unless `front` stops it sooner
+ * with an upright edge (a van's steep pillar would run it onto the hood).
  * The C pillar is the region's own edge, so its corners are grid corners
  * on every tier, however few cells the glass keeps.
  */
-export function sideGlass(s: CarShape, o: { cTop: number; rearTip: number; gap?: number; drop?: number }): Region {
+export function sideGlass(s: CarShape, o: { cTop: number; rearTip: number; gap?: number; drop?: number; front?: number }): Region {
   const gap = o.gap ?? 0.014;
   const drop = o.drop ?? 0.024;
   const low = (x: number) => belt(s, x) + gap;
   const high = (x: number) => Math.max(low(x), rail(s, x) - drop);
   let front = o.cTop;
-  while (front < s.length / 2 - 0.5 && high(front + 0.01) - low(front + 0.01) > 0.012) front += 0.01;
+  while (front < (o.front ?? s.length / 2 - 0.5) && high(front + 0.01) - low(front + 0.01) > 0.012) front += 0.01;
   const bottom: Pt[] = steps(front, o.rearTip, 12).map((x) => [x, low(x)]);
   const top: Pt[] = steps(front, o.cTop, 10).map((x) => [x, high(x)]);
   return { view: 'side', bottom, top, right: [[o.rearTip, low(o.rearTip)], [o.cTop, high(o.cTop)]] };
+}
+
+/**
+ * Upright glass drawn from the front or behind, in (z, y): the lower edge
+ * at `low` on the centerline, the upper at `high`, out to `lowHalf` and
+ * `highHalf` from it. The lower edge rises by `bow` toward its outer end
+ * and the upper falls by a third of it, so the corners round off as real
+ * glass does. For a windshield too steep to draw from above.
+ */
+export function uprightGlass(view: 'front' | 'rear', o: { low: number; high: number; lowHalf: number; highHalf: number; bow: number }): Region {
+  const edge = (y: number, half: number, rise: number, n: number): Pt[] => steps(0, 1, n).map((t) => [half * t, y + rise * Math.pow(t, 3)]);
+  return { view, bottom: edge(o.low, o.lowHalf, o.bow, 6), top: edge(o.high, o.highHalf, -o.bow / 3, 6) };
 }
 
 /** A slim pillar standing across the side glass at x, leaning back by `lean` at the top. */
