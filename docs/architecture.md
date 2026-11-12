@@ -21,14 +21,14 @@ Both labs, Driving and Navigation, are plugins of one generic episode pipeline. 
 
 | Thread | Job | Talks to |
 | --- | --- | --- |
-| Main | UI, charts and the 3D renderer. No simulation in the labs. | Coordinator through Comlink; receives snapshot streams |
+| Main | UI, charts and the 3D renderer. No simulation in the labs. | Coordinator through Comlink. Receives snapshot streams |
 | Coordinator worker | NEAT selection, generations, curriculum steps and checkpoints | Sim workers through ports the main thread hands it |
-| Sim workers (cores minus 2, 1 to 8) | Headless batches, plus the live generation at watch speeds | Coordinator; sim worker 0 streams the live generation to the main thread |
+| Sim workers (cores minus 2, 1 to 8) | Headless batches, plus the live generation at watch speeds | Coordinator. Sim worker 0 streams the live generation to the main thread |
 | Replay worker | Ghosts of past champions, the Sandbox and background benchmarks | Main thread, with its own snapshot stream |
 | Test run worker | The Studio's test runs and lesson previews (`src/studio/panels/testrun/testRun.worker.ts`) | The Studio |
 
 * Commands and results go through Comlink. Snapshots never do: each stream (`population` and `ghosts`) has its own `MessagePort`, and buffers cycle through a ring of three so the main thread never queues more than two frames.
-* Watch speeds (1x, 2x and 4x) run the whole generation live in one sim worker, paced to real time. Turbo and Max split the population across all sim workers and run flat out. Turbo keeps the viewport busy with ghosts; Max stops drawing and holds the viewport so every core trains.
+* Watch speeds (1x, 2x and 4x) run the whole generation live in one sim worker, paced to real time. Turbo and Max split the population across all sim workers and run flat out. Turbo keeps the viewport busy with ghosts. Max stops drawing and holds the viewport so every core trains.
 * At Turbo and Max several generations can finish each second. The lab hands records to its store at most twice a second, so the charts repaint in step with the eye instead of with the trainer.
 * The replay worker re-simulates stored champions. It is separate so watching never slows training down.
 
@@ -48,7 +48,7 @@ Everything else finds the env through those entries: the trainer, the sim and re
 
 **The env class** is stepped in lockstep at the module's `tickHz` (30 for both labs). `reset(brains, seeds, slots)` starts an episode, `step()` advances every running agent, `done` says when all stopped and `results()` gives one result per agent with at least `fitness`, `time` and `stopReason`. `leaderIndex`, `lastObservation`, `writeOutputs` and `writeRays` feed the camera and the inputs overlay. Steps, snapshots and world writes allocate nothing.
 
-**The info and the module** are the two halves of an env. The info is the light half that any page may read: names, the snapshot layout, `metrics`, preset brains, the input schema, the `bench` (whose `run` loads its exam on first use) and what lessons measure. Its `load()` is a dynamic import of the module, which adds the simulation, so the Runs page and the Studio never ship an env's engine and a lab ships only its own. Workers, labs and headless code call `loadEpisodeModule(env)` before they simulate; `requireEpisodeModule(env)` then answers synchronously. A test keeps the registry's static graph free of every `module.ts`.
+**The info and the module** are the two halves of an env. The info is the light half that any page may read: names, the snapshot layout, `metrics`, preset brains, the input schema, the `bench` (whose `run` loads its exam on first use) and what lessons measure. Its `load()` is a dynamic import of the module, which adds the simulation, so the Runs page and the Studio never ship an env's engine and a lab ships only its own. Workers, labs and headless code call `loadEpisodeModule(env)` before they simulate. `requireEpisodeModule(env)` then answers synchronously. A test keeps the registry's static graph free of every `module.ts`.
 
 * Brains: `blueprints` (preset brains, simplest first), `inputCount`, `inputSchema` (labels and scales, script sensors last), `outputs`, `validateInputs` and `physicsHash`.
 * Episodes: `createSetup` turns the run and the content into a plain setup a worker can rebuild (it carries `scriptSource`), and `createEnv(setup, host, seed)` builds the episode. `host.createController` returns the script's controller, or null for a run without a script, when the env uses its built in reward.
@@ -86,7 +86,7 @@ A test only toy env (`src/engine/env/tests/toyEnv.ts`, with its script slice in 
 
 Ghosts, the Sandbox and resumed runs work by re-simulating genomes, so results must repeat exactly:
 
-* Every random choice goes through a seeded `Rng` (sfc32). Episode seeds are mixed from the run seed, the generation and the genome id; ghosts use their own salt.
+* Every random choice goes through a seeded `Rng` (sfc32). Episode seeds are mixed from the run seed, the generation and the genome id. Ghosts use their own salt.
 * Agents never share state, and the world ignores them, so a champion replayed alone matches its training run tick for tick. Tests check this for both envs, and `src/engine/training/goldenRuns.test.ts` pins the hashes of short Driving and Navigation runs so any change to their results shows.
 * Weights are rounded to float32 when mutated, so the compact binary genome format (16 bytes per connection, 8 per neuron) round-trips exactly.
 * The rules are frozen per run and hashed (`physicsHash`), and every run stores its env's engine version. On a mismatch the lab says the run's generations cannot be replayed, rather than drawing a wrong path.
@@ -114,7 +114,7 @@ The renderer (`src/render/driving`) builds the city, the SUV and the traffic in 
 
 The sensor overlay draws what the followed SUV senses and plans: its lidar beams with a dot where each one hits (cyan for curbs and walls, amber for cars, magenta for people), boxes round what it detected, the light it is reading and the line it means to stop at, the route ahead as a ribbon on the road, chevrons where it will be over the next few seconds, and the destination zone. The overlay runs the engine's own lidar on the drawn world, so every beam is one the brain really has.
 
-The Driving Sandbox drives stored champions or the shipped trained model on any city, level and trip through the replay worker, and training never sees it. Up to 8 SUVs line up nose to tail on the first lane of the route; a destination clicked on the map replaces the seeded one. Training puts every SUV on the same spot, slot 0, so a lone champion replays its trip exactly.
+The Driving Sandbox drives stored champions or the shipped trained model on any city, level and trip through the replay worker, and training never sees it. Up to 8 SUVs line up nose to tail on the first lane of the route. A destination clicked on the map replaces the seeded one. Training puts every SUV on the same spot, slot 0, so a lone champion replays its trip exactly.
 
 ## Navigation
 
@@ -122,10 +122,10 @@ A course is a room with a start line, a finish line and obstacles: crates, walls
 
 * **The runner** is a small round body with a top speed and a turn rate. It slides along walls, and speed it could not use is lost. Spikes end a run, a mover can crush it, and four seconds without getting closer to the finish ends it as stuck. Its outputs are `move` and `turn`.
 * **The path hint** comes from a walking distance field over a grid of the room, worked out once per course by Dijkstra from the finish line. The same field gives progress for fitness, the hint input and the dotted trail the renderer draws.
-* **Sensors** are rays round the runner (4 to 24, optionally telling walls, spikes and movers apart), the finish bearing and distance, the path hint, its own speed and the clock. The Starter, Standard and Advanced brains have 11, 42 and 53 inputs; Advanced has no path hint.
+* **Sensors** are rays round the runner (4 to 24, optionally telling walls, spikes and movers apart), the finish bearing and distance, the path hint, its own speed and the clock. The Starter, Standard and Advanced brains have 11, 42 and 53 inputs, and Advanced has no path hint.
 * **The world block** is `[time, moverCount, x0, z0, x1, z1, ...]`. Movers are a pure function of the clock, but streaming their positions keeps renderers free of course logic.
 
-The renderer (`src/render/navigation`) draws the room on a tiled floor inside a grey block city that fades into haze. The followed runner is the full character, which looks at a mover close by, falls on spikes and celebrates at the line; the rest of the population is one instanced crowd at lower detail whose legs swing at the cadence of each runner's real speed. The cameras are Follow (a drone behind and beside the best runner, on springs stepped in simulation time), Overview, Top down and Free.
+The renderer (`src/render/navigation`) draws the room on a tiled floor inside a grey block city that fades into haze. The followed runner is the full character, which looks at a mover close by, falls on spikes and celebrates at the line. The rest of the population is one instanced crowd at lower detail whose legs swing at the cadence of each runner's real speed. The cameras are Follow (a drone behind and beside the best runner, on springs stepped in simulation time), Overview, Top down and Free.
 
 The Navigation Sandbox plays runners outside training through the shared ghost replay: `setGhostScene('navigation', setup, ghosts)` with a setup of one course and one ghost per runner, each with its own start slot. The runners are copies of the run's stored champions, or a model shipped in `public/references/navigation.json`, up to 40 at once.
 
@@ -141,28 +141,28 @@ The first screen of the landing page plays both labs live and side by side aroun
 * Once the page has loaded and gone idle, `heroMode` decides whether the device goes live. Reduced motion, Save-Data, no WebGL 2, a window under 1024 x 560 px (where the brain card has no room beside the text), a phone (a touch screen whose shorter side is under 768 px, however it is held), fewer than 4 cores or under 4 GB of memory keep the poster. Otherwise `HeroLive` loads as its own chunk.
 * Each scene is a pure loop in `src/engine/hero`: the SUV drives the trips in `public/hero/driver.json` one after another (`npm run hero:driver`), and the runner crosses the courses in `public/hero/navigator.json` (`npm run hero:navigator`). Each episode starts from a fresh env and a fresh copy of the brain, exactly as it was checked when the file was made, so every pass round the loop is the same. Between episodes the frame holds, dips to the page color and comes back up while the next one starts (`cut.ts`).
 * Both loops run on the main thread, stepped at 30 Hz from the canvas's frame loop, and a slow frame slows the scene rather than piling up ticks. The course only starts warming up once the city is on screen, so the two never compete for the first frames.
-* One canvas draws both scenes (`src/render/hero/stage/`). `splitLayout` splits the hero (side by side when it is wide, stacked when it is tall) and puts each subject in the middle of the part of its pane the text panel leaves free; the cameras aim at their subject and a shifted lens moves it there. A pane stays transparent until its scene is warm, then fades in over its half of the poster.
-* Everything stops while the hero is off screen or the tab is hidden. The quality follows Settings; when nobody picked one, the hero starts a step below the labs' default.
+* One canvas draws both scenes (`src/render/hero/stage/`). `splitLayout` splits the hero (side by side when it is wide, stacked when it is tall) and puts each subject in the middle of the part of its pane the text panel leaves free. The cameras aim at their subject and a shifted lens moves it there. A pane stays transparent until its scene is warm, then fades in over its half of the poster.
+* Everything stops while the hero is off screen or the tab is hidden. The quality follows Settings. When nobody picked one, the hero starts a step below the labs' default.
 
 ## Walkthrough
 
-Each lab opens a guided tour the first time someone visits it. The engine lives in `src/ui/walkthrough/` and knows nothing about the labs; the steps live in `src/features/onboarding/`.
+Each lab opens a guided tour the first time someone visits it. The engine lives in `src/ui/walkthrough/` and knows nothing about the labs. The steps live in `src/features/onboarding/`.
 
 * A step names what it frames with a selector, almost always a `data-tour` attribute, so restyling a control never breaks the tour. A selector that matches several elements frames them all, and a `fallback` covers controls a narrow layout hides.
 * One `requestAnimationFrame` loop in `useStage` measures the target each frame and springs the hole, its outline and the card toward it, writing straight to the DOM. React renders only when the step changes. Reduced motion snaps instead and fades.
-* The dim layer is one SVG path drawn with the evenodd rule, so the hole is unpainted and the page under it stays live and clickable. `placeCard` puts the card beside the frame without covering it; under 640 px it becomes a sheet along whichever edge hides less of the frame.
+* The dim layer is one SVG path drawn with the evenodd rule, so the hole is unpainted and the page under it stays live and clickable. `placeCard` puts the card beside the frame without covering it. Under 640 px it becomes a sheet along whichever edge hides less of the frame.
 * A step can wait for the user to press the real control, like Train, and a step's `prepare` puts the lab in the state its words describe.
 * Right or Enter goes on, Left goes back and Escape skips. The card is a non modal dialog, so lab shortcuts like Space still work from inside it.
 * The localStorage keys `sandboxlab.tour.driving` and `sandboxlab.tour.navigation` hold `1` once a tour was finished or skipped. The browser tests set them to keep tours out of the way, and each lab's help menu replays its tour.
 
 ## Scripts
 
-SBL scripts start with a header such as `script "My script" for driving v1`. They are parsed with error recovery, checked against one API registry (names, kinds, units and scopes) and compiled into closure trees. Nothing ever evaluates generated JavaScript, so an imported run cannot carry code that runs on open. Each env's slice in `src/engine/script/registry/<env>/` lists the sensors, actions and operators its scripts may name, with docs and examples the Studio shows. Generation operators like `speciate` and `breed` only fill a plan; the tested NEAT code does the work.
+SBL scripts start with a header such as `script "My script" for driving v1`. They are parsed with error recovery, checked against one API registry (names, kinds, units and scopes) and compiled into closure trees. Nothing ever evaluates generated JavaScript, so an imported run cannot carry code that runs on open. Each env's slice in `src/engine/script/registry/<env>/` lists the sensors, actions and operators its scripts may name, with docs and examples the Studio shows. Generation operators like `speciate` and `breed` only fill a plan. The tested NEAT code does the work.
 
 ## Persistence
 
 Runs, per generation champions and the newest three population checkpoints live in IndexedDB, next to the courses the user draws. Destructive actions keep the old run in Trash for seven days. A run exports to one JSON file with genomes in base64. The Model tab also downloads the champion brain alone as a readable `.model.json`: every neuron and link with its weight, the input and output names, an evaluation order, and the exact genome in base64. Hidden neurons use the run's activation and outputs use tanh, so the file is enough to run the brain in any language.
 
-Generation records and checkpoints are written through one queue, in the order they happened, because IndexedDB keeps no order between stores. A run reopens from the newest checkpoint its stored history reaches without a gap; later generations are dropped and come back exactly when training resumes.
+Generation records and checkpoints are written through one queue, in the order they happened, because IndexedDB keeps no order between stores. A run reopens from the newest checkpoint its stored history reaches without a gap. Later generations are dropped and come back exactly when training resumes.
 
-The Dexie schema (`src/storage/db.ts`) is at version 5. The tables of two retired labs stay declared, since dropping one would need a new version and their rows harm nothing; nothing writes them, and destroying an old run still frees its rows.
+The Dexie schema (`src/storage/db.ts`) is at version 5. The tables of two retired labs stay declared, since dropping one would need a new version and their rows harm nothing. Nothing writes them, and destroying an old run still frees its rows.
