@@ -33,7 +33,7 @@ export function CityEffects({ tier }: { tier: DrivingTier }) {
   const high = tier === 'high' || ultra;
   return (
     <EffectComposer multisampling={0} enableNormalPass={false} frameBufferType={THREE.HalfFloatType}>
-      <N8AO ref={opaqueOnly} aoRadius={2.6} distanceFalloff={1.2} intensity={high ? 2.4 : 2} quality={ultra ? 'high' : high ? 'medium' : 'low'} halfRes={!ultra} color="#0a0c10" />
+      <N8AO ref={opaqueOnly} aoRadius={1.2} distanceFalloff={1} intensity={high ? 2.4 : 2} quality={ultra ? 'high' : high ? 'medium' : 'low'} halfRes={!ultra} color="#0a0c10" />
       <Bloom mipmapBlur levels={ultra ? 7 : 6} luminanceThreshold={1.1} luminanceSmoothing={0.25} intensity={high ? 0.85 : 0.6} radius={0.65} />
       <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       <primitive object={grade} />
