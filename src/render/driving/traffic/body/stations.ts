@@ -2,6 +2,9 @@ import type { CarShape } from '../shape/types';
 import type { TrafficDetail } from './detail';
 import { archRadius, axles, endSpan, keysAt } from './frame';
 
+/** How far outside each wheel opening its straight sides stand, m. */
+export const ARCH_EDGE = 0.003;
+
 /** How much a radian of turn counts against a meter of length when spacing stations. */
 const TURN_WEIGHT = 0.35;
 /** The same along the middle, where the turns are the side view's: hood into glass, glass into roof. */
@@ -91,7 +94,7 @@ export function lowerStations(s: CarShape, d: TrafficDetail): number[] {
   const out = upperStations(s, d);
   const extra: number[] = [];
   for (const axle of axles(s)) {
-    extra.push(axle - r - 0.003, axle + r + 0.003);
+    extra.push(axle - r - ARCH_EDGE, axle + r + ARCH_EDGE);
     for (let i = 0; i <= d.arch; i++) extra.push(axle - r * Math.cos((Math.PI * i) / d.arch));
   }
   for (const x of extra) if (out.every((k) => Math.abs(k - x) > 0.002)) out.push(x);

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 /** Surfaces on a traffic car. */
-export type Look = 'paint' | 'seam' | 'glass' | 'trim' | 'plastic' | 'well' | 'grille' | 'plate' | 'head' | 'lens' | 'drl' | 'tail' | 'amber' | 'sign' | 'tire' | 'wall' | 'rim' | 'hub';
+export type Look = 'paint' | 'seam' | 'glass' | 'trim' | 'plastic' | 'well' | 'grille' | 'plate' | 'head' | 'lens' | 'drl' | 'tail' | 'amber' | 'sign' | 'tire' | 'wall' | 'lip' | 'rim' | 'hub' | 'gap';
 
 /**
  * Which lamp a vertex belongs to, so the shader can light it from the
@@ -27,9 +27,11 @@ const LOOKS: Record<Look, { color: [number, number, number]; rough: number; meta
   amber: { color: [0.7, 0.33, 0.04], rough: 0.2, metal: 0.1, glow: 0, tint: 0 },
   sign: { color: [0.98, 0.9, 0.62], rough: 0.4, metal: 0, glow: 1.1, tint: 0 },
   tire: { color: [0.022, 0.022, 0.024], rough: 0.9, metal: 0, glow: 0, tint: 0 },
-  wall: { color: [0.034, 0.034, 0.036], rough: 0.72, metal: 0, glow: 0, tint: 0 },
-  rim: { color: [0.5, 0.52, 0.55], rough: 0.34, metal: 0.9, glow: 0, tint: 0 },
-  hub: { color: [0.02, 0.02, 0.022], rough: 0.6, metal: 0.3, glow: 0, tint: 0 },
+  wall: { color: [0.046, 0.047, 0.05], rough: 0.8, metal: 0, glow: 0, tint: 0 },
+  lip: { color: [0.78, 0.8, 0.82], rough: 0.16, metal: 1, glow: 0, tint: 0 },
+  rim: { color: [0.56, 0.58, 0.6], rough: 0.28, metal: 0.95, glow: 0, tint: 0 },
+  hub: { color: [0.08, 0.08, 0.085], rough: 0.4, metal: 0.5, glow: 0, tint: 0 },
+  gap: { color: [0.012, 0.012, 0.013], rough: 0.7, metal: 0.2, glow: 0, tint: 0 },
 };
 
 /**

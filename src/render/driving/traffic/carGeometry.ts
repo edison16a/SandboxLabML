@@ -71,7 +71,7 @@ export function buildTrafficBody(s: CarShape, d: TrafficDetail): { geometry: THR
   }
   const half = merge([imprint.geometry(), ...laid]);
   laid.forEach((g) => g.dispose());
-  const parts = [half, mirrorHalf(half), bothSides(bakeLook(wheelLiners(s, Math.max(3, d.arch - 2)), ['well'])), bothSides(doorMirror(s, proj, d.fine))];
+  const parts = [half, mirrorHalf(half), bothSides(bakeLook(wheelLiners(s, d), ['well'])), bothSides(doorMirror(s, proj, d.fine))];
   if (s.roofSign) parts.push(roofSign(s, proj));
   shell.panels.forEach((g) => g.dispose());
   shell.underbody.dispose();

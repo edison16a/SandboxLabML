@@ -56,8 +56,8 @@ export function saloonDecals(s: CarShape): Decal[] {
     { region: strip('front', [[0.43, 0.705], [0.6, 0.713], [0.78, 0.713], [0.86, 0.705]], 0.009), look: 'drl', kind: 'float', lamp: LAMP.head, cells: [8, 1] },
     { region: strip('front', [[0.47, 0.68], [0.68, 0.677]], 0.018), look: 'lens', kind: 'float', cells: [3, 1], fine: true },
     { region: strip('front', [[0.79, 0.679], [0.865, 0.692]], 0.016), look: 'amber', kind: 'float', lamp: LAMP.left, cells: [3, 1] },
-    { region: strip('front', [[0, 0.668], [0.37, 0.674]], [[0, 0.712], [0.36, 0.716]]), look: 'grille', kind: 'float', cells: [8, 1] },
-    { region: strip('front', [[0, 0.4], [0.5, 0.405], [0.62, 0.43]], [[0, 0.52], [0.48, 0.52], [0.58, 0.5]]), look: 'grille', kind: 'float', cells: [10, 1] },
+    { region: strip('front', [[0, 0.668], [0.37, 0.674]], [[0, 0.712], [0.36, 0.716]]), look: 'grille', kind: 'float', cells: [3, 1] },
+    { region: strip('front', [[0, 0.4], [0.5, 0.405], [0.62, 0.43]], [[0, 0.52], [0.48, 0.52], [0.58, 0.5]]), look: 'grille', kind: 'float', cells: [4, 1] },
     // Tail lamps wrap round the corners; the indicator is their inner end.
     { region: strip('rear', [[0.4, 0.862], [0.6, 0.856], [0.82, 0.862], [0.905, 0.88]], [[0.38, 0.918], [0.6, 0.928], [0.82, 0.928], [0.9, 0.916]]), look: 'tail', lamp: LAMP.tail, cells: [5, 1] },
     { region: strip('rear', [[0.3, 0.868], [0.39, 0.865]], 0.03), look: 'amber', kind: 'float', lamp: LAMP.left, cells: [2, 1] },

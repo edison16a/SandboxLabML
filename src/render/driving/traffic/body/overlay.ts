@@ -41,6 +41,9 @@ function lay(proj: Projector, r: Region, flat: Pt[][], lift: number): { geometry
   return { geometry: g, misses };
 }
 
+/** How tall a floating piece must be, m, before it also bends at creases across it. */
+const TALL = 0.05;
+
 const lerp = (a: Pt, b: Pt, t: number): Pt => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 
 /**
@@ -49,12 +52,24 @@ const lerp = (a: Pt, b: Pt, t: number): Pt => [a[0] + (b[0] - a[0]) * t, a[1] + 
  * thin shapes, and safe where the paint under it is gently curved.
  */
 export function floatDecal(proj: Projector, r: Region, nu: number, nv: number, lift: number): { geometry: THREE.BufferGeometry; misses: number } {
-  const us = laidParams(proj, r, nu, true);
-  // Add a row wherever the middle of the strip crosses a shell crease, so the sheet bends with the paint.
-  const fine = Array.from({ length: 4 * nu + 1 }, (_, i) => i / (4 * nu));
-  const mid = regionGrid(r, fine, [0.5]).map((row) => row[0]);
-  for (let i = 0; i < fine.length - 1; i++) for (const t of proj.creases(r.view, mid[i], mid[i + 1], 3)) us.push(fine[i] + t * (fine[i + 1] - fine[i]));
-  return lay(proj, r, regionGrid(r, tidy(us), laidParams(proj, r, nv, false)), lift);
+  // Add a row wherever the strip's middle line crosses a shell crease, so the sheet bends with the
+  // paint instead of sinking into it where the paint is convex. Across a slim strip the paint
+  // barely turns, so only pieces taller than a few centimeters (a plate, a grille) bend that way.
+  const us = withCreases(proj, r, laidParams(proj, r, nu, true), nu, true);
+  const vs = laidParams(proj, r, nv, false);
+  const across = regionGrid(r, [0.5], [0, 1])[0];
+  const tall = Math.hypot(across[1][0] - across[0][0], across[1][1] - across[0][1]) > TALL;
+  return lay(proj, r, regionGrid(r, us, tall ? withCreases(proj, r, vs, nv, false) : vs), lift);
+}
+
+/** Parameters along one direction of a region plus wherever its middle line crosses a shell crease. */
+function withCreases(proj: Projector, r: Region, ts: number[], n: number, along: boolean): number[] {
+  const fine = Array.from({ length: 4 * n + 1 }, (_, i) => i / (4 * n));
+  const grid = along ? regionGrid(r, fine, [0.5]) : regionGrid(r, [0.5], fine);
+  const mid = along ? grid.map((row) => row[0]) : grid[0];
+  const out = [...ts];
+  for (let i = 0; i < fine.length - 1; i++) for (const t of proj.creases(r.view, mid[i], mid[i + 1], 3)) out.push(fine[i] + t * (fine[i + 1] - fine[i]));
+  return tidy(out);
 }
 
 /** Sorted parameters with near duplicates dropped. */
