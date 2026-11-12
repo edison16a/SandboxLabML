@@ -1,31 +1,19 @@
 import { DIR_X, DIR_Y, LANE_OFFSET, PROPERTY, STOP_LINE } from '@/engine/driving/city/dimensions';
 import type { City } from '@/engine/driving/city/types';
-import { streetscapeFor, type Spot } from '../city/streetscape/layout';
+import { crowdedLens, sees, sightWorld, type SightWorld } from './sightLines';
 
-/** Camera height on its corner, m, and the raised height used when both corners are cluttered. */
+/** Camera height on its corner, m, and the raised heights used when the corner is cluttered. */
 export const CORNER_HEIGHT = 3.4;
 const RAISED_HEIGHT = 5.5;
-/** How far the camera moves out along the cross street when it has to dodge the corner furniture, m. */
+const HIGH_HEIGHT = 8;
+/** How far a spot moves out along the cross street to dodge the corner furniture, m. */
 const DODGE = 1.5;
-/** A pole, lamp or trunk blocks a sight line passing within this of its center, m; a tree crown more. */
-const POLE = 0.4;
-const CROWN = 1.6;
-/** Height of a tree crown's underside, m: a sight line below it only meets the trunk. */
-const CROWN_BASE = 2.5;
-/** Points along the approach the camera must see: the stop line and up to 30 m back. */
-const SAMPLES = [0, 7.5, 15, 22.5, 30];
-/**
- * A pole, signal or lamp nearer the lens than this fills the frame as the
- * camera pans to follow the car through the junction, m. Such a spot is
- * as bad as a fully blocked one.
- */
-const TOO_CLOSE = 2.4;
-/**
- * How far the camera steps on along the far sidewalk, away from the
- * junction, to clear a pole beside it, m. Stepping along the street keeps
- * the view down the approach clear of the buildings on the corner.
- */
+/** How far a spot steps on along the far sidewalk, away from the junction, to clear a pole beside it, m. */
 const CLEAR_STEP = 3.2;
+/** Points along the approach the camera must see: the stop line and up to 30 m back. */
+const APPROACH = [0, 7.5, 15, 22.5, 30];
+/** Points along the exit it pans to as the car leaves the junction, m past the far stop line. */
+const EXIT = [0, 6, 12];
 
 /** A camera spot on a corner, in sim meters, and its height. */
 export interface CornerSpot {
@@ -34,84 +22,68 @@ export interface CornerSpot {
   height: number;
 }
 
-/** Whether the sight line from (px, py, ph) to (tx, ty, 1 m up) passes an obstacle of radius r at (cx, cy) with a crown above `crown` m. */
-function blocks(px: number, py: number, ph: number, tx: number, ty: number, c: Spot, r: number, crown: number): boolean {
-  const dx = tx - px;
-  const dy = ty - py;
-  const len2 = dx * dx + dy * dy || 1;
-  const t = ((c.x - px) * dx + (c.y - py) * dy) / len2;
-  if (t < 0.03 || t > 0.97) return false;
-  const h = ph + (1 - ph) * t;
-  const reach = h > crown ? r : POLE;
-  const ex = px + dx * t - c.x;
-  const ey = py + dy * t - c.y;
-  return ex * ex + ey * ey < reach * reach;
-}
-
-/** True when a pole, signal head or lamp stands so close to the spot that it would fill the frame. */
-function crowded(city: City, spot: CornerSpot): boolean {
-  const s = streetscapeFor(city);
-  const near = (c: { x: number; y: number }) => Math.hypot(c.x - spot.x, c.y - spot.y) < TOO_CLOSE;
-  return s.signals.some((g) => near(g.pole) || near(g.head) || near(g.near)) || s.walks.some(near) || s.lamps.some(near);
-}
-
-/** How many of the approach's sample points the spot cannot see past poles, lamps and trees; all of them when a pole crowds the lens. */
-function blockedSamples(city: City, spot: CornerSpot, node: number, dir: number): number {
-  if (crowded(city, spot)) return SAMPLES.length;
-  const s = streetscapeFor(city);
+/** The points the camera has to see for one maneuver: down the approach, the middle of the junction and out along the exit, 1 m up. */
+function viewPoints(city: City, node: number, dir: number, turn: number): Array<[number, number]> {
   const n = city.nodes[node];
   const fx = DIR_X[dir];
   const fy = DIR_Y[dir];
+  const out: Array<[number, number]> = [];
   // The approach lane: behind the node against the travel direction, on the right of travel.
-  const rx = fy;
-  const ry = -fx;
+  for (const back of APPROACH) out.push([n.x - fx * (STOP_LINE + back) + fy * LANE_OFFSET, n.y - fy * (STOP_LINE + back) - fx * LANE_OFFSET]);
+  out.push([n.x, n.y]);
+  // A right turn (1) leaves to the right of travel, a left one (-1) to the left.
+  const ex = turn === 0 ? fx : turn === 1 ? fy : -fy;
+  const ey = turn === 0 ? fy : turn === 1 ? -fx : fx;
+  for (const s of EXIT) out.push([n.x + ex * (STOP_LINE + s) + ey * LANE_OFFSET, n.y + ey * (STOP_LINE + s) - ex * LANE_OFFSET]);
+  return out;
+}
+
+/** How many of the maneuver's points the spot cannot see; every one of them when furniture crowds the lens. */
+function blockedPoints(w: SightWorld, spot: CornerSpot, points: ReadonlyArray<[number, number]>): number {
+  if (crowdedLens(w, spot.x, spot.y, spot.height)) return points.length + 1;
   let blocked = 0;
-  for (const back of SAMPLES) {
-    const tx = n.x - fx * (STOP_LINE + back) + rx * LANE_OFFSET;
-    const ty = n.y - fy * (STOP_LINE + back) + ry * LANE_OFFSET;
-    let hit = false;
-    for (const g of s.signals) hit ||= blocks(spot.x, spot.y, spot.height, tx, ty, g.pole, POLE + 0.2, Infinity);
-    for (const w of s.walks) hit ||= blocks(spot.x, spot.y, spot.height, tx, ty, w, POLE, Infinity);
-    for (const l of s.lamps) hit ||= blocks(spot.x, spot.y, spot.height, tx, ty, l, POLE, Infinity);
-    for (const tr of s.trees) hit ||= blocks(spot.x, spot.y, spot.height, tx, ty, tr, CROWN, CROWN_BASE);
-    if (hit) blocked++;
-  }
+  for (const [x, y] of points) if (!sees(w, spot.x, spot.y, spot.height, x, y, 1)) blocked++;
   return blocked;
 }
 
 /**
- * Where the street corner camera stands for a car arriving at `node`
- * travelling in `dir` and turning `turn`. It tries the two far corners,
- * the one on the outside of the turn first, and keeps the one with the
- * clearer view down the approach past the signal poles, lamps and trees.
- * If both are cluttered it climbs higher and steps out along the cross
- * street, away from the corner furniture.
+ * Every spot the street corner camera may stand on for a car arriving at
+ * `node` travelling in `dir` and turning `turn`, best first. The two far
+ * corners come first, the one on the outside of the turn ahead of the
+ * other, then each stepped along its sidewalk, then raised and dodged out
+ * along the cross street, then high above the corner. They are ranked by
+ * how many points of the maneuver they see past the poles, signal heads,
+ * lamps, trees and buildings, over the whole pan from the approach through
+ * the junction to the exit; a spot where furniture fills the lens comes
+ * last. The camera takes the first and moves down the list if the car
+ * ever stays hidden from it (see cornerCam).
  */
-export function pickCornerSpot(city: City, node: number, dir: number, turn: number): CornerSpot {
+export function rankCornerSpots(city: City, node: number, dir: number, turn: number): CornerSpot[] {
+  const w = sightWorld(city);
   const n = city.nodes[node];
   const fx = DIR_X[dir];
   const fy = DIR_Y[dir];
   const d = PROPERTY - 1.2;
   const first = turn === 1 ? 1 : -1;
-  let best: CornerSpot | null = null;
-  let bestBlocked = Infinity;
-  let bestSide = first;
+  const spots: CornerSpot[] = [];
   for (const side of [first, -first]) {
     const lx = -fy * side;
     const ly = fx * side;
-    const spot = { x: n.x + fx * d + lx * d, y: n.y + fy * d + ly * d, height: CORNER_HEIGHT };
-    const blocked = blockedSamples(city, spot, node, dir);
-    if (blocked < bestBlocked) {
-      best = spot;
-      bestBlocked = blocked;
-      bestSide = side;
-    }
-    if (blocked === 0) break;
+    const x = n.x + fx * d + lx * d;
+    const y = n.y + fy * d + ly * d;
+    spots.push({ x, y, height: CORNER_HEIGHT });
+    spots.push({ x: x + fx * CLEAR_STEP, y: y + fy * CLEAR_STEP, height: CORNER_HEIGHT });
+    spots.push({ x: x + lx * DODGE, y: y + ly * DODGE, height: RAISED_HEIGHT });
+    spots.push({ x: x + fx * CLEAR_STEP, y: y + fy * CLEAR_STEP, height: RAISED_HEIGHT });
+    spots.push({ x, y, height: HIGH_HEIGHT });
   }
-  if (bestBlocked <= 1) return best!;
-  const lx = -fy * bestSide;
-  const ly = fx * bestSide;
-  const raised = { x: best!.x + lx * DODGE, y: best!.y + ly * DODGE, height: RAISED_HEIGHT };
-  // On along the far sidewalk when a pole still stands at the lens.
-  return crowded(city, raised) ? { x: best!.x + fx * CLEAR_STEP, y: best!.y + fy * CLEAR_STEP, height: RAISED_HEIGHT } : raised;
+  const points = viewPoints(city, node, dir, turn);
+  const score = spots.map((s, i) => ({ s, blocked: blockedPoints(w, s, points), i }));
+  score.sort((a, b) => a.blocked - b.blocked || a.i - b.i);
+  return score.map((e) => e.s);
+}
+
+/** The best spot for the street corner camera (see rankCornerSpots). */
+export function pickCornerSpot(city: City, node: number, dir: number, turn: number): CornerSpot {
+  return rankCornerSpots(city, node, dir, turn)[0];
 }
