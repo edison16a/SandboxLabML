@@ -72,8 +72,8 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
     tail,
     glass: new THREE.MeshPhysicalMaterial({ color: '#0b0f14', metalness: 0.1, roughness: 0.05, clearcoat: 0.6, clearcoatRoughness: 0.03 }),
     trim: new THREE.MeshPhysicalMaterial({ color: '#08090b', metalness: 0.2, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.04 }),
-    // Satin, a shade off black: its rolled top catches the sky, so it reads as trim on the body and never merges with the shadow under it.
-    clad: new THREE.MeshStandardMaterial({ color: '#202327', roughness: 0.3, metalness: 0.05 }),
+    // Satin dark grey rather than black: its face looks up at the sky, so it reads as trim on the body and never merges with the shadow under it.
+    clad: new THREE.MeshStandardMaterial({ color: '#34383e', roughness: 0.4, metalness: 0.05 }),
     led: new THREE.MeshBasicMaterial({ color: new THREE.Color(4.2, 4.2, 3.9), toneMapped: false }),
     liner: new THREE.MeshStandardMaterial({ color: '#050506', roughness: 0.95 }),
     metal: new THREE.MeshStandardMaterial({ color: '#cfd3d8', metalness: 1, roughness: 0.16 }),

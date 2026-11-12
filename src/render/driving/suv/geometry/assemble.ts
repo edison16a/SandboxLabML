@@ -35,7 +35,7 @@ const LOOK: Record<Slot, { color: [number, number, number]; rough: number; metal
   paint: { color: [1, 1, 1], rough: 0.32, metal: 0.14, tint: 1 },
   glass: { color: [0.02, 0.025, 0.03], rough: 0.05, metal: 0.2 },
   trim: { color: [0.012, 0.012, 0.014], rough: 0.2, metal: 0.2 },
-  clad: { color: [0.019, 0.021, 0.024], rough: 0.34, metal: 0 },
+  clad: { color: [0.04, 0.043, 0.048], rough: 0.4, metal: 0 },
   grille: { color: [0.01, 0.01, 0.012], rough: 0.5, metal: 0.2 },
   led: { color: [1, 1, 0.96], rough: 0.4, metal: 0, glow: 3 },
   tail: { color: [1, 0.06, 0.04], rough: 0.4, metal: 0, glow: 1.5 },
