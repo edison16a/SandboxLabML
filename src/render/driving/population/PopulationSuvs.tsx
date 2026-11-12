@@ -112,7 +112,7 @@ export function PopulationSuvs({ source, colors, onPick }: Props = {}) {
       g.setMatrixAt(slot, tmp.m);
       slots[slot] = i;
       if (status === STATUS_CRASHED) tmp.c.copy(CRASHED_COLOR);
-      else if (status === STATUS_ARRIVED) tmp.c.copy(ARRIVED_COLOR);
+      else if (status === STATUS_ARRIVED) glassTint(tmp.c.copy(ARRIVED_COLOR));
       else if (tint === 'age') glassTint(ghostColor(n > 1 ? i / (n - 1) : 1, tmp.c));
       else glassTint(speciesColor(population.tags[i] ?? 0, tmp.c));
       g.setColorAt(slot, tmp.c);
