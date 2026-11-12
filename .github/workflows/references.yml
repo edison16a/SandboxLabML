@@ -1,7 +1,7 @@
 name: Benchmark references
 
 # Retrains the reference scripts of both environments and rebuilds
-# public/references/racing.json and public/references/hideseek.json. Each
+# public/references/driving.json and public/references/navigation.json. Each
 # environment trains in its own job, so the two run side by side. Training
 # is deterministic, so a file only changes when the engine, the benchmark or
 # a preset changed. When one does, the new files are committed to the
@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env: [racing, hideseek]
+        env: [driving, navigation]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
