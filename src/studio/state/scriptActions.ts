@@ -4,6 +4,7 @@ import { getSetting, setSetting } from '@/storage/settings';
 import { createScript, deleteScript, duplicateScript, getScript, listPresets, renameScript, saveScript } from '@/storage/scripts';
 import { toast } from '@/ui/toast/toastStore';
 import { ask } from './confirm';
+import { shownScript, STARTER_SCRIPT_ID } from './studioEnvs';
 import { isDirty, useStudio } from './studioStore';
 
 const LAST_SCRIPT_KEY = 'studio.lastScript';
@@ -58,23 +59,39 @@ export async function openScript(id: string, opts: { force?: boolean } = {}): Pr
     toast.error('Script not found', 'It may have been deleted.');
     return false;
   }
+  if (!shownScript(entry)) {
+    toast.info('That script is for a lab this version does not have.');
+    return false;
+  }
   useStudio.getState().open(entry);
   syncUrl(id);
   void setSetting(LAST_SCRIPT_KEY, id);
   return true;
 }
 
-/** Opens ?script=, else the last script, else the first preset. */
+/** Opens the script a newcomer starts on, the Driving Beginner preset, or the first preset shown if that one is missing. */
+async function openStarter(): Promise<void> {
+  const id = (await getScript(STARTER_SCRIPT_ID)) ? STARTER_SCRIPT_ID : listPresets().find(shownScript)?.id;
+  if (id) await openScript(id, { force: true });
+}
+
+/**
+ * Opens ?script=, else the last script, else the starter preset. A script
+ * of a removed lab is skipped; a link to one says so.
+ */
 export async function openInitial(requested: string | null): Promise<void> {
   const last = await getSetting<string>(LAST_SCRIPT_KEY).catch(() => null);
   for (const id of [requested, last]) {
-    if (id && (await getScript(id))) {
-      await openScript(id, { force: true });
-      return;
+    const entry = id ? await getScript(id) : undefined;
+    if (!entry) continue;
+    if (!shownScript(entry)) {
+      if (id === requested) toast.info('That script is for a lab this version does not have.');
+      continue;
     }
+    await openScript(entry.id, { force: true });
+    return;
   }
-  const first = listPresets()[0];
-  if (first) await openScript(first.id, { force: true });
+  await openStarter();
 }
 
 export async function saveCurrent(): Promise<boolean> {
@@ -133,8 +150,5 @@ export async function remove(id: string, name: string): Promise<void> {
   if (answer !== 'confirm') return;
   await deleteScript(id).catch(fail('Could not delete'));
   bumpList();
-  if (useStudio.getState().script?.id === id) {
-    const first = listPresets()[0];
-    if (first) await openScript(first.id, { force: true });
-  }
+  if (useStudio.getState().script?.id === id) await openStarter();
 }
