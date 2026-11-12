@@ -126,6 +126,21 @@ describe('what the Navigation viewport shows', () => {
     expect(feeds.getGhosts()).toBe(feeds.ghosts);
   });
 
+  it("reads training's level under Max, not the level of the replay it holds still", () => {
+    const state = lab({ status: 'running', speed: '1x' });
+    const { ghosts, feeds } = setup(state);
+    // A replay of a level 1 course has a frame, then training races on under Max to level 4.
+    ghosts.start(3, generateCourse(1, 9));
+    ghosts.frame(NAV_RUNNING);
+    expect(feeds.level(state)).toBe(1);
+    const content = initialNavigationContent(run);
+    Object.assign(state, { speed: 'max', content: { ...content, curriculum: { ...content.curriculum, level: 4 } } });
+    expect(feeds.level(state)).toBe(4);
+    // Paused again, the replay plays and its own level shows.
+    Object.assign(state, { status: 'paused' });
+    expect(feeds.level(state)).toBe(1);
+  });
+
   describe('in the Sandbox', () => {
     // Two copies of the run's champion on a level 1 course, while training is on a level 0 course.
     const records = [{ generation: 0, genome: { nodes: [], connections: [] }, replaySeed: 4, replaySlot: 0, champion: { fitness: 1 } }] as never;

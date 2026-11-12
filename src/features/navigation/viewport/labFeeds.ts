@@ -3,6 +3,7 @@ import { navigationOf } from '@/engine/navigation/pipeline/settings';
 import type { NavigationParams } from '@/engine/navigation/params';
 import type { NavigationInputConfig } from '@/engine/navigation/sensors/inputConfig';
 import type { NavFeed } from '@/render/navigation/types';
+import { viewportHeld } from '@/features/lab/state/labState';
 import type { SnapshotStream } from '@/workers/client/snapshotStream';
 import { isWatchSpeed, WATCH_SPEEDS } from '@/workers/shared/protocol';
 import type { NavigationLabState } from '../state/labStore';
@@ -114,9 +115,17 @@ export class LabFeeds {
     return buffer && buffer.length > 0 ? { buffer, count: feed.stream.count } : null;
   }
 
-  /** The level on screen: the Sandbox course's in the Sandbox, the streamed course's while one streams, else the content's. */
+  /**
+   * The level on screen: the Sandbox course's in the Sandbox, the streamed
+   * course's while one streams, else the content's. Max holds the replay
+   * still while it trains, so its level would go stale while training
+   * climbs: then it reads training's own, as Driving does.
+   */
   level(s: NavigationLabState): number {
+    if (!s.run || s.run.env !== 'navigation') return 0;
+    this.sync(s);
     if (s.mode === 'sandbox') return s.sandbox.lineup?.spec.level ?? 0;
+    if (viewportHeld(s)) return s.content?.curriculum.level ?? this.population.level;
     if (this.showsPopulation(s)) return this.population.level;
     if (this.showsGhosts(s)) return this.ghosts.level;
     return s.content?.curriculum.level ?? 0;
