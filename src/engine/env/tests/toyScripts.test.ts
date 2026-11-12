@@ -48,7 +48,8 @@ describe('scripts of an env added through the registry', () => {
 
   it('compile against that env only', () => {
     expect(compileScript(STARTER).diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
-    expect(compileScript(STARTER.replace('stop "there" when walker.reached', 'stop "off" when car.offTrack')).script).toBeNull();
+    // A Driving sensor is unknown to a toy script.
+    expect(compileScript(STARTER.replace('stop "there" when walker.reached', 'stop "off" when car.offRoad')).script).toBeNull();
   });
 
   it('train under a tick block that reads extra from createController', () => {
