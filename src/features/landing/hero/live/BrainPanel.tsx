@@ -42,7 +42,7 @@ export function BrainPanel({ title, feed, outputLabels, status, detail, classNam
       <div className="flex items-center gap-2 border-t border-white/10 pt-2 text-[12px]">
         <span className="size-1.5 shrink-0 rounded-full bg-success" />
         <span className="whitespace-nowrap text-fg">{status}</span>
-        <span className="ml-auto font-mono text-[11px] whitespace-nowrap text-muted tabular">{detail}</span>
+        <span data-hero-detail className="ml-auto font-mono text-[11px] whitespace-nowrap text-muted tabular">{detail}</span>
       </div>
     </div>
   );

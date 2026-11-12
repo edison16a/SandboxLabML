@@ -1,4 +1,4 @@
-import { expect, test, type Worker } from '@playwright/test';
+import { expect, test, type Page, type Worker } from '@playwright/test';
 
 declare global {
   interface Window {
@@ -28,8 +28,26 @@ function cardsOverText(): string[] {
   return covered;
 }
 
+/** Records every WebGL context the page makes and skips the lab walkthroughs. */
+async function watchContexts(page: Page) {
+  await page.addInitScript(() => {
+    const contexts: Array<WebGLRenderingContext | WebGL2RenderingContext> = [];
+    window.__glContexts = contexts;
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...rest: unknown[]) {
+      const ctx = (original as (...a: unknown[]) => RenderingContext | null).call(this, type, ...rest);
+      if (ctx && (type === 'webgl2' || type === 'webgl') && !contexts.includes(ctx as WebGL2RenderingContext)) contexts.push(ctx as WebGL2RenderingContext);
+      return ctx;
+    } as typeof original;
+    for (const lab of ['driving', 'navigation']) window.localStorage.setItem(`sandboxlab.tour.${lab}`, '1');
+  });
+}
+
+/** The runner card's clock, which only moves while the hero plays. */
+const runnerClock = (page: Page) => page.locator('[data-hero-card="run"] [data-hero-detail]').textContent();
+
 test.describe('Landing hero', () => {
-  test.setTimeout(300_000);
+  test.setTimeout(420_000);
 
   test('paints the poster first and keeps it for reduced motion', async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: 'reduce' });
@@ -47,49 +65,51 @@ test.describe('Landing hero', () => {
     await context.close();
   });
 
-  test('goes live on a desktop with both scenes in one canvas and lets go of its worker and context when you leave', async ({ page }) => {
-    await page.addInitScript(() => {
-      const contexts: Array<WebGLRenderingContext | WebGL2RenderingContext> = [];
-      window.__glContexts = contexts;
-      const original = HTMLCanvasElement.prototype.getContext;
-      HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...rest: unknown[]) {
-        const ctx = (original as (...a: unknown[]) => RenderingContext | null).call(this, type, ...rest);
-        if (ctx && (type === 'webgl2' || type === 'webgl') && !contexts.includes(ctx as WebGL2RenderingContext)) contexts.push(ctx as WebGL2RenderingContext);
-        return ctx;
-      } as typeof original;
-      window.localStorage.setItem('sandboxlab.tour.racing', '1');
-    });
+  test('talks only about the two labs', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('link', { name: 'Go Train' })).toHaveAttribute('href', '/lab/driving');
+    await expect(page.locator('[data-hero-content]').getByRole('link', { name: 'Navigation' })).toHaveAttribute('href', '/lab/navigation');
+    await expect(page.locator('[data-hero-content]').getByRole('link', { name: 'Studio' })).toHaveAttribute('href', '/studio');
+    const words = await page.locator('section, footer').allTextContents();
+    expect(words.join(' ')).not.toMatch(/racing|\blaps?\b|tracks?\b|hiders?|seekers?|hide and seek/i);
+  });
+
+  test('plays both trained brains live, pauses off screen, and lets go of its contexts when you leave', async ({ page }) => {
+    await watchContexts(page);
     const workers: Worker[] = [];
-    const gone = new Set<Worker>();
-    page.on('worker', (w) => {
-      workers.push(w);
-      w.once('close', () => gone.add(w));
-    });
+    page.on('worker', (w) => workers.push(w));
     await page.goto('/?quality=low');
 
-    // The car scene comes up over its half of the poster, driven by one replay worker. The worker that built the
-    // hills and trees has finished and closed by the time the scene shows. The arena then joins it beside it.
-    await expect(page.locator('[data-hero-shown~="car"]')).toBeAttached({ timeout: 240_000 });
-    await expect(page.locator('[data-hero-panels]')).toContainText('Car brain');
-    await expect.poll(() => workers.filter((w) => !gone.has(w)).length).toBe(1);
-    await expect(page.locator('[data-hero-shown~="arena"]')).toBeAttached({ timeout: 240_000 });
-    await expect(page.locator('[data-hero-panels]')).toContainText(/Hider brain|Seeker brain/);
+    // The city comes up over its half of the poster with the SUV's brain card, then the course beside it.
+    await expect(page.locator('[data-hero-shown~="drive"]')).toBeAttached({ timeout: 300_000 });
+    await expect(page.locator('[data-hero-card="drive"]')).toContainText('SUV brain');
+    await expect(page.locator('[data-hero-card="drive"]')).toContainText(/\d+ km\/h/);
+    await expect(page.locator('[data-hero-shown~="run"]')).toBeAttached({ timeout: 300_000 });
+    await expect(page.locator('[data-hero-card="run"]')).toContainText('Runner brain');
+    // Both simulations run on the page itself: no worker starts for the hero.
+    expect(workers).toHaveLength(0);
+
+    // Scrolled away, the scenes and their simulations stand still; back on screen, they carry on.
+    await page.locator('footer').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(2000);
+    const held = await runnerClock(page);
+    await page.waitForTimeout(6000);
+    expect(await runnerClock(page)).toBe(held);
+    await page.locator('section[aria-labelledby="hero-title"]').scrollIntoViewIfNeeded();
+    await expect.poll(() => runnerClock(page), { timeout: 120_000 }).not.toBe(held);
 
     // On a small laptop the corner cards stay clear of the centered words and the button.
     await page.setViewportSize({ width: 1024, height: 768 });
     await expect(page.locator('[data-hero-panels]')).toBeVisible();
     await expect.poll(() => page.evaluate(cardsOverText)).toEqual([]);
     await page.setViewportSize({ width: 1440, height: 900 });
-    const heroWorker = workers.find((w) => !gone.has(w)) as Worker;
-    const closed = new Promise<void>((resolve) => heroWorker.once('close', () => resolve()));
-    // Both scenes draw on one canvas in the page. Off-page contexts belong to libraries that keep one for the
+    // Each scene draws in a canvas of its own. Off-page contexts belong to libraries that keep one for the
     // whole visit (the text renderer measures glyphs on one), so they are not the hero's to release.
     const heroContexts = await page.evaluate(() => (window.__glContexts ?? []).flatMap((c, i) => (c.canvas instanceof HTMLCanvasElement && c.canvas.isConnected ? [i] : [])));
-    expect(heroContexts).toHaveLength(1);
+    expect(heroContexts).toHaveLength(2);
 
     await page.getByRole('link', { name: 'Go Train' }).click();
-    await expect(page).toHaveURL(/\/lab\/racing$/);
-    await closed;
+    await expect(page).toHaveURL(/\/lab\/driving$/);
     // Every context the hero drew with is lost once the lab is up: nothing of it lingers.
     await expect(page.getByRole('button', { name: 'Train' })).toBeVisible({ timeout: 60_000 });
     await expect
