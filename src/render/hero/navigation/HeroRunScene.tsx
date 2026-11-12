@@ -13,9 +13,9 @@ import { NavEffects, navDpr, ToneMappingSync } from '@/render/navigation/scene/N
 import { NavLighting } from '@/render/navigation/scene/NavLighting';
 import { SensorOverlay } from '@/render/navigation/sensors/SensorOverlay';
 import { FramePacer } from '@/render/shared/FramePacer';
-import { useFrameLoop } from '@/render/shared/frameLoop';
 import { Prewarm } from '@/render/shared/Prewarm';
 import { FeedStepper } from '../feed/FeedStepper';
+import { useHeroFrameLoop } from '../feed/heroFrameLoop';
 import type { HeroSceneProps } from '../feed/sceneProps';
 import type { PaneView } from '../stage/paneView';
 import { HeroFollowCamera } from './HeroFollowCamera';
@@ -28,7 +28,7 @@ import type { RunFeed } from './runFeed';
  * canvas, with the lab's post effects on High.
  */
 export function HeroRunScene({ feed, tier, pane, running, onWarm, dip }: HeroSceneProps<RunFeed> & { pane: PaneView }) {
-  const loop = useFrameLoop(running ? 'live' : 'held');
+  const loop = useHeroFrameLoop(running, tier);
   const frame = useMemo(() => createNavFrame(), []);
   const live = useRef(false);
   const [warm, setWarm] = useState(false);

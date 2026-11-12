@@ -10,9 +10,9 @@ import { createFrame, DrivingSceneContext, type DrivingView } from '@/render/dri
 import { CityEffects } from '@/render/driving/post/CityEffects';
 import { TIERS } from '@/render/driving/quality';
 import { FramePacer } from '@/render/shared/FramePacer';
-import { useFrameLoop } from '@/render/shared/frameLoop';
 import { Prewarm } from '@/render/shared/Prewarm';
 import { FeedStepper } from '../feed/FeedStepper';
+import { useHeroFrameLoop } from '../feed/heroFrameLoop';
 import type { HeroSceneProps } from '../feed/sceneProps';
 import type { PaneView } from '../stage/paneView';
 import type { DriveFeed } from './driveFeed';
@@ -30,7 +30,7 @@ const VIEW: DrivingView = { camera: 'chase', sensors: true, focus: 0, population
  */
 export function HeroDriveScene({ feed, tier, pane, running, onWarm, dip }: HeroSceneProps<DriveFeed> & { pane: PaneView }) {
   const look = TIERS[tier];
-  const loop = useFrameLoop(running ? 'live' : 'held');
+  const loop = useHeroFrameLoop(running, tier);
   const frame = useMemo(() => createFrame(), []);
   const target = useRef(new THREE.Vector3());
   const live = useRef(false);
