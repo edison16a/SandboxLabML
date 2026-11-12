@@ -70,7 +70,7 @@ Population size, brain shape, sensors, sensor noise, rewards and training speed 
 ## Why you can trust what you see
 
 * **Real neuroevolution.** Brains evolve with NEAT, which starts from tiny networks and grows them. Mutations add links and neurons, and speciation protects new ideas long enough to improve.
-* **Real rules.** The SUV has a grip limit, lights cycle on a plan, people cross when the signal lets them, and other cars keep their lanes and stop at red. A runner has a speed and a turn rate and slides along walls. Nothing bends the rules for a brain.
+* **Real rules.** The SUV has a grip limit, lights cycle on a plan, people cross with the walk signal (at rush hour some cross late or mid block), and other cars keep their lanes and stop at red. A runner has a speed and a turn rate and slides along walls. Nothing bends the rules for a brain.
 * **Fully reproducible.** Every random number is seeded and every weight is stored exactly. Replays are re-simulated from stored brains instead of recorded video, and tests check that a replay matches its training run tick for tick.
 * **Benchmarked.** A built-in benchmark scores any champion in cities and courses it never trained on, next to reference curves trained from several seeds, so you can tell real learning from luck. See [docs/benchmark.md](docs/benchmark.md).
 * **Private by default.** Everything runs locally in Web Workers. Runs are saved in your browser and can be exported as a file to share.
