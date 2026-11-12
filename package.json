@@ -2,7 +2,7 @@
   "name": "sandboxlab-ml",
   "version": "0.1.0",
   "private": true,
-  "description": "Watch neural networks learn to race and play hide and seek, right in the browser.",
+  "description": "Watch neural networks learn to drive through a city and to reach a finish line, right in the browser.",
   "license": "MIT",
   "engines": {
     "node": ">=20.9"
@@ -30,8 +30,6 @@
     "@codemirror/lint": "6.9.7",
     "@codemirror/state": "6.7.6",
     "@codemirror/view": "6.43.13",
-    "@dimforge/rapier3d-compat": "0.21.0",
-    "@lezer/highlight": "1.2.5",
     "@react-three/drei": "10.7.9",
     "@react-three/fiber": "9.8.1",
     "@react-three/postprocessing": "3.1.3",
