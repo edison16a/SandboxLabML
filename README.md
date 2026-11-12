@@ -25,12 +25,12 @@ This is the loop that makes machine learning click. You shape the goal and press
 
 ## Screenshots
 
-![Driving lab: the chase camera behind the leading SUV as it brakes for a red light, with its lidar, the route drawn on the road, arrows where it will be next and boxes round the car and the people it sees](assets/screenshots/driving-chase.png)
+![Driving lab at rush hour: the chase camera behind the leading SUV as it brakes for a red light with a person crossing ahead, the route and arrows of where it will be next drawn on the road, and what it senses listed on the left](assets/screenshots/driving-chase.png)
 
 | | |
 | --- | --- |
-| ![Driving lab at rush hour from a street corner: traffic queued at the lights and a person walking past](assets/screenshots/driving-rush-hour.png) | ![Navigation lab following the champion runner and the crowd behind it through the Gauntlet, past sliding crates, walls and spikes, with the path hint and the arrow to the finish](assets/screenshots/navigation-gauntlet.png) |
-| ![Driving Sandbox: the trained SUV waits on a trip through Midtown, with the city map to pick where it goes](assets/screenshots/driving-sandbox.png) | ![Navigation Sandbox: copies of the trained runner weave between crates and spikes on the Gauntlet](assets/screenshots/navigation-sandbox.png) |
+| ![Driving lab at rush hour from a street corner: the followed SUV and a van at the junction while people walk past](assets/screenshots/driving-rush-hour.png) | ![Navigation lab following the leading runner and the crowd behind it near the end of the Gauntlet, past a sliding crate and spikes, with the path hint and the arrow to the finish](assets/screenshots/navigation-gauntlet.png) |
+| ![Driving Sandbox: the trained SUV sets off on a trip through Midtown, with the city map to pick where it goes](assets/screenshots/driving-sandbox.png) | ![Navigation Sandbox: copies of the trained runner weave between crates and spikes on the Gauntlet](assets/screenshots/navigation-sandbox.png) |
 | ![Navigation course editor with a copy of the Gauntlet: crates, walls, spikes and two movers](assets/screenshots/navigation-editor.png) | ![The home screen: a trained SUV stops for a person at a red light beside a trained runner crossing the Gauntlet, each with its live brain](assets/screenshots/landing.png) |
 | ![The first run walkthrough explaining the curriculum while the Driving lab trains at rush hour](assets/screenshots/walkthrough.png) | ![Script Studio in blocks view with the Driving Beginner preset and the Driving lessons](assets/screenshots/studio-blocks.png) |
 | ![Model tab: download the champion brain or the whole run, with the brain's size and how it grew](assets/screenshots/model-tab.png) | ![Brain setup: pick the sensors and start the brain with hidden layers](assets/screenshots/brain-setup.png) |
