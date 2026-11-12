@@ -66,6 +66,8 @@ export function roofSign(s: CarShape, proj: Projector): THREE.BufferGeometry {
     return bakeLook(q, ['sign'], LAMP.sign);
   });
   const foot = new THREE.BoxGeometry(depth * 0.7, 0.035, 2 * half * 0.85).translate(x, base + 0.017, 0);
+  // The foot's underside sits on the roof where nothing can see it; a box keeps it as indices 18 to 23.
+  foot.setIndex(Array.from(foot.index?.array ?? []).filter((_, i) => i < 18 || i >= 24));
   const parts = [bakeLook(shell, ['plate']), ...caps.map((c) => bakeLook(c, ['plate'])), ...faces, bakeLook(foot, ['trim'])];
   const g = merge(parts);
   parts.forEach((p) => p.dispose());
