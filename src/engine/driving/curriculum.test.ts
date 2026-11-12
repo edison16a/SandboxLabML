@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ADVANCE_SHARE, ADVANCE_WINDOW, advanceCurriculum, MIN_GENERATIONS, startCurriculum, withBar, type Curriculum } from './curriculum';
+import { ADVANCE_SHARE, advanceCurriculum, advanceRule, startCurriculum, STEP_AFTER, STEP_FLOOR, STEP_SHARE, withBar, type Curriculum } from './curriculum';
 import { cityFor } from './city/buildCity';
 import { builtInCity, DEFAULT_CITY_ID } from './city/presets';
 import { DRIVING_LEVELS, MAX_LEVEL } from './levels';
@@ -13,27 +13,53 @@ function feed(c: Curriculum, shares: number[]): Curriculum {
 
 describe('automatic curriculum', () => {
   it('moves up on the average over several generations, not one lucky route', () => {
-    const lucky = feed(startCurriculum(1), [1]);
+    const { window, min } = advanceRule(1);
+    const lucky = feed(startCurriculum(1), [1, 1]);
     expect(lucky.level).toBe(1);
-    const steady = feed(startCurriculum(1), Array(Math.max(ADVANCE_WINDOW, MIN_GENERATIONS)).fill(ADVANCE_SHARE));
+    const steady = feed(startCurriculum(1), Array(Math.max(window, min)).fill(ADVANCE_SHARE));
     expect(steady.level).toBe(2);
     expect(steady.recent).toEqual([]);
     expect(steady.generations).toBe(0);
+  });
+
+  it('waits longer before it moves on to traffic and rush hour', () => {
+    expect(advanceRule(3).window).toBeGreaterThan(advanceRule(1).window);
+    expect(advanceRule(4).min).toBeGreaterThan(advanceRule(2).min);
+    // A stretch that would lift level 1 is not enough to leave level 3.
+    const short = Array(Math.max(advanceRule(1).window, advanceRule(1).min)).fill(ADVANCE_SHARE);
+    expect(feed(startCurriculum(3), short).level).toBe(3);
+    expect(feed(startCurriculum(3), Array(advanceRule(3).min).fill(ADVANCE_SHARE)).level).toBe(4);
   });
 
   it('holds while the average stays under the bar', () => {
     const c = feed(startCurriculum(1), [0.9, 0, 0, 0.3, 0, 0.6, 0]);
     expect(c.level).toBe(1);
     expect(c.generations).toBe(7);
-    expect(c.recent.length).toBe(ADVANCE_WINDOW);
+    expect(c.recent).toEqual([0.9, 0, 0, 0.3, 0, 0.6, 0]);
   });
 
-  it('never moves back down, however hard a level is', () => {
-    expect(feed(startCurriculum(3), Array(200).fill(0)).level).toBe(3);
+  it('steps back down after a long stretch with almost no safe arrivals, and says from where', () => {
+    const before = feed(startCurriculum(4), Array(STEP_AFTER - 1).fill(0));
+    expect(before.level).toBe(4);
+    const after = advanceCurriculum(before, 0);
+    expect(after).toMatchObject({ level: 3, generations: 0, recent: [], fell: 4 });
+    // Moving up again clears the note.
+    const up = feed(after, Array(advanceRule(3).min).fill(1));
+    expect(up.level).toBe(4);
+    expect(up.fell).toBeUndefined();
+  });
+
+  it('stays on a hard level the run still arrives on now and then', () => {
+    const now = Array(STEP_AFTER * 2).fill(0).map((_, i) => (i % 5 === 0 ? STEP_SHARE * 5 + 0.01 : 0));
+    expect(feed(startCurriculum(4), now).level).toBe(4);
+    // Lights and people are learned through a long dip: those levels never step down.
+    expect(feed(startCurriculum(STEP_FLOOR), Array(STEP_AFTER * 3).fill(0)).level).toBe(STEP_FLOOR);
+    expect(feed(startCurriculum(2), Array(STEP_AFTER * 3).fill(0)).level).toBe(2);
   });
 
   it('takes a bar from a script and keeps what it measured', () => {
-    const c = feed(startCurriculum(1), [0.2, 0.2]);
+    const c = feed(startCurriculum(1), Array(advanceRule(1).min - 1).fill(0.2));
+    expect(c.level).toBe(1);
     const lower = withBar(c, 0.1);
     expect(lower.bar).toBe(0.1);
     expect(lower.recent).toEqual(c.recent);
@@ -42,7 +68,7 @@ describe('automatic curriculum', () => {
 
   it('never leaves the level range', () => {
     expect(startCurriculum(0).level).toBe(1);
-    expect(feed(startCurriculum(MAX_LEVEL), Array(ADVANCE_WINDOW * 4).fill(1)).level).toBe(MAX_LEVEL);
+    expect(feed(startCurriculum(MAX_LEVEL), Array(advanceRule(MAX_LEVEL).min * 4).fill(1)).level).toBe(MAX_LEVEL);
   });
 });
 

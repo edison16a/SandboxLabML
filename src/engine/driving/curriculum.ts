@@ -1,14 +1,33 @@
 import { MAX_LEVEL, MIN_LEVEL } from './levels';
 
-/** Generations whose safe share is averaged before moving up. */
-export const ADVANCE_WINDOW = 3;
-/** Move up once the safe share averaged over ADVANCE_WINDOW generations reaches this. */
+/** Move up once the judged safe share, averaged over a level's window, reaches this. */
 export const ADVANCE_SHARE = 0.5;
-/** Generations a level is played at least, so a new level is never skipped on one lucky start. */
-export const MIN_GENERATIONS = 3;
 /** The bars a script's autoLevel may ask for. */
 export const MIN_BAR = 0.02;
 export const MAX_BAR = 1;
+/**
+ * Traffic and rush hour step back down a level once the judged share,
+ * averaged over the last STEP_WINDOW generations, stays under STEP_SHARE
+ * after STEP_AFTER generations there. A run that reaches other cars too
+ * early can collapse into parking behind them, and a level it cannot
+ * drive at all teaches nothing. The levels below never step down: the
+ * dip right after a new level is how lights and people get learned.
+ */
+export const STEP_SHARE = 0.05;
+export const STEP_WINDOW = 20;
+export const STEP_AFTER = 60;
+/** The lowest level a step down lands on. */
+export const STEP_FLOOR = 3;
+
+/**
+ * How long a level is judged before the run leaves it: how many
+ * generations the share is averaged over, and how many it plays at least.
+ * Leaving for traffic and rush hour waits longer, since a run that gets
+ * there too early stops driving altogether.
+ */
+export function advanceRule(level: number): { window: number; min: number } {
+  return level >= 3 ? { window: 8, min: 12 } : { window: 5, min: 6 };
+}
 
 /**
  * Where the automatic curriculum stands. Plain data and small, so every
@@ -19,10 +38,12 @@ export interface Curriculum {
   level: number;
   /** Generations played at this level so far. */
   generations: number;
-  /** Safe share (0 to 1) of the latest generations at this level, oldest first, at most ADVANCE_WINDOW kept. */
+  /** Judged safe share (0 to 1) of the latest generations at this level, oldest first, at most STEP_WINDOW kept. */
   recent: number[];
   /** The share that moves it up: ADVANCE_SHARE, or what a script's autoLevel asked for. */
   bar: number;
+  /** The level it last stepped back down from, until it moves up again. Runs saved before step downs have none. */
+  fell?: number;
 }
 
 function clampBar(bar: number): number {
@@ -39,21 +60,34 @@ export function withBar(c: Curriculum, bar: number): Curriculum {
   return next === c.bar ? c : { ...c, bar: next };
 }
 
+/** Mean of the last `n` values, or NaN when fewer than `n` are kept. */
+function lastMean(values: readonly number[], n: number): number {
+  if (values.length < n) return NaN;
+  let sum = 0;
+  for (let i = values.length - n; i < values.length; i++) sum += values[i];
+  return sum / n;
+}
+
 /**
- * Records one generation's safe share (drives that arrived with no crash,
- * no person hit and no red light run, out of every drive) and returns where
- * the curriculum stands for the next generation, as a new object. It moves
- * on an average over a few generations, because a new route every
- * generation makes one count swing with the luck of the route. It never
- * moves back down: a level that is hard just takes longer, and a level
- * that bounces up and down tells a newcomer nothing.
+ * Records one generation's judged safe share and returns where the
+ * curriculum stands for the next generation, as a new object. The share
+ * is the safe arrivals of the champions kept from the generation before,
+ * on trips they were not picked on (see judgedSafeShare), so luck on the
+ * routes that made them champions cannot lift it. It moves up on an
+ * average over a few generations, because a new route every generation
+ * makes one count swing. It steps back down from traffic or rush hour
+ * only when they have gone on for long with almost no safe arrivals, and
+ * moves up again the same way.
  */
 export function advanceCurriculum(c: Curriculum, share: number): Curriculum {
-  const recent = [...c.recent, Number.isFinite(share) ? share : 0].slice(-ADVANCE_WINDOW);
+  const recent = [...c.recent, Number.isFinite(share) ? share : 0].slice(-STEP_WINDOW);
   const generations = c.generations + 1;
-  const mean = recent.reduce((a, b) => a + b, 0) / recent.length;
-  if (c.level < MAX_LEVEL && generations >= MIN_GENERATIONS && recent.length >= ADVANCE_WINDOW && mean >= c.bar) {
+  const rule = advanceRule(c.level);
+  if (c.level < MAX_LEVEL && generations >= rule.min && lastMean(recent, rule.window) >= c.bar) {
     return { level: c.level + 1, generations: 0, recent: [], bar: c.bar };
   }
-  return { level: c.level, generations, recent, bar: c.bar };
+  if (c.level > STEP_FLOOR && generations >= STEP_AFTER && lastMean(recent, STEP_WINDOW) < STEP_SHARE) {
+    return { level: c.level - 1, generations: 0, recent: [], bar: c.bar, fell: c.level };
+  }
+  return { ...c, generations, recent };
 }

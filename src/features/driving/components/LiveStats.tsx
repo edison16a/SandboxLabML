@@ -64,9 +64,9 @@ const percent = (v: number | undefined) => (v === undefined || !Number.isFinite(
  * Generation, level and trip, then the live numbers while a generation
  * plays at a watch speed (driving, arrived, rule breaks, speed), or the
  * last generation's shares while Turbo and Max train out of sight. Those
- * lead with the best fifth's safe share: the whole population's shares sit
- * near zero for a long time, since most brains are fresh mutants, while
- * the best fifth climbs.
+ * lead with the share the curriculum judges, the kept champions' safe
+ * arrivals: the whole population's shares sit near zero for a long time,
+ * since most brains are fresh mutants, while the champions climb.
  */
 export function LiveStats({ stream, shown }: { stream: SnapshotStream | null; shown: 'population' | 'ghosts' }) {
   const live = useLive(stream);
@@ -106,7 +106,7 @@ function TrainingStats({ live, shown }: { live: Live; shown: 'population' | 'gho
       {watching && live.total > 0 && <Chip label="Arrived" value={percent(live.arrived / live.total)} />}
       {watching && live.total > 0 && <Chip label="Violations" value={live.violations} title="Ran a red light, or on the wrong side of the road" wide />}
       {watching && live.total > 0 && <Chip label="Speed" value={`${Math.round(live.speed * 3.6)} km/h`} />}
-      {!watching && last && <Chip label="Best fifth safe" value={percent(last.metrics?.eliteSafe)} title="Safe arrivals among the best fifth of the population, the share the curriculum judges" />}
+      {!watching && last && <Chip label="Champions safe" value={percent(last.metrics?.judged ?? last.metrics?.eliteSafe)} title="Safe arrivals of the champions kept from the generation before, on new trips. The curriculum moves on this share." />}
       {!watching && last && <Chip label="Arrived" value={percent(last.metrics?.arrived)} title="Share of every trip last generation that arrived, new mutants included" wide />}
       {!watching && last && <Chip label="Safe" value={percent(last.metrics?.safe)} title="Share of every trip last generation that arrived with no crash and no red light run" />}
     </div>

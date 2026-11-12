@@ -71,7 +71,7 @@ export const DRIVING_TOUR: Tour = {
       prefer: ['bottom', 'right'],
       prepare: () => void keepDrivingTraining(),
       title: 'One level at a time',
-      body: 'Training starts on empty streets. When half of the best fifth arrives safely, averaged over three generations, the city adds traffic lights, then people, traffic and rush hour.',
+      body: 'Training starts on empty streets. Once its champions arrive safely on half of their new trips, over a few generations, the city adds traffic lights, then people, traffic and rush hour.',
       terms: [{ term: 'Curriculum', meaning: 'Lessons in order, each a little harder than the last.' }],
     },
     {

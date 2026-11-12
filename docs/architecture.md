@@ -67,12 +67,14 @@ The stream's start message says how many world floats follow the agents and may 
 
 Content is what the population trains on now: for Driving the city, the level, the trip count and a trip seed, and for Navigation the level, the generation that seeds its courses, how many courses run and any named course. `initialContent` reads the run. After each generation, once the script's generation block has run, `nextContent` moves it on from the script's requests (`directives.env`, where each of the env's operators sets its own key with `setEnvDirective`) or from the env's own curriculum, and `contentHash` names it on every record (stored as `trackHash`, a field name older builds wrote). Anything that changes from one generation to the next belongs in the content, never in the setup, since ghosts and the Sandbox rebuild setups from the content alone. Both envs set `contentOnRecords`, so every record keeps the small content it ran on and a branch resumes exactly there.
 
-Both curricula judge the best fifth of the population, since most of a generation are fresh mutants that crash or fall. They only move up, never down, and wait at least three generations on a level so none is skipped on one lucky start:
+Neither curriculum judges the whole population, since most of a generation are fresh mutants that crash or fall. Both wait some generations on a level so none is skipped on one lucky start:
 
 | Env | Levels | Moves up when |
 | --- | --- | --- |
-| Driving | 1 Empty streets, 2 Traffic lights, 3 Pedestrians, 4 Traffic, 5 Rush hour | the best fifth of the population by fitness arrived safely (no crash, no person hit, no red light run) on half of their trips, averaged over 3 generations |
+| Driving | 1 Empty streets, 2 Traffic lights, 3 Pedestrians, 4 Traffic, 5 Rush hour | the champions kept unchanged from the generation before arrived safely (no crash, no person hit, no red light run) on half of this generation's trips, averaged over 5 generations (8 before traffic and rush hour) |
 | Navigation | 0 Straight run, 1 One block, 2 Block field, 3 Spikes, 4 Walls and gaps, 5 Movers, 6 Gauntlet | the best fifth of the population by fitness finished three quarters of their courses, averaged over 2 generations |
+
+Driving judges its kept champions rather than its best fifth because the best fifth is picked by fitness on the very trips it would be judged on, so a lucky route lifts both at once. The kept champions (genomes born before the generation, see `judgedSafeShare`) drive new trips they were not picked on. The trainer marks them for `generationMetrics` as `carried`. Navigation still moves on the best fifth. Driving alone also steps back down: a run on traffic or rush hour whose champions arrive safely on under 5% of trips over 20 generations, after 60 there, goes back one level, and the Curriculum card says why. The levels below never step down.
 
 A script can take over from its generation block: `useLevel` fixes the level and `autoLevel` brings the curriculum back with a bar of its own, in both envs, while Driving adds `useCity` and `routesPerGeneration` and Navigation adds `useCourse` and `coursesPerGeneration`. The generation block reads the env's metrics through generation sensors (`metricSensor`).
 

@@ -131,7 +131,9 @@ export class EpisodeTrainer<Setup extends EpisodeSetup = EpisodeSetup, Content =
     const ranOn = this.contentNow;
     const trackHash = this.module.contentHash(ranOn);
     const mean = genomes.reduce((s, g) => s + g.fitness, 0) / genomes.length;
-    const metrics = this.module.generationMetrics?.(results, this.contentNow);
+    // Brains born before this generation came through unchanged (elites): their results are on episodes they were not picked on.
+    const carried = genomes.map((g) => g.birthGeneration < generation);
+    const metrics = this.module.generationMetrics?.(results, this.contentNow, carried);
 
     if (champ.fitness > this.bestEver + 1e-9) {
       this.bestEver = champ.fitness;

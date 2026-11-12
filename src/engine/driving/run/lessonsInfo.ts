@@ -24,6 +24,7 @@ export const DRIVING_LESSONS_INFO: EpisodeLessonsInfo = {
     arrived: percent,
     safe: percent,
     eliteSafe: percent,
+    judged: percent,
     completion: percent,
     crashes: percent,
     pedestrians: percent,

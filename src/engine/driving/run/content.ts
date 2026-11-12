@@ -62,8 +62,8 @@ export function requestsOf(env: Record<string, unknown> | undefined): DrivingReq
 /**
  * The content of the next generation. A script's useLevel fixes the level
  * and turns the curriculum off; autoLevel turns it back on. Otherwise the
- * curriculum, when on, records this generation's safe share and may move
- * up. Every generation gets a new trip seed. A new level, city or trip
+ * curriculum, when on, records this generation's judged safe share and may
+ * move. Every generation gets a new trip seed. A new level, city or trip
  * count resets the stagnation count, since old scores no longer compare.
  */
 export function nextDrivingContent(step: ContentStep<DrivingContent, DrivingRunResult>): { content: DrivingContent; reset: boolean } {
@@ -79,7 +79,7 @@ export function nextDrivingContent(step: ContentStep<DrivingContent, DrivingRunR
   } else {
     if (asked.autoLevel !== undefined) curriculum = curriculum ? withBar(curriculum, asked.autoLevel) : startCurriculum(level, asked.autoLevel);
     if (curriculum) {
-      curriculum = advanceCurriculum(curriculum, metrics.eliteSafe ?? 0);
+      curriculum = advanceCurriculum(curriculum, metrics.judged ?? metrics.eliteSafe ?? 0);
       level = curriculum.level;
     }
   }

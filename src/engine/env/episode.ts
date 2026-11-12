@@ -195,8 +195,8 @@ export interface EpisodeEnvModule<Setup extends EpisodeSetup = EpisodeSetup, Con
   startSlots?(count: number, seed: number): number[];
 
   championFields(result: R): ChampionFields<C>;
-  /** Stats over the whole generation, keyed like `metrics` with source 'generation'. */
-  generationMetrics?(results: readonly R[], content: Content): Record<string, number>;
+  /** Stats over the whole generation, keyed like `metrics` with source 'generation'. `carried` marks the brains kept unchanged from the generation before. */
+  generationMetrics?(results: readonly R[], content: Content, carried: readonly boolean[]): Record<string, number>;
 
   lessons?: EpisodeLessons<R>;
 }

@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { trainDriving } from './curriculumRun';
 
-/** Generations a default run gets to master empty streets and move on to traffic lights. */
-const BUDGET = 60;
+/**
+ * Generations a default run gets to master empty streets and move on to
+ * traffic lights. The curriculum judges the champions on trips they were
+ * not picked on, so it waits until they truly drive: seed 1 moves at 76.
+ */
+const BUDGET = 100;
 
 /**
  * The automatic curriculum must actually move: a default run that never
@@ -10,8 +14,8 @@ const BUDGET = 60;
  * the traffic. Each seed trains the lab's default run headless, through
  * the trainer and sim code the workers run, until it reaches level 2.
  */
-/** Generations a default run gets before its top level is judged: enough for seed 7 to climb past traffic lights. */
-const LONG_BUDGET = 70;
+/** Generations a default run gets before its top level is judged: enough for seed 7 to climb past traffic lights (it does at 130). */
+const LONG_BUDGET = 150;
 
 describe('driving curriculum', () => {
   for (const seed of [1, 2]) {
@@ -31,5 +35,5 @@ describe('driving curriculum', () => {
     expect(recent.length).toBeGreaterThan(0);
     // A dead end shows here as a top level the best brains never finish a trip on.
     expect(recent.reduce((n, g) => n + g.eliteSafe, 0) / recent.length).toBeGreaterThan(0.05);
-  }, 900_000);
+  }, 1_500_000);
 });

@@ -66,7 +66,7 @@ export function NewRunDialog({ open, onOpenChange, initialScript }: Props) {
           </button>
         </div>
       </Field>
-      <Field label="Levels" hint={auto ? 'Moves up once the best fifth arrives safely. Pick where it starts.' : 'Stays on this level the whole run.'}>
+      <Field label="Levels" hint={auto ? 'Moves up once its champions arrive safely. Pick where it starts.' : 'Stays on this level the whole run.'}>
         <div className="flex flex-col gap-2">
           <Segmented<'auto' | 'fixed'>
             label="How the level is chosen"

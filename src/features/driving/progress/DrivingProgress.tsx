@@ -13,12 +13,12 @@ const share = (v: number) => `${Math.round(v * 100)}%`;
 const LEVEL_TICKS = DRIVING_LEVELS.map((l) => l.id);
 /** Generations each arrival and safety line averages over; the raw values stay faint behind it. */
 const SMOOTH = 5;
-const COLORS = { level: '#4c9aff', arrived: '#4c9aff', safe: '#3dd68c', elite: '#ff9f43', crash: '#ff5f5f', people: '#ff6fb8', offRoad: '#f5c451', red: '#ff8a5c' };
+const COLORS = { level: '#4c9aff', arrived: '#4c9aff', safe: '#3dd68c', judged: '#ff9f43', crash: '#ff5f5f', people: '#ff6fb8', offRoad: '#f5c451', red: '#ff8a5c' };
 
-/** One metric of every record, NaN and missing as gaps. */
-function column(records: readonly GenerationRecord[], key: string): Array<number | null> {
+/** One metric of every record, NaN and missing as gaps. `fallback` stands in on records saved before `key` existed. */
+function column(records: readonly GenerationRecord[], key: string, fallback?: string): Array<number | null> {
   return records.map((r) => {
-    const v = r.metrics?.[key];
+    const v = r.metrics?.[key] ?? (fallback ? r.metrics?.[fallback] : undefined);
     return v === undefined || !Number.isFinite(v) ? null : v;
   });
 }
@@ -44,10 +44,22 @@ function LevelSteps({ now, best }: { now: number; best: number }) {
   );
 }
 
+/** How the level moves, in one line, and why it came back down when it did. */
+function CurriculumNote({ bar, fell, now }: { bar: number; fell?: number; now: number }) {
+  if (fell !== undefined && fell > now) {
+    return (
+      <p className="text-[11px] text-subtle">
+        Back on {drivingLevel(now).name}: the champions stopped arriving safely at {drivingLevel(fell).name}. It moves up again once they arrive safely on {share(bar)} of new trips.
+      </p>
+    );
+  }
+  return <p className="text-[11px] text-subtle">The level moves up once last generation&apos;s champions arrive safely on {share(bar)} of new trips, over a few generations.</p>;
+}
+
 /**
  * Driving's own Progress charts: the curriculum's level per generation,
- * how many trips arrive (everyone, safely, and the best fifth that moves the
- * level up), and how trips end badly. A faint dashed line marks every level
+ * how many trips arrive (everyone, safely, and the kept champions whose
+ * share moves the level), and how trips end badly. A faint dashed line marks every level
  * change, so a dip in arrivals lines up with the harder level that caused it.
  */
 export function DrivingProgress() {
@@ -64,7 +76,7 @@ export function DrivingProgress() {
     return [
       ...(differ ? [{ label: 'Arrived', color: COLORS.arrived, values: arrived }] : []),
       { label: 'Arrived safely', color: COLORS.safe, values: safe, fill: true },
-      { label: 'Best fifth, safely', color: COLORS.elite, values: column(records, 'eliteSafe'), dash: [4, 3], width: 1.5 },
+      { label: 'Champions, safely', color: COLORS.judged, values: column(records, 'judged', 'eliteSafe'), dash: [4, 3], width: 1.5 },
     ];
   }, [records]);
   const safety = useMemo<Series[]>(
@@ -88,7 +100,7 @@ export function DrivingProgress() {
       </Section>
       <Section title="Arrivals" hint={`share of trips, mean of ${SMOOTH} generations`}>
         <SeriesChart x={x} series={arrivals} yLabel="Trips" format={share} range={[0, 1]} marks={marks} bar={auto?.bar} smooth={SMOOTH} />
-        {auto && <p className="text-[11px] text-subtle">The level moves up once the best fifth arrives safely on {share(auto.bar)} of its trips, over a few generations.</p>}
+        {auto && <CurriculumNote bar={auto.bar} fell={auto.fell} now={now} />}
       </Section>
       <Section title="Safety" hint={`how trips ended, mean of ${SMOOTH} generations`}>
         <SeriesChart x={x} series={safety} yLabel="Trips" format={share} range={[0, 1]} marks={marks} smooth={SMOOTH} />

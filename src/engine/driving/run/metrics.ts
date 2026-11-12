@@ -18,6 +18,7 @@ export const DRIVING_METRICS: readonly MetricSpec[] = [
   { key: 'arrived', label: 'Arrived', unit: '%', source: 'generation', better: 'higher', chart: false, format: percent },
   { key: 'safe', label: 'Safe arrivals', unit: '%', source: 'generation', better: 'higher', chart: false, format: percent },
   { key: 'eliteSafe', label: 'Top fifth safe', unit: '%', source: 'generation', better: 'higher', chart: false, format: percent },
+  { key: 'judged', label: 'Champions safe', unit: '%', source: 'generation', better: 'higher', chart: false, format: percent },
   { key: 'completion', label: 'Route covered', unit: '%', source: 'generation', better: 'higher', chart: false, format: percent },
   { key: 'crashes', label: 'Crashes', unit: '%', source: 'generation', better: 'lower', chart: false, format: percent },
   { key: 'pedestrians', label: 'People hit', unit: '%', source: 'generation', better: 'lower', chart: false, format: percent },
@@ -49,8 +50,27 @@ export function eliteSafeShare(results: readonly DrivingRunResult[]): number {
   return safe / Math.max(1, trips);
 }
 
+/**
+ * The safe share the curriculum moves on: safe arrivals of the champions
+ * kept unchanged from the generation before, over this generation's new
+ * trips. They became champions on other routes, so this share carries no
+ * luck from the routes that picked them, as the best fifth's does. With no
+ * kept champions (the first generation, or a script that keeps none) it
+ * falls back to the best fifth.
+ */
+export function judgedSafeShare(results: readonly DrivingRunResult[], carried: readonly boolean[]): number {
+  let trips = 0;
+  let safe = 0;
+  results.forEach((r, i) => {
+    if (!carried[i]) return;
+    trips += r.trips;
+    safe += r.safeArrivals;
+  });
+  return trips > 0 ? safe / trips : eliteSafeShare(results);
+}
+
 /** Shares over every drive of a generation, keyed like DRIVING_METRICS. */
-export function drivingGenerationMetrics(results: readonly DrivingRunResult[], content: DrivingContent): Record<string, number> {
+export function drivingGenerationMetrics(results: readonly DrivingRunResult[], content: DrivingContent, carried: readonly boolean[] = []): Record<string, number> {
   let drives = 0;
   const sum = { arrived: 0, safe: 0, completion: 0, crashes: 0, pedestrians: 0, offRoad: 0, redLights: 0 };
   for (const r of results) {
@@ -69,6 +89,7 @@ export function drivingGenerationMetrics(results: readonly DrivingRunResult[], c
     arrived: sum.arrived / n,
     safe: sum.safe / n,
     eliteSafe: eliteSafeShare(results),
+    judged: judgedSafeShare(results, carried),
     completion: sum.completion / n,
     crashes: sum.crashes / n,
     pedestrians: sum.pedestrians / n,

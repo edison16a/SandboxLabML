@@ -83,7 +83,7 @@ export const DRIVING_GENERATION_ENTRIES: RegistryEntry[] = [
       name: 'autoLevel',
       params: [param('share', 'number', '', 'Share of trips that must arrive safely, averaged over a few generations, such as 25%.', { range: [MIN_BAR, MAX_BAR] })],
       summary: 'Moves up a level on its own once enough trips arrive safely.',
-      description: 'The curriculum judges the best fifth of the population by fitness and averages their safe share over a few generations, so one easy route never skips a level. It never moves back down. A run without a script uses a bar of 50%.',
+      description: 'The curriculum judges the champions kept from the generation before, on trips they were not picked on, and averages their safe share over a few generations, so one easy route never skips a level. Traffic and rush hour wait longer. A level with almost no safe arrivals for a long while steps back down. A run without a script uses a bar of 50%.',
       example: 'autoLevel(share: 30%)',
       block: { category: 'environment', label: 'level up at {share} safe' },
       explain: 'move up a level once {share} of trips arrive safely',

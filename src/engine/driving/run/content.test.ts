@@ -3,14 +3,14 @@ import { defaultPlan } from '../../neat/population';
 import { DEFAULT_NEAT } from '../../neat/config';
 import { createEpisodeRunConfig } from '../../training/newRun';
 import { DEFAULT_DRIVING_BLUEPRINT } from '../blueprints';
-import { ADVANCE_SHARE, ADVANCE_WINDOW, MIN_GENERATIONS } from '../curriculum';
+import { ADVANCE_SHARE, advanceRule } from '../curriculum';
 import { drivingContentHash, initialDrivingContent, nextDrivingContent, type DrivingContent } from './content';
 import { DEFAULT_DRIVING_SETTINGS, drivingSettingsOf } from './settings';
 
 const config = createEpisodeRunConfig({ env: 'driving', name: 't', seed: 42, blueprint: DEFAULT_DRIVING_BLUEPRINT, populationSize: 20, settings: { ...DEFAULT_DRIVING_SETTINGS } });
 
-function step(content: DrivingContent, generation: number, env?: Record<string, unknown>, eliteSafe = 0) {
-  return nextDrivingContent({ config, content, generation, directives: { plan: defaultPlan(DEFAULT_NEAT), env }, results: [], metrics: { eliteSafe } });
+function step(content: DrivingContent, generation: number, env?: Record<string, unknown>, judged = 0, eliteSafe = judged) {
+  return nextDrivingContent({ config, content, generation, directives: { plan: defaultPlan(DEFAULT_NEAT), env }, results: [], metrics: { judged, eliteSafe } });
 }
 
 describe('driving content', () => {
@@ -30,12 +30,19 @@ describe('driving content', () => {
     expect(drivingContentHash(a.content)).not.toBe(drivingContentHash(c));
   });
 
-  it('moves up a level once the best fifth arrives safely for a few generations', () => {
+  it('moves up a level once the kept champions arrive safely for a few generations', () => {
     let c = initialDrivingContent(config);
     let reset = false;
-    for (let g = 0; g < Math.max(ADVANCE_WINDOW, MIN_GENERATIONS); g++) ({ content: c, reset } = step(c, g, undefined, ADVANCE_SHARE));
+    const { window, min } = advanceRule(1);
+    for (let g = 0; g < Math.max(window, min); g++) ({ content: c, reset } = step(c, g, undefined, ADVANCE_SHARE));
     expect(c.level).toBe(2);
     expect(reset).toBe(true);
+  });
+
+  it('judges the kept champions, not the best fifth picked on the same trips', () => {
+    let c = initialDrivingContent(config);
+    for (let g = 0; g < 40; g++) c = step(c, g, undefined, 0.2, 0.9).content;
+    expect(c.level).toBe(1);
   });
 
   it('follows the script: a fixed level, more trips, another city, then the curriculum again', () => {
