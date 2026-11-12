@@ -2,6 +2,7 @@ import type * as THREE from 'three';
 import { gridGeometry, type Vec3 } from '../../suv/geometry/grid';
 import type { CarShape } from '../shape/types';
 import type { TrafficDetail } from './detail';
+import { creaseStations, snapCrease } from './crease';
 import { archRadius, axles, keysAt, planShare, shoulderOut, warpX } from './frame';
 import { trueNormals, type RowAt } from './normals';
 import { deg, resample, span, through, type Pt } from './section';
@@ -67,7 +68,7 @@ export interface Shell {
  * each section toward the tips, so the ends close by themselves with no
  * caps, and the ends' lean is applied last. Only the lower panels need
  * rows across the wheel openings; the panel above the shoulder skips
- * them. Normals are smooth inside each panel; on the centerline they lie
+ * them unless the crease curves there (body/crease.ts). Normals are smooth inside each panel; on the centerline they lie
  * in its plane, so the two mirrored halves meet with no seam.
  */
 export function buildShell(s: CarShape, d: TrafficDetail): Shell {
@@ -91,7 +92,13 @@ export function buildShell(s: CarShape, d: TrafficDetail): Shell {
     if (!buried[i] || !buried[i - 1] || !buried[i + 1]) add(0, x, floor);
     add(1, x, floor);
   });
-  for (const x of upper) add(2, x, -1);
+  const crease = (x: number) => {
+    const k = keysAt(s, x)[3];
+    return place(x, [[k.z, k.y]])[0];
+  };
+  const upperRows = creaseStations(upper, lower, crease);
+  for (const x of upperRows) add(2, x, -1);
+  snapCrease(rows[1], lower, rows[2], upperRows);
   // The underbody closes the bottom along the sill's own edge. Through the ends, where the sill
   // curves up, it takes every station so it meets the skin exactly; the flat middle needs few.
   const under = upper.filter((x, i) => i % 3 === 0 || i === upper.length - 1 || planShare(s, x) < 1).map((x) => {
