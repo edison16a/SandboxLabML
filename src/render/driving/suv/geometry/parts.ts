@@ -6,9 +6,9 @@ import { merge } from './grid';
  * SUV draws one mesh per slot and the population SUV bakes each slot into
  * vertex colors and surface values.
  */
-export type Slot = 'paint' | 'glass' | 'trim' | 'clad' | 'grille' | 'led' | 'tail' | 'liner' | 'metal' | 'tire' | 'rim' | 'face' | 'disc' | 'caliper';
+export type Slot = 'paint' | 'glass' | 'trim' | 'clad' | 'grille' | 'led' | 'tail' | 'liner' | 'metal' | 'tire' | 'rim' | 'face' | 'disc' | 'caliper' | 'seam';
 
-export const SLOTS: readonly Slot[] = ['paint', 'glass', 'trim', 'clad', 'grille', 'led', 'tail', 'liner', 'metal', 'tire', 'rim', 'face', 'disc', 'caliper'];
+export const SLOTS: readonly Slot[] = ['paint', 'glass', 'trim', 'clad', 'grille', 'led', 'tail', 'liner', 'metal', 'tire', 'rim', 'face', 'disc', 'caliper', 'seam'];
 
 /**
  * How finely the SUV is built. The followed SUV and the population share
@@ -38,14 +38,6 @@ export const DETAIL: Record<'high' | 'medium' | 'low' | 'crowd' | 'crowdLow', De
   crowd: { stations: 24, archSteps: 9, bands: [1, 1, 2, 1, 2, 2, 1], cabin: [2, 3], wheel: 14, brakes: false, fine: false },
   crowdLow: { stations: 14, archSteps: 6, bands: [1, 1, 1, 1, 1, 1, 1], cabin: [1, 2], wheel: 9, brakes: false, fine: false },
 };
-
-/**
- * How a panel gap is drawn, m: a dark line 9 mm wide, standing just off
- * the paint. A real gap is narrower, but its shadow reads about this wide,
- * and at the orbit camera's distance a thinner line falls under a pixel
- * and breaks into dots.
- */
-export const SHUT = { width: 0.009, lift: 0.0015 };
 
 /** The far population's lightest build, which drops even the small trims a 100 car field cannot afford. */
 export const lightest = (detail: Detail) => detail.wheel < 12;

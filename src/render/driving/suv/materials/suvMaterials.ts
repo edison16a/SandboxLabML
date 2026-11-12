@@ -85,6 +85,8 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
     rim: new THREE.MeshPhysicalMaterial({ color: '#2c2f34', metalness: 0.75, roughness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.08 }),
     face: new THREE.MeshPhysicalMaterial({ color: '#c3c7cc', metalness: 1, roughness: 0.27, clearcoat: 0.6, clearcoatRoughness: 0.12 }),
     caliper: new THREE.MeshPhysicalMaterial({ color: '#b01c14', roughness: 0.3, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.06 }),
+    // Panel gaps: black, their darkness in vertex alpha, drawn over the paint without writing depth.
+    seam: new THREE.MeshBasicMaterial({ color: '#000000', vertexColors: true, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }),
   };
   for (const [slot, k] of Object.entries(REFLECT)) (slots[slot as Slot] as THREE.MeshStandardMaterial).envMapIntensity = k;
   // The glossy surfaces see the street's buildings low down, not open sky, so they keep their color.

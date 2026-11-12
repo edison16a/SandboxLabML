@@ -1,10 +1,11 @@
 import type * as THREE from 'three';
 import { bodyStrip, onBody } from './body';
 import { FLARE_REACH, skinAt } from './flares';
-import { bothSides, gridGeometry, type Vec3 } from './grid';
-import { SHUT, type PartBin } from './parts';
+import { bothSides, type Vec3 } from './grid';
+import type { PartBin } from './parts';
 import { ARCH, AXLES } from './profile';
 import { rockerY } from './lines';
+import { SEAM, SEAM_LIFT as LIFT, seamGeometry } from './seams';
 import { warp } from './warp';
 
 /**
@@ -15,8 +16,6 @@ import { warp } from './warp';
  * and the window graphic and the doors agree.
  */
 export const DOOR = { front: 0.95, pillar: -0.43, rear: -1.34 };
-const HALF = SHUT.width / 2;
-const LIFT = SHUT.lift;
 /** Paint left between the rear door's edge and the rear flare's outer edge, m. */
 const CLEAR = 0.008;
 /** How long each leg of the rounded corner is, where the rear door's edge turns off the arch and up to the belt, m. */
@@ -32,34 +31,43 @@ function onSide(x: number, y: number): Vec3 {
   return warp([x, y + s.ny * LIFT, s.z + s.nz * LIFT]);
 }
 
+/** Steps up each band a shut line crosses: the curved lower side and door get more, the crease and shelf fewer. */
+const UP_STEPS: Record<number, number> = { 1: 5, 2: 6, 3: 3, 4: 4 };
+
 /** Points up the side at x from the cladding's top to the belt, taken on the section itself so they follow the crease. */
 function upSide(x: number): Vec3[] {
   const pts: Vec3[] = [];
-  for (const band of [1, 2, 3, 4]) for (let k = band === 1 ? 0 : 1; k <= 6; k++) pts.push(onBody(x, band, k / 6, LIFT));
+  for (const band of [1, 2, 3, 4]) {
+    const n = UP_STEPS[band];
+    for (let k = band === 1 ? 0 : 1; k <= n; k++) pts.push(onBody(x, band, k / n, LIFT));
+  }
   return pts;
 }
 
-/** The two edges of a shut line, bottom to top: the left of travel first (toward the tail on a straight cut), so the strip faces out. */
-type Edges = [Vec3[], Vec3[]];
+/**
+ * A gap's rows across its width, one per SEAM entry, each running bottom
+ * to top: from left of travel to right (toward the nose on a straight
+ * cut), so the strip faces out.
+ */
+type Rows = Vec3[][];
 
-/** Edges either side of a straight cut up the side at x. */
-function straightEdges(pts: Vec3[]): Edges {
-  return [pts.map(([x, y, z]): Vec3 => [x - HALF, y, z]), pts.map(([x, y, z]): Vec3 => [x + HALF, y, z])];
+/** Rows across a straight cut up the side, stepped along the car. */
+function straightRows(pts: Vec3[]): Rows {
+  return SEAM.map(([d]) => pts.map(([x, y, z]): Vec3 => [x + d, y, z]));
 }
 
-/** Edges either side of a path in (x, y) on the skin below the shoulder, each point stepped out across the path. */
-function pathEdges(path: P2[]): Edges {
-  const edges: Edges = [[], []];
+/** Rows across a path in (x, y) on the skin below the shoulder, each point stepped out across the path. */
+function pathRows(path: P2[]): Rows {
+  const rows: Rows = SEAM.map(() => []);
   path.forEach(([x, y], i) => {
     const [ax, ay] = path[Math.max(0, i - 1)];
     const [bx, by] = path[Math.min(path.length - 1, i + 1)];
     const len = Math.hypot(bx - ax, by - ay) || 1;
     // Across the path, to the right of travel: walking up and back round the arch, that is away from the wheel.
     const [ux, uy] = [(by - ay) / len, -(bx - ax) / len];
-    edges[0].push(onSide(x - ux * HALF, y - uy * HALF));
-    edges[1].push(onSide(x + ux * HALF, y + uy * HALF));
+    SEAM.forEach(([d], k) => rows[k].push(onSide(x + ux * d, y + uy * d)));
   });
-  return edges;
+  return rows;
 }
 
 /**
@@ -75,7 +83,7 @@ function rearPath(): { path: P2[]; top: number } {
   const arcEnd = meet - CORNER / r;
   const start = Math.asin(Math.max(0, rockerY(cx + r) + 0.003 - cy) / r);
   const path: P2[] = [];
-  const steps = 22;
+  const steps = 16;
   for (let i = 0; i <= steps; i++) {
     const a = start + ((arcEnd - start) * i) / steps;
     path.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
@@ -92,8 +100,8 @@ function rearPath(): { path: P2[]; top: number } {
   return { path, top: e[1] };
 }
 
-/** One dark strip from a pair of edges, on both sides of the car. */
-const shutLine = ([back, front]: Edges): THREE.BufferGeometry => bothSides(gridGeometry([back, front]));
+/** One soft dark line from its rows, on both sides of the car. */
+const shutLine = (rows: Rows): THREE.BufferGeometry => bothSides(seamGeometry(rows));
 
 /**
  * Door shut lines and flush handles. The front door runs from just
@@ -102,10 +110,10 @@ const shutLine = ([back, front]: Edges): THREE.BufferGeometry => bothSides(gridG
  * in the same rhythm as the glass above them.
  */
 export function addDoors(bin: PartBin): void {
-  bin.add('liner', shutLine(straightEdges(upSide(DOOR.front))), shutLine(straightEdges(upSide(DOOR.pillar))));
+  bin.add('seam', shutLine(straightRows(upSide(DOOR.front))), shutLine(straightRows(upSide(DOOR.pillar))));
   const { path, top } = rearPath();
-  const [arcLeft, arcRight] = pathEdges(path);
-  const [upLeft, upRight] = straightEdges(upSide(DOOR.rear).filter(([, y]) => y > top + 0.005));
-  bin.add('liner', shutLine([[...arcLeft, ...upLeft], [...arcRight, ...upRight]]));
+  const arc = pathRows(path);
+  const up = straightRows(upSide(DOOR.rear).filter(([, y]) => y > top + 0.01));
+  bin.add('seam', shutLine(arc.map((row, k) => [...row, ...up[k]])));
   for (const x of HANDLES) bin.add('trim', bodyStrip(2, [[0.86, 0.003], [0.9, 0.003]], x, x + 0.17, 4));
 }

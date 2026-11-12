@@ -46,6 +46,8 @@ const LOOK: Record<Slot, { color: [number, number, number]; rough: number; metal
   face: { color: [0.62, 0.63, 0.65], rough: 0.3, metal: 0.95 },
   disc: { color: [0.25, 0.25, 0.26], rough: 0.5, metal: 0.5 },
   caliper: { color: [0.75, 0.1, 0.08], rough: 0.35, metal: 0.1 },
+  // Panel gaps are only drawn on the followed SUV; the population never bakes this slot.
+  seam: { color: [0.012, 0.012, 0.013], rough: 0.95, metal: 0 },
 };
 
 /** Bakes a slot's look into per vertex `color` and `surface` attributes, for one instanced draw call. */
