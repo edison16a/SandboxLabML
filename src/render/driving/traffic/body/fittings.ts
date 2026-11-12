@@ -5,23 +5,31 @@ import type { CarShape } from '../shape/types';
 import type { Projector } from './project';
 
 /**
- * The right door mirror (the drawn half is the right): a smooth rounded pod on a short arm, its inner
- * end sunk into the door so it never floats. Gloss black, like the trim.
+ * The right door mirror (the drawn half is the right): a smooth rounded
+ * pod on a short stalk, its inner face just inside the door on every tier
+ * so it never floats. Gloss black, like the trim.
  */
 export function doorMirror(s: CarShape, proj: Projector, fine: boolean): THREE.BufferGeometry {
   const { x, y, out } = s.mirror;
   const at = proj.hit('side', x, y);
   const z = at ? at.p[2] : s.width / 2 - 0.08;
   // A rounded box rather than a ball (each coordinate pushed out toward the cube), its back
-  // pressed nearly flat where the glass would be: a D in plan.
-  const head = new THREE.SphereGeometry(1, fine ? 7 : 5, fine ? 4 : 3);
+  // pressed nearly flat where the glass would be: a D in plan. It keeps the ball's own normals,
+  // bent by the same squash, so its few facets shade as one smooth shell instead of a die.
+  const head = new THREE.SphereGeometry(1, fine ? 9 : 6, fine ? 5 : 3);
   const p = head.attributes.position;
-  const square = (c: number) => Math.sign(c) * Math.pow(Math.abs(c), 0.55);
-  for (let i = 0; i < p.count; i++) p.setXYZ(i, square(p.getX(i)) * (p.getX(i) < 0 ? 0.4 : 1), square(p.getY(i)), square(p.getZ(i)));
-  head.computeVertexNormals();
-  head.scale(0.075, 0.058, out * 0.5).translate(x - 0.02, y + 0.035, z + out * 0.6);
-  const parts = [bakeLook(head, ['trim'])];
-  if (fine) parts.push(bakeLook(new THREE.SphereGeometry(1, 4, 2).scale(0.05, 0.02, out * 0.35).translate(x + 0.01, y - 0.005, z + out * 0.2), ['trim']));
+  const n = head.attributes.normal;
+  const round = (c: number) => Math.sign(c) * Math.pow(Math.abs(c), 0.7);
+  const v = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++) {
+    const back = p.getX(i) < 0 ? 0.45 : 1;
+    p.setXYZ(i, round(p.getX(i)) * back, round(p.getY(i)), round(p.getZ(i)));
+    v.set(n.getX(i) / back, n.getY(i), n.getZ(i)).normalize();
+    n.setXYZ(i, v.x, v.y, v.z);
+  }
+  head.scale(0.075, 0.058, out * 0.5).translate(x - 0.02, y + 0.035, z + out * 0.45);
+  const stalk = new THREE.SphereGeometry(1, 4, 2).scale(0.05, 0.02, out * 0.35).translate(x + 0.01, y - 0.005, z + out * 0.2);
+  const parts = [bakeLook(head, ['trim']), bakeLook(stalk, ['trim'])];
   const g = merge(parts);
   parts.forEach((q) => q.dispose());
   return g;
