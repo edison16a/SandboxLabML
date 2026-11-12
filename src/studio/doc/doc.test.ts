@@ -55,7 +55,7 @@ describe('text changes', () => {
 });
 
 describe('inserting examples', () => {
-  const src = 'script "t" for racing v1\neach tick {\n  drive(steer: brain.steer, pedal: brain.pedal)\n}\n';
+  const src = 'script "t" for driving v1\neach tick {\n  drive(steer: brain.steer, pedal: brain.pedal)\n}\n';
 
   it('inserts below the cursor line with its indentation, or one deeper after a brace', () => {
     const afterDrive = insertBelowLine(src, src.indexOf('drive'), 'reward 1');
@@ -65,17 +65,17 @@ describe('inserting examples', () => {
   });
 
   it('appends to a section and creates it when missing', () => {
-    expect(appendToSection(src, 'tick', 'reward +1 when checkpoint.passed')).toContain('pedal: brain.pedal)\n  reward +1 when checkpoint.passed\n}');
+    expect(appendToSection(src, 'tick', 'reward +10 when car.arrived')).toContain('pedal: brain.pedal)\n  reward +10 when car.arrived\n}');
     const gen = appendToSection(src, 'generation', 'speciate(target: 8)');
     expect(gen).toContain('\neach generation {\n  speciate(target: 8)\n}\n');
-    expect(appendToSection('script "t" for racing v1\neach tick {\n', 'tick', 'reward 1')).toBeNull();
+    expect(appendToSection('script "t" for driving v1\neach tick {\n', 'tick', 'reward 1')).toBeNull();
   });
 });
 
 describe('last valid text', () => {
   it('finds the newest state in the history that parses', () => {
-    const good = 'script "t" for racing v1\neach tick {\n  reward 1\n}\n';
-    let h = createHistory('script "t" for racing v1\n');
+    const good = 'script "t" for driving v1\neach tick {\n  reward 1\n}\n';
+    let h = createHistory('script "t" for driving v1\n');
     h = commit(h, good);
     h = commit(h, `${good}reward (`);
     h = commit(h, `${good}reward ((`);
@@ -87,12 +87,12 @@ describe('last valid text', () => {
 
 describe('analysis', () => {
   it('counts problems, finds the first syntax error and estimates cost', () => {
-    const ok = analyze('script "t" for racing v1\neach tick {\n  drive(steer: brain.steer, pedal: brain.pedal)\n}\n');
+    const ok = analyze('script "t" for driving v1\neach tick {\n  drive(steer: brain.steer, pedal: brain.pedal)\n}\n');
     expect(ok.syntaxError).toBeNull();
     expect(ok.counts.error).toBe(0);
     expect(ok.micros).toBeGreaterThan(0);
     expect(ok.turboShare).toBeGreaterThan(0.9);
-    const broken = analyze('script "t" for racing v1\neach tick {\n  reward (1\n}\n');
+    const broken = analyze('script "t" for driving v1\neach tick {\n  reward (1\n}\n');
     expect(broken.syntaxError).not.toBeNull();
     expect(broken.cost).toBeNull();
   });

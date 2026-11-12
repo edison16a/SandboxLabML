@@ -4,6 +4,7 @@ import { presetBlueprints } from '@/engine/blueprints/presets';
 import { parse, toBlocks } from '@/engine/script';
 import { Badge } from '@/ui/primitives/Badge';
 import { Button } from '@/ui/primitives/Button';
+import { studioEnvOf } from '../state/studioEnvs';
 import { useBlocks } from './BlocksContext';
 import { InlineField } from './editors/InlineField';
 
@@ -18,7 +19,7 @@ export function HeaderCard() {
       <div className="flex items-center justify-between gap-3 rounded-lg border border-dashed border-border-strong px-3 py-2 text-[13px] text-muted">
         This script has no script line yet.
         {!readOnly && (
-          <Button size="sm" variant="outline" onClick={() => apply((w) => ({ ...w, header: toBlocks(parse('script "My script" for racing v1\n').program).header }))}>
+          <Button size="sm" variant="outline" onClick={() => apply((w) => ({ ...w, header: toBlocks(parse(`script "My script" for ${studioEnvOf(env)} v1\n`).program).header }))}>
             Add it
           </Button>
         )}
@@ -30,7 +31,7 @@ export function HeaderCard() {
   const setBrain = (id: string) =>
     apply((w) => {
       if (id === NO_BRAIN) return { ...w, brain: null };
-      const brain = w.brain ?? toBlocks(parse(`script "x" for racing v1\nbrain ${id}\n`).program).brain;
+      const brain = w.brain ?? toBlocks(parse(`script "x" for ${studioEnvOf(env)} v1\nbrain ${id}\n`).program).brain;
       return brain ? { ...w, brain: { ...brain, fields: { ...brain.fields, id } } } : w;
     });
   return (

@@ -4,8 +4,8 @@ import { paletteFor } from './palette';
 import { placeBlock, scopeOfPath } from './place';
 import { blockAt } from './paths';
 
-const ws = () => toBlocks(parse('script "t" for racing v1\nlet k = 2\neach tick {\n  reward 1\n  reward 2\n}\n').program);
-const item = (scope: 'top' | 'tick' | 'generation', key: string) => paletteFor('racing', scope).flatMap((c) => c.items).find((i) => i.key === key)!.template;
+const ws = () => toBlocks(parse('script "t" for driving v1\nlet k = 2\neach tick {\n  reward 1\n  reward 2\n}\n').program);
+const item = (scope: 'top' | 'tick' | 'generation', key: string) => paletteFor('driving', scope).flatMap((c) => c.items).find((i) => i.key === key)!.template;
 
 describe('placing palette blocks', () => {
   it('inserts after the selected statement in the same section', () => {

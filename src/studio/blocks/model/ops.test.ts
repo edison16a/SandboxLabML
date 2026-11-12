@@ -3,15 +3,15 @@ import { fromBlocks, parse, print, toBlocks, type BlockWorkspace } from '@/engin
 import { duplicateBlock, insertBlock, moveBlock, removeBlock, setInput, updateBlock } from './ops';
 import { blockAt, ROOT_LIST, shiftPath, type BlockPath } from './paths';
 
-const SOURCE = `script "t" for racing v1
+const SOURCE = `script "t" for driving v1
 
 each tick {
   drive(steer: brain.steer, pedal: brain.pedal)
-  reward +1 when checkpoint.passed
+  reward +10 when car.arrived
   if car.speed > 3 m/s {
     reward 0.1
   }
-  stop "crash" when car.offTrack
+  stop "crash" when car.offRoad
 }
 `;
 
@@ -28,13 +28,13 @@ const lines = (w: BlockWorkspace) =>
 describe('block list operations', () => {
   it('moves a statement down within its list and reports where it landed', () => {
     const moved = moveBlock(ws(), tick(0), body, 3)!;
-    expect(lines(moved.ws)).toEqual(['reward +1 when checkpoint.passed', 'if car.speed > 3 m/s {', 'reward 0.1', 'drive(steer: brain.steer, pedal: brain.pedal)', 'stop "crash" when car.offTrack']);
+    expect(lines(moved.ws)).toEqual(['reward +10 when car.arrived', 'if car.speed > 3 m/s {', 'reward 0.1', 'drive(steer: brain.steer, pedal: brain.pedal)', 'stop "crash" when car.offRoad']);
     expect(blockAt(moved.ws, moved.path)?.type).toBe('call');
   });
 
   it('moves a statement up within its list', () => {
     const moved = moveBlock(ws(), tick(3), body, 0)!;
-    expect(lines(moved.ws)[0]).toBe('stop "crash" when car.offTrack');
+    expect(lines(moved.ws)[0]).toBe('stop "crash" when car.offRoad');
     expect(blockAt(moved.ws, moved.path)?.type).toBe('stop');
   });
 
@@ -53,21 +53,21 @@ describe('block list operations', () => {
 
   it('removes, duplicates and inserts', () => {
     const w = ws();
-    expect(lines(removeBlock(w, tick(1)))).not.toContain('reward +1 when checkpoint.passed');
+    expect(lines(removeBlock(w, tick(1)))).not.toContain('reward +10 when car.arrived');
     expect(lines(duplicateBlock(w, tick(3))).filter((l) => l.startsWith('stop'))).toHaveLength(2);
     const extra = blockAt(w, tick(1))!;
-    expect(lines(insertBlock(w, body, 99, extra)).at(-1)).toBe('reward +1 when checkpoint.passed');
+    expect(lines(insertBlock(w, body, 99, extra)).at(-1)).toBe('reward +10 when car.arrived');
   });
 
   it('edits a number inside an expression and keeps the rest of the text', () => {
     const cond: BlockPath = [...tick(2), { input: 0 }, { input: 1 }];
     const next = updateBlock(ws(), cond, (b) => ({ ...b, fields: { ...b.fields, value: 5 } }));
     expect(text(next)).toContain('if car.speed > 5 m/s {');
-    expect(text(next)).toContain('stop "crash" when car.offTrack');
+    expect(text(next)).toContain('stop "crash" when car.offRoad');
   });
 
   it('turns an else if chain into a plain else once it holds two blocks', () => {
-    const w = toBlocks(parse(`script "t" for racing v1\neach tick {\n  if car.offTrack {\n    reward -1\n  } else if car.speed > 1 m/s {\n    reward 1\n  }\n}\n`).program);
+    const w = toBlocks(parse(`script "t" for driving v1\neach tick {\n  if car.offRoad {\n    reward -1\n  } else if car.speed > 1 m/s {\n    reward 1\n  }\n}\n`).program);
     const elseList = { parent: tick(0), list: 'else' };
     const extra = blockAt(w, [...tick(0), { list: 'then', index: 0 }])!;
     const next = insertBlock(w, elseList, 1, extra);
@@ -75,7 +75,7 @@ describe('block list operations', () => {
   });
 
   it('adds a missing optional argument at the end', () => {
-    const w = toBlocks(parse(`script "t" for racing v1\neach generation {\n  keepChampions()\n}\n`).program);
+    const w = toBlocks(parse(`script "t" for driving v1\neach generation {\n  keepChampions()\n}\n`).program);
     const bool = { id: 'x', type: 'boolean' as const, fields: { value: false }, inputs: [], children: {}, comment: null };
     expect(text(setInput(w, tick(0), 'enabled', bool))).toContain('keepChampions(enabled: false)');
   });

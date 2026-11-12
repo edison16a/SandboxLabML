@@ -15,7 +15,7 @@ export interface Slot {
   removable: boolean;
   /** Shown in an empty slot, such as "condition" or the parameter name. */
   hint: string;
-  /** Allowed texts for a string parameter, such as built-in track ids. */
+  /** Allowed texts for a string parameter, such as the city ids. */
   choices?: readonly string[];
   /** Fields of a record parameter, such as the rates inside `mutate: { ... }`. */
   fields?: readonly ParamDef[];

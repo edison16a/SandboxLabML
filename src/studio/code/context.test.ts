@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { braceDepth, scopeAt, unitContext } from './context';
 
-const SRC = `script "t" for racing v1
-sensor gap "Gap" in 0 m .. 60 m = rays.min
+const SRC = `script "t" for driving v1
+sensor gap "Gap" in 0 m .. 50 m = carAhead.gap
 each tick {
   if car.speed > 3 m/s {
     re
@@ -22,7 +22,7 @@ describe('cursor context', () => {
   });
 
   it('works on half-typed text', () => {
-    expect(scopeAt('script "t" for racing v1\neach tick {\n  reward (', 40)).toBe('tick');
+    expect(scopeAt('script "t" for driving v1\neach tick {\n  reward (', 40)).toBe('tick');
   });
 
   it('counts unclosed braces outside strings and comments', () => {
