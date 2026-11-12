@@ -13,7 +13,7 @@ import { overlapsFocus } from '../traffic/focusOverlap';
 import { FatLines } from './fatLines';
 import { PERSON_BOX_TOP, PERSON_PILL_Y, carBoxTop, carPillY } from './labelPlace';
 import { SENSOR, SENSOR_CSS } from './palette';
-import { TextLabel } from './TextLabel';
+import { LABEL_SIZE, TextLabel } from './TextLabel';
 
 const MAX_BOXES = 18;
 /** Corner bracket arms as a share of each box edge, capped in meters. */
@@ -49,6 +49,12 @@ function bodyEdge(a: number): number {
   return Math.min(c > 1e-6 ? BODY.length / 2 / c : Infinity, s > 1e-6 ? BODY.width / 2 / s : Infinity);
 }
 
+/** Half the chase camera's field of view, radians: the pill is sized for it and scaled to keep that size on screen under any lens. */
+const CHASE_HALF_FOV = (26 * Math.PI) / 180;
+/** Above this height the camera looks down on the city, m: the pill moves out past what it labels, away from the followed SUV. */
+const LOOKS_DOWN = 30;
+const ASIDE = 4;
+
 /** True when a point lies inside the camera's view. `v` is scratch and is overwritten. */
 function onScreen(camera: THREE.Camera, v: THREE.Vector3, x: number, y: number, z: number): boolean {
   v.set(x, y, z).project(camera);
@@ -62,7 +68,9 @@ function onScreen(camera: THREE.Camera, v: THREE.Vector3, x: number, y: number, 
  * the gap to it, measured from the SUV's own outline along the beam that
  * found it. Brighter boxes are the ones its dedicated sensors report.
  * The label only shows while the SUV itself is in view, so a free or
- * orbit camera looking elsewhere never shows a stray distance.
+ * orbit camera looking elsewhere never shows a stray distance. It keeps
+ * the same size on screen under every lens, and seen from above it sits
+ * just past what it labels, so it never covers the followed SUV.
  */
 export function Detections() {
   const { frame } = useDrivingScene();
@@ -143,7 +151,17 @@ export function Detections() {
     lines.finish(size.width, size.height);
     label.sprite.visible = bKind >= 0 && onScreen(camera, scratch, frame.pos.x, frame.pos.y + 0.8, frame.pos.z);
     if (!label.sprite.visible) return;
+    if (camera.position.y - frame.pos.y > LOOKS_DOWN) {
+      const dx = bx - frame.pos.x;
+      const dz = bz - frame.pos.z;
+      const d = Math.hypot(dx, dz) || 1;
+      bx += (dx / d) * ASIDE;
+      bz += (dz / d) * ASIDE;
+    }
     label.sprite.position.set(bx, by, bz);
+    const fov = (camera as THREE.PerspectiveCamera).fov;
+    const k = fov ? Math.tan(((fov / 2) * Math.PI) / 180) / Math.tan(CHASE_HALF_FOV) : 1;
+    label.sprite.scale.set(LABEL_SIZE.w * k, LABEL_SIZE.h * k, 1);
     label.setMeters(Math.round(best), bKind === HIT_PED ? SENSOR_CSS.person : SENSOR_CSS.car);
   }, FRAME_PRIORITY.overlay);
 

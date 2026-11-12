@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 
+/** The pill's size as a sprite that keeps its size on screen: a share of the view, under the chase camera's lens. */
+export const LABEL_SIZE = { w: 0.075, h: 0.03 };
+
 /**
  * A small text pill drawn into a canvas and shown as a sprite that keeps
  * its size on screen, for the overlay's distance label. The canvas is only
@@ -33,7 +36,7 @@ export class TextLabel {
       polygonOffsetUnits: -4,
     });
     this.sprite = new THREE.Sprite(this.material);
-    this.sprite.scale.set(0.075, 0.03, 1);
+    this.sprite.scale.set(LABEL_SIZE.w, LABEL_SIZE.h, 1);
     this.sprite.renderOrder = 20;
     this.sprite.visible = false;
   }
