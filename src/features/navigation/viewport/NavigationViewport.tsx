@@ -29,8 +29,9 @@ export function NavigationViewport({ feeds, ultra, onReady }: Props) {
   const held = useNavigationLab(viewportHeld);
   // Paused at a watch speed nothing moves (the ghosts pause too), so it only draws on demand.
   const live = useNavigationLab((s) => !(s.status === 'paused' && s.mode === 'train' && isWatchSpeed(s.speed)));
-  // While idle, these redraw for a moment: the view toggle, a new course, a new run.
-  const wake = useNavigationLab((s) => `${s.view}:${s.run?.id}:${s.content?.generation}:${s.focus.kind}`);
+  // While idle, these redraw for a moment: the view toggle, a new course, a new run. Held under Max
+  // nothing redraws, and a key that changed with every generation would only re-render the scene tree.
+  const wake = useNavigationLab((s) => (viewportHeld(s) ? 'held' : `${s.view}:${s.run?.id}:${s.content?.generation}:${s.focus.kind}`));
   // A clicked runner becomes the focus: the population's by index, a ghost by the generation it replays.
   const onPick = useCallback(
     (ghost: boolean, index: number) => {
