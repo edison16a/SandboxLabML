@@ -24,9 +24,13 @@ const NEW = new THREE.Color(NAV_COLORS.ghostNew);
 /** Opacity of the oldest and the newest champion. Newer ghosts read stronger, as they matter more. */
 const ALPHA_OLD = 0.22;
 const ALPHA_NEW = 0.5;
-/** Ghosts in front of the followed runner fade further back, as the crowd does. */
+/**
+ * Ghosts in front of the followed runner, toward the camera, fade nearly
+ * out: see-through bodies stacked over it read as a smear, where the
+ * solid crowd only needs to step back a little.
+ */
 const CLEAR_RADIUS = 0.85;
-const CLEAR_ALPHA = 0.3;
+const CLEAR_ALPHA = 0.1;
 /**
  * Copies of one brain run the same line, and drawn on top of each other
  * they read as one body with several heads. A ghost this close to the
