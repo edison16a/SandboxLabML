@@ -24,10 +24,6 @@ export function copyVec(out: Vec3, v: Vec3): Vec3 {
   return setVec(out, v.x, v.y, v.z);
 }
 
-export function lerpVec(out: Vec3, a: Vec3, b: Vec3, t: number): Vec3 {
-  return setVec(out, a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
-}
-
 export function distance(a: Vec3, b: Vec3): number {
   return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 }

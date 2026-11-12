@@ -40,9 +40,6 @@ export const RIG = {
 /** Full leg reach from hip to ankle, m, with a hair of bend kept so a knee never snaps straight. */
 export const LEG_REACH = (RIG.thigh + RIG.shin) * 0.985;
 
-/** Where the head's center sits in the body's frame, as a point. */
-export const HEAD_CENTER = { x: 0, y: RIG.headY, z: 0 } as const;
-
 /**
  * The center of eye `side` (-1 left, +1 right) in the head's frame: on the
  * bun scaled head surface, sunk in a little, so the eyeball bulges out of

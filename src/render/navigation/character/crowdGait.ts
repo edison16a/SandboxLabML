@@ -40,8 +40,3 @@ export function crowdGaitMaterial(params: THREE.MeshStandardMaterialParameters):
   m.customProgramCacheKey = () => 'hs-crowd-gait';
   return m;
 }
-
-/** A per instance (phase, amplitude) attribute for `count` instances, rewritten every frame. */
-export function gaitAttribute(count: number): THREE.InstancedBufferAttribute {
-  return new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2).setUsage(THREE.DynamicDrawUsage);
-}

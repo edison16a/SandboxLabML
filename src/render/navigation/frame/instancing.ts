@@ -6,13 +6,6 @@ import * as THREE from 'three';
  */
 export const GRID_LAYER = 1;
 
-/**
- * The city round the room draws on layer 2. The main camera sees it; a
- * shadow pass under the room need not, since the city can never cast into
- * the room.
- */
-export const BACKDROP_LAYER = 2;
-
 /** The characters' see through silhouettes draw on layer 3, which only the main camera sees. */
 export const XRAY_LAYER = 3;
 
