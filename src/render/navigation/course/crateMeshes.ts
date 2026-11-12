@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { bracedBox, type BracedBoxParts } from '@/render/hideseek/boxes/bracedBox';
-import { BOX_LOOK } from '@/render/hideseek/boxes/boxMaterials';
+import { bracedBox, type BracedBoxParts } from './bracedBox';
+
+/** The light frame and X braces over a crate's panels. */
+const BRACE = '#f5f1e8';
 
 /** A crate of a size, standing at the origin, length along x. */
 export interface CrateSize {
@@ -49,13 +51,13 @@ export function crateMesh(s: CrateSize): BracedBoxParts & { dispose: () => void 
   };
 }
 
-/** Lacquered panels in a crate color and the light frame, as in Hide and Seek. `full` adds the clear coat. */
+/** Lacquered panels in a crate color and the light frame. `full` adds the clear coat. */
 export function crateMaterials(color: THREE.ColorRepresentation, full: boolean, glow = 0.06): { panel: THREE.MeshStandardMaterial; brace: THREE.MeshStandardMaterial; dispose: () => void } {
   const c = new THREE.Color(color);
   const panel = full
     ? new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.4, metalness: 0.22, clearcoat: 0.5, clearcoatRoughness: 0.22, envMapIntensity: 1.1 })
     : new THREE.MeshStandardMaterial({ color: c, roughness: 0.42, metalness: 0.2, envMapIntensity: 1.1 });
-  const brace = new THREE.MeshStandardMaterial({ color: BOX_LOOK.brace, roughness: 0.34, metalness: 0, emissive: BOX_LOOK.brace, emissiveIntensity: glow, envMapIntensity: 0.9 });
+  const brace = new THREE.MeshStandardMaterial({ color: BRACE, roughness: 0.34, metalness: 0, emissive: BRACE, emissiveIntensity: glow, envMapIntensity: 0.9 });
   return {
     panel,
     brace,

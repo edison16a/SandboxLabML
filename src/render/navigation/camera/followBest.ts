@@ -1,6 +1,6 @@
 import type * as THREE from 'three';
-import type { Flight, Orbit } from '@/render/hideseek/camera/flight';
-import { orbitShot } from '@/render/hideseek/camera/framing';
+import type { Flight, Orbit } from '@/render/navigation/camera/flight';
+import { orbitShot } from '@/render/navigation/camera/framing';
 import { stepSpring } from '@/render/shared/interpolate';
 import { FOLLOW, followAim, followAzimuth, followShot, followSide } from './shots';
 

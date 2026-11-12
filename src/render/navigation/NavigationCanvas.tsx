@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import { useCallback, useEffect, useMemo } from 'react';
-import { GRID_LAYER, XRAY_LAYER } from '@/render/hideseek/grid/scratch';
+import { GRID_LAYER, XRAY_LAYER } from '@/render/navigation/frame/instancing';
 import { FramePacer } from '@/render/shared/FramePacer';
 import { useFrameLoop } from '@/render/shared/frameLoop';
 import { SceneReady } from '@/render/shared/SceneReady';
@@ -55,9 +55,9 @@ export interface NavigationCanvasProps {
 
 /**
  * The Navigation viewport. It only reads the feed; nothing here can change
- * a training result. The scene is the Hide and Seek look: tiled room,
- * golden crates, the grey block city, the same characters and the same
- * daylight, with the course pieces this game adds.
+ * a training result. The scene is a bright toy world: a tiled room,
+ * golden crates, a grey block city and soft daylight, with spikes, walls,
+ * movers and the finish gate as the course pieces.
  */
 export function NavigationCanvas({ getFeed, getGhosts, tier, camera, sensors, effects = true, live, held = false, hoveredInput = -1, onFrame, onReady, onFollow, wake, onPick }: NavigationCanvasProps) {
   const loop = useFrameLoop(held ? 'held' : live ? 'live' : 'idle');

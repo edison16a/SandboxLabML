@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Environment, Lightformer } from '@react-three/drei';
 import { useEffect, useMemo, useRef } from 'react';
-import { HAZE } from '@/render/hideseek/scene/haze';
+import { HAZE } from '@/render/navigation/scene/haze';
 import { NAV_COLORS } from '../palette';
 import type { NavQualityTier } from '../types';
 import { KEY, snapShadowTarget } from './shadowSnap';
@@ -16,7 +16,7 @@ const SHADOW_MAX = 30;
 const SIZE_STEP = 3;
 
 /**
- * Daylight for every tier, the Hide and Seek studio sky: image based light
+ * Daylight for every tier, a bright studio sky: image based light
  * from a few drei Lightformers rendered once into an environment map, one
  * warm sun with soft shadows and a pale haze. The courses are long, so the
  * sun's shadow box follows the point the camera orbits and grows with the

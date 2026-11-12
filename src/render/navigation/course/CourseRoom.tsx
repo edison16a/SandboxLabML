@@ -2,16 +2,16 @@
 
 import type { Course } from '@/engine/navigation/course/build';
 import type { Rect } from '@/engine/navigation/course/types';
-import { floorAoMaterial } from '@/render/hideseek/room/floorAoMaterial';
-import { groundedMaterial } from '@/render/hideseek/room/groundedMaterial';
-import { floorAoGeometry } from '@/render/hideseek/room/roomGeometry';
-import { tileFloorMaterial } from '@/render/hideseek/room/tileFloor';
+import { floorAoMaterial } from '@/render/navigation/room/floorAoMaterial';
+import { groundedMaterial } from '@/render/navigation/room/groundedMaterial';
+import { floorAoGeometry } from '@/render/navigation/room/floorAoGeometry';
+import { tileFloorMaterial } from '@/render/navigation/room/tileFloor';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { NAV_COLORS } from '../palette';
 import { courseFloorGeometry, courseWallGeometry, courseWalls } from './roomGeometry';
 
 /**
- * The room of a course in the Hide and Seek look: light grey tiles with
+ * The room of a course: light grey tiles with
  * crisp grout, a satin sheen and the odd engraved emblem, clean light grey
  * slab walls, and a baked band of shade along the foot of every wall and
  * crate so they sit on the floor even without screen space occlusion.

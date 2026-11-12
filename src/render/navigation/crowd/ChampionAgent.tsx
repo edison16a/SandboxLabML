@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from 'react';
 import { FLAG_TOUCHING, NAV_DIED, NAV_FINISHED } from '@/engine/navigation/agent';
 import { SNAP_FLAGS, SNAP_STATUS, SNAP_STOP_TIME } from '@/engine/navigation/snapshot';
-import type { CharacterDrive } from '@/render/hideseek/characters/types';
+import type { CharacterDrive } from '@/render/navigation/character/types';
 import { useNavScene } from '../frame/sceneContext';
 import { STRIDE } from '../frame/snapshotRead';
 import type { NavQualityTier } from '../types';

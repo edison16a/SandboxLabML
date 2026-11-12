@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { crowdGaitMaterial } from '@/render/hideseek/grid/crowdGait';
+import { crowdGaitMaterial } from '@/render/navigation/character/crowdGait';
 
 /** The crowd's material settings: the glossy gummy body of the grid characters. */
 const BODY: THREE.MeshStandardMaterialParameters = { roughness: 0.28, metalness: 0, envMapIntensity: 1.1 };
 
-/** The solid crowd: Hide and Seek's walking crowd material, as is. */
+/** The solid crowd: the walking crowd material, as is. */
 export function crowdSolidMaterial(): THREE.MeshStandardMaterial {
   return crowdGaitMaterial(BODY);
 }

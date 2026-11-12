@@ -4,8 +4,8 @@ import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useMemo, useRef } from 'react';
-import { Flight } from '@/render/hideseek/camera/flight';
-import { cityEdgeFrom, farPlane, hazeRange } from '@/render/hideseek/scene/haze';
+import { Flight } from '@/render/navigation/camera/flight';
+import { cityEdgeFrom, farPlane, hazeRange } from '@/render/navigation/scene/haze';
 import { OUTER_WALL } from '@/engine/navigation/course/types';
 import { useNavScene } from '../frame/sceneContext';
 import { NAV_CAMERAS, type NavCamera } from '../types';
@@ -88,9 +88,9 @@ export function NavCameraRig({ mode }: { mode: NavCamera }) {
 }
 
 /**
- * Near and far planes and the haze follow the viewing distance, as in Hide
- * and Seek: depth precision stays on the course from any orbit, and the
- * city melts into the sky where it ends.
+ * Near and far planes and the haze follow the viewing distance, so depth
+ * precision stays on the course from any orbit and the city melts into
+ * the sky where it ends.
  */
 function fitDepth(camera: THREE.PerspectiveCamera, scene: THREE.Scene, target: THREE.Vector3, hx: number, hz: number, haze: { near: number; far: number }): void {
   const distance = camera.position.distanceTo(target);

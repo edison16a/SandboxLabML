@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-/** Key light direction: high and from the front left, as in Hide and Seek, so walls and crates throw readable shadows. */
+/** Key light direction: high and from the front left, so walls and crates throw readable shadows. */
 export const KEY = new THREE.Vector3(-0.55, 1, 0.42).normalize();
 
 /**

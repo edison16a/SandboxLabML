@@ -4,7 +4,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import type { Course } from '@/engine/navigation/course/build';
 import { WALL_HEIGHT, type Rect } from '@/engine/navigation/course/types';
 
-/** Rounding of every wall edge, m: a crisp slab that still catches a line of light, as in Hide and Seek. */
+/** Rounding of every wall edge, m: a crisp slab that still catches a line of light. */
 const WALL_EDGE = 0.03;
 
 /**

@@ -1,7 +1,7 @@
 import type { Course } from '@/engine/navigation/course/build';
 import { FINISH_INSET, WALL_HEIGHT } from '@/engine/navigation/course/types';
-import { fitDistance, type ScreenWindow } from '@/render/hideseek/camera/fit';
-import { orbitShot, type Shot } from '@/render/hideseek/camera/framing';
+import { fitDistance, type ScreenWindow } from '@/render/navigation/camera/fit';
+import { orbitShot, type Shot } from '@/render/navigation/camera/framing';
 
 /**
  * The follow shot: a drone behind the runner and a little to its side,

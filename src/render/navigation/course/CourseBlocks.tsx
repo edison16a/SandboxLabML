@@ -6,8 +6,8 @@ import { NAV_COLORS } from '../palette';
 import { crateMaterials, mergedCrates } from './crateMeshes';
 
 /**
- * The still crates of a course: the golden braced crates of Hide and Seek,
- * every one merged into two meshes when the course changes.
+ * The still crates of a course: golden braced crates, every one merged
+ * into two meshes when the course changes.
  */
 export function CourseBlocks({ course, full, shadows }: { course: Course; full: boolean; shadows: boolean }) {
   const mesh = useDisposable(() => {

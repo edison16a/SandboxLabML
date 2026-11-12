@@ -4,16 +4,16 @@ import * as THREE from 'three';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import type { Course } from '@/engine/navigation/course/build';
 import { OUTER_WALL, WALL_HEIGHT } from '@/engine/navigation/course/types';
-import { commit, makeScratch, placeInstance } from '@/render/hideseek/grid/scratch';
-import { groundedMaterial } from '@/render/hideseek/room/groundedMaterial';
-import { cityBlocks } from '@/render/hideseek/scene/backdropBlocks';
-import { openUnitBox } from '@/render/hideseek/shared/basicGeometry';
+import { commit, makeScratch, placeInstance } from '@/render/navigation/frame/instancing';
+import { groundedMaterial } from '@/render/navigation/room/groundedMaterial';
+import { cityBlocks } from '@/render/navigation/scene/backdropBlocks';
+import { openUnitBox } from '@/render/navigation/scene/basicGeometry';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { NAV_COLORS } from '../palette';
 
 /** Most blocks the city ever holds. */
 const CAPACITY = 8000;
-/** The finest block size next to the course, m: the Hide and Seek showcase size. */
+/** The finest block size next to the course, m. */
 const BASE = 2;
 /** Blocks this close to the outer walls stay under them, m, so they never hide the course. */
 const NEAR = 3;
@@ -21,10 +21,9 @@ const LIGHT = new THREE.Color(NAV_COLORS.blockLight);
 const DARK = new THREE.Color(NAV_COLORS.blockDark);
 
 /**
- * The world round the course: the dense grey block city of Hide and Seek,
- * low by the walls and rising into a skyline that fades into the haze, on
- * open ground. One instanced draw call, rebuilt only when the course size
- * changes.
+ * The world round the course: a dense grey block city, low by the walls
+ * and rising into a skyline that fades into the haze, on open ground. One
+ * instanced draw call, rebuilt only when the course size changes.
  */
 export function NavBackdrop({ course }: { course: Course | null }) {
   const mesh = useRef<THREE.InstancedMesh>(null);

@@ -3,14 +3,14 @@
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
-import { characterKit } from '@/render/hideseek/characters/characterKit';
-import { CharacterMaterials } from '@/render/hideseek/characters/characterMaterials';
-import { CharacterMotion } from '@/render/hideseek/characters/motion/characterMotion';
-import { createSkeleton } from '@/render/hideseek/characters/rig/bones';
-import { CharacterPoser } from '@/render/hideseek/characters/rig/poser';
-import { seekerRingMaterial } from '@/render/hideseek/characters/seekerRing';
-import { createCharacterDrive, type CharacterDetail, type CharacterDrive } from '@/render/hideseek/characters/types';
-import { XRAY_LAYER } from '@/render/hideseek/grid/scratch';
+import { characterKit } from '@/render/navigation/character/characterKit';
+import { CharacterMaterials } from '@/render/navigation/character/characterMaterials';
+import { CharacterMotion } from '@/render/navigation/character/motion/characterMotion';
+import { createSkeleton } from '@/render/navigation/character/rig/bones';
+import { CharacterPoser } from '@/render/navigation/character/rig/poser';
+import { focusRingMaterial } from '@/render/navigation/character/focusRing';
+import { createCharacterDrive, type CharacterDetail, type CharacterDrive } from '@/render/navigation/character/types';
+import { XRAY_LAYER } from '@/render/navigation/frame/instancing';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { POSE_PRIORITY, useNavScene } from '../frame/sceneContext';
 import { NAV_COLORS } from '../palette';
@@ -33,8 +33,8 @@ export interface NavCharacterProps {
 }
 
 /**
- * The champion: the full Hide and Seek character in the runner blue, with
- * the same rig and motion model (planted feet, IK knees and elbows, a
+ * The champion: the full character in the runner blue, with the same rig
+ * and motion model as the crowd (planted feet, IK knees and elbows, a
  * trunk that leans with its momentum, eyes on what matters), standing in a
  * soft ring. When its run ends it falls, squashes or hops exactly as the
  * crowd does (see stopPose). Behind a crate it still shows as a faint
@@ -43,8 +43,8 @@ export interface NavCharacterProps {
 export function NavCharacter({ read, detail, shadows, blob }: NavCharacterProps) {
   const { frame } = useNavScene();
   const kit = characterKit(detail);
-  const mats = useDisposable(() => new CharacterMaterials('hider', detail, kit.blobMap), [detail, kit]);
-  const ringMat = useDisposable(() => seekerRingMaterial(RING), []);
+  const mats = useDisposable(() => new CharacterMaterials(NAV_COLORS.runner, detail, kit.blobMap), [detail, kit]);
+  const ringMat = useDisposable(() => focusRingMaterial(RING), []);
   const rig = useDisposable(() => {
     const { root, bones, skeleton } = createSkeleton();
     const body = new THREE.SkinnedMesh(kit.body, mats.body);
@@ -84,7 +84,7 @@ export function NavCharacter({ read, detail, shadows, blob }: NavCharacterProps)
     const thinForward = st.thin < 1 && frame.course !== null && crushAlongForward(frame.course, frame.movers, d.x, d.z, d.yaw + st.spin);
     g.scale.set(st.spread * (thinForward ? st.thin : 1), st.squash, st.spread * (thinForward ? 1 : st.thin));
     rig.poser.apply(pose);
-    mats.apply(pose, st.lift, clock.elapsedTime);
+    mats.apply(pose, st.lift);
     if (st.grey > 0) mats.body.color.lerp(GREY, st.grey);
     if (st.flash > 0) mats.body.color.lerp(st.thin < 1 ? CRUSH_FLASH : FLASH, st.flash * 0.55);
     if (shadow.current) {

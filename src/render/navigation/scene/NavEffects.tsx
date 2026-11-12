@@ -5,11 +5,10 @@ import { useThree } from '@react-three/fiber';
 import { Bloom, EffectComposer, N8AO, SMAA, ToneMapping, Vignette } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';
 import { useEffect } from 'react';
-import { HS_TONE_MAPPING } from '@/render/hideseek/palette';
 import type { NavQualityTier } from '../types';
 
 /**
- * Post processing on High and Ultra, the Hide and Seek showcase recipe:
+ * Post processing on High and Ultra:
  * N8AO grounds the crates and runners, bloom lifts only emissive parts
  * (the finish glow, the ring, sensor hits), neutral tone mapping keeps the
  * whites white, SMAA cleans edges and a light vignette frames the view.
@@ -35,12 +34,16 @@ function opaqueOnly(pass: { autoDetectTransparency: boolean; configuration: { tr
   pass.configuration.transparencyAware = false;
 }
 
-/** The renderer tone maps unless the effect composer does it, in which case it must hand over linear colors. */
+/**
+ * The renderer tone maps unless the effect composer does it, in which case
+ * it must hand over linear colors. Neutral keeps whites white and the
+ * runner blue true, where AgX would grey a bright daylight scene down.
+ */
 export function ToneMappingSync({ composer }: { composer: boolean }) {
   const gl = useThree((s) => s.gl);
   const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
-    gl.toneMapping = composer ? THREE.NoToneMapping : HS_TONE_MAPPING;
+    gl.toneMapping = composer ? THREE.NoToneMapping : THREE.NeutralToneMapping;
     gl.toneMappingExposure = 1;
     invalidate();
   }, [gl, composer, invalidate]);

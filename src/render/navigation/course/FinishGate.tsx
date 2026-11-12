@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { Course } from '@/engine/navigation/course/build';
 import { OUTER_WALL } from '@/engine/navigation/course/types';
-import { groundedMaterial } from '@/render/hideseek/room/groundedMaterial';
+import { groundedMaterial } from '@/render/navigation/room/groundedMaterial';
 import { useDisposable } from '@/render/shared/useDisposable';
 import { NAV_COLORS } from '../palette';
 import { checkerMaterial } from './checkerMaterial';
