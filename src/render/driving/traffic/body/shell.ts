@@ -55,7 +55,7 @@ function finer(d: TrafficDetail, k: number): TrafficDetail {
   return { ...d, p0: d.p0 * k, p1: [d.p1[0] * k, d.p1[1] * k], p2: [d.p2[0] * k, d.p2[1] * k, d.p2[2] * k, d.p2[3] * k] };
 }
 
-/** The body's left half: one grid per panel, plus the underbody, ready to mirror. */
+/** The body's right half (z of 0 and up): one grid per panel, plus the underbody, ready to mirror. */
 export interface Shell {
   panels: THREE.BufferGeometry[];
   underbody: THREE.BufferGeometry;
@@ -63,7 +63,7 @@ export interface Shell {
 }
 
 /**
- * Lofts the left half of the body through its stations. The plan narrows
+ * Lofts the right half of the body through its stations. The plan narrows
  * each section toward the tips, so the ends close by themselves with no
  * caps, and the ends' lean is applied last. Only the lower panels need
  * rows across the wheel openings; the panel above the shoulder skips

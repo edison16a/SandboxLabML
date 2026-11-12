@@ -24,7 +24,7 @@ function openingOutline(s: CarShape, axle: number, stations: readonly number[]):
 }
 
 /**
- * Dark liners inside the left wheel openings: a tunnel from the opening's
+ * Dark liners inside the right wheel openings (the drawn half): a tunnel from the opening's
  * edge in toward the middle of the car and a wall closing it, so an
  * opening shows deep shadow round the tire instead of the far side of the
  * body. The tunnel faces the wheel; the wall faces out.

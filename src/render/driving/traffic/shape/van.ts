@@ -55,12 +55,12 @@ function vanDecals(s: CarShape): Decal[] {
     { region: strip('front', [[0.46, 0.85], [0.66, 0.85], [0.82, 0.87], [0.92, 0.9]], [[0.44, 0.95], [0.66, 0.97], [0.82, 0.975], [0.9, 0.965]]), look: 'head', cells: [5, 1] },
     { region: strip('front', [[0.48, 0.928], [0.66, 0.945], [0.82, 0.948], [0.89, 0.94]], 0.011), look: 'drl', kind: 'float', lamp: LAMP.head, cells: [7, 1] },
     { region: strip('front', [[0.5, 0.865], [0.7, 0.868]], 0.04), look: 'lens', kind: 'float', cells: [3, 1], fine: true },
-    { region: strip('front', [[0.8, 0.88], [0.91, 0.905]], 0.022), look: 'amber', kind: 'float', lamp: LAMP.left, cells: [3, 1] },
+    { region: strip('front', [[0.8, 0.88], [0.91, 0.905]], 0.022), look: 'amber', kind: 'float', lamp: LAMP.right, cells: [3, 1] },
     { region: strip('front', [[0, 0.8], [0.43, 0.81]], [[0, 0.93], [0.42, 0.935]]), look: 'grille', cells: [3, 1] },
     { region: strip('front', [[0, 0.6], [0.5, 0.6], [0.62, 0.62]], [[0, 0.72], [0.52, 0.72], [0.6, 0.7]]), look: 'grille', kind: 'float', cells: [4, 1] },
     // Tall tail lamps up the rear corners.
     { region: strip('rear', [[0.8, 0.8], [0.9, 0.81], [0.955, 0.83]], [[0.8, 1.34], [0.9, 1.34], [0.945, 1.32]]), look: 'tail', lamp: LAMP.tail, cells: [2, 4] },
-    { region: strip('rear', [[0.81, 0.83], [0.95, 0.84]], 0.06), look: 'amber', kind: 'float', lamp: LAMP.left, cells: [2, 1] },
+    { region: strip('rear', [[0.81, 0.83], [0.95, 0.84]], 0.06), look: 'amber', kind: 'float', lamp: LAMP.right, cells: [2, 1] },
     { region: strip('rear', [[0, 0.66], [0.26, 0.66]], 0.11), look: 'plate', kind: 'float', cells: [4, 1] },
     // The sliding door: its front and rear edges and the rail it runs on under the rear glass.
     { region: shutLine(0.9, 0.46, 0.92, 1.1), look: 'seam', kind: 'float', cells: [5, 1], fine: true },

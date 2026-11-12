@@ -19,9 +19,10 @@ export interface PlanEnd {
 }
 
 /**
- * Which way a decal is laid onto the body: from the left side in (x, y),
- * from above in (x, z), or from the front or back in (z, y). Each decal is
- * drawn on the left half (z of 0 and up) and mirrored to the right.
+ * Which way a decal is laid onto the body: from the side in (x, y), from
+ * above in (x, z), or from the front or back in (z, y). Each decal is drawn
+ * on the half at z of 0 and up, which is the car's right side (the world
+ * maps local +z to the driver's right), and mirrored onto the left.
  */
 export type View = 'side' | 'top' | 'front' | 'rear';
 

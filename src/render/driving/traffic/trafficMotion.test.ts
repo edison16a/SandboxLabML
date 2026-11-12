@@ -20,7 +20,8 @@ describe('traffic wheel placement', () => {
         p.setFromMatrixPosition(motion.wheel(0, w, world, m));
         expect(p.x).toBeCloseTo(w < 2 ? front : rear, 6);
         expect(p.y).toBeCloseTo(shape.wheelRadius, 6);
-        expect(p.z).toBeCloseTo((w % 2 === 0 ? 1 : -1) * shape.track, 6);
+        // Left wheels (even w) sit on the car's left, local -z.
+        expect(p.z).toBeCloseTo((w % 2 === 0 ? -1 : 1) * shape.track, 6);
       }
     }
   });

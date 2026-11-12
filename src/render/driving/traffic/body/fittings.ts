@@ -5,7 +5,7 @@ import type { CarShape } from '../shape/types';
 import type { Projector } from './project';
 
 /**
- * The left door mirror: a smooth rounded pod on a short arm, its inner
+ * The right door mirror (the drawn half is the right): a smooth rounded pod on a short arm, its inner
  * end sunk into the door so it never floats. Gloss black, like the trim.
  */
 export function doorMirror(s: CarShape, proj: Projector, fine: boolean): THREE.BufferGeometry {
@@ -58,7 +58,7 @@ export function roofSign(s: CarShape, proj: Projector): THREE.BufferGeometry {
   const half = 0.31;
   const y0 = base + 0.035 + tall / 2;
   const ring = rounded(depth, tall, 0.035, 2);
-  // Rows run from the left end to the right and columns round the outline, which faces the skin out.
+  // Rows run from the right end (+z) to the left and columns round the outline, which faces the skin out.
   const shell = gridGeometry([half, -half].map((z) => [...ring, ring[0]].map(([a, b]) => [x + a, y0 + b, z] as Vec3)));
   const caps = [1, -1].map((side) => polygonGeometry(ring.map(([a, b]) => [x + a, y0 + b, side * half] as Vec3), [0, 0, side]));
   const faces = [1, -1].map((side) => {

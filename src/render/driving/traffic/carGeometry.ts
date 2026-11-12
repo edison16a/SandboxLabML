@@ -27,9 +27,10 @@ const RING_LIFT = 0.006;
 const RING_DENSITY = 1;
 
 /**
- * The left half and its mirror image as one geometry. Indicators on the
- * mirrored half are the right indicators, so every triangle on the right
- * (z below zero) swaps its indicator code.
+ * The right half and its mirror image as one geometry. Local +z is the
+ * car's right side once placed in the world, so the drawn half carries
+ * the right indicators and every triangle on the mirrored half (z below
+ * zero) swaps its code to the left one.
  */
 function withMirror(g: THREE.BufferGeometry): THREE.BufferGeometry {
   const both = bothSides(g);
@@ -48,7 +49,7 @@ function withMirror(g: THREE.BufferGeometry): THREE.BufferGeometry {
 
 /**
  * One traffic car body with every look baked into vertex attributes, so a
- * whole body type draws in one instanced call. The left half of the shell
+ * whole body type draws in one instanced call. The right half of the shell
  * is lofted, then glass, lamps, grilles and lines are stamped flush into
  * it from flat drawings, and the half is mirrored. Liners, mirrors and the
  * cab's sign finish it. `misses` counts outline points with no body under
