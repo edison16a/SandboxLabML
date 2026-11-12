@@ -7,16 +7,27 @@ import { checkpoints } from '../checkpoints';
 import { numberArg, writeReferences, type Args } from '../file';
 import type { JobPool } from '../pool';
 import { pickDrivingModel } from './pick';
+import { SANDBOX_LEVELS } from './sandboxTrips';
 import type { DrivingReferenceJob, DrivingReferenceResult } from './train';
 
 /** A Driving reference file: the shared curves plus the models the Sandbox can drive. */
 type DrivingReferences = Omit<BenchReferences, 'models'> & { models: DrivingReferenceModel[] };
 
-/** The model a tier ships (see pickDrivingModel), with how often it arrived safely on the pick's trips logged and left out of the file. */
-function modelOf(tier: ReferenceTier, runs: DrivingReferenceResult[]): DrivingReferenceModel {
-  const { sandboxShare, ...model } = pickDrivingModel(tier, runs);
-  console.log(`${tier} model: seed ${model.seed}, generation ${model.generation}, benchmark ${model.score}, safe on ${Math.round(sandboxShare * 100)}% of Sandbox trips`);
+const percent = (share: number) => `${Math.round(share * 100)}%`;
+
+/** The model a tier ships (see pickDrivingModel). How reliable it is goes to the log, not the file. */
+async function modelOf(tier: ReferenceTier, runs: DrivingReferenceResult[]): Promise<DrivingReferenceModel> {
+  const { pickShare, checkShares, ...model } = await pickDrivingModel(tier, runs);
+  const levels = SANDBOX_LEVELS.map((l, i) => `level ${l} ${percent(checkShares[i])}`).join(', ');
+  console.log(
+    `${tier} model: seed ${model.seed}, generation ${model.generation}, benchmark ${model.score}, weighted ${percent(pickShare)} on the pick trips, safe on unseen trips at ${levels}`,
+  );
   return model;
+}
+
+/** Runs from one or more dumps, comma separated, so seeds trained in separate batches build one file. */
+function readDumps(list: string): DrivingReferenceResult[] {
+  return list.split(',').flatMap((path) => JSON.parse(readFileSync(path, 'utf8')) as DrivingReferenceResult[]);
 }
 
 /**
@@ -44,8 +55,9 @@ function stableDate(path: string, next: DrivingReferences): DrivingReferences {
  *
  * Options: --seeds 6, --first-seed 1, --generations 200, --every 10,
  * --population 100, --tiers beginner,intermediate,advanced, --out file,
- * --dump file (every run's checkpoints and champions as JSON, to study),
- * --from-dump file (build the file from such a dump without training).
+ * --dump file (every run's checkpoints and screened champions as JSON),
+ * --from-dump a.json,b.json (build the file from such dumps without
+ * training, for a new pick or seeds trained in batches).
  * A smoke run: --seeds 1 --generations 4 --every 2 --population 20.
  */
 export async function generateDriving(args: Args, pool: JobPool): Promise<void> {
@@ -56,30 +68,46 @@ export async function generateDriving(args: Args, pool: JobPool): Promise<void> 
   const population = numberArg(args, 'population', 100);
   const out = args.out ?? 'public/references/driving.json';
   const tiers = args.tiers ? (args.tiers.split(',') as ReferenceTier[]) : [...REFERENCE_TIERS];
-  // Advanced first: runs that climb further drive busier streets and take longer, so they start early.
-  const jobs: DrivingReferenceJob[] = [...tiers].reverse().flatMap((tier) => Array.from({ length: seeds }, (_, i) => ({ kind: 'driving' as const, tier, seed: firstSeed + i, generations, every, population })));
+  // Seed by seed, so a run stopped early still holds whole seeds. Within a seed Advanced
+  // goes first: runs that climb further drive busier streets and take longer.
+  const jobs: DrivingReferenceJob[] = Array.from({ length: seeds }, (_, i) =>
+    [...tiers].reverse().map((tier) => ({ kind: 'driving' as const, tier, seed: firstSeed + i, generations, every, population })),
+  ).flat();
   if (!args['from-dump']) console.log(`Driving reference runs: ${tiers.length} tiers x ${seeds} seeds, ${generations} generations, population ${population}.`);
   const started = performance.now();
+  const done: DrivingReferenceResult[] = [];
+  // The dump grows as runs finish, so a stopped run keeps the ones it trained.
+  const keep = (r: DrivingReferenceResult) => {
+    done.push(r);
+    if (args.dump) writeFileSync(args.dump, JSON.stringify(done));
+    console.log(
+      `${r.job.tier} seed ${r.job.seed}: final ${r.scores[r.scores.length - 1].toFixed(1)}, level ${r.levels[r.levels.length - 1]}, ${r.candidates?.length ?? 0} candidates, in ${r.seconds.toFixed(0)} s`,
+    );
+  };
   // A dump from an earlier run skips the training and only builds the file again, with the current picking rules.
-  const results = args['from-dump']
-    ? (JSON.parse(readFileSync(args['from-dump'], 'utf8')) as DrivingReferenceResult[])
-    : await pool.run<DrivingReferenceResult>(jobs, (r) =>
-        console.log(`${r.job.tier} seed ${r.job.seed}: final ${r.scores[r.scores.length - 1].toFixed(1)}, level ${r.levels[r.levels.length - 1]}, in ${r.seconds.toFixed(0)} s`),
-      );
-  if (args.dump) writeFileSync(args.dump, JSON.stringify(results));
-  const file = referenceFile(results, tiers);
+  const results = args['from-dump'] ? readDumps(args['from-dump']) : await pool.run<DrivingReferenceResult>(jobs, keep);
+  const file = await referenceFile(results, tiers);
   writeReferences(out, stableDate(out, file));
   for (const r of file.references) console.log(`${r.tier}: final median ${r.finalScore}`);
   console.log(`Wrote ${out} in ${((performance.now() - started) / 1000).toFixed(0)} s.`);
 }
 
 /** The reference file from finished runs: each tier's curve, from the median and middle half of its seeds, and its model. */
-function referenceFile(results: readonly DrivingReferenceResult[], tiers: readonly ReferenceTier[]): DrivingReferences {
+async function referenceFile(results: readonly DrivingReferenceResult[], tiers: readonly ReferenceTier[]): Promise<DrivingReferences> {
   const first = results[0].job;
   const gens = checkpoints(first.generations, first.every);
   const byTier = (tier: ReferenceTier) => results.filter((r) => r.job.tier === tier).sort((a, b) => a.job.seed - b.job.seed);
   // The last two checkpoints: the curriculum keeps moving the level, so one checkpoint alone swings with it.
-  const references = tiers.map((tier) => summarizeCurve(tier, gens, byTier(tier).map((r) => r.scores), 2));
+  const references = tiers.map((tier) =>
+    summarizeCurve(
+      tier,
+      gens,
+      byTier(tier).map((r) => r.scores),
+      2,
+    ),
+  );
+  const models: DrivingReferenceModel[] = [];
+  for (const tier of tiers) models.push(await modelOf(tier, byTier(tier)));
   return {
     env: 'driving',
     benchmarkVersion: DRIVING_BENCHMARK_VERSION,
@@ -87,6 +115,6 @@ function referenceFile(results: readonly DrivingReferenceResult[], tiers: readon
     generatedAt: new Date().toISOString().slice(0, 10),
     seeds: new Set(results.map((r) => r.job.seed)).size,
     references,
-    models: tiers.map((tier) => modelOf(tier, byTier(tier))),
+    models,
   };
 }

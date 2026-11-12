@@ -207,23 +207,44 @@ In the lab the exam runs in the background on every fifth generation's champion,
 
 Scores only compare within one `DRIVING_BENCHMARK_VERSION` (in `src/engine/driving/version.ts`). Changing a trip, a seed or anything in `src/engine/bench/driving/scoring.ts` must bump it. A change to the simulation bumps `DRIVING_ENGINE_VERSION` instead. Both are stored in every result and in the reference file.
 
-`public/references/driving.json` holds a curve per preset and, beside it, each preset's most reliable champion as a model the Sandbox can drive ("Try a trained model"). `scripts/references/driving/generate.ts` trains several seeds per preset on the settings a new run uses (Midtown, the automatic curriculum from level 1, three trips) and benchmarks the champion every few generations. A preset's final score is the median of every seed's scores at the last two checkpoints, because the curriculum keeps moving the level under the champion.
+`public/references/driving.json` holds a curve per preset and, beside it, one trained model per preset that the Sandbox can drive ("Try a trained model"). `scripts/references/driving/generate.ts` trains several seeds per preset on the settings a new run uses (Midtown, the automatic curriculum from level 1, three trips) and benchmarks the champion every 10 generations. A preset's final score is the median of every seed's scores at the last two checkpoints, because the curriculum keeps moving the level under the champion. The curves in the Bench panel and the Benchmark chart are the median and the middle half of the seeds at each checkpoint.
 
-The model is picked in `scripts/references/driving/pick.ts`. Every champion benchmarked in the second half of a seed's training drives the Sandbox's first trip (Midtown, level 2) on forty routes, alone, with the built-in rules the Sandbox uses, and the one that arrives safely most often ships. A final champion won its generation on one lucky score over three trips, and the earlier stand-in mostly parked short of the first light. A test drives the model a new run picks on twenty other routes and asks for safe arrivals on at least 70% of them.
+    npm run refs -- --env driving --workers 2
 
-    npm run refs -- --env driving --workers 3
+The defaults are 6 seeds of 200 generations with 100 SUVs. `--dump file` keeps every run, with its checkpoints and every champion of its second half, and writes it again as each run finishes, seed by seed. `--from-dump a.json,b.json` builds the reference file from one or more dumps without training, so seeds trained in separate batches make one file and a change to the pick needs no retrain.
 
-The defaults are 6 seeds of 200 generations with 100 SUVs. `--dump file` keeps every run's checkpoints and champions, and `--from-dump file` builds the reference file again from such a dump without training.
+### The shipped run
 
-The file shipped now comes from 3 seeds of 200 generations per preset (22 minutes on three threads). Every seed passed traffic lights and pedestrians and spent its last 30 to 80 generations at traffic, and one Beginner seed reached rush hour.
+The shipped file uses the defaults: 6 seeds of 200 generations per preset, 18 runs. They trained in two batches of three seeds on two worker threads of a busy shared machine, 30 and 21 minutes, with each run taking 2.5 to 10 minutes. Runs that climb further take longer, since busier streets cost more to simulate and better drivers stay on the road for the whole trip. Picking the models from the two dumps took another 10 minutes on one thread.
 
-| Preset | Final score | Model | Its benchmark | Safe on Sandbox trips |
-| --- | --- | --- | --- | --- |
-| Beginner | 45.4 | seed 3, generation 150 | 72.2 | 80% |
-| Intermediate | 38.7 | seed 1, generation 120 | 50.4 | 95% |
-| Advanced | 43.7 | seed 3, generation 160 | 50.8 | 78% |
+| Preset | Final score | Middle half at generation 200 | Level at generation 200 |
+| --- | --- | --- | --- |
+| Beginner | 39.6 | 34.2 to 44.1 | 2 for one seed, 4 for three, 5 for two |
+| Intermediate | 39.5 | 36.1 to 50.7 | 2 for two seeds, 4 for three, 5 for one |
+| Advanced | 41.4 | 33.4 to 45.3 | 2 for two seeds, 4 for three, 5 for one |
 
-The presets do not rank in order. Beginner punishes nothing but leaving the road, yet its seeds climbed as fast as the others: at level 2 a trip that meets no red light counts as safe, and from level 4 on a red light run drives into cross traffic, which ends the trip. Single champions swing a lot from one checkpoint to the next (one Intermediate seed fell from 50 to 1 within twenty generations at traffic), so three seeds say little about the order.
+A score around 40 is a champion that arrives on the exam's level 2 trips, often running a red light on the way, and on few trips at traffic and rush hour, where it crashes or hits a person on most of them. That costs completion, safety and pace at once. The best single checkpoints reach the 60s and 70s, and the swing from one checkpoint to the next is large: one Intermediate seed fell from 50 to 1 within twenty generations at traffic.
+
+The presets do not rank in order, and with these seeds they are within two points of each other. Beginner punishes nothing but leaving the road, yet its seeds climbed as fast as the others: at level 2 a trip that meets no red light counts as safe, and from level 4 on a red light run drives into cross traffic, which ends the trip. Intermediate and Advanced only differ from level 3 on (Advanced adds two costs near people and cars and a random city every other generation), so the two seeds that never left level 2 in 200 generations trained the same in both. How long a run waits at level 2 depends mostly on its seed: the first checkpoint at level 3 came anywhere from generation 50 to 170, and 5 of the 18 runs never left level 2.
+
+### The trained models
+
+Most champions are poor Sandbox drivers. A champion wins its generation on one score over three trips, often a lucky one, and the average champion of the second half of training arrives safely on about a fifth of its level 2 Sandbox trips and on fewer than one in ten at traffic. So the shipped model is picked by how it drives where a visitor watches it, in `scripts/references/driving/pick.ts` and `sandboxTrips.ts`:
+
+1. Every champion of the second half of every seed's training (generations 100 to 200, 606 per preset) drives a quick screen during training: 4 Sandbox trips at each of levels 2 to 5, played the way the Sandbox replays the model, three copies lined up nose to tail in Midtown with the built-in rules.
+2. The 16 best screened champions, plus the 8 that screen best at traffic and rush hour, drive 25 fresh trips per level. The best three drive 25 more.
+3. The best weighted safe share over those 50 trips per level ships. Level 2 counts 40%, level 3 15%, level 4 35% and rush hour 10%: every newcomer's Sandbox opens on level 2, and a trained run opens on the level its training reached, which for most runs is level 4.
+4. Its reliability is then measured on 20 more trips per level that no step above saw. A safe trip arrives without a crash, a person hit or a red light run.
+
+| Preset | Model | Its benchmark | Safe, level 2 | Level 3 | Traffic | Rush hour |
+| --- | --- | --- | --- | --- | --- | --- |
+| Beginner | seed 4, generation 146 | 72.7 | 73% | 63% | 62% | 57% |
+| Intermediate | seed 6, generation 178 | 65.0 | 92% | 82% | 65% | 50% |
+| Advanced | seed 6, generation 124 | 71.1 | 85% | 72% | 58% | 72% |
+
+The shares are per SUV on the unseen trips, three copies each. The models stand well above their presets' final scores because they are the best drivers of six seeds, not typical ones. The earlier pick, which drove level 2 alone, shipped an Advanced model that was safe on about 80% of level 2 trips but on 35% at traffic and 25% at rush hour. The one shipped now copes with every level, though at traffic two SUVs in five still do not arrive safely.
+
+A new run uses the Standard brain, so its Sandbox drives the better scoring of the two models with standard inputs, the Advanced one. A run on the Starter brain gets the Beginner model, and a run on the Advanced brain, whose inputs no model shares, gets the best scoring model of all, the Beginner one. A test drives the model a new run picks alone on twenty level 2 trips and asks for safe arrivals on at least 70% of them.
 
 # The Navigation benchmark
 
@@ -262,11 +283,35 @@ Scores only compare within one `NAVIGATION_BENCHMARK_VERSION` (in `src/engine/be
 
 ## Reference results
 
-`public/references/navigation.json` holds a curve per preset and one trained model per preset, the last champion of the seed whose final score is the median of its tier. The Sandbox plays those models under Trained model, so a newcomer sees a skilled runner without training one. `scripts/references/navigation/generate.ts` trains each preset through the same code the sim workers run, with 100 runners on the default curriculum, benchmarks the champion every 5 generations, and pools the last three checkpoints of every seed into the final score.
+`public/references/navigation.json` holds a curve per preset and one trained model per preset, which the Sandbox plays under Trained model, so a newcomer sees a skilled runner without training one. `scripts/references/navigation/generate.ts` trains each preset through the same code the sim workers run, with 100 runners on the default curriculum, benchmarks the champion every 5 generations, and pools the last three checkpoints of every seed into the final score.
 
-The shipped file is a smoke run: 2 seeds of 30 generations per preset, which takes under a minute on two worker threads. Regenerate it at full size with:
+    npm run refs -- --env navigation --workers 2
 
-    npm run refs -- --env navigation --workers 2 --seeds 8 --generations 60
+The defaults are 8 seeds of 60 generations with 100 runners. `--dump file` keeps every run with its champions, and `--from-dump a.json,b.json` builds the file again from dumps without training.
+
+### The shipped run
+
+The shipped file uses the defaults: 8 seeds of 60 generations per preset, 24 runs. They trained in 6 minutes on two worker threads, 17 to 37 seconds a run. Advanced runs take the longest, since from the spikes on they run three courses a generation. The pick took 7 more minutes on one thread. Every seed of every preset reached the Gauntlet (level 6).
+
+| Preset | Final score | Middle half at generation 60 |
+| --- | --- | --- |
+| Beginner | 80.5 | 77.3 to 83.2 |
+| Intermediate | 88.6 | 80.7 to 89.5 |
+| Advanced | 93.5 | 93.3 to 95.5 |
+
+The score is mostly how often a runner finishes and how fast. A Beginner champion near 80 finishes over 90% of the exam's runs but at about half the scripted navigator's pace. Intermediate champions move at nearly the navigator's pace and die a little more often. Advanced champions finish 95% or more at about 90% of the navigator's pace. Movers (level 5) are the weakest level for every preset. The presets rank Beginner, Intermediate, Advanced, as in the preset experiments below.
+
+### The trained models
+
+The pick lives in `scripts/references/navigation/pick.ts` and `sandboxCourses.ts`. Every distinct champion from the second half of every seed's training (generations 30 to 60) runs the courses a visitor meets in the Sandbox, eight copies at a time from the front of the start grid, as the Sandbox lines up a model: the first layout of every level, three more layouts of each level and the named courses. The Sandbox opens on the first layout of level 1 for a new run and of the training level for a trained one, so level 1 counts the most, then the other first layouts. The twelve best finishers take the benchmark, and the best finisher that scores at least its preset's pooled final score ships, so a model never scores below what its preset typically reaches. Fresh layouts of levels 1 to 6 that the pick never saw give the reliability below.
+
+| Preset | Model | Its benchmark | First layouts finished, levels 0 to 6 | Fresh layouts finished |
+| --- | --- | --- | --- | --- |
+| Beginner | seed 1, generation 54 | 88.5 | all eight copies on every level | 92% |
+| Intermediate | seed 4, generation 53 | 92.4 | all eight copies on every level | 94% |
+| Advanced | seed 4, generation 31 | 99.0 | all eight on every level but Movers, where seven of eight finish | 96% |
+
+The Sandbox opens on the Advanced model.
 
 ## What the presets show
 

@@ -4,6 +4,7 @@ import { findPresetBlueprint } from '../../../src/engine/blueprints/presets';
 import type { EpisodeBlueprint } from '../../../src/engine/blueprints/types';
 import { drivingModule } from '../../../src/engine/driving/module';
 import { DEFAULT_DRIVING_SETTINGS } from '../../../src/engine/driving/run/settings';
+import type { DrivingInputConfig } from '../../../src/engine/driving/sensors/inputConfig';
 import { linkScriptCompiler } from '../../../src/engine/lessons/compilerLink';
 import { Network } from '../../../src/engine/neat/network';
 import { bytesToBase64, encodeGenome } from '../../../src/engine/neat/serialize';
@@ -13,6 +14,7 @@ import { EpisodeTrainer, trainingControllerSeed } from '../../../src/engine/trai
 import { createEpisodeRunConfig } from '../../../src/engine/training/newRun';
 import type { RunConfig } from '../../../src/engine/training/runConfig';
 import { checkpoints } from '../checkpoints';
+import { sandboxShares, SCREEN_TRIPS } from './sandboxTrips';
 
 /** One Driving reference training run: a preset tier and a seed. */
 export interface DrivingReferenceJob {
@@ -26,6 +28,18 @@ export interface DrivingReferenceJob {
   population: number;
 }
 
+/**
+ * A champion from the second half of training that might ship: its
+ * generation, the level it trained on, its genome and its safe share on
+ * the quick Sandbox screen (one number per SANDBOX_LEVELS entry).
+ */
+export interface DrivingCandidate {
+  generation: number;
+  level: number;
+  genome: string;
+  screen: number[];
+}
+
 /** Benchmark score at each checkpoint, the level reached and the final champion, ready to ship. */
 export interface DrivingReferenceResult {
   job: DrivingReferenceJob;
@@ -35,6 +49,8 @@ export interface DrivingReferenceResult {
   champion: { generation: number; score: number; genome: string; blueprint: string; inputs: unknown };
   /** Every benchmarked champion, for a closer look with --dump. The last one is `champion`. */
   checkpoints: Array<{ generation: number; level: number; score: number; genome: string }>;
+  /** Every distinct champion of the second half, screened on Sandbox trips. Dumps from before this field have none. */
+  candidates?: DrivingCandidate[];
   seconds: number;
 }
 
@@ -63,7 +79,10 @@ export function drivingReferenceConfig(job: DrivingReferenceJob): RunConfig {
  * Trains one preset headless exactly as the lab would, one generation at a
  * time on this thread, and benchmarks the champion of every checkpoint
  * generation. The controller seed matches the sim worker's, so a reference
- * run is the run a user would get with that preset and seed.
+ * run is the run a user would get with that preset and seed. Every
+ * distinct champion of the second half also drives the quick Sandbox
+ * screen here, on the worker thread, so the pick only has to look closer
+ * at a shortlist.
  */
 export async function trainDrivingReference(job: DrivingReferenceJob): Promise<DrivingReferenceResult> {
   // The module and the exam are imported here rather than loaded through the registry: worker threads run under tsx's require hook, which cannot follow the registry's dynamic imports.
@@ -76,6 +95,9 @@ export async function trainDrivingReference(job: DrivingReferenceJob): Promise<D
   const levels: number[] = [];
   let champion: DrivingReferenceResult['champion'] | null = null;
   const kept: DrivingReferenceResult['checkpoints'] = [];
+  const candidates: DrivingCandidate[] = [];
+  const seen = new Set<string>();
+  const blueprint = config.blueprint as EpisodeBlueprint;
   while (trainer.generation <= job.generations) {
     const level = trainer.content.level;
     const env = drivingModule.createEnv(trainer.setup(), trainer.host(), trainingControllerSeed(trainer.generation));
@@ -85,14 +107,19 @@ export async function trainDrivingReference(job: DrivingReferenceJob): Promise<D
     );
     while (!env.done) env.step();
     const record = trainer.complete(env.results(), 0);
+    const genome = bytesToBase64(encodeGenome(record.genome));
+    // Elitism often keeps the same champion for several generations, and it only needs screening once.
+    if (record.generation >= job.generations / 2 && !seen.has(genome)) {
+      seen.add(genome);
+      candidates.push({ generation: record.generation, level, genome, screen: sandboxShares(genome, blueprint.inputs as DrivingInputConfig, job.seed, SCREEN_TRIPS) });
+    }
     if (!marks.has(record.generation)) continue;
     const score = (await benchmarkDriving(config, record.genome))?.score ?? 0;
     scores.push(score);
     levels.push(level);
-    const blueprint = config.blueprint as EpisodeBlueprint;
-    champion = { generation: record.generation, score, genome: bytesToBase64(encodeGenome(record.genome)), blueprint: blueprint.id, inputs: blueprint.inputs };
-    kept.push({ generation: record.generation, level, score, genome: champion.genome });
+    champion = { generation: record.generation, score, genome, blueprint: blueprint.id, inputs: blueprint.inputs };
+    kept.push({ generation: record.generation, level, score, genome });
   }
   if (!champion) throw new Error('A reference run benchmarked no generation.');
-  return { job, scores, levels, champion, checkpoints: kept, seconds: (performance.now() - started) / 1000 };
+  return { job, scores, levels, champion, checkpoints: kept, candidates, seconds: (performance.now() - started) / 1000 };
 }

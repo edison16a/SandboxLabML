@@ -27,14 +27,24 @@ export interface NavigationReferenceJob {
   population: number;
 }
 
+/** A champion that might ship, with its genome in the binary format as base64 and its benchmark score once it has one. */
+export interface NavigationCandidate {
+  generation: number;
+  level: number;
+  genome: string;
+  score?: number;
+}
+
 export interface NavigationReferenceResult {
   job: NavigationReferenceJob;
   /** Benchmark score at each checkpoint generation, in order. */
   scores: number[];
   /** The curriculum level at each checkpoint. */
   levels: number[];
-  /** The last checkpoint's champion in the binary format, as base64, for the shipped model. */
+  /** The last checkpoint's champion in the binary format, as base64. */
   champion: string;
+  /** Every distinct champion of the second half of training, checkpoints with their score. Kept in dumps for the pick. */
+  candidates?: NavigationCandidate[];
   seconds: number;
 }
 
@@ -76,6 +86,7 @@ export async function trainNavigationReference(job: NavigationReferenceJob): Pro
   const scores: number[] = [];
   const levels: number[] = [];
   let champion = '';
+  const candidates = new Map<string, NavigationCandidate>();
   while (trainer.generation <= job.generations) {
     const env = envModule.createEnv(trainer.setup(), trainer.host(), trainingControllerSeed(trainer.generation));
     env.reset(
@@ -85,11 +96,17 @@ export async function trainNavigationReference(job: NavigationReferenceJob): Pro
     );
     while (!env.done) env.step();
     const record = trainer.complete(env.results(), 0);
+    const genome = bytesToBase64(encodeGenome(record.genome));
+    const level = record.metrics?.[NAV_METRIC.level] ?? 0;
+    // Elitism often keeps one champion for several generations; the first one stands for all.
+    if (record.generation >= job.generations / 2 && !candidates.has(genome)) candidates.set(genome, { generation: record.generation, level, genome });
     if (!marks.has(record.generation)) continue;
-    const result = await benchmarkNavigation(config, record.genome);
-    scores.push(result?.score ?? 0);
-    levels.push(record.metrics?.[NAV_METRIC.level] ?? 0);
-    champion = bytesToBase64(encodeGenome(record.genome));
+    const score = (await benchmarkNavigation(config, record.genome))?.score ?? 0;
+    scores.push(score);
+    levels.push(level);
+    champion = genome;
+    const kept = candidates.get(genome);
+    if (kept && kept.score === undefined) kept.score = score;
   }
-  return { job, scores, levels, champion, seconds: (performance.now() - started) / 1000 };
+  return { job, scores, levels, champion, candidates: [...candidates.values()], seconds: (performance.now() - started) / 1000 };
 }
