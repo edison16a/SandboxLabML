@@ -58,7 +58,7 @@ export function FollowedSuv() {
     g.rotation.set(0, frame.yaw, 0);
     const body = rig.body.current;
     if (body) {
-      // Taller than the racer: it leans a touch more, about its own center of mass.
+      // An SUV sits tall, so it leans a touch more, about its own center of mass.
       state.euler.set(b.roll.x * 1.6, 0, b.pitch.x * 1.4);
       body.rotation.copy(state.euler);
       state.pivot.set(0, PIVOT, 0).applyEuler(state.euler);
