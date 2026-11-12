@@ -1,5 +1,5 @@
 import type * as THREE from 'three';
-import { onCap } from './body';
+import { onCap } from './cap';
 import { bothSides, gridGeometry, type Vec3 } from './grid';
 import type { Pt } from './section';
 

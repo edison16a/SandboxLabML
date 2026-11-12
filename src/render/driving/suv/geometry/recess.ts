@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { onCap } from './body';
+import type * as THREE from 'three';
+import { onCap } from './cap';
 import { gridGeometry, type Vec3 } from './grid';
 import type { Pt } from './section';
 
@@ -27,6 +27,21 @@ export function rounded(corners: Pt[], r: number, steps: number): Pt[] {
   return out;
 }
 
+/**
+ * A closed outline with extra points on its long edges, at most `step` m
+ * apart. Laid on a curved face, a long straight edge would cut a chord
+ * under the paint; short steps keep every part of it on the surface.
+ */
+export function densify(pts: Pt[], step: number): Pt[] {
+  const out: Pt[] = [];
+  pts.forEach((p, i) => {
+    const q = pts[(i + 1) % pts.length];
+    const n = Math.max(1, Math.ceil(Math.hypot(q[0] - p[0], q[1] - p[1]) / step));
+    for (let k = 0; k < n; k++) out.push([p[0] + ((q[0] - p[0]) * k) / n, p[1] + ((q[1] - p[1]) * k) / n]);
+  });
+  return out;
+}
+
 const unit = ([z, y]: Pt): Pt => {
   const l = Math.hypot(z, y) || 1;
   return [z / l, y / l];
@@ -48,11 +63,15 @@ export function offset(pts: Pt[], d: number): Pt[] {
   });
 }
 
-/** Turns a geometry's triangles round if they face away from `dir`, so it shows from outside. */
-export function facing(g: THREE.BufferGeometry, dir: Vec3): THREE.BufferGeometry {
+/** Turns a geometry's triangles round if, summed over its vertices, they face away from `dir(position)`. */
+export function facing(g: THREE.BufferGeometry, dir: Vec3 | ((p: Vec3) => Vec3)): THREE.BufferGeometry {
   const n = g.attributes.normal;
+  const p = g.attributes.position;
   let dot = 0;
-  for (let i = 0; i < n.count; i++) dot += n.getX(i) * dir[0] + n.getY(i) * dir[1] + n.getZ(i) * dir[2];
+  for (let i = 0; i < n.count; i++) {
+    const d = typeof dir === 'function' ? dir([p.getX(i), p.getY(i), p.getZ(i)]) : dir;
+    dot += n.getX(i) * d[0] + n.getY(i) * d[1] + n.getZ(i) * d[2];
+  }
   if (dot >= 0 || !g.index) return g;
   const idx = g.index.array;
   for (let t = 0; t < idx.length; t += 3) [idx[t + 1], idx[t + 2]] = [idx[t + 2], idx[t + 1]];
@@ -61,33 +80,57 @@ export function facing(g: THREE.BufferGeometry, dir: Vec3): THREE.BufferGeometry
   return g;
 }
 
-/** How far the mesh sits off the face: enough that its flat triangles never dip behind the curved paint. */
-const MESH_LIFT = 0.01;
+export interface RecessShape {
+  /** Width of the bezel on the paint outside the opening, m. */
+  width: number;
+  /** How far the bezel's rounded lip stands proud of the face, m. */
+  lip: number;
+  /** How far behind the face the mesh sits, m; only where the face has a hole for it may this go past zero. */
+  back: number;
+}
 
 export interface Recess {
-  /** The gloss black bezel: it rises from the paint to a lip and steps back down inside. */
+  /** The gloss black bezel: from the paint up to a rounded lip and back down to the face. */
   bezel: THREE.BufferGeometry;
-  /** The mesh filling the back of the opening, on the face itself. */
+  /** The walls inside the opening, from the face back to the mesh. */
+  throat: THREE.BufferGeometry;
+  /** The mesh filling the back of the opening. */
   mesh: THREE.BufferGeometry;
 }
 
 /**
- * An intake on the nose or tail with real depth. The bezel's outer edge
- * lies on the paint `width` m outside the opening and rises to a rounded
- * lip `depth` m proud of the face at the opening; inside, a wall drops
- * straight back to the mesh. From any angle but dead ahead the wall
- * shows and the lip catches a line of light, so the mesh reads as set
- * deep into the bumper. `outline` is counterclockwise in (z, y).
+ * An intake on the nose or tail. The bezel's outer edge lies on the
+ * paint outside the opening and rises to a rounded lip, which catches a
+ * line of light; inside, the throat drops back to the mesh. Where the
+ * face has a hole the mesh sits well behind the paint, so from any angle
+ * but dead ahead the throat shows and the opening has real depth.
+ * `outline` is counterclockwise in (z, y), in the face's own unrolled
+ * coordinates, so an intake can wrap onto a corner.
  */
-export function recess(end: 1 | -1, outline: Pt[], depth: number, width: number, rings: number): Recess {
-  const ring = [...outline, outline[0]];
-  // Across the bezel: outer edge, two points up the rise, the rounded lip, the foot of the inside wall.
-  const across: Array<[number, number]> = [[width, 0.002], [width * 0.55, depth * 0.45], [width * 0.18, depth * 0.88], [0, depth], [-0.004, depth - 0.006], [-0.007, 0.006]];
-  const loops = across.map(([d, lift]) => ({ pts: offset(ring.slice(0, -1), d), lift }));
-  const rows = ring.map((_, i) => loops.map(({ pts, lift }) => onCap(end, ...pts[i % pts.length], lift)));
-  const bezel = facing(gridGeometry(rows), [end, 0, 0]);
-  const back = loops[loops.length - 1].pts;
-  return { bezel, mesh: capFill(end, back, MESH_LIFT, rings) };
+export function recess(end: 1 | -1, corners: Pt[], shape: RecessShape, rings: number, step = 0.015, meshStep = step): Recess {
+  const { width, lip, back } = shape;
+  const outline = densify(corners, step);
+  const build = (across: Array<[number, number]>) => ringGeometry(end, corners, across, step);
+  const bezel = facing(build([[width, 0.002], [width * 0.55, lip * 0.75], [width * 0.18, lip], [0, lip * 0.8], [-0.003, 0.002]]), [end, 0, 0]);
+  const deep = -Math.max(back, -0.002);
+  const throat = build([[-0.003, 0.002], [-0.004, deep * 0.4], [-0.005, deep]]);
+  const mid: Pt = [outline.reduce((s, p) => s + p[0], 0) / outline.length, outline.reduce((s, p) => s + p[1], 0) / outline.length];
+  const centre = onCap(end, mid[0], mid[1], deep);
+  // The throat's walls face into the opening.
+  facing(throat, (p) => [centre[0] - p[0], centre[1] - p[1], centre[2] - p[2]]);
+  return { bezel, throat, mesh: capFill(end, offset(corners, -0.005), deep + 0.001, rings, meshStep) };
+}
+
+/**
+ * A band round a closed outline on the nose or tail: each entry of
+ * `across` is a loop, the outline moved out by d m and lifted off the
+ * face by lift m, and the band runs through the loops in order. Bezels,
+ * throats and raised frames are all such bands.
+ */
+export function ringGeometry(end: 1 | -1, corners: Pt[], across: Array<[number, number]>, step: number): THREE.BufferGeometry {
+  const outline = densify(corners, step);
+  const loops = across.map(([d, lift]) => ({ pts: offset(outline, d), lift }));
+  return gridGeometry([...outline, outline[0]].map((_, i) => loops.map(({ pts, lift }) => onCap(end, ...pts[i % pts.length], lift))));
 }
 
 /**
@@ -96,7 +139,8 @@ export function recess(end: 1 | -1, outline: Pt[], depth: number, width: number,
  * panel follows it. UVs are in meters across the face, so textures keep
  * their scale.
  */
-export function capFill(end: 1 | -1, outline: Pt[], lift: number, rings: number): THREE.BufferGeometry {
+export function capFill(end: 1 | -1, corners: Pt[], lift: number, rings: number, step = 0.02): THREE.BufferGeometry {
+  const outline = densify(corners, step);
   const mid: Pt = [outline.reduce((s, p) => s + p[0], 0) / outline.length, outline.reduce((s, p) => s + p[1], 0) / outline.length];
   const at = ([z, y]: Pt, t: number): Pt => [z + (mid[0] - z) * t, y + (mid[1] - y) * t];
   const loop = [...outline, outline[0]];
@@ -107,5 +151,4 @@ export function capFill(end: 1 | -1, outline: Pt[], lift: number, rings: number)
     for (let k = 0; k <= rings; k++) uv.setXY(i * (rings + 1) + k, ...at(p, k / rings));
   });
   return g;
-
 }

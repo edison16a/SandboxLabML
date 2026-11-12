@@ -5,6 +5,7 @@ import { flakeNormalMap } from '../../textures/flakes';
 import { HONEYCOMB_ASPECT, honeycombColor, honeycombNormal } from '../../textures/grille';
 import { wheelBlurMap } from '../../textures/wheelBlur';
 import type { Slot } from '../geometry/parts';
+import { withStreetReflections } from './streetReflections';
 
 export interface SuvMaterials {
   slots: Record<Slot, THREE.Material>;
@@ -18,7 +19,7 @@ export interface SuvMaterials {
 }
 
 /** How strongly each slot mirrors the environment: paint and glass glossy, tires and liners dull. */
-const REFLECT: Partial<Record<Slot, number>> = { paint: 1.05, glass: 1.05, trim: 0.9, clad: 0.35, grille: 0.45, metal: 1, rim: 0.9, face: 1, caliper: 0.8, disc: 0.5, tire: 0.35, liner: 0.25, tail: 0.6 };
+const REFLECT: Partial<Record<Slot, number>> = { paint: 0.75, glass: 1.05, trim: 0.9, clad: 0.35, grille: 0.45, metal: 1, rim: 0.9, face: 1, caliper: 0.8, disc: 0.5, tire: 0.35, liner: 0.25, tail: 0.6 };
 
 /**
  * Tail lamp glow at rest and under braking. The lamps skip tone mapping,
@@ -46,11 +47,14 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
   const high = d === 'high';
   const textures: THREE.Texture[] = [];
   const keep = <T extends THREE.Texture>(t: T) => (textures.push(t), t);
-  // A low base roughness and metalness keep the color deep on the hood and roof: the sharp clear coat carries the reflection.
-  const paint = new THREE.MeshPhysicalMaterial({ color: PARKED_PAINT, metalness: 0.3, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.025 });
+  // A satin base with little metal and a low sheen keeps the color deep on the hood and roof at any angle. The
+  // clear coat on top is near mirror smooth, so buildings and the street's edges reflect crisp in it and the
+  // shoulder crease draws a sharp line; the street sky term keeps it from mirroring a white horizon. The flake
+  // is only a hint.
+  const paint = new THREE.MeshPhysicalMaterial({ color: PARKED_PAINT, metalness: 0.12, roughness: 0.36, clearcoat: 1, clearcoatRoughness: 0.07, specularIntensity: 0.32 });
   if (d !== 'low') {
-    paint.normalMap = keep(repeat(flakeNormalMap(high ? 512 : 256), high ? 10 : 6));
-    paint.normalScale.set(0.3, 0.3);
+    paint.normalMap = keep(repeat(flakeNormalMap(high ? 512 : 256), high ? 14 : 8));
+    paint.normalScale.set(0.08, 0.08);
   }
   const mesh = <T extends THREE.Texture>(t: T) => keep(repeat(t, 14, 14 * HONEYCOMB_ASPECT));
   const grille = new THREE.MeshStandardMaterial({ map: mesh(honeycombColor(128)), normalMap: d === 'low' ? null : mesh(honeycombNormal(128)), roughness: 0.4, metalness: 0.4 });
@@ -64,7 +68,7 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
     tail,
     glass: new THREE.MeshPhysicalMaterial({ color: '#0b0f14', metalness: 0.1, roughness: 0.05, clearcoat: 0.6, clearcoatRoughness: 0.03 }),
     trim: new THREE.MeshPhysicalMaterial({ color: '#08090b', metalness: 0.2, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.04 }),
-    clad: new THREE.MeshStandardMaterial({ color: '#16171a', roughness: 0.62, metalness: 0.05 }),
+    clad: new THREE.MeshStandardMaterial({ color: '#0e0f11', roughness: 0.5, metalness: 0.05 }),
     led: new THREE.MeshBasicMaterial({ color: new THREE.Color(4.2, 4.2, 3.9), toneMapped: false }),
     liner: new THREE.MeshStandardMaterial({ color: '#050506', roughness: 0.95 }),
     metal: new THREE.MeshStandardMaterial({ color: '#cfd3d8', metalness: 1, roughness: 0.16 }),
@@ -74,6 +78,8 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
     caliper: new THREE.MeshPhysicalMaterial({ color: '#b01c14', roughness: 0.3, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.06 }),
   };
   for (const [slot, k] of Object.entries(REFLECT)) (slots[slot as Slot] as THREE.MeshStandardMaterial).envMapIntensity = k;
+  // The glossy surfaces see the street's buildings low down, not open sky, so they keep their color.
+  for (const slot of ['paint', 'glass', 'trim'] as const) withStreetReflections(slots[slot] as THREE.MeshPhysicalMaterial);
   return {
     slots,
     paint,

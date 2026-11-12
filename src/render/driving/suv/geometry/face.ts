@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import type * as THREE from 'three';
 import { bothSides, gridGeometry, merge, type Vec3 } from './grid';
 import type { Detail } from './parts';
 import type { Pt } from './section';
@@ -65,7 +65,7 @@ export function coons(bottom: Pt[], top: Pt[], left: Pt[], right: Pt[]): Pt[][] 
   return out;
 }
 
-/** Heights from `a` to `b`, spaced like the heights of `like`, so rows stay level across a patch. */
+/** Heights from `a` to `b` at z = 0, spaced like the heights of `like`, so rows stay level across a patch. */
 function spacedLike(like: Pt[], a: number, b: number): Pt[] {
   const y0 = like[0][1];
   const span = like[like.length - 1][1] - y0 || 1;
@@ -73,45 +73,107 @@ function spacedLike(like: Pt[], a: number, b: number): Pt[] {
 }
 
 /**
+ * A hole in an end face: between two heights and out to `half(y)` either
+ * side of the centerline. The face gets rows at exactly those heights, so
+ * the hole's edge is a clean line in its grid. The nose leaves one for
+ * the central intake, the tail one for the plate; their walls and the
+ * mesh or plate behind fill it from behind.
+ */
+export interface FaceCut {
+  y0: number;
+  y1: number;
+  half: (y: number) => number;
+}
+
+/** The outline with a point added at each height in `ys` below index `upto`, unless one is there already. */
+function withRows(pts: Pt[], upto: number, ys: number[]): Pt[] {
+  const out = [...pts];
+  for (const y of ys) {
+    const i = out.findIndex((p, k) => k < upto && p[1] <= y + 1e-6 && out[k + 1][1] >= y - 1e-6);
+    if (i < 0 || Math.abs(out[i][1] - y) < 1e-5 || Math.abs(out[i + 1][1] - y) < 1e-5) continue;
+    const [a, b] = [out[i], out[i + 1]];
+    const t = (y - a[1]) / (b[1] - a[1]);
+    out.splice(i + 1, 0, [a[0] + (b[0] - a[0]) * t, y]);
+    upto++;
+  }
+  return out;
+}
+
+/**
  * The face closing the nose (+1) or the tail (-1) at x, filling the body's
  * outline there. The outline's points are the side panels' last row, so
  * the face shares their vertices and no crack opens at the corner. The
- * face is two regular grids: below the shoulder a near rectangle, above it
- * the roll over the top and the hood or deck edge. Rows stay level and
- * columns upright, so no long thin triangles meet in the middle.
+ * face is two grids: below, rows at the outline's own heights, level low
+ * down and dipping toward the top edge's lowest point higher up; above,
+ * a patch from that row to the hood or deck edge. Normals come from the
+ * bend itself, so the face shades smooth whatever its grid looks like.
+ * A hole's rows, and any asked for in `rowsAt` to carry a tight fold,
+ * are added on the outline's own segments.
  */
-export function endFace(end: 1 | -1, x: number, half: Pt[], detail: Detail): THREE.BufferGeometry {
+export function endFace(end: 1 | -1, x: number, outline: Pt[], detail: Detail, cut?: FaceCut, rowsAt: number[] = []): THREE.BufferGeometry {
   const [b0, b1, b2, b3] = detail.bands;
-  const sh = b0 + b1 + b2;
-  const c = sh + Math.ceil(b3 / 2);
-  const top = half.slice(c).reverse();
-  const [zs, ys] = half[0];
-  const [zsh, ysh] = half[sh];
-  const zc = half[c][0];
+  const half = withRows(outline, b0 + b1 + b2, cut ? [cut.y0, cut.y1, ...rowsAt] : rowsAt);
+  const sh = b0 + b1 + b2 + half.length - outline.length;
+  const top = half.slice(sh + b3).reverse();
+  const ys = half[0][1];
+  const ysh = half[sh][1];
   const yt = top[0][1];
-  // The row between the two grids: level at the shoulder, dipping at the middle only if the top edge is low there.
+  // The top row: level at the shoulder, dipping at the middle only if the top edge is low there.
   const ym = Math.min(ysh, ys + 0.85 * (yt - ys));
-  const mid: Pt[] = top.map(([z]) => {
-    const t = z / zc;
-    return [t * zsh, ym + (ysh - ym) * t * t];
+  // Rows stay level up to the hole's top, then ease toward that dip.
+  const level = cut ? cut.y1 + 0.005 : ys;
+  const cols = top.length - 1;
+  const inner = cut ? Math.round(cols * 0.55) : 0;
+  const rows: Pt[][] = half.slice(0, sh + 1).map(([zr, yr]) => {
+    const yl = yr <= level ? yr : level + ((yr - level) * (ym - level)) / Math.max(ysh - level, 1e-6);
+    const g = cut ? Math.min(cut.half(yr), zr - 0.04) : 0;
+    return Array.from({ length: cols + 1 }, (_, i) => {
+      const z = cut ? (i <= inner ? (g * i) / inner : g + ((zr - g) * (i - inner)) / (cols - inner)) : (zr * i) / cols;
+      return [z, yl + (yr - yl) * (z / zr) ** 2] as Pt;
+    });
   });
-  const bottom: Pt[] = top.map(([z]) => [(z / zc) * zs, ys]);
-  const lowRight = half.slice(0, sh + 1);
-  const upRight = half.slice(sh, c + 1);
-  const lower = coons(bottom, mid, spacedLike(lowRight, ys, ym), lowRight);
-  const upper = coons(mid, top, spacedLike(upRight, ym, yt), upRight);
-  const parts = [lower, upper].map((patch) => {
-    // Rows up and columns across face +x; flipped for the tail.
-    const cols = patch[0].map((_, j) => patch.map((col) => col[j]));
-    const rows = end > 0 ? cols : patch;
-    const g = gridGeometry(rows.map((row) => row.map(([z, y]) => warp([x, y, z]))));
-    const normal = g.attributes.normal;
-    const flat = rows.flat();
-    flat.forEach(([z, y], k) => normal.setXYZ(k, ...faceNormal(end, x, y, z)));
-    // Flat UVs in meters across the face, so paint flake keeps its scale.
-    const uv = g.attributes.uv;
-    flat.forEach(([z, y], k) => uv.setXY(k, z, y));
-    return g;
+  // The upper patch crosses the fold under the hood's edge, so it gets extra rows: each step of the
+  // outline is split, which keeps every body vertex on the edge and adds points only along its segments.
+  const upRight = split(half.slice(sh, sh + b3 + 1), detail.brakes ? 2 : 1);
+  const upper = coons(rows[sh], top, spacedLike(upRight, ym, yt), upRight);
+  const from = cut ? half.findIndex(([, y]) => Math.abs(y - cut.y0) < 1e-5) : -1;
+  const to = cut ? half.findIndex(([, y]) => Math.abs(y - cut.y1) < 1e-5) : -1;
+  const skip = (i: number, j: number) => !!cut && i >= from && i < to && j < inner;
+  // Rows up and columns across face +x; flipped for the tail.
+  const lower = grid(end, x, end > 0 ? rows : transpose(rows), end > 0 ? skip : (i, j) => skip(j, i));
+  return bothSides(merge([lower, grid(end, x, end > 0 ? transpose(upper) : upper)]));
+}
+
+const transpose = (m: Pt[][]): Pt[][] => m[0].map((_, j) => m.map((r) => r[j]));
+
+/** A polyline with each segment cut into `n` equal steps. */
+function split(pts: Pt[], n: number): Pt[] {
+  const out: Pt[] = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const [a, b] = [pts[i - 1], pts[i]];
+    for (let k = 1; k <= n; k++) out.push([a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n]);
+  }
+  return out;
+}
+
+/** A face grid laid through the bend, with the bend's own normals and flat UVs in meters; `skip` drops cells for a hole. */
+function grid(end: 1 | -1, x: number, rows: Pt[][], skip?: (i: number, j: number) => boolean): THREE.BufferGeometry {
+  const g = gridGeometry(rows.map((row) => row.map(([z, y]) => warp([x, y, z]))));
+  const normal = g.attributes.normal;
+  const uv = g.attributes.uv;
+  rows.flat().forEach(([z, y], k) => {
+    normal.setXYZ(k, ...faceNormal(end, x, y, z));
+    uv.setXY(k, z, y);
   });
-  return bothSides(merge(parts));
+  if (skip && g.index) {
+    const nc = rows[0].length - 1;
+    const src = g.index.array;
+    const keep: number[] = [];
+    for (let t = 0; t < src.length; t += 6) {
+      const cell = t / 6;
+      if (!skip(Math.floor(cell / nc), cell % nc)) for (let k = 0; k < 6; k++) keep.push(src[t + k]);
+    }
+    g.setIndex(keep);
+  }
+  return g;
 }

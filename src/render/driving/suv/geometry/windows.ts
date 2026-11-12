@@ -10,10 +10,10 @@ import type { Detail, PartBin } from './parts';
  * under the rear quarter window. Inside it the pillars are gloss black,
  * so the glass reads as one band and the painted roof seems to float.
  */
-export const DLO = { front: CABIN.front, kick: -0.95, drop: -1.18, point: -1.88 };
+export const DLO = { front: CABIN.front, kick: -1.6, drop: -1.48, point: -2.0 };
 /** Pillar and divider spans along the car, m. */
-const B_PILLAR = { from: -0.29, to: -0.18 };
-const DIVIDER = { from: -0.96, to: -0.92 };
+const B_PILLAR = { from: -0.5, to: -0.4 };
+const DIVIDER = { from: -1.5, to: -1.46 };
 /** The bright surround's width and the glass's margin inside the graphic, m. */
 const SURROUND = 0.012;
 const MARGIN = 0.017;
@@ -28,7 +28,7 @@ function sideHeight(x: number): number {
 
 /** Height of the graphic's lower edge above the belt, m: level along the doors, kicking up under the quarter window. */
 function lowM(x: number): number {
-  return 0.11 * smooth((DLO.kick - x) / (DLO.kick - DLO.point)) ** 1.2;
+  return 0.05 * smooth((DLO.kick - x) / (DLO.kick - DLO.point)) ** 1.2;
 }
 
 /** The graphic's edges at x as shares of the side band: its lower edge and its upper edge, which meet at the rear point. */
@@ -57,18 +57,21 @@ const at = (v: number) => () => v;
  * windows laid on it. Above the graphic and behind its rear point the
  * band stays gloss black up to the roof edge, a dark fin that sweeps
  * down toward the deck and meets the black beside the rear glass, so
- * only the painted roof panel reads, floating. Under the kick and the
- * fin it is paint, flowing into the haunch.
+ * only the painted roof panel reads, floating. The fin ends on the rear
+ * glass's own line, one cut across the whole cabin, and behind it the
+ * deck is paint. Under the kick and the fin it is paint too, flowing
+ * into the haunch.
  */
 export function addWindows(bin: PartBin, detail: Detail): void {
   const n = detail.cabin[0];
   const low = (x: number) => dloAt(x)[0];
   const high = (x: number) => dloAt(x)[1];
-  // The fin's lower edge: from the graphic's rear point down to the belt where the cabin meets the deck.
+  // The fin's lower edge: from the graphic's rear point sweeping down, then running level into the cut, so the fin
+  // ends in a square corner rather than a spike. The paint under it and the black above share these rows exactly.
   const meet = low(DLO.point);
-  const fin = (x: number) => meet * smooth((x - CABIN.rear) / (DLO.point - CABIN.rear)) ** 0.8;
-  bin.add('paint', sideStrip(CABIN.rear, DLO.point, at(0), fin, 0, detail, Math.max(1, n - 3)));
-  bin.add('trim', sideStrip(CABIN.rear, DLO.point, fin, at(1), 0, detail, n));
+  const fin = (x: number) => meet * (0.55 + 0.45 * smooth((x - CABIN.glassRear) / (DLO.point - CABIN.glassRear)));
+  bin.add('paint', sideStrip(CABIN.glassRear, DLO.point, at(0), fin, 0, detail, Math.max(1, n - 3)));
+  bin.add('trim', sideStrip(CABIN.glassRear, DLO.point, fin, at(1), 0, detail, n));
   bin.add('trim', sideStrip(DLO.point, DLO.front, low, high, 0, detail, n));
   bin.add('paint', sideStrip(DLO.point, DLO.kick, at(0), low, 0, detail, 1));
   bin.add('trim', sideStrip(DLO.point, DLO.drop, high, at(1), 0, detail, Math.max(1, n - 2)));
@@ -84,12 +87,4 @@ export function addWindows(bin: PartBin, detail: Detail): void {
   const s = (x: number) => SURROUND / sideHeight(x);
   bin.add('metal', sideStrip(DLO.point, DLO.front - 0.01, (x) => Math.max(low(x), high(x) - s(x)), high, 0.002, detail, 1));
   bin.add('metal', sideStrip(DLO.point, DLO.front - 0.01, low, (x) => Math.min(high(x), low(x) + s(x)), 0.002, detail, 1));
-}
-
-/** A panoramic glass roof set into the paint in a slim black frame, the view the chase camera sees most. */
-export function addSunroof(bin: PartBin, detail: Detail): void {
-  const rows = (x0: number, x1: number, t0: number, lift: number): Vec3[][] =>
-    cabinStations(x0, x1, detail).map((x) => Array.from({ length: 5 }, (_, j) => onCabin(x, 2, t0 + ((1 - t0) * j) / 4, lift)));
-  bin.add('trim', bothSides(gridGeometry(rows(-0.88, 0.05, 0.27, 0.002))));
-  bin.add('glass', bothSides(gridGeometry(rows(-0.86, 0.03, 0.3, 0.004))));
 }
