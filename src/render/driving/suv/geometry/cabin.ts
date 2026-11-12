@@ -14,7 +14,7 @@ import { warp } from './warp';
  * the tail's deck, matching the body exactly at both ends, so no seam or
  * cap is needed.
  */
-export const CABIN = { rear: TAIL, glassRear: -2.13, roofRear: -1.24, header: -0.1, front: COWL.x };
+export const CABIN = { rear: TAIL, glassRear: -2.13, roofRear: -1.4, header: -0.1, front: COWL.x };
 
 const [FZ, FY] = beltAt(CABIN.front);
 const [RZ, RY] = beltAt(CABIN.rear);
