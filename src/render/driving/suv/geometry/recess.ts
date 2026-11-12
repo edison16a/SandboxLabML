@@ -134,6 +134,33 @@ export function ringGeometry(end: 1 | -1, corners: Pt[], across: Array<[number, 
 }
 
 /**
+ * A band like ringGeometry, split by where it runs: the steps whose two
+ * outline points both pass `pick` go in the first list, the rest in the
+ * second, each as open strips. A frame can then change material along
+ * its length, say black where it sits on the dark lower bumper.
+ */
+export function ringSplit(end: 1 | -1, corners: Pt[], across: Array<[number, number]>, step: number, pick: (p: Pt) => boolean): [THREE.BufferGeometry[], THREE.BufferGeometry[]] {
+  const outline = densify(corners, step);
+  const n = outline.length;
+  const loops = across.map(([d, lift]) => ({ pts: offset(outline, d), lift }));
+  const row = (i: number) => loops.map(({ pts, lift }) => onCap(end, ...pts[i % n], lift));
+  const picked = (i: number) => pick(outline[i % n]) && pick(outline[(i + 1) % n]);
+  // Start the walk where the kind of step changes, so no strip wraps past the end of the loop.
+  const start = Array.from({ length: n }, (_, i) => i).find((i) => picked(i) !== picked(i + n - 1)) ?? 0;
+  const out: [THREE.BufferGeometry[], THREE.BufferGeometry[]] = [[], []];
+  let strip: Vec3[][] = [row(start)];
+  for (let k = 0; k < n; k++) {
+    const i = start + k;
+    strip.push(row(i + 1));
+    if (k === n - 1 || picked(i + 1) !== picked(i)) {
+      out[picked(i) ? 0 : 1].push(gridGeometry(strip));
+      strip = [row(i + 1)];
+    }
+  }
+  return out;
+}
+
+/**
  * A flat panel filling a closed outline on the nose or tail: rings
  * shrinking to its middle, every point laid on the bent face so the
  * panel follows it. UVs are in meters across the face, so textures keep

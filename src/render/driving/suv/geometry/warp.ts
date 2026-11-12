@@ -20,14 +20,16 @@ export function warp(p: Vec3): Vec3 {
 }
 
 /**
- * The nose in side view: the face leans back 14 degrees from a soft fold
+ * The nose in side view: the face leans back 12 degrees from a soft fold
  * at `apex` up to the hood's edge at `top`, and below the fold the bumper
  * tucks back toward the lip at `under` m per m. The bend starts behind
- * the front wheel arch, so the arch stays round. The fold under the hood's
- * edge turns over about as wide as the hood's own 4 cm roll, so the two
- * read as one rounded edge.
+ * the front wheel arch, so the arch stays round. The fold is tight, so a
+ * line of light runs across the face just above the central intake and
+ * the bumper reads as its own volume under the nose. The bend under the
+ * hood's edge turns over about as wide as the hood's own roll, so the
+ * two read as one rounded edge.
  */
-const NOSE_BEND = { from: 1.96, top: 0.9, apex: 0.567, lean: 0.25, under: 0.55, edge: 0.035, fold: 0.045 };
+const NOSE_BEND = { from: 1.96, top: 0.915, apex: 0.58, lean: 0.21, under: 0.58, edge: 0.035, fold: 0.024 };
 
 /** How far the nose face sits ahead of its upright station at height y, m. */
 export function noseLean(y: number): number {
@@ -48,17 +50,19 @@ function noseBow(z: number): number {
 }
 
 /**
- * The tail in side view: from the roof's lip at `lip` the tailgate leans
- * out and down to the bumper's top at `bumper`, the bumper stands upright,
- * and below `diffuser` it tucks back in to the diffuser's floor. Above the
- * lip nothing moves, so the roofline is exactly the cabin's.
+ * The tail in side view: from the roof's lip at `lip` a short tailgate
+ * face leans out and down at `gate` m per m to the light bar at `knee`,
+ * stands steeper (`low`) down to the bumper's top at `bumper`, the bumper
+ * stands upright, and below `diffuser` it tucks back in to the diffuser's
+ * floor. Above the lip nothing moves, so the roofline is exactly the cabin's.
  */
-const TAIL_BEND = { from: -1.9, lip: 1.22, bumper: 0.885, diffuser: 0.55, gate: 0.444, tuck: 0.66 };
+const TAIL_BEND = { from: -1.9, lip: 1.28, knee: 1.11, bumper: 0.92, diffuser: 0.58, gate: 0.718, low: 0.16, tuck: 0.625 };
 
 /** How far the tail sits behind its upright station at height y, m. */
 export function tailLean(y: number): number {
   const b = TAIL_BEND;
-  return b.gate * (hinge(b.lip - y, 0.02) - hinge(b.bumper - y, 0.03)) - b.tuck * hinge(b.diffuser - y, 0.05);
+  const face = b.gate * hinge(b.lip - y, 0.02) - (b.gate - b.low) * hinge(b.knee - y, 0.04) - b.low * hinge(b.bumper - y, 0.03);
+  return face - b.tuck * hinge(b.diffuser - y, 0.05);
 }
 
 /**
@@ -67,7 +71,7 @@ export function tailLean(y: number): number {
  * as its own volume. It runs across the tailgate and fades out before the
  * corners, where the face curls into the sides.
  */
-export const LEDGE = { y: 0.6, step: 0.01, r: 0.008, half: 0.45, fade: 0.15 };
+export const LEDGE = { y: 0.635, step: 0.01, r: 0.008, half: 0.45, fade: 0.15 };
 
 function ledge(y: number, z: number): number {
   const across = smooth((LEDGE.half + LEDGE.fade - Math.abs(z)) / LEDGE.fade);

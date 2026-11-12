@@ -1,10 +1,11 @@
 import type * as THREE from 'three';
 import { onCap } from './cap';
-import { bothSides, gridGeometry, type Vec3 } from './grid';
+import { bothSides, type Vec3 } from './grid';
 import type { Detail, PartBin } from './parts';
 import type { FaceCut } from './face';
 import { capFill, facing, recess, rounded } from './recess';
 import { tailBand } from './rear';
+import { SEAM, SEAM_LIFT, seamGeometry } from './seams';
 import type { Pt } from './section';
 import { LEDGE } from './warp';
 
@@ -15,7 +16,7 @@ import { LEDGE } from './warp';
 const GATE = { side: 0.6, bottom: LEDGE.y + LEDGE.r, corner: 0.06 };
 
 /** The plate's pocket in the tailgate's lower half: a rounded rectangle, 1.5 cm deep. */
-const PLATE = { half: 0.265, y0: 0.66, y1: 0.79, corner: 0.016, depth: 0.015 };
+const PLATE = { half: 0.265, y0: 0.695, y1: 0.825, corner: 0.016, depth: 0.015 };
 
 /** The hole the tail face leaves for the plate's pocket. */
 export const plateCut = (): FaceCut => ({ y0: PLATE.y0, y1: PLATE.y1, half: () => PLATE.half });
@@ -23,16 +24,17 @@ export const plateCut = (): FaceCut => ({ y0: PLATE.y0, y1: PLATE.y1, half: () =
 /** Rows the tail face adds so the bumper's crease is drawn as a tight fold, not a long slope. */
 export const LEDGE_ROWS = [LEDGE.y - LEDGE.r, LEDGE.y + LEDGE.r];
 
-/** A dark hairline along a path on the tail face, `width` m wide, so a panel gap reads as a real cut. */
-function cut(path: Pt[], width: number): THREE.BufferGeometry {
-  const rows: Vec3[][] = path.map((p, i) => {
-    const a = path[Math.max(0, i - 1)];
-    const b = path[Math.min(path.length - 1, i + 1)];
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
-    const n: Pt = [(-(b[1] - a[1]) / len) * (width / 2), ((b[0] - a[0]) / len) * (width / 2)];
-    return [onCap(-1, p[0] - n[0], p[1] - n[1], 0.0015), onCap(-1, p[0] + n[0], p[1] + n[1], 0.0015)];
-  });
-  return facing(gridGeometry(rows), [-1, 0, 0]);
+/** A soft dark line along a path on the tail face, so a panel gap reads as a real cut (seams.ts). */
+function cut(path: Pt[]): THREE.BufferGeometry {
+  const rows: Vec3[][] = SEAM.map(([d]) =>
+    path.map((p, i) => {
+      const a = path[Math.max(0, i - 1)];
+      const b = path[Math.min(path.length - 1, i + 1)];
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+      return onCap(-1, p[0] - ((b[1] - a[1]) / len) * d, p[1] + ((b[0] - a[0]) / len) * d, SEAM_LIFT);
+    }),
+  );
+  return facing(seamGeometry(rows), [-1, 0, 0]);
 }
 
 /** The left half of the tailgate's shut line: from under the light band, down the side, round the corner and across to the middle. */
@@ -59,7 +61,7 @@ function gatePath(steps: number): Pt[] {
  */
 export function addTailgate(bin: PartBin, detail: Detail): void {
   const open = detail.fine || detail.brakes;
-  if (open) bin.add('liner', bothSides(cut(gatePath(detail.fine ? 6 : 3), 0.0045)));
+  if (open) bin.add('seam', bothSides(cut(gatePath(detail.fine ? 6 : 3))));
   const corner = detail.fine ? 4 : detail.brakes ? 2 : 1;
   const { half, y0, y1 } = PLATE;
   const outline = rounded([[-half, y0], [half, y0], [half, y1], [-half, y1]], PLATE.corner, corner);

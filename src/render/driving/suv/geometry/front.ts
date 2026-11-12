@@ -27,8 +27,8 @@ const PEAK = sectionAt(NOSE).keys[5].z;
 const topLine = profile([0.3, 0.38, 0.46, 0.52, PEAK + 0.04, 1.2].map((s) => [s, faceTop(1, Math.min(s, PEAK)) - LAMP.drop] as const));
 export const lampTop = (s: number) => topLine(s);
 
-/** The lens's height at s: 8 cm at the inner end, 11 cm at the outer end. */
-const lampHeight = (s: number) => 0.08 + (0.03 * (s - LAMP.inner)) / (LAMP.outer - LAMP.inner);
+/** The lens's height at s: 9 cm at the inner end, 12 cm at the outer end, in step with the tall face. */
+const lampHeight = (s: number) => 0.09 + (0.03 * (s - LAMP.inner)) / (LAMP.outer - LAMP.inner);
 
 /** How far a rounded end pulls both edges in, `e` m from the end. */
 function endPull(e: number, r: number): number {

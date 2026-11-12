@@ -35,17 +35,19 @@ const LOOK: Record<Slot, { color: [number, number, number]; rough: number; metal
   paint: { color: [1, 1, 1], rough: 0.32, metal: 0.14, tint: 1 },
   glass: { color: [0.02, 0.025, 0.03], rough: 0.05, metal: 0.2 },
   trim: { color: [0.012, 0.012, 0.014], rough: 0.2, metal: 0.2 },
-  clad: { color: [0.012, 0.013, 0.014], rough: 0.5, metal: 0 },
+  clad: { color: [0.04, 0.043, 0.048], rough: 0.4, metal: 0 },
   grille: { color: [0.01, 0.01, 0.012], rough: 0.5, metal: 0.2 },
   led: { color: [1, 1, 0.96], rough: 0.4, metal: 0, glow: 3 },
   tail: { color: [1, 0.06, 0.04], rough: 0.4, metal: 0, glow: 1.5 },
   liner: { color: [0.012, 0.012, 0.013], rough: 0.95, metal: 0 },
   metal: { color: [0.7, 0.72, 0.75], rough: 0.2, metal: 1 },
-  tire: { color: [0.02, 0.02, 0.022], rough: 0.9, metal: 0 },
+  tire: { color: [0.034, 0.036, 0.04], rough: 0.78, metal: 0 },
   rim: { color: [0.16, 0.165, 0.18], rough: 0.35, metal: 0.8 },
   face: { color: [0.62, 0.63, 0.65], rough: 0.3, metal: 0.95 },
   disc: { color: [0.25, 0.25, 0.26], rough: 0.5, metal: 0.5 },
   caliper: { color: [0.75, 0.1, 0.08], rough: 0.35, metal: 0.1 },
+  // Panel gaps are only drawn on the followed SUV; the population never bakes this slot.
+  seam: { color: [0.012, 0.012, 0.013], rough: 0.95, metal: 0 },
 };
 
 /** Bakes a slot's look into per vertex `color` and `surface` attributes, for one instanced draw call. */

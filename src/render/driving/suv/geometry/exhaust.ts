@@ -8,7 +8,7 @@ import type { Detail, PartBin } from './parts';
  * the face, their height, radius and how much flatter than round they
  * are, how far the lip stands out of the face and how deep the throat runs.
  */
-const PIPES = { at: [0.4, 0.535], y: 0.44, r: 0.043, squash: 0.74, out: 0.024, wall: 0.0045, deep: 0.05 };
+const PIPES = { at: [0.4, 0.535], y: 0.465, r: 0.043, squash: 0.74, out: 0.024, wall: 0.0045, deep: 0.05 };
 
 /**
  * One tailpipe along +y, centered on the axis: a polished tube with a

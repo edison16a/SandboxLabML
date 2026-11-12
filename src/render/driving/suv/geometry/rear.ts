@@ -10,15 +10,15 @@ import { addTailgate } from './tailgate';
 
 /**
  * The tail's light band in the face's unrolled coordinates: level across
- * the tailgate at 1.0 to 1.05 m, easing a little lower as it wraps 10 cm
- * round each corner under the shoulder. `half` is how far it reaches.
+ * the tailgate at 1.06 to 1.11 m, easing lower and slimmer as it wraps
+ * 10 cm round each corner under the shoulder crease. `half` is how far it reaches.
  */
-export const BAND = { half: 0.83, lo: 0.993, hi: 1.046 };
+export const BAND = { half: 0.83, lo: 1.06, hi: 1.11 };
 
 /** The light band's lower and upper edge at s. */
 export function tailBand(s: number): { lo: number; hi: number } {
-  const k = smooth((Math.abs(s) - 0.52) / 0.3);
-  return { lo: BAND.lo - 0.006 * k, hi: BAND.hi - 0.012 * k };
+  const k = smooth((Math.abs(s) - 0.5) / 0.25);
+  return { lo: BAND.lo - 0.02 * k, hi: BAND.hi - 0.032 * k };
 }
 
 /** A point in the band at s, a share `v` of its height up from its lower edge. */
@@ -48,7 +48,7 @@ function addLights(bin: PartBin, detail: Detail): void {
   bin.add('tail', bandStrip(0.56, BAND.half - 0.034, 0.68, 0.78, 0.008, c));
   if (detail.brakes) addEmblem(bin, inBand(0, 0.49)[1], detail.fine ? 14 : 8);
   // Slim reflectors on the bumper's corners, under its crease.
-  bin.add('tail', capPanel(-1, at(0.66), at(0.8), 0.56, 0.572, 0.004, 4, 1));
+  bin.add('tail', capPanel(-1, at(0.66), at(0.8), 0.595, 0.607, 0.004, 4, 1));
 }
 
 /**
@@ -78,7 +78,7 @@ function addEmblem(bin: PartBin, cy: number, seg: number): void {
 function addDiffuser(bin: PartBin, detail: Detail): void {
   const c = detail.fine ? 10 : detail.brakes ? 4 : 2;
   const y0 = sillY(TAIL);
-  const top = 0.53;
+  const top = 0.565;
   const half = (y: number) => faceEdge(-1, y) - 0.02;
   bin.add('trim', capPanel(-1, (y) => -half(y), half, y0, top, 0.004, c * 2, detail.fine ? 9 : 5, false));
   bin.add('metal', capPanel(-1, (y) => -half(y), half, top + 0.003, top + 0.008, 0.006, c * 2, 1, false));

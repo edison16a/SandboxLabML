@@ -1,5 +1,6 @@
+import type * as THREE from 'three';
 import { endFace, faceNormal } from './face';
-import { bothSides, gridGeometry } from './grid';
+import { bothSides, gridGeometry, type Vec3 } from './grid';
 import { intakeCut } from './intakes';
 import { bodyNormals } from './normals';
 import { LEDGE_ROWS, plateCut } from './tailgate';
@@ -9,14 +10,14 @@ import { along, resample, span, type Pt } from './section';
 import { warp } from './warp';
 
 /**
- * Bands joined into one smooth grid each: the gloss black sill trim, the
- * lower side, the side up to the shoulder, and everything from the
+ * Bands joined into one smooth grid each: the satin black sill cladding,
+ * the lower side, the side up to the shoulder, and everything from the
  * shoulder crease over the top. Normals come from the surface itself
  * (normals.ts), so the panels shade as one sheet wherever they meet
- * smoothly; only the sill trim keeps the crease at its top edge.
+ * smoothly; only the cladding keeps the crease at its top edge.
  */
 const PANELS: Array<{ bands: number[]; slot: Slot; creased?: boolean }> = [
-  { bands: [0], slot: 'trim' },
+  { bands: [0], slot: 'clad' },
   { bands: [1], slot: 'paint', creased: true },
   { bands: [2], slot: 'paint' },
   { bands: [3, 4, 5, 6], slot: 'paint' },
@@ -101,7 +102,17 @@ export function outline(x: number, detail: Detail): Pt[] {
 }
 
 /** A point on the body surface: band `band` of the section at x, a share `t` of the way along it, lifted along its outward normal. */
-export function onBody(x: number, band: number, t: number, lift = 0): [number, number, number] {
+export function onBody(x: number, band: number, t: number, lift = 0): Vec3 {
   const { p, n } = along(bandCurve(x, band, 48), t);
   return warp([x, p[1] + n[1] * lift, p[0] + n[0] * lift]);
+}
+
+/** A thin strip along the body at a band from x0 to x1, on both sides; `across` lists its points as (share of the band, lift off it). */
+export function bodyStrip(band: number, across: Array<[number, number]>, x0: number, x1: number, steps: number): THREE.BufferGeometry {
+  const rows: Vec3[][] = [];
+  for (let i = 0; i <= steps; i++) {
+    const x = x0 + ((x1 - x0) * i) / steps;
+    rows.push(across.map(([t, lift]) => onBody(x, band, t, lift)));
+  }
+  return bothSides(gridGeometry(rows));
 }

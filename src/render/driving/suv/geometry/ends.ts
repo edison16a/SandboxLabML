@@ -4,7 +4,7 @@
  * footprint's front and the tail's bumper back to its rear, so these sit
  * a little inside the 4.9 m box.
  */
-export const NOSE = 2.362;
+export const NOSE = 2.377;
 export const TAIL = -2.3;
 
 /**
@@ -17,7 +17,7 @@ export const TAIL = -2.3;
  * edge and the tail a clean lip.
  */
 export const ROUND = {
-  nose: { plan: 0.35, peak: 0.16, roll: 0.04, rollLen: 0.04 },
+  nose: { plan: 0.35, peak: 0.16, roll: 0.045, rollLen: 0.045 },
   tail: { plan: 0.25, peak: 0.15, roll: 0.018, rollLen: 0.025 },
 };
 

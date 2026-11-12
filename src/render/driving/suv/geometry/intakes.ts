@@ -3,7 +3,7 @@ import type { FaceCut } from './face';
 import { bothSides, gridGeometry, type Vec3 } from './grid';
 import type { Detail, PartBin } from './parts';
 import { NOSE, sectionAt, sillY } from './profile';
-import { capFill, facing, offset, recess, ringGeometry, rounded } from './recess';
+import { capFill, facing, offset, recess, ringGeometry, ringSplit, rounded } from './recess';
 import type { Pt } from './section';
 
 /**
@@ -33,15 +33,19 @@ export function intakeCut(): FaceCut {
 }
 
 /**
- * A side intake, outboard of the central one: 0.16 m wide and 0.26 m
+ * A side intake, outboard of the central one: 0.17 m wide and 0.335 m
  * tall, its sides leaning in toward the top like the central intake's,
- * so the three openings read as one trapezoid mouth. It wraps onto the
- * corner by the face's unrolled coordinates. Counterclockwise in (s, y).
+ * so the three openings read as one trapezoid mouth. Its foot stands on
+ * the cladding that wraps the bumper's corner, level with the central
+ * intake's floor, so one dark line runs from the lip through the intake
+ * bottoms to the sills. It wraps onto the corner by the face's unrolled
+ * coordinates. Counterclockwise in (s, y).
  */
-const SIDE: Pt[] = [[0.585, 0.385], [0.745, 0.385], [0.69, 0.645], [0.53, 0.645]];
+const SIDE: Pt[] = [[0.594, 0.385], [0.764, 0.385], [0.695, 0.72], [0.525, 0.72]];
+const SIDE_Y = { lo: 0.385, hi: 0.72 };
 
 /** The side intake's fin line at height y: down the middle of the opening, leaning with it. */
-const finAt = (y: number) => 0.665 - ((y - 0.385) / 0.26) * 0.055;
+const finAt = (y: number) => 0.679 - ((y - SIDE_Y.lo) / (SIDE_Y.hi - SIDE_Y.lo)) * 0.069;
 
 /**
  * Across the frame the bumper raises round each side intake, as (out
@@ -76,19 +80,23 @@ export function addIntakes(bin: PartBin, detail: Detail): void {
   // The far population lifts its flat mesh a little more and keeps finer steps, so the curl never swallows it.
   bin.add('grille', bothSides(capFill(1, offset(side, -0.004), open ? 0.0012 : 0.004, rings, Math.min(step, 0.05))));
   if (!open) return;
-  const mid = onCap(1, 0.64, 0.515, 0);
+  const mid = onCap(1, 0.64, (SIDE_Y.lo + SIDE_Y.hi) / 2, 0);
   const inward = (p: Vec3): Vec3 => [mid[0] - p[0], mid[1] - p[1], mid[2] - p[2]];
-  // The frame is a soft swell, so it can take longer steps than the opening's own edge.
-  bin.add('paint', bothSides(facing(ringGeometry(1, side, FRAME, Math.max(step, 0.032)), [1, 0, 0])));
+  // The frame is a soft swell, so it can take longer steps than the opening's own edge. Its foot lies on the
+  // cladding and is satin black like it, so the opening seems to stand on the dark base.
+  const [foot, frame] = ringSplit(1, side, FRAME, Math.max(step, 0.032), ([, y]) => y < SIDE_Y.lo + 0.01);
+  bin.add('clad', ...foot.map((g) => bothSides(facing(g, [1, 0, 0]))));
+  bin.add('paint', ...frame.map((g) => bothSides(facing(g, [1, 0, 0]))));
   bin.add('trim', bothSides(facing(ringGeometry(1, side, [[0.004, 0.0072], [-0.004, 0.0012]], Math.max(step, 0.032)), inward)));
   if (!detail.fine) return;
   // The fin: a slim body colored bar with walls, standing up to the frame's height.
-  const fin = rounded([[finAt(0.39) - 0.006, 0.39], [finAt(0.39) + 0.006, 0.39], [finAt(0.64) + 0.006, 0.64], [finAt(0.64) - 0.006, 0.64]], 0.004, 2);
+  const [f0, f1] = [SIDE_Y.lo + 0.005, SIDE_Y.hi - 0.005];
+  const fin = rounded([[finAt(f0) - 0.006, f0], [finAt(f0) + 0.006, f0], [finAt(f1) + 0.006, f1], [finAt(f1) - 0.006, f1]], 0.004, 2);
   bin.add('paint', bothSides(facing(ringGeometry(1, fin, [[0.0, 0.0012], [-0.002, 0.0078], [-0.0045, 0.0086], [-0.0058, 0.0086]], 0.03), [1, 0, 0])));
 }
 
 /**
- * A gloss black splitter under the face, carrying the black sill trim
+ * A satin black splitter under the face, carrying the sill cladding
  * round the front. It is a real blade with a top, a front and an
  * underside, wrapping a little way round each corner and tapering back
  * into the bumper at its ends.
@@ -103,5 +111,5 @@ export function addLip(bin: PartBin, detail: Detail): void {
     const k = 1 - (s / half) ** 8;
     rows.push(([[y0 + 0.045, 0.002], [y0 + 0.034, 0.004 + 0.016 * k], [y0 + 0.008, 0.004 + 0.024 * k], [y0, 0.002 + 0.014 * k]] as const).map(([y, lift]) => onCap(1, s, y, lift)));
   }
-  bin.add('trim', facing(gridGeometry(rows), [1, 0, 0]));
+  bin.add('clad', facing(gridGeometry(rows), [1, 0, 0]));
 }

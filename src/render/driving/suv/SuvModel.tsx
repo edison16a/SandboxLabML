@@ -10,7 +10,7 @@ import { buildWheel, caliper } from './geometry/wheels';
 import type { SuvMaterials } from './materials/suvMaterials';
 
 /** Slots too thin or small to cast a useful shadow. */
-const NO_SHADOW = new Set<Slot>(['led', 'tail', 'grille', 'liner', 'metal', 'caliper', 'disc', 'trim']);
+const NO_SHADOW = new Set<Slot>(['led', 'tail', 'grille', 'liner', 'metal', 'caliper', 'disc', 'trim', 'seam']);
 
 /** Handles the driver animates: the sprung body, each wheel's steering pivot and its spinning part. */
 export interface SuvRig {

@@ -11,10 +11,11 @@ export { sillY } from './lines';
  * A cross section of the body at x is eight keys from under the sill up
  * and over to the centerline:
  *
- * 0 under the sill, 1 top of the gloss black sill trim, 2 where the lower
- * side starts to tuck under, 3 and 4 either end of the shoulder crease's
- * small radius, 5 the belt where the glass sits (ahead of the windshield,
- * the fender peak), 6 the edge of the hood's valley, 7 the centerline.
+ * 0 under the sill, 1 top of the satin black sill cladding, which turns
+ * out under the sill and leans in up its face (lowerKeys), 2 where the lower side starts to tuck under, 3 and 4
+ * either end of the shoulder crease's small radius, 5 the belt where the
+ * glass sits (ahead of the windshield, the fender peak), 6 the edge of the
+ * hood's valley, 7 the centerline.
  *
  * The spans between keys are smooth curves. Below the shoulder the side
  * stands nearly upright and only gently full; above it a shelf leans in
@@ -27,6 +28,36 @@ export interface Section {
 
 /** The shoulder crease's radius, m. */
 const SHOULDER_R = 0.015;
+
+/**
+ * How much of the sill cladding's roll is on at x, 0 to 1: full between
+ * the wheels, fading out round the ends so the lip and the diffuser keep
+ * their own shape.
+ */
+const rollAt = (x: number) => smooth((2.2 - x) / 0.25) * smooth((x + 2.15) / 0.25);
+
+/** The lower side's sculpt between the wheels: key 1's angle leaving the cladding, key 2's inset from w and its angle, degrees. */
+const SCULPT = { leave: -24, inset: 0.012, tuck: 14 };
+
+/**
+ * The lowest three keys at x on a side of half width w: the cladding and
+ * the tuck above it. Rolled, the cladding's underside turns out almost
+ * flat from the sill, so its face is widest just 5 cm up and leans in 25
+ * degrees by the top, where it meets the paint; most of the face you see
+ * from the side then looks up at the sky and shows a satin sheen over the
+ * dark shadow under the car. Above it the paint swells out to a soft
+ * bulge and leans back in to the tuck, where a shallow scoop begins: that
+ * band faces the sky and draws a line of light along the lower doors,
+ * which splits the tall side the way a stylist would.
+ */
+function lowerKeys(x: number, w: number): [Key, Key, Key] {
+  const r = rollAt(x);
+  return [
+    key(w - 0.085 + 0.035 * r, sillY(x), deg(-70 - 15 * r)),
+    key(w - 0.032 - 0.013 * r, rockerY(x), deg(-6 + 31 * r), deg(-10 + (SCULPT.leave + 10) * r)),
+    key(w - 0.014 + (0.014 - SCULPT.inset) * r, tuckY(x), deg(-5 + (SCULPT.tuck + 5) * r)),
+  ];
+}
 
 /** The belt line at x as (z, y), after the end rounding: where the cabin's glass sits on the body. */
 export function beltAt(x: number): [number, number] {
@@ -61,14 +92,14 @@ export function sectionAt(x: number): Section {
   // Along the cabin the shelf ends under the glass; on the hood it crests flat at the fender peak, and the tail's deck flattens too.
   const crest = deg(72 + 18 * onHood(x) + 8 * smooth((-x - 2.0) / 0.3));
   // On the hood the peak is a soft crease, so a line of light runs along each fender from the A pillar to the
-  // lamp. Over the lamp it melts into a round crest, so the hood's leading edge has no notch where it meets.
-  const crease = deg(12) * smooth((x - 0.9) / 0.45) * (1 - smooth((x - NOSE + ROUND.nose.plan) / 0.3));
+  // lamp. It melts into a round crest only inside the hood's last 6 cm, where the edge rolls down into the face:
+  // the lamp's top then has no notch, and the hood keeps one cross section all the way, so its reflections run
+  // through to the nose instead of pooling in an island where the crease used to fade.
+  const crease = deg(12) * smooth((x - 0.9) / 0.45) * (1 - smooth((x - NOSE + 0.06) / 0.06));
   // The valley falls from the peak to a floor on the centerline like half a cosine wave: flat at both ends, one U, no ridge.
   const fall = Math.atan((Math.PI / 2) * Math.sin(0.45 * Math.PI) * (v / Math.max(bz, 0.2)));
   const keys: Key[] = [
-    key(w - 0.1, sillY(x), deg(-70)),
-    key(w - 0.05, rockerY(x), deg(-28), deg(-12)),
-    key(w - 0.014, tuckY(x), deg(-5)),
+    ...lowerKeys(x, w),
     key(w + t * Math.sin(up), ys - t * Math.cos(up), up),
     key(w - t * Math.sin(shelf), ys + t * Math.cos(shelf), shelf),
     key(bz, by, crest, crest + crease),
@@ -79,11 +110,11 @@ export function sectionAt(x: number): Section {
 }
 
 /**
- * Round wheel arches, cut 5 cm clear of the tire, so the body wraps the
+ * Round wheel arches, cut 4.7 cm clear of the tire, so the body wraps the
  * big wheels. Over each wheel the side skin stops at a circle round the
  * wheel center; below the center the opening runs straight down to the sill.
  */
-export const ARCH = { radius: WHEEL.radius + 0.05, centerY: WHEEL.radius };
+export const ARCH = { radius: WHEEL.radius + 0.047, centerY: WHEEL.radius };
 export const AXLES = [BODY.axleFront, BODY.axleRear];
 /** Bands low enough to meet the wheels: the sill trim, the lower side and the side up to the shoulder. */
 export const ARCHED_BANDS = 3;

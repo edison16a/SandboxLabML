@@ -24,11 +24,11 @@ describe('SUV lamps', () => {
     for (let s = peak; s <= LAMP.outer; s += 0.01) expect(lampTop(s)).toBeLessThanOrEqual(lampTop(peak) + 0.002);
   });
 
-  it('sizes the headlights as drawn: 8 cm tall inboard, 11 cm at the corner, wrapping round it', () => {
+  it('sizes the headlights as drawn: 9 cm tall inboard, 12 cm at the corner, wrapping round it', () => {
     const inner = headlampLens(0.12);
     const outer = headlampLens(0.88);
-    expect(inner.hi[1] - inner.lo[1]).toBeGreaterThan(0.07);
-    expect(outer.hi[1] - outer.lo[1]).toBeGreaterThan(0.095);
+    expect(inner.hi[1] - inner.lo[1]).toBeGreaterThan(0.08);
+    expect(outer.hi[1] - outer.lo[1]).toBeGreaterThan(0.105);
     expect(LAMP.outer - faceEdge(1, 0.85)).toBeGreaterThan(0.2);
   });
 
