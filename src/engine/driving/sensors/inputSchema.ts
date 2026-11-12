@@ -35,7 +35,26 @@ function beamKey(prefix: string, angle: number): string {
 }
 
 type Spec = Omit<InputSpec, 'index'>;
-const scalar = (key: string, label: string, unit: string, scale: number, offset = 0): Spec => ({ key, label, group: 'scalar', unit, scale, offset });
+const scalar = (key: string, label: string, unit: string, scale: number, offset = 0, extra?: Pick<InputSpec, 'values' | 'limit'>): Spec => ({ key, label, group: 'scalar', unit, scale, offset, ...extra });
+
+/** Names the inputs panel shows for the inputs that are categories. */
+const HIT_KINDS = [
+  { at: 0, label: 'None' },
+  { at: 1 / 3, label: 'Curb' },
+  { at: 2 / 3, label: 'Car' },
+  { at: 1, label: 'Person' },
+];
+const TURNS = [
+  { at: -1, label: 'Left' },
+  { at: 0, label: 'Straight' },
+  { at: 1, label: 'Right' },
+];
+/** Green and no signal at all both read 0: either way nothing asks the car to stop. */
+const LIGHTS = [
+  { at: 0, label: 'Clear' },
+  { at: 0.5, label: 'Yellow' },
+  { at: 1, label: 'Red' },
+];
 
 /**
  * The driving input schema, generated from the run's input config. The
@@ -50,7 +69,7 @@ export function drivingInputSchema(cfg: DrivingInputConfig, car: CarParams, cust
     specs.push({ key: beamKey('lidar', angle), label: beamLabel(angle, 'Lidar'), group: 'ray', unit: 'm', scale: cfg.lidar.range, offset: 0, ray: { angle, maxLength: cfg.lidar.range } });
   }
   // What each beam hit: 0 nothing, 1/3 a curb or wall, 2/3 a car, 1 a person.
-  if (cfg.lidarKinds) for (const angle of angles) specs.push(scalar(beamKey('lidarKind', angle), beamLabel(angle, 'Hit type'), '', 3));
+  if (cfg.lidarKinds) for (const angle of angles) specs.push(scalar(beamKey('lidarKind', angle), beamLabel(angle, 'Hit type'), '', 3, 0, { values: HIT_KINDS }));
   if (cfg.lane) {
     specs.push(scalar('laneOffset', 'Lane offset', 'm', 3.5));
     specs.push(scalar('headingError', 'Heading error', 'rad', Math.PI / 2));
@@ -60,20 +79,20 @@ export function drivingInputSchema(cfg: DrivingInputConfig, car: CarParams, cust
     specs.push(scalar('curveFar', `Bend at ${CURVE_FAR} m`, '1/m', CURVE_SCALE));
   }
   if (cfg.route) {
-    specs.push(scalar('nextTurn', 'Next turn', '', 1));
-    specs.push(scalar('turnDistance', 'Next turn in', 'm', STOP_RANGE));
-    specs.push(scalar('destination', 'Destination', 'm', DEST_RANGE));
+    specs.push(scalar('nextTurn', 'Next turn', '', 1, 0, { values: TURNS }));
+    specs.push(scalar('turnDistance', 'Next turn in', 'm', STOP_RANGE, 0, { limit: 'far' }));
+    specs.push(scalar('destination', 'Destination', 'm', DEST_RANGE, 0, { limit: 'far' }));
   }
   if (cfg.light) {
-    specs.push(scalar('light', 'Light ahead', '', 2));
-    specs.push(scalar('lightDistance', 'Light distance', 'm', STOP_RANGE));
+    specs.push(scalar('light', 'Light ahead', '', 2, 0, { values: LIGHTS }));
+    specs.push(scalar('lightDistance', 'Light distance', 'm', STOP_RANGE, 0, { limit: 'none' }));
   }
   if (cfg.carAhead) {
-    specs.push(scalar('carGap', 'Car ahead', 'm', GAP_RANGE));
+    specs.push(scalar('carGap', 'Car ahead', 'm', GAP_RANGE, 0, { limit: 'none' }));
     specs.push(scalar('carRelSpeed', 'Car ahead speed', 'm/s', REL_SPEED_SCALE));
   }
   if (cfg.pedestrian) {
-    specs.push(scalar('pedDistance', 'Person ahead', 'm', PED_RANGE));
+    specs.push(scalar('pedDistance', 'Person ahead', 'm', PED_RANGE, 0, { limit: 'none' }));
     specs.push(scalar('pedLateral', 'Person offset', 'm', PED_LATERAL_SCALE));
   }
   if (cfg.speed) {

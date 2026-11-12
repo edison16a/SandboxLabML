@@ -19,6 +19,14 @@ export interface InputSpec {
   offset: number;
   /** For rays: direction relative to the agent's facing (radians, left positive) and length. */
   ray?: { angle: number; maxLength: number };
+  /**
+   * Names for an input that stands for a category rather than an amount,
+   * keyed by normalized value (Driving's light: 0 clear, 0.5 yellow, 1
+   * red). The inputs panel shows the nearest name instead of a number.
+   */
+  values?: ReadonlyArray<{ at: number; label: string }>;
+  /** What the panel shows when the normalized value sits at its range limit, which means nothing was seen (such as "none"). */
+  limit?: string;
 }
 
 /** A brain input a script declares with `sensor`, scaled into [0, 1] by its constant range. */

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { InputSpec, OutputSpec } from '@/engine/env/types';
 import { cn } from '@/ui/cn';
+import { display } from './inputDisplay';
 import { isSignedInput } from './signedInputs';
 
 interface Props {
@@ -17,12 +18,6 @@ interface Props {
   /** Inputs switched off by a lesion test, drawn struck through. */
   lesioned?: ReadonlySet<number>;
   onToggleLesion?: (index: number) => void;
-}
-
-function display(spec: InputSpec, v: number): string {
-  const real = v * spec.scale + spec.offset;
-  const digits = Math.abs(real) >= 100 ? 0 : Math.abs(real) >= 10 ? 1 : 2;
-  return `${real.toFixed(digits)}${spec.unit ? ` ${spec.unit}` : ''}`;
 }
 
 /**
