@@ -69,6 +69,21 @@ export async function setGenerationBenchmark(runId: string, generation: number, 
   await db().generations.update([runId, generation], { benchmark: score });
 }
 
+/**
+ * Rebuilds a run's summary from only the history it keeps, as the run was
+ * when created plus those generations. A resume from an older checkpoint
+ * drops the generations past it, and the Runs page must not go on counting them.
+ */
+export async function resetSummary(runId: string, kept: readonly GenerationRecord[]): Promise<void> {
+  const d = db();
+  await d.transaction('rw', d.runs, async () => {
+    const run = await d.runs.get(runId);
+    if (!run) return;
+    const created = { ...run, generation: 0, bestFitness: 0, benchmark: undefined, best: undefined };
+    await d.runs.update(runId, { benchmark: undefined, best: undefined, ...foldSummary(created, kept) });
+  });
+}
+
 /** Drops generations at or after `generation`, used when resuming from an older checkpoint. */
 export async function deleteGenerationsFrom(runId: string, generation: number): Promise<void> {
   await db()
