@@ -3,23 +3,29 @@
  * a loop, and writes public/hero/driver.json. Training is an ordinary
  * Driving run (the default brain, the built in reward, Midtown and the
  * automatic curriculum), the run a newcomer gets in the lab. Every
- * champion from the second half of the run then drives many trips at the
- * hero's level, and the one with the most clean arrivals wins: no crash,
- * no person hit, no red light run, no wheel over the curb. Its loop is a
- * handful of those trips, picked to show a stop at a red and a stop for
- * a person.
+ * champion from the second half of the run then drives many rush hour
+ * trips, and the one with the most clean arrivals wins: no crash, no
+ * person hit, no red light run, no wheel over the curb, nothing passing
+ * through it and no car where the camera hangs. Its loop is a handful of
+ * those trips, picked to show a stop at a red and a stop for a person.
  *
- *   npm run hero:driver -- --seed 7 --generations 220
- *   npm run hero:driver -- --pool public/references/driving.json
+ * The shipped file came from this, which trains for about a quarter of an
+ * hour on one core and then names the trips and the opening moment picked
+ * by eye from the trips the pick found:
+ *
+ *   npm run hero:driver -- --seed 7 --generations 220 --tries 300 \
+ *     --trips 447494230,983170199,2215336046,2008511112,1918831909,2399240596 --opening 300
  *
  * Options, all optional: --seed 7, --generations 220, --population 100,
  * --save file (writes the trained champions, to pick again later),
  * --pool file[,file] (picks from saved brains instead of training: a
- * reference file, a reference generator dump or a --save file), --level 4,
+ * reference file, a reference generator dump or a --save file), --level 5,
  * --city midtown, --tries 80 (trip seeds per finalist), --loop 5 (trips in
- * the loop), --budget 240 (seconds of driving in the loop), --order 2,0,1
- * (puts the picked trips in this order) and --out public/hero/driver.json.
- * Run it from the repo root. Training and picking are deterministic.
+ * the loop), --budget 240 (seconds of driving in the loop), --trips
+ * seed,seed (plays these trips in this order instead, each checked fit
+ * for the hero), --opening 75 (ticks into the first trip the page opens
+ * on) and --out public/hero/driver.json. Run it from the repo root.
+ * Training and picking are deterministic.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -85,18 +91,25 @@ function pickDriver(candidates: DriverCandidate[], city: string, level: number, 
   return best;
 }
 
+/** The trips named on the command line, in that order, each checked fit for the hero with the picked brain. */
+function namedTrips(best: DriverCandidate, city: string, level: number, seeds: number[]): TripPick[] {
+  const fit = showableTrips(best, city, level, seeds);
+  const missing = seeds.filter((s) => !fit.some((t) => t.seed === s));
+  if (missing.length > 0) throw new Error(`These trips are not fit for the hero with ${best.label}: ${missing.join(', ')}`);
+  return seeds.map((s) => fit.find((t) => t.seed === s) as TripPick);
+}
+
 function main(): void {
   const args = parseArgs();
   const city = args.city ?? 'midtown';
-  const level = numberArg(args, 'level', 4);
+  const level = numberArg(args, 'level', 5);
   const out = args.out ?? 'public/hero/driver.json';
   const seed = numberArg(args, 'seed', 7);
   const candidates = args.pool ? loadDriverPool(args.pool.split(',')) : train(seed, numberArg(args, 'generations', 220), numberArg(args, 'population', 100));
   if (args.save) saveDriverPool(args.save, candidates);
   console.log(`${candidates.length} candidates`);
   const { best, trips } = pickDriver(candidates, city, level, numberArg(args, 'tries', 80));
-  let loop = chooseLoop(trips, numberArg(args, 'loop', 5), numberArg(args, 'budget', 240));
-  if (args.order) loop = args.order.split(',').map((k) => loop[Number(k)]).filter(Boolean);
+  const loop = args.trips ? namedTrips(best, city, level, args.trips.split(',').map(Number)) : chooseLoop(trips, numberArg(args, 'loop', 5), numberArg(args, 'budget', 240));
   for (const t of loop) {
     const r = t.report;
     console.log(`trip ${t.seed}: ${r.seconds.toFixed(0)} s, ${r.turns} turns, ${r.redStops} red stops (longest ${r.redWait.toFixed(1)} s), longest wait for a person ${r.personWait.toFixed(1)} s`);
@@ -110,6 +123,7 @@ function main(): void {
     inputs: best.inputs,
     brainSeed: best.brainSeed,
     trips: loop.map((t) => t.seed),
+    ...(args.opening ? { opening: Number(args.opening) } : {}),
     source: best.label,
     genome: bytesToBase64(encodeGenome(best.genome)),
   };

@@ -11,10 +11,12 @@
  *
  *   npm run hero:navigator -- --seed 3 --generations 60
  *
+ * That is how the shipped file was made, in a few minutes on one core.
+ *
  * Options, all optional: --seed 3, --generations 60, --population 100,
  * --save file, --pool file[,file] (picks from saved brains instead of
  * training: a reference file or a --save file), --rooms 16 (generated
- * rooms to try), --loop 5 (courses in the loop) and --out
+ * rooms to try), --loop 6 (courses in the loop) and --out
  * public/hero/navigator.json. Run it from the repo root.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -75,7 +77,7 @@ function main(): void {
   const candidates = args.pool ? loadRunnerPool(args.pool.split(',')) : train(seed, numberArg(args, 'generations', 60), numberArg(args, 'population', 100));
   if (args.save) saveRunnerPool(args.save, candidates);
   const { best, picks } = pickRunner(candidates, numberArg(args, 'rooms', 16));
-  const loop = chooseCourses(picks, numberArg(args, 'loop', 5));
+  const loop = chooseCourses(picks, numberArg(args, 'loop', 6));
   for (const p of loop) console.log(`${p.spec.name} (level ${p.spec.level}): ${p.report.seconds.toFixed(1)} s from spot ${p.slot}`);
   const file: HeroNavigatorFile = {
     version: HERO_NAVIGATOR_VERSION,
