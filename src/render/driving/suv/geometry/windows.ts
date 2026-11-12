@@ -10,10 +10,10 @@ import type { Detail, PartBin } from './parts';
  * under the rear quarter window. Inside it the pillars are gloss black,
  * so the glass reads as one band and the painted roof seems to float.
  */
-export const DLO = { front: CABIN.front, kick: -1.6, drop: -1.48, point: -2.0 };
+export const DLO = { front: CABIN.front, kick: -1.7, drop: -1.56, point: -2.0 };
 /** Pillar and divider spans along the car, m. */
 const B_PILLAR = { from: -0.5, to: -0.4 };
-const DIVIDER = { from: -1.5, to: -1.46 };
+const DIVIDER = { from: -1.58, to: -1.54 };
 /** The bright surround's width and the glass's margin inside the graphic, m. */
 const SURROUND = 0.012;
 const MARGIN = 0.017;
@@ -28,7 +28,7 @@ function sideHeight(x: number): number {
 
 /** Height of the graphic's lower edge above the belt, m: level along the doors, kicking up under the quarter window. */
 function lowM(x: number): number {
-  return 0.05 * smooth((DLO.kick - x) / (DLO.kick - DLO.point)) ** 1.2;
+  return 0.058 * smooth((DLO.kick - x) / (DLO.kick - DLO.point)) ** 1.2;
 }
 
 /** The graphic's edges at x as shares of the side band: its lower edge and its upper edge, which meet at the rear point. */

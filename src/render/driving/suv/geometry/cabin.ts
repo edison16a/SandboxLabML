@@ -1,5 +1,6 @@
 import { profile, smooth, toCenter } from './curve';
 import { TAIL } from './ends';
+import { COWL } from './lines';
 import type { Vec3 } from './grid';
 import type { Detail } from './parts';
 import { beltAt, deckY, sectionAt } from './profile';
@@ -7,22 +8,27 @@ import { along, deg, key, resample, span, type Pt } from './section';
 import { warp } from './warp';
 
 /**
- * The cabin: a glasshouse on the belt line under a coupe roof that peaks
- * over the front seats and falls in one long arc to the lip over the
- * tailgate. It starts on the hood at the cowl and ends on the tail's
- * deck, matching the body exactly at both ends, so no seam or cap is needed.
+ * The cabin: a glasshouse on the belt line under a coupe roof that stays
+ * high over both rows of seats and falls late, in one taut arc, to the
+ * lip over the tailgate. It starts on the hood at the cowl and ends on
+ * the tail's deck, matching the body exactly at both ends, so no seam or
+ * cap is needed.
  */
-export const CABIN = { rear: TAIL, glassRear: -2.16, roofRear: -1.06, header: -0.05, front: 0.9 };
+export const CABIN = { rear: TAIL, glassRear: -2.13, roofRear: -1.24, header: -0.1, front: COWL.x };
 
 const [FZ, FY] = beltAt(CABIN.front);
 const [RZ, RY] = beltAt(CABIN.rear);
 /** The roof edge: the top of the side glass, running down the A pillar at the front and the sail at the back. */
-const edgeZ = profile([[CABIN.rear, RZ], [-2.0, 0.678], [-1.6, 0.664], [-1.0, 0.657], [-0.45, 0.66], [-0.05, 0.673], [0.3, 0.714], [0.6, 0.765], [CABIN.front, FZ]]);
-const edgeY = profile([[CABIN.rear, RY], [-2.0, 1.292], [-1.7, 1.372], [-1.4, 1.443], [-1.0, 1.522], [-0.45, 1.578], [-0.05, 1.556], [0.3, 1.392], [0.6, 1.238], [CABIN.front, FY]]);
-/** The roofline at the centerline: windshield, crown, then the long fall to the lip. */
-const centerY = profile([[CABIN.rear, deckY(CABIN.rear)], [-2.0, 1.336], [-1.7, 1.425], [-1.4, 1.5], [-1.0, 1.58], [-0.6, 1.634], [-0.35, 1.648], [-0.15, 1.632], [-0.05, 1.6], [0.2, 1.47], [0.425, 1.345], [0.7, 1.186], [CABIN.front, deckY(CABIN.front)]]);
+const edgeZ = profile([[CABIN.rear, RZ], [-2.0, 0.678], [-1.6, 0.664], [-1.0, 0.657], [-0.45, 0.66], [-0.1, 0.672], [0.3, 0.717], [0.6, 0.768], [CABIN.front, FZ]]);
+const edgeY = profile([[CABIN.rear, RY], [-2.0, 1.43], [-1.85, 1.488], [-1.6, 1.545], [-1.3, 1.596], [-1.0, 1.632], [-0.45, 1.647], [-0.1, 1.628], [0.3, 1.445], [0.6, 1.29], [CABIN.front, FY]]);
+/**
+ * The roofline at the centerline: a fast windshield with a slight bow,
+ * the header at 1.66, a near level crown at 1.68 over the front seats,
+ * still 1.66 over the rear seats, then a fall that tightens toward the lip.
+ */
+const centerY = profile([[CABIN.rear, deckY(CABIN.rear)], [-2.13, 1.41], [-2.0, 1.468], [-1.85, 1.518], [-1.6, 1.576], [-1.3, 1.625], [-1.0, 1.662], [-0.7, 1.677], [-0.45, 1.68], [-0.25, 1.676], [-0.1, 1.658], [0.0, 1.618], [0.2, 1.518], [0.45, 1.388], [0.7, 1.248], [CABIN.front, deckY(CABIN.front)]]);
 /** The narrow roll between the side glass and the roof, m. */
-const RAIL = { out: 0.03, down: 0.045 };
+const RAIL = { out: 0.025, down: 0.032 };
 /** How far in from the belt the glass leans by the time it reaches the roof: the tumblehome. */
 const TUMBLE = deg(19);
 
