@@ -56,7 +56,13 @@ function stableDate(path: string, next: DrivingReferences): DrivingReferences {
  * unless the model the file already holds drives better (see
  * keepBetterModels).
  *
- * Options: --seeds 6, --first-seed 1, --generations 200, --every 10,
+ * Runs climb slowly under the judged curriculum: timed runs reached
+ * traffic between generations 180 and 250 and rush hour at 280, or fell
+ * back from traffic to pedestrians and stayed there. 500 generations let
+ * a run that climbs spend a long stretch at the busy levels, and the 18
+ * runs train in about two hours on three worker threads.
+ *
+ * Options: --seeds 6, --first-seed 1, --generations 500, --every 10,
  * --population 100, --tiers beginner,intermediate,advanced, --out file,
  * --dump file (every run's checkpoints and screened champions as JSON),
  * --from-dump a.json,b.json (build the file from such dumps without
@@ -67,7 +73,7 @@ function stableDate(path: string, next: DrivingReferences): DrivingReferences {
 export async function generateDriving(args: Args, pool: JobPool): Promise<void> {
   const seeds = numberArg(args, 'seeds', 6);
   const firstSeed = numberArg(args, 'first-seed', 1);
-  const generations = numberArg(args, 'generations', 200);
+  const generations = numberArg(args, 'generations', 500);
   const every = numberArg(args, 'every', 10);
   const population = numberArg(args, 'population', 100);
   const out = args.out ?? 'public/references/driving.json';
