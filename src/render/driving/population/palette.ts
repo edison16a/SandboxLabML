@@ -29,6 +29,15 @@ export function ghostColor(t: number, out = new THREE.Color()): THREE.Color {
   return out.copy(EARLY).lerp(RECENT, t);
 }
 
+const GLASS = new THREE.Color('#aab9cb');
+/** Share of clear glass mixed into a ghost's hue: enough to read as tinted glass, not colored plastic. */
+const GLASS_MIX = 0.55;
+
+/** Mutes a ghost color toward a cool clear glass, in place. */
+export function glassTint(c: THREE.Color): THREE.Color {
+  return c.lerp(GLASS, GLASS_MIX);
+}
+
 /** A crashed SUV turns graphite so the ones still driving stand out. */
 export const CRASHED_COLOR = new THREE.Color('#3b3f47');
 /** An SUV that arrived glows a calm green. */
