@@ -8,6 +8,8 @@ interface Props {
   rect: Rect;
   /** The scene has compiled: the pane fades in over its half of the poster. */
   shown: boolean;
+  /** The scene draws and simulates. Only for the browser tests, as a data attribute. */
+  running: boolean;
   /** The layer the cut between episodes dips to, set by the scene every frame. */
   dip: RefObject<HTMLDivElement | null>;
   scene: 'drive' | 'run';
@@ -21,10 +23,11 @@ interface Props {
  * clear and fades in once its scene is ready, so the poster under it
  * gives way without a jump.
  */
-export function HeroPane({ rect, shown, dip, scene, children }: Props) {
+export function HeroPane({ rect, shown, running, dip, scene, children }: Props) {
   return (
     <div
       data-hero-pane={scene}
+      data-hero-running={running}
       className={cn('absolute overflow-hidden transition-opacity duration-[1200ms] ease-out', shown ? 'opacity-100' : 'opacity-0')}
       style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
     >

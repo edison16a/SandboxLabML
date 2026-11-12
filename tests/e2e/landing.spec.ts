@@ -61,9 +61,9 @@ const runnerClock = (page: Page) => page.locator('[data-hero-card="run"] [data-h
 const draws = (page: Page) => page.evaluate(() => window.__glDraws ?? 0);
 
 /**
- * Waits until nothing has drawn for a few seconds. A frame already under
- * way when the hero left the screen can still land, and a software
- * renderer on a busy machine may take seconds over one.
+ * Waits until nothing has drawn for eight seconds. Once the panes say they
+ * are paused, one frame already under way can still land, and a software
+ * renderer on a busy machine can spend seconds on it.
  */
 async function settleDrawing(page: Page): Promise<number> {
   let last = await draws(page);
@@ -75,7 +75,7 @@ async function settleDrawing(page: Page): Promise<number> {
         last = now;
         return still;
       },
-      { timeout: 90_000, intervals: [4000] },
+      { timeout: 120_000, intervals: [8000] },
     )
     .toBe(true);
   return last;
@@ -131,6 +131,7 @@ test.describe('Landing hero', () => {
 
     // Scrolled away, the scenes draw nothing and their simulations stand still; back on screen, they carry on.
     await page.locator('footer').scrollIntoViewIfNeeded();
+    await expect(page.locator('[data-hero-pane][data-hero-running="true"]')).toHaveCount(0);
     const drawn = await settleDrawing(page);
     const held = await runnerClock(page);
     await page.waitForTimeout(8000);

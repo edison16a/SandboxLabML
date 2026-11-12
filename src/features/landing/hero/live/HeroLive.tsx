@@ -74,14 +74,14 @@ export default function HeroLive({ active, hero, panel }: HeroLiveProps) {
         className="pointer-events-none absolute inset-0"
       >
         {layout && feeds.drive && (
-          <HeroPane rect={layout.drive.rect} shown={shown.drive} dip={driveDip} scene="drive">
+          <HeroPane rect={layout.drive.rect} shown={shown.drive} running={active} dip={driveDip} scene="drive">
             <SceneBoundary>
               <HeroDriveScene feed={feeds.drive} tier={tier} pane={layout.drive} running={active} onWarm={driveShown} dip={driveDip} />
             </SceneBoundary>
           </HeroPane>
         )}
         {layout && feeds.run && runGo && (
-          <HeroPane rect={layout.run.rect} shown={shown.run} dip={runDip} scene="run">
+          <HeroPane rect={layout.run.rect} shown={shown.run} running={active} dip={runDip} scene="run">
             <SceneBoundary>
               <HeroRunScene feed={feeds.run} tier={tier} pane={layout.run} running={active} onWarm={runShown} dip={runDip} />
             </SceneBoundary>
