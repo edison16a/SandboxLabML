@@ -1,0 +1,534 @@
+{
+  "version": 1,
+  "engineVersion": 1,
+  "blueprint": "navigation-starter",
+  "inputs": {
+    "rays": {
+      "count": 8,
+      "fov": 6.283185307179586,
+      "range": 8,
+      "hitTypes": false
+    },
+    "goal": true,
+    "pathHint": true,
+    "velocity": false,
+    "time": false,
+    "noise": 0
+  },
+  "courses": [
+    {
+      "spec": {
+        "id": "gauntlet",
+        "name": "Gauntlet",
+        "level": 6,
+        "length": 50,
+        "width": 14,
+        "obstacles": [
+          {
+            "kind": "block",
+            "x": -14,
+            "z": -2.5,
+            "hx": 0.5,
+            "hz": 0.5,
+            "height": 1
+          },
+          {
+            "kind": "block",
+            "x": -12.5,
+            "z": 2.5,
+            "hx": 0.65,
+            "hz": 0.65,
+            "height": 1.2
+          },
+          {
+            "kind": "block",
+            "x": -11,
+            "z": 0,
+            "hx": 0.5,
+            "hz": 1.1,
+            "height": 1
+          },
+          {
+            "kind": "spikes",
+            "x": -6,
+            "z": -3.9,
+            "hx": 0.8,
+            "hz": 2.9
+          },
+          {
+            "kind": "spikes",
+            "x": -6,
+            "z": 3.9,
+            "hx": 0.8,
+            "hz": 2.9
+          },
+          {
+            "kind": "wall",
+            "x": 1,
+            "z": -2,
+            "hx": 0.15,
+            "hz": 5
+          },
+          {
+            "kind": "wall",
+            "x": 1,
+            "z": 6,
+            "hx": 0.15,
+            "hz": 1
+          },
+          {
+            "kind": "wall",
+            "x": 8,
+            "z": -5.5,
+            "hx": 0.15,
+            "hz": 1.5
+          },
+          {
+            "kind": "wall",
+            "x": 8,
+            "z": 4,
+            "hx": 0.15,
+            "hz": 3
+          },
+          {
+            "kind": "mover",
+            "hx": 0.6,
+            "hz": 0.8,
+            "height": 1,
+            "ax": 8,
+            "az": -3.12,
+            "bx": 8,
+            "bz": 0.12,
+            "period": 2.6,
+            "phase": 0.3
+          },
+          {
+            "kind": "mover",
+            "hx": 0.6,
+            "hz": 0.9,
+            "height": 1,
+            "ax": 15,
+            "az": -2.5,
+            "bx": 15,
+            "bz": 2.5,
+            "period": 4,
+            "phase": 0.7
+          },
+          {
+            "kind": "spikes",
+            "x": 18.5,
+            "z": -5,
+            "hx": 0.6,
+            "hz": 1.2
+          },
+          {
+            "kind": "spikes",
+            "x": 18.5,
+            "z": 5,
+            "hx": 0.6,
+            "hz": 1.2
+          }
+        ]
+      },
+      "slot": 0,
+      "seed": 1230054737
+    },
+    {
+      "spec": {
+        "id": "level-5-4230467454",
+        "name": "Movers",
+        "level": 5,
+        "length": 42,
+        "width": 14,
+        "obstacles": [
+          {
+            "kind": "wall",
+            "x": -7.55,
+            "z": -4.3,
+            "hx": 0.15,
+            "hz": 2.7
+          },
+          {
+            "kind": "wall",
+            "x": -7.55,
+            "z": 5.35,
+            "hx": 0.15,
+            "hz": 1.65
+          },
+          {
+            "kind": "mover",
+            "hx": 0.6,
+            "hz": 0.9,
+            "height": 1,
+            "ax": -7.55,
+            "az": 2.7,
+            "bx": -7.55,
+            "bz": -0.6,
+            "period": 3.05,
+            "phase": 0.6
+          },
+          {
+            "kind": "mover",
+            "hx": 0.6,
+            "hz": 0.85,
+            "height": 1,
+            "ax": 2.25,
+            "az": -2.7,
+            "bx": 2.25,
+            "bz": 3.05,
+            "period": 4.8,
+            "phase": 0.05
+          },
+          {
+            "kind": "wall",
+            "x": 11.3,
+            "z": -5.55,
+            "hx": 0.15,
+            "hz": 1.45
+          },
+          {
+            "kind": "wall",
+            "x": 11.3,
+            "z": 3.7,
+            "hx": 0.15,
+            "hz": 3.3
+          },
+          {
+            "kind": "mover",
+            "hx": 0.6,
+            "hz": 0.8,
+            "height": 1,
+            "ax": 11.3,
+            "az": -0.5,
+            "bx": 11.3,
+            "bz": -3.2,
+            "period": 2.5,
+            "phase": 0.35
+          },
+          {
+            "kind": "block",
+            "x": -11.3,
+            "z": -1.7,
+            "hx": 0.9,
+            "hz": 0.9,
+            "height": 1.2
+          },
+          {
+            "kind": "block",
+            "x": 6,
+            "z": -3.1,
+            "hx": 0.5,
+            "hz": 0.5,
+            "height": 1
+          },
+          {
+            "kind": "block",
+            "x": 14.75,
+            "z": -1.1,
+            "hx": 0.65,
+            "hz": 0.65,
+            "height": 1.2
+          }
+        ]
+      },
+      "slot": 0,
+      "seed": 1230054737
+    },
+    {
+      "spec": {
+        "id": "clockwork",
+        "name": "Clockwork",
+        "level": 5,
+        "length": 46,
+        "width": 14,
+        "obstacles": [
+          {
+            "kind": "block",
+            "x": -11,
+            "z": 3,
+            "hx": 0.65,
+            "hz": 0.65,
+            "height": 1.2
+          },
+          {
+            "kind": "mover",
+            "hx": 0.6,
+            "hz": 0.9,
+            "height": 1,
+            "ax": -5,
+            "az": -4.2,
+            "bx": -5,
+            "bz": 0.2,
+            "period": 3.4,
+            "phase": 0.1
+          },
+          {
+            "kind": "mover",
+            "hx": 0.6,
+            "hz": 0.8,
+            "height": 1,
+            "ax": -5,
+            "az": 2.6,
+            "bx": -5,
+            "bz": 5.9,
+            "period": 3,
+            "phase": 0.6
+          },
+          {
+            "kind": "wall",
+            "x": 2,
+            "z": -4.25,
+            "hx": 0.15,
+            "hz": 2.75
+          },
+          {
+            "kind": "wall",
+            "x": 2,
+            "z": 5.25,
+            "hx": 0.15,
+            "hz": 1.75
+          },
+          {
+            "kind": "mover",
+            "hx": 0.6,
+            "hz": 0.8,
+            "height": 1,
+            "ax": 2,
+            "az": -0.62,
+            "bx": 2,
+            "bz": 2.62,
+            "period": 2.6,
+            "phase": 0.4
+          },
+          {
+            "kind": "spikes",
+            "x": 7.5,
+            "z": 0,
+            "hx": 0.6,
+            "hz": 2
+          },
+          {
+            "kind": "mover",
+            "hx": 0.6,
+            "hz": 0.9,
+            "height": 1,
+            "ax": 13,
+            "az": -3,
+            "bx": 13,
+            "bz": 3,
+            "period": 4.4,
+            "phase": 0.85
+          }
+        ]
+      },
+      "slot": 2,
+      "seed": 1371816078
+    },
+    {
+      "spec": {
+        "id": "piston-row",
+        "name": "Piston row",
+        "level": 5,
+        "length": 42,
+        "width": 14,
+        "obstacles": [
+          {
+            "kind": "wall",
+            "x": -7,
+            "z": -5,
+            "hx": 0.15,
+            "hz": 2
+          },
+          {
+            "kind": "wall",
+            "x": -7,
+            "z": 4.5,
+            "hx": 0.15,
+            "hz": 2.5
+          },
+          {
+            "kind": "mover",
+            "hx": 0.6,
+            "hz": 0.8,
+            "height": 1,
+            "ax": -7,
+            "az": -2.12,
+            "bx": -7,
+            "bz": 1.12,
+            "period": 2.8,
+            "phase": 0
+          },
+          {
+            "kind": "mover",
+            "hx": 0.6,
+            "hz": 0.9,
+            "height": 1,
+            "ax": 1,
+            "az": -2.6,
+            "bx": 1,
+            "bz": 2.6,
+            "period": 4.2,
+            "phase": 0.5
+          },
+          {
+            "kind": "wall",
+            "x": 9,
+            "z": -3.5,
+            "hx": 0.15,
+            "hz": 3.5
+          },
+          {
+            "kind": "wall",
+            "x": 9,
+            "z": 6,
+            "hx": 0.15,
+            "hz": 1
+          },
+          {
+            "kind": "mover",
+            "hx": 0.6,
+            "hz": 0.8,
+            "height": 1,
+            "ax": 9,
+            "az": 0.88,
+            "bx": 9,
+            "bz": 4.12,
+            "period": 2.8,
+            "phase": 0.25
+          }
+        ]
+      },
+      "slot": 0,
+      "seed": 1230054737
+    },
+    {
+      "spec": {
+        "id": "switchback",
+        "name": "Switchback",
+        "level": 4,
+        "length": 42,
+        "width": 14,
+        "obstacles": [
+          {
+            "kind": "wall",
+            "x": -8,
+            "z": 1,
+            "hx": 0.15,
+            "hz": 6
+          },
+          {
+            "kind": "wall",
+            "x": -1,
+            "z": -1,
+            "hx": 0.15,
+            "hz": 6
+          },
+          {
+            "kind": "spikes",
+            "x": -4.5,
+            "z": 0,
+            "hx": 0.7,
+            "hz": 1.4
+          },
+          {
+            "kind": "wall",
+            "x": 6,
+            "z": 1,
+            "hx": 0.15,
+            "hz": 6
+          },
+          {
+            "kind": "spikes",
+            "x": 2.5,
+            "z": -5.4,
+            "hx": 0.6,
+            "hz": 1.2
+          },
+          {
+            "kind": "block",
+            "x": 11,
+            "z": 0,
+            "hx": 0.9,
+            "hz": 0.9,
+            "height": 1.2
+          },
+          {
+            "kind": "spikes",
+            "x": 14,
+            "z": 4.5,
+            "hx": 0.7,
+            "hz": 2.1
+          }
+        ]
+      },
+      "slot": 0,
+      "seed": 1230054737
+    },
+    {
+      "spec": {
+        "id": "spike-alley",
+        "name": "Spike alley",
+        "level": 3,
+        "length": 38,
+        "width": 14,
+        "obstacles": [
+          {
+            "kind": "spikes",
+            "x": -7,
+            "z": -3.7,
+            "hx": 0.8,
+            "hz": 3.1
+          },
+          {
+            "kind": "spikes",
+            "x": -7,
+            "z": 4.1,
+            "hx": 0.8,
+            "hz": 2.7
+          },
+          {
+            "kind": "spikes",
+            "x": 1,
+            "z": -2.4,
+            "hx": 0.9,
+            "hz": 4.4
+          },
+          {
+            "kind": "spikes",
+            "x": 1,
+            "z": 5.5,
+            "hx": 0.9,
+            "hz": 1.3
+          },
+          {
+            "kind": "spikes",
+            "x": 9,
+            "z": 1.1,
+            "hx": 0.8,
+            "hz": 5.7
+          },
+          {
+            "kind": "block",
+            "x": -3,
+            "z": 3,
+            "hx": 0.65,
+            "hz": 0.65,
+            "height": 1.2
+          },
+          {
+            "kind": "block",
+            "x": 5,
+            "z": -3.5,
+            "hx": 0.5,
+            "hz": 0.5,
+            "height": 1
+          }
+        ]
+      },
+      "slot": 0,
+      "seed": 1230054737
+    }
+  ],
+  "source": "Default run, seed 3, generation 58",
+  "genome": "U0JHMQEAAADAFQAAEwAiAAsAAgA6AAAAULLbQQAAAAAAAAAAAQAAAAAAAAACAAAAAAAAAAMAAAAAAAAABAAAAAAAAAAFAAAAAAAAAAYAAAAAAAAABwAAAAAAAAAIAAAAAAAAAAkAAAAAAAAACgAAAAAAAAALAAAAAQAAAAwAAAACAAAADQAAAAIAAAAVAAAAAwAAAB8AAAADAAAAEgAAAAMAAAAPAAAAAwAAACUAAAADAAAAAAAAAAAADABrF7Q/AQAAAAEAAAABAAwA3eKCPwEAAAACAAAAAgAMAEHjjL4BAAAAAwAAAAMADACY/ec/AQAAAAQAAAAEAAwAHmo0QAEAAAAFAAAABQAMAA5RAUABAAAABgAAAAYADADvWpk/AQAAAAcAAAAHAAwA8mdUQAEAAAAIAAAACAAMAKhnHz4BAAAACQAAAAkADADkKLC/AQAAAAoAAAAKAAwAhmWKPwEAAAALAAAACwAMAAWKuD4BAAAADAAAAAAADQAeAQrAAQAAAA0AAAABAA0Anx5KPwAAAAAOAAAAAgANAI+24z8BAAAADwAAAAMADQDUJAfAAQAAABAAAAAEAA0ANl1ivgEAAAARAAAABQANADnvyL8BAAAAEgAAAAYADQDrEo++AQAAABMAAAAHAA0A1WCDPwEAAAAUAAAACAANAM+Uoz8AAAAAFQAAAAkADQALtig/AQAAABYAAAAKAA0A+HrDQAEAAAAXAAAACwANAG5Ihj8BAAAAGgAAAAgAEQAAKpS/AQAAABsAAAARAAwAhDwOvwEAAAAgAAAAAAAQAGcvML8BAAAAIQAAABAADQBJ/gjAAQAAACYAAAAKAA4AOIOcQAEAAAAnAAAADgANAPj92UABAAAAQgAAAAgADwDpeP++AQAAAEMAAAAPAA0A/z1+PwEAAABWAAAABQASABqt0L4BAAAAVwAAABIADQBAwBLAAQAAAA=="
+}
