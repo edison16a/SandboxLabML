@@ -16,17 +16,19 @@ const steps = (a: number, b: number, n: number) => Array.from({ length: n + 1 },
  * runs from `cTop` on the rail down to `rearTip` on the belt. The front
  * tip is found where the rail comes down to meet the belt, so the glass
  * always closes to a point under the A pillar.
+ * The C pillar is the region's own edge, so its corners are grid corners
+ * on every tier, however few cells the glass keeps.
  */
 export function sideGlass(s: CarShape, o: { cTop: number; rearTip: number; gap?: number; drop?: number }): Region {
   const gap = o.gap ?? 0.014;
   const drop = o.drop ?? 0.024;
-  const room = (x: number) => rail(s, x) - drop - (belt(s, x) + gap);
+  const low = (x: number) => belt(s, x) + gap;
+  const high = (x: number) => Math.max(low(x), rail(s, x) - drop);
   let front = o.cTop;
-  while (front < s.length / 2 - 0.5 && room(front + 0.01) > 0.012) front += 0.01;
-  const bottom: Pt[] = steps(front, o.rearTip, 12).map((x) => [x, belt(s, x) + gap]);
-  const top: Pt[] = steps(front, o.cTop, 10).map((x) => [x, Math.max(belt(s, x) + gap, rail(s, x) - drop)]);
-  top.push([o.rearTip, belt(s, o.rearTip) + gap]);
-  return { view: 'side', bottom, top };
+  while (front < s.length / 2 - 0.5 && high(front + 0.01) - low(front + 0.01) > 0.012) front += 0.01;
+  const bottom: Pt[] = steps(front, o.rearTip, 12).map((x) => [x, low(x)]);
+  const top: Pt[] = steps(front, o.cTop, 10).map((x) => [x, high(x)]);
+  return { view: 'side', bottom, top, right: [[o.rearTip, low(o.rearTip)], [o.cTop, high(o.cTop)]] };
 }
 
 /** A slim pillar standing across the side glass at x, leaning back by `lean` at the top. */
