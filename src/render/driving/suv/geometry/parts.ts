@@ -39,6 +39,14 @@ export const DETAIL: Record<'high' | 'medium' | 'low' | 'crowd' | 'crowdLow', De
   crowdLow: { stations: 14, archSteps: 6, bands: [1, 1, 1, 1, 1, 1, 1], cabin: [1, 2], wheel: 9, brakes: false, fine: false },
 };
 
+/**
+ * How a panel gap is drawn, m: a dark line 9 mm wide, standing just off
+ * the paint. A real gap is narrower, but its shadow reads about this wide,
+ * and at the orbit camera's distance a thinner line falls under a pixel
+ * and breaks into dots.
+ */
+export const SHUT = { width: 0.009, lift: 0.0015 };
+
 /** The far population's lightest build, which drops even the small trims a 100 car field cannot afford. */
 export const lightest = (detail: Detail) => detail.wheel < 12;
 

@@ -2,7 +2,7 @@ import type * as THREE from 'three';
 import { bodyStrip, onBody } from './body';
 import { FLARE_REACH, skinAt } from './flares';
 import { bothSides, gridGeometry, type Vec3 } from './grid';
-import type { PartBin } from './parts';
+import { SHUT, type PartBin } from './parts';
 import { ARCH, AXLES } from './profile';
 import { rockerY } from './lines';
 import { warp } from './warp';
@@ -15,9 +15,8 @@ import { warp } from './warp';
  * and the window graphic and the doors agree.
  */
 export const DOOR = { front: 0.95, pillar: -0.43, rear: -1.34 };
-/** Half a shut line's width and how far it stands off the paint, m. */
-const HALF = 0.0035;
-const LIFT = 0.0015;
+const HALF = SHUT.width / 2;
+const LIFT = SHUT.lift;
 /** Paint left between the rear door's edge and the rear flare's outer edge, m. */
 const CLEAR = 0.008;
 /** How long each leg of the rounded corner is, where the rear door's edge turns off the arch and up to the belt, m. */
