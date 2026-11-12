@@ -52,17 +52,16 @@ function hatchDecals(s: CarShape): Decal[] {
     { region: back, look: 'glass', cells: [3, 4] },
     { region: strip('rear', [[0, 1.385], [0.22, 1.385]], 0.018), look: 'tail', kind: 'float', lamp: LAMP.brake, cells: [2, 1], fine: true },
     // Head lamps: a little taller than the saloon's, their inner ends dipping toward the grille.
-    { region: strip('front', [[0.4, 0.655], [0.6, 0.66], [0.76, 0.672], [0.85, 0.69]], [[0.38, 0.72], [0.6, 0.735], [0.76, 0.735], [0.845, 0.72]]), look: 'head', cells: [6, 1] },
+    { region: strip('front', [[0.4, 0.655], [0.6, 0.66], [0.76, 0.672], [0.85, 0.69]], [[0.38, 0.72], [0.6, 0.735], [0.76, 0.735], [0.845, 0.72]]), look: 'head', cells: [5, 1] },
     { region: strip('front', [[0.44, 0.703], [0.6, 0.714], [0.76, 0.716], [0.83, 0.708]], 0.009), look: 'drl', kind: 'float', lamp: LAMP.head, cells: [7, 1] },
     { region: strip('front', [[0.46, 0.665], [0.66, 0.67]], 0.026), look: 'lens', kind: 'float', cells: [3, 1], fine: true },
     { region: strip('front', [[0.76, 0.678], [0.84, 0.694]], 0.018), look: 'amber', kind: 'float', lamp: LAMP.left, cells: [3, 1] },
     { region: strip('front', [[0, 0.665], [0.37, 0.668]], [[0, 0.71], [0.36, 0.716]]), look: 'grille', kind: 'float', cells: [8, 1] },
     { region: strip('front', [[0, 0.4], [0.42, 0.405], [0.56, 0.43]], [[0, 0.54], [0.44, 0.54], [0.53, 0.51]]), look: 'grille', kind: 'float', cells: [10, 1] },
     // Tail lamps stand up the rear corners and wrap round onto the sides.
-    { region: strip('rear', [[0.52, 0.86], [0.7, 0.858], [0.84, 0.87]], [[0.54, 1.02], [0.7, 1.03], [0.82, 1.02]]), look: 'tail', lamp: LAMP.tail, cells: [6, 2] },
+    { region: strip('rear', [[0.52, 0.86], [0.7, 0.858], [0.84, 0.87]], [[0.54, 1.02], [0.7, 1.03], [0.82, 1.02]]), look: 'tail', lamp: LAMP.tail, cells: [5, 1] },
     { region: strip('rear', [[0.56, 0.87], [0.72, 0.868]], 0.035), look: 'amber', kind: 'float', lamp: LAMP.left, cells: [3, 1] },
     { region: strip('rear', [[0, 0.62], [0.26, 0.62]], 0.11), look: 'plate', kind: 'float', cells: [4, 1] },
-    { region: shutLine(0.88, 0.29, 0.85, 0.94), look: 'seam', kind: 'float', cells: [5, 1], fine: true },
     { region: shutLine(-0.1, 0.29, -0.13, 0.97), look: 'seam', kind: 'float', cells: [5, 1], fine: true },
     { region: shutLine(-0.88, 0.29, -1.08, 0.99), look: 'seam', kind: 'float', cells: [5, 1], fine: true },
   ];

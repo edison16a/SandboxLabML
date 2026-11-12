@@ -12,14 +12,16 @@ export function doorMirror(s: CarShape, proj: Projector, fine: boolean): THREE.B
   const { x, y, out } = s.mirror;
   const at = proj.hit('side', x, y);
   const z = at ? at.p[2] : s.width / 2 - 0.08;
-  // A flattened ellipsoid with its back pressed nearly flat, where the glass would be: a D in plan.
-  const head = new THREE.SphereGeometry(1, fine ? 7 : 5, fine ? 5 : 3);
+  // A rounded box rather than a ball (each coordinate pushed out toward the cube), its back
+  // pressed nearly flat where the glass would be: a D in plan.
+  const head = new THREE.SphereGeometry(1, fine ? 7 : 5, fine ? 4 : 3);
   const p = head.attributes.position;
-  for (let i = 0; i < p.count; i++) if (p.getX(i) < 0) p.setX(i, p.getX(i) * 0.4);
+  const square = (c: number) => Math.sign(c) * Math.pow(Math.abs(c), 0.55);
+  for (let i = 0; i < p.count; i++) p.setXYZ(i, square(p.getX(i)) * (p.getX(i) < 0 ? 0.4 : 1), square(p.getY(i)), square(p.getZ(i)));
   head.computeVertexNormals();
   head.scale(0.075, 0.058, out * 0.5).translate(x - 0.02, y + 0.035, z + out * 0.6);
   const parts = [bakeLook(head, ['trim'])];
-  if (fine) parts.push(bakeLook(new THREE.SphereGeometry(1, 5, 3).scale(0.05, 0.02, out * 0.35).translate(x + 0.01, y - 0.005, z + out * 0.2), ['trim']));
+  if (fine) parts.push(bakeLook(new THREE.SphereGeometry(1, 4, 2).scale(0.05, 0.02, out * 0.35).translate(x + 0.01, y - 0.005, z + out * 0.2), ['trim']));
   const g = merge(parts);
   parts.forEach((q) => q.dispose());
   return g;

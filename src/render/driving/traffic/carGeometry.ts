@@ -19,13 +19,12 @@ const PANEL_LOOKS: Look[] = ['plastic', 'paint', 'paint'];
  * to clear the depth buffer's steps at street distances, too little to see.
  */
 const FLOAT_LIFT = 0.004;
-const RING_LIFT = 0.004;
+const RING_LIFT = 0.006;
 /**
- * A frame is thin, so it costs two triangles a point; drawing its outline
- * three times finer than the glass keeps its chords from dipping under
- * the paint where the body curves, as it does over a windshield header.
+ * A frame follows its window's own outline point for point, so the two
+ * meet exactly; the frame adds points of its own only at shell creases.
  */
-const RING_DENSITY = 3;
+const RING_DENSITY = 1;
 
 /** The right half's copy of the left: its indicators are the right indicators. */
 function mirrorHalf(g: THREE.BufferGeometry): THREE.BufferGeometry {
@@ -68,11 +67,11 @@ export function buildTrafficBody(s: CarShape, d: TrafficDetail): { geometry: THR
     }
     const { loop, misses: lost } = outlineLoop(proj, decal.region, nu, nv, decal.grow);
     misses += lost;
-    imprint.stamp(loop, decal.region.view, decal.look, lamp);
+    imprint.stamp(loop, decal.region.view, decal.look, lamp, proj);
   }
   const half = merge([imprint.geometry(), ...laid]);
   laid.forEach((g) => g.dispose());
-  const parts = [half, mirrorHalf(half), bothSides(bakeLook(wheelLiners(s, d.arch), ['well'])), bothSides(doorMirror(s, proj, d.fine))];
+  const parts = [half, mirrorHalf(half), bothSides(bakeLook(wheelLiners(s, Math.max(3, d.arch - 2)), ['well'])), bothSides(doorMirror(s, proj, d.fine))];
   if (s.roofSign) parts.push(roofSign(s, proj));
   shell.panels.forEach((g) => g.dispose());
   shell.underbody.dispose();
