@@ -90,7 +90,21 @@ export function buildTrafficBody(s: CarShape, d: TrafficDetail): { geometry: THR
   return { geometry, misses };
 }
 
-/** The body geometry alone, for the instanced meshes. */
+/**
+ * Built bodies by type and detail. Building all four takes a few hundred
+ * milliseconds on High, so a scene that mounts again, or a return to a
+ * tier, reuses them instead of hitching. These copies never reach the GPU.
+ */
+const built = new WeakMap<CarShape, Map<TrafficDetail, THREE.BufferGeometry>>();
+
+/** The body geometry for the instanced meshes: a fresh copy the caller owns and disposes, cut from a cached build. */
 export function carBodyGeometry(s: CarShape, d: TrafficDetail): THREE.BufferGeometry {
-  return buildTrafficBody(s, d).geometry;
+  let byDetail = built.get(s);
+  if (!byDetail) built.set(s, (byDetail = new Map()));
+  let g = byDetail.get(d);
+  if (!g) {
+    g = buildTrafficBody(s, d).geometry;
+    byDetail.set(d, g);
+  }
+  return g.clone();
 }
