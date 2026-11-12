@@ -47,9 +47,11 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
   const high = d === 'high';
   const textures: THREE.Texture[] = [];
   const keep = <T extends THREE.Texture>(t: T) => (textures.push(t), t);
-  // A satin base with little metal keeps the color deep on the hood and roof at any angle; the sharp clear coat
-  // on top carries the reflections, so the paint reads glossy without a milky sheen. The flake is only a hint.
-  const paint = new THREE.MeshPhysicalMaterial({ color: PARKED_PAINT, metalness: 0.12, roughness: 0.34, clearcoat: 0.85, clearcoatRoughness: 0.16, specularIntensity: 0.6 });
+  // A satin base with little metal and a low sheen keeps the color deep on the hood and roof at any angle. The
+  // clear coat on top is near mirror smooth, so buildings and the street's edges reflect crisp in it and the
+  // shoulder crease draws a sharp line; the street sky term keeps it from mirroring a white horizon. The flake
+  // is only a hint.
+  const paint = new THREE.MeshPhysicalMaterial({ color: PARKED_PAINT, metalness: 0.12, roughness: 0.36, clearcoat: 1, clearcoatRoughness: 0.07, specularIntensity: 0.32 });
   if (d !== 'low') {
     paint.normalMap = keep(repeat(flakeNormalMap(high ? 512 : 256), high ? 14 : 8));
     paint.normalScale.set(0.08, 0.08);
