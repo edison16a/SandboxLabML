@@ -19,7 +19,7 @@ const LOOKS: Record<Look, { color: [number, number, number]; rough: number; meta
   plastic: { color: [0.03, 0.031, 0.034], rough: 0.6, metal: 0, glow: 0, tint: 0 },
   well: { color: [0.008, 0.008, 0.009], rough: 0.95, metal: 0, glow: 0, tint: 0 },
   grille: { color: [0.014, 0.014, 0.016], rough: 0.45, metal: 0.2, glow: 0, tint: 0 },
-  plate: { color: [0.72, 0.72, 0.7], rough: 0.5, metal: 0, glow: 0, tint: 0 },
+  plate: { color: [0.62, 0.63, 0.61], rough: 0.5, metal: 0, glow: 0, tint: 0 },
   head: { color: [0.05, 0.055, 0.06], rough: 0.08, metal: 0.4, glow: 0, tint: 0 },
   lens: { color: [0.75, 0.78, 0.8], rough: 0.12, metal: 0.7, glow: 0.12, tint: 0 },
   drl: { color: [1, 0.98, 0.94], rough: 0.3, metal: 0, glow: 1.6, tint: 0 },
