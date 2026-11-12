@@ -130,7 +130,7 @@ export const DRIVING_TOUR: Tour = {
       target: '[data-tour="camera"]',
       prefer: ['bottom', 'left'],
       title: 'Pick a camera',
-      body: 'Chase follows the best SUV. Corner waits at the next junction, top down shows the whole trip. C cycles them.',
+      body: 'Chase follows the best SUV. Corner waits at the next junction, and top down follows from straight above. C cycles them.',
     },
     {
       id: 'network',
