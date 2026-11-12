@@ -1,54 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { NAV_DIED, NAV_FINISHED, NAV_RUNNING } from '@/engine/navigation/agent';
 import { NAV_LEVELS } from '@/engine/navigation/course/levels';
 import { NAV_METRIC } from '@/engine/navigation/pipeline/metricSpecs';
-import { NAVIGATION_SNAPSHOT, SNAP_PROGRESS, SNAP_STATUS } from '@/engine/navigation/snapshot';
 import { HudChip } from '@/features/lab/components/HudChip';
 import { useNavigationLab } from '../state/labStore';
 import type { LabFeeds } from '../viewport/labFeeds';
-
-const STRIDE = NAVIGATION_SNAPSHOT.stride;
-
-interface Live {
-  watching: boolean;
-  level: number;
-  running: number;
-  finished: number;
-  died: number;
-  total: number;
-  best: number;
-}
-
-const NONE: Live = { watching: false, level: 0, running: 0, finished: 0, died: 0, total: 0, best: 0 };
-
-/** Counts the runners on screen four times a second, so the chips never redraw per frame. */
-function useLive(feeds: LabFeeds | null): Live {
-  const [live, setLive] = useState<Live>(NONE);
-  useEffect(() => {
-    if (!feeds) return;
-    const id = setInterval(() => {
-      const s = useNavigationLab.getState();
-      const level = feeds.level(s);
-      // The live population in training; in the Sandbox its own runners, standing or replayed.
-      const frame = feeds.counted(s);
-      if (!frame) return setLive((l) => (l.watching || l.level !== level ? { ...NONE, level } : l));
-      const { buffer: buf, count } = frame;
-      const next: Live = { watching: true, level, running: 0, finished: 0, died: 0, total: count, best: 0 };
-      for (let i = 0; i < count; i++) {
-        const status = buf[i * STRIDE + SNAP_STATUS];
-        if (status === NAV_RUNNING) next.running++;
-        else if (status === NAV_FINISHED) next.finished++;
-        else if (status === NAV_DIED) next.died++;
-        next.best = Math.max(next.best, status === NAV_FINISHED ? 1 : buf[i * STRIDE + SNAP_PROGRESS]);
-      }
-      setLive(next);
-    }, 250);
-    return () => clearInterval(id);
-  }, [feeds]);
-  return live;
-}
+import { useRunnerCounts } from './useRunnerCounts';
 
 const percent = (v: number | undefined) => (v === undefined || !Number.isFinite(v) ? '-' : `${Math.round(v * 100)}%`);
 
@@ -60,7 +17,7 @@ const percent = (v: number | undefined) => (v === undefined || !Number.isFinite(
  * counts wait as dashes.
  */
 export function LiveStats({ feeds }: { feeds: LabFeeds | null }) {
-  const live = useLive(feeds);
+  const live = useRunnerCounts(feeds);
   const gen = useNavigationLab((s) => s.liveGeneration);
   const sandbox = useNavigationLab((s) => s.mode === 'sandbox');
   const last = useNavigationLab((s) => s.records[s.records.length - 1]);

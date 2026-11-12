@@ -70,7 +70,7 @@ function NavigationLabBody() {
           <LoadingCover loading={!feeds || !sceneReady} label={feeds ? 'Building the course' : 'Starting the lab'} />
           {feeds && <ViewportHud feeds={feeds} />}
           <InputsCard />
-          <SandboxPanel />
+          <SandboxPanel feeds={feeds} />
         </div>
         <LabToolbar onNewRun={openNewRun} />
       </div>

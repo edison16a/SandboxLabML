@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/primitives/Tabs';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import { navigationSession } from '../../session/NavigationSession';
 import { useNavigationLab } from '../../state/labStore';
+import type { LabFeeds } from '../../viewport/labFeeds';
 import { fieldSize } from '../../state/sandboxState';
 import { CourseEditorDialog } from './editor/CourseEditorDialog';
 import { CourseTab } from './CourseTab';
@@ -38,7 +39,7 @@ function copyOf(spec: CourseSpec, taken: readonly CourseSpec[]): CourseSpec {
  * and becomes a sheet along the bottom on a phone. Training waits the
  * whole time.
  */
-export function SandboxPanel() {
+export function SandboxPanel({ feeds }: { feeds: LabFeeds | null }) {
   const mode = useNavigationLab((s) => s.mode);
   const saved = useNavigationLab((s) => s.sandbox.saved);
   const runners = useNavigationLab((s) => (s.sandbox.source === 'model' ? s.sandbox.modelCopies : fieldSize(s.sandbox.field)));
@@ -96,7 +97,7 @@ export function SandboxPanel() {
         </Tabs>
       )}
       <footer className="shrink-0 border-t border-white/10 px-3 py-2">
-        <RunBar />
+        <RunBar feeds={feeds} />
       </footer>
       {editing && (
         <CourseEditorDialog
