@@ -18,7 +18,7 @@ const KIND_ORDER: ReadonlyArray<[EntryKind, string]> = [
   ['constant', 'Constants'],
 ];
 
-/** Categories in palette order, so racing sensors come before the generation counters. */
+/** Categories in palette order, so the env's sensors come before the generation counters. */
 const CATEGORY_ORDER = ['sensors', 'actions', 'rewards', 'logic', 'math', 'evolution', 'environment'];
 
 /** Registry entries grouped by kind, then by block category, filtered by a search over names and summaries. */

@@ -7,7 +7,7 @@ import { lessonFraction, openPlayer, reducePlayer } from './player';
 describe('markdown subset', () => {
   it('parses paragraphs, lists, bold and inline code', () => {
     expect(parseMarkdown(lesson.steps[0].body)).toEqual([
-      { kind: 'paragraph', inline: [{ kind: 'text', text: 'Cars only move when a script calls ' }, { kind: 'bold', children: [{ kind: 'text', text: 'drive' }] }, { kind: 'text', text: '.' }] },
+      { kind: 'paragraph', inline: [{ kind: 'text', text: 'An SUV only moves when a script calls ' }, { kind: 'bold', children: [{ kind: 'text', text: 'drive' }] }, { kind: 'text', text: '.' }] },
       {
         kind: 'list',
         ordered: false,
@@ -32,7 +32,7 @@ describe('markdown subset', () => {
 describe('line diff', () => {
   it('marks added and removed lines around common ones', () => {
     const d = lineDiff(lesson.steps[1].starter, lesson.steps[1].solution);
-    expect(d.filter((l) => l.kind === 'add').map((l) => l.text.trim())).toEqual(['reward +1 when checkpoint.passed']);
+    expect(d.filter((l) => l.kind === 'add').map((l) => l.text.trim())).toEqual(['reward +10 when car.arrived']);
     expect(d.filter((l) => l.kind === 'remove')).toEqual([]);
     expect(lineDiff('a\nb\n', 'a\nc\n')).toEqual([
       { kind: 'same', text: 'a' },

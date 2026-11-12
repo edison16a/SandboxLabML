@@ -3,7 +3,7 @@ import { frameAt } from '../playback';
 import { fitView, px, py, type View } from '../view';
 import { poseAt, poseBetween, poseFields, previewBounds, type Pose, type PoseFields } from './pose';
 
-/** Theme colors, matching the racing drive: surface greys, the agent in the accent blue. */
+/** Theme colors: surface greys, the agent in the accent blue. */
 export const EPISODE_COLORS = {
   grid: '#1a202b',
   gridMajor: '#232a37',
