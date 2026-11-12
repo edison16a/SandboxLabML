@@ -4,7 +4,8 @@ import type { NextConfig } from 'next';
  * The app is fully client side: training runs in Web Workers and data lives in
  * IndexedDB, so the config mostly adds security headers. Scripts never run
  * through eval, which lets the CSP leave out 'unsafe-eval' in production.
- * 'wasm-unsafe-eval' is required for the Rapier physics WASM module.
+ * 'wasm-unsafe-eval' lets the old landing showcase load its physics WASM;
+ * neither lab needs it, so it goes when that showcase does.
  */
 const isDev = process.env.NODE_ENV !== 'production';
 
