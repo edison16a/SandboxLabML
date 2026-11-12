@@ -8,7 +8,7 @@ async function stats(page: Page) {
 /** Every lab's tour is marked done, so none sits on top of the controls. */
 async function skipTours(page: Page) {
   await page.addInitScript(() => {
-    for (const k of ['racing', 'hideseek', 'driving', 'navigation']) window.localStorage.setItem(`sandboxlab.tour.${k}`, '1');
+    for (const k of ['driving', 'navigation']) window.localStorage.setItem(`sandboxlab.tour.${k}`, '1');
   });
 }
 

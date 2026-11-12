@@ -7,7 +7,7 @@ async function stats(page: Page) {
 
 async function skipTours(page: Page) {
   await page.addInitScript(() => {
-    for (const k of ['racing', 'hideseek', 'driving', 'navigation']) window.localStorage.setItem(`sandboxlab.tour.${k}`, '1');
+    for (const k of ['driving', 'navigation']) window.localStorage.setItem(`sandboxlab.tour.${k}`, '1');
   });
 }
 
@@ -53,8 +53,14 @@ test.describe('Navigation Sandbox', () => {
     await page.keyboard.press('r');
     await expect(panel.getByRole('button', { name: 'Pause' })).toBeVisible();
 
-    // Another level, then back to training, which trains a few generations on Max.
+    // The movers level draws its sliding crates on their rails.
     await panel.getByRole('tab', { name: 'Course' }).click();
+    await panel.getByRole('radio', { name: /Level 5/ }).click();
+    await expect(page.locator('[data-tour="hud-level"]')).toContainText('Movers', { timeout: 60_000 });
+    await expect.poll(async () => (await stats(page))?.instances.movers ?? 0, { timeout: 90_000 }).toBeGreaterThan(0);
+    expect((await stats(page))?.drawCalls ?? 0).toBeGreaterThan(10);
+
+    // Another level, then back to training, which trains a few generations on Max.
     await panel.getByRole('radio', { name: /Level 3/ }).click();
     await expect(page.locator('[data-tour="hud-level"]')).toContainText('Spikes', { timeout: 60_000 });
     await panel.getByRole('button', { name: 'Back to training' }).click();
