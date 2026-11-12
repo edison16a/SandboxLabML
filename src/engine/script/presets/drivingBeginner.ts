@@ -35,7 +35,7 @@ each generation {
   breed(crossover: 0.75, mutate: { weights: 0.8, addConnection: 0.05, addNode: 0.03, toggle: 0.01 })
   // The best brain of each species moves on unchanged, so it is never lost.
   keepChampions()
-  // Move up a level once half the trips of the best brains arrive safely.
+  // Move up a level once last generation's champions arrive safely on half their new trips.
   // Nothing here punishes a red light. Its brains learn to stop for one late, once
   // cross traffic turns running it into a crash that ends the trip.
   autoLevel(share: 50%)
