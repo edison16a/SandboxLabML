@@ -20,10 +20,12 @@ export interface SuvMaterials {
 
 /**
  * How strongly each slot takes the environment's light: paint and glass
- * glossy, liners dull. The cladding and tires take it in full, or the
- * dark base would sink into the shadow under the car.
+ * glossy, liners dull. The tires take it in full and the cladding half as
+ * much again: the ambient occlusion pass darkens everything near the
+ * road, and without the extra sky the dark base would sink into the
+ * shadow under the car.
  */
-const REFLECT: Partial<Record<Slot, number>> = { paint: 0.75, glass: 1.05, trim: 0.9, clad: 1, grille: 0.45, metal: 1, rim: 0.9, face: 1, caliper: 0.8, disc: 0.5, tire: 0.9, liner: 0.25, tail: 0.6 };
+const REFLECT: Partial<Record<Slot, number>> = { paint: 0.75, glass: 1.05, trim: 0.9, clad: 1.5, grille: 0.45, metal: 1, rim: 0.9, face: 1, caliper: 0.8, disc: 0.5, tire: 0.9, liner: 0.25, tail: 0.6 };
 
 /**
  * Tail lamp glow at rest and under braking. The lamps skip tone mapping,
