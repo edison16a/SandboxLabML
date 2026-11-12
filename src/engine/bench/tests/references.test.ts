@@ -1,10 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { STANDARD_HIDESEEK_INPUTS } from '../../hideseek/inputConfig';
 import { loadReferences, parseReferences, quantile, summarizeCurve } from '../references';
-import type { BenchReferences, ReferenceChampion } from '../types';
+import type { BenchReferences } from '../types';
 
 const SAMPLE: BenchReferences = {
-  env: 'racing',
+  env: 'driving',
   benchmarkVersion: 1,
   engineVersion: 1,
   generatedAt: '2026-10-06',
@@ -20,6 +19,10 @@ describe('parseReferences', () => {
     expect(parseReferences({ ...SAMPLE, references: [{ tier: 'expert', finalScore: 1, curve: [] }] })).toBeNull();
     expect(parseReferences({ ...SAMPLE, references: [{ tier: 'beginner', finalScore: 1, curve: [{ generation: 0 }] }] })).toBeNull();
   });
+
+  it('rejects the file of a lab this build does not have', () => {
+    expect(parseReferences({ ...SAMPLE, env: 'hideseek' })).toBeNull();
+  });
 });
 
 describe('parseReferences with models', () => {
@@ -30,25 +33,6 @@ describe('parseReferences with models', () => {
     // Driving's models carry their inputs instead of a script preset, and Driving parses them itself.
     const driving = { ...SAMPLE, env: 'driving' as const, models: [{ ...model, preset: undefined, inputs: {} }] };
     expect(parseReferences(JSON.parse(JSON.stringify(driving)))).toEqual({ ...driving, models: [] });
-  });
-});
-
-const CHAMPION: ReferenceChampion = {
-  tier: 'advanced',
-  seed: 2,
-  generation: 40,
-  rating: 1600,
-  hider: { inputs: STANDARD_HIDESEEK_INPUTS, genome: 'U0JHMQ==' },
-  seeker: { inputs: STANDARD_HIDESEEK_INPUTS, genome: 'U0JHMQ==' },
-};
-
-describe('parseReferences with champions', () => {
-  it('keeps Hide and Seek champions and rejects broken ones', () => {
-    const file = { ...SAMPLE, env: 'hideseek' as const, champions: [CHAMPION] };
-    expect(parseReferences(JSON.parse(JSON.stringify(file)))).toEqual(file);
-    expect(parseReferences({ ...file, champions: [{ ...CHAMPION, rating: 'high' }] })).toBeNull();
-    expect(parseReferences({ ...file, champions: [{ ...CHAMPION, hider: { inputs: {}, genome: 'x' } }] })).toBeNull();
-    expect(parseReferences({ ...file, champions: 'none' })).toBeNull();
   });
 });
 
@@ -88,29 +72,21 @@ describe('summarizeCurve', () => {
 describe('loadReferences', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('fetches the racing file and parses it', async () => {
+  it('fetches the Driving file and parses it', async () => {
     const fetch = vi.fn(async () => new Response(JSON.stringify(SAMPLE)));
     vi.stubGlobal('fetch', fetch);
-    expect(await loadReferences('racing')).toEqual(SAMPLE);
-    expect(fetch).toHaveBeenCalledWith('/references/racing.json');
+    expect(await loadReferences('driving')).toEqual(SAMPLE);
+    expect(fetch).toHaveBeenCalledWith('/references/driving.json');
   });
 
   it('returns null when the file is missing, broken or for another env', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('nope', { status: 404 })));
-    expect(await loadReferences('racing')).toBeNull();
+    expect(await loadReferences('driving')).toBeNull();
     vi.stubGlobal('fetch', vi.fn(async () => new Response('{ not json')));
-    expect(await loadReferences('racing')).toBeNull();
+    expect(await loadReferences('driving')).toBeNull();
     vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new Error('offline'))));
-    expect(await loadReferences('racing')).toBeNull();
+    expect(await loadReferences('driving')).toBeNull();
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(SAMPLE))));
-    expect(await loadReferences('hideseek')).toBeNull();
-  });
-
-  it('fetches the Hide and Seek file from its own path', async () => {
-    const file = { ...SAMPLE, env: 'hideseek', champions: [CHAMPION] };
-    const fetch = vi.fn(async () => new Response(JSON.stringify(file)));
-    vi.stubGlobal('fetch', fetch);
-    expect(await loadReferences('hideseek')).toEqual(file);
-    expect(fetch).toHaveBeenCalledWith('/references/hideseek.json');
+    expect(await loadReferences('navigation')).toBeNull();
   });
 });

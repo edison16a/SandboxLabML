@@ -3,7 +3,7 @@ import { blueprintShape } from '../../blueprints/shape';
 import { EpisodeTrainer } from '../../training/episodeTrainer';
 import { builtinHost } from '../../training/scriptHost';
 import { metricValue } from '../metrics';
-import { engineVersionOf, episodeInfo, isKnownEnv, registerEpisodeModule } from '../registry';
+import { engineVersionOf, episodeInfo, isEpisodeEnv, registerEpisodeModule } from '../registry';
 import { TOY_ENV, toyModule } from './toyEnv';
 import { toyConfig, toyGeneration } from './toyRun';
 
@@ -19,7 +19,7 @@ const generation = toyGeneration;
 describe('a toy env through the generic pipeline', () => {
   it('registers, and the registry answers for it', () => {
     expect(episodeInfo(TOY_ENV)).toBe(toyModule);
-    expect(isKnownEnv(TOY_ENV)).toBe(true);
+    expect(isEpisodeEnv(TOY_ENV)).toBe(true);
     expect(engineVersionOf(TOY_ENV)).toBe(7);
   });
 

@@ -3,7 +3,7 @@ import { styleProblems } from '../style';
 import type { Lesson, LessonStep } from '../types';
 import { validateLesson } from '../validate';
 
-const STARTER = 'script "t" for racing v1\neach tick {\n  drive(steer: 0, pedal: 1)\n}\n';
+const STARTER = 'script "t" for driving v1\neach tick {\n  drive(steer: 0, pedal: 1)\n}\n';
 
 function step(id: string, overrides: Partial<LessonStep> = {}): LessonStep {
   return {
@@ -20,7 +20,7 @@ function step(id: string, overrides: Partial<LessonStep> = {}): LessonStep {
 }
 
 function lesson(overrides: Partial<Lesson> = {}): Lesson {
-  return { id: 'racing-test', course: 'racing', order: 1, title: 'Test', summary: 'A test lesson.', minutes: 5, steps: [step('a'), step('b'), step('c')], ...overrides };
+  return { id: 'driving-test', course: 'driving', order: 1, title: 'Test', summary: 'A test lesson.', minutes: 5, steps: [step('a'), step('b'), step('c')], ...overrides };
 }
 
 describe('validateLesson', () => {
@@ -55,7 +55,7 @@ describe('validateLesson', () => {
       lesson({
         steps: [
           step('a', { check: { kind: 'testRun', metric: 'smiles', op: '>', value: 1, message: 'x' } }),
-          step('b', { check: { kind: 'metricAbove', generations: 500, metric: 'bestDistance', value: 1, message: 'x' } }),
+          step('b', { check: { kind: 'metricAbove', generations: 500, metric: 'safe', value: 1, message: 'x' } }),
           step('c', { check: { kind: 'astContains', anyOf: [{ stmt: 'loop' as 'if' }], message: 'x' } }),
         ],
       }),
@@ -65,18 +65,22 @@ describe('validateLesson', () => {
     expect(problems).toContain('step 3 (c) pattern 1: unknown statement kind loop');
   });
 
-  it("checks Hide and Seek metrics against that course's own list", () => {
+  it("checks Navigation metrics against that course's own list", () => {
     const problems = validateLesson(
       lesson({
-        course: 'hideseek',
+        course: 'navigation',
         steps: [
           step('a', { check: { kind: 'testRun', metric: 'distance', op: '>', value: 1, message: 'x' } }),
-          step('b', { check: { kind: 'metricAbove', generations: 10, metric: 'locksPerMatch', value: 0, message: 'x' } }),
-          step('c', { check: { kind: 'testRun', metric: 'hiderReward', op: '>', value: 0, message: 'x' } }),
+          step('b', { check: { kind: 'metricAbove', generations: 10, metric: 'safe', value: 0, message: 'x' } }),
+          step('c', { check: { kind: 'testRun', metric: 'finished', op: '>', value: 0, message: 'x' } }),
         ],
       }),
     );
-    expect(problems).toEqual(['step 1 (a): a test match cannot measure distance', 'step 2 (b): generations must be a whole number from 1 to 5']);
+    expect(problems).toEqual(['step 1 (a): a test run cannot measure distance', 'step 2 (b): training cannot measure safe']);
+  });
+
+  it('refuses a course this version has no lab for', () => {
+    expect(validateLesson(lesson({ course: 'hideseek' as Lesson['course'] }))).toContain('unknown course hideseek');
   });
 
   it('applies the writing style to text and to script comments', () => {

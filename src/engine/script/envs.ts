@@ -1,11 +1,9 @@
 import type { EnvId } from '../env/types';
 import { DRIVING_PRESETS } from './presets/driving';
-import { HIDESEEK_PRESETS } from './presets/hideseek';
 import { NAVIGATION_PRESETS } from './presets/navigation';
 import { RACING_PRESETS } from './presets/racing';
 import type { ScriptPreset } from './presets/types';
 import { DRIVING_SLICE } from './registry/driving';
-import { HIDESEEK_SLICE } from './registry/hideseek';
 import { NAVIGATION_SLICE } from './registry/navigation';
 import { RACING_SLICE } from './registry/racing';
 import type { RegistrySlice } from './registry/types';
@@ -59,21 +57,6 @@ const table: ScriptEnv[] = [
       'for each': 'for each ${1:r} in ${2:rays} {\n  ${3}\n}',
       sensor: 'sensor ${1:name} "${2:Label}" in ${3:0 m} .. ${4:60 m} = ${5:rays.min}',
       'each tick': 'each tick {\n  ${1:drive(steer: brain.steer, pedal: brain.pedal)}\n}',
-    },
-  },
-  {
-    env: 'hideseek',
-    slice: HIDESEEK_SLICE,
-    presets: HIDESEEK_PRESETS,
-    builtin: 'Hiders score while unseen, seekers while they see.',
-    starter: 'script "My script" for hideseek v1\n\n// Hide and Seek scripts are coming soon. Sketch your ideas here.\n',
-    templates: {
-      'reward when': 'reward ${1:+1} * dt when ${2:agent.hidden}',
-      'reward every tick': 'reward ${1:+0.1} * dt * ${2:agent.boxesLocked}',
-      'stop when': 'stop "${1:done}" when ${2:agent.timeLeft < 1 s}',
-      'for each': 'for each ${1:r} in ${2:rays} {\n  ${3}\n}',
-      sensor: 'sensor ${1:name} "${2:Label}" in ${3:0 m} .. ${4:12 m} = ${5:rays.min}',
-      'each tick': 'each tick {\n  ${1:act(move: brain.move, turn: brain.turn, grab: brain.grab, lock: brain.lock)}\n}',
     },
   },
   {

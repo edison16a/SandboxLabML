@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { episodeEnvIds, isKnownEnv } from '@/engine/env/registry';
+import { episodeEnvIds, isEpisodeEnv } from '@/engine/env/registry';
 import { compileScript } from '@/engine/script/compiler';
 import { SCRIPT_ENV_TABLE } from '@/engine/script/envs';
 import { LABS } from './labs';
@@ -9,7 +9,7 @@ import { LABS } from './labs';
 const ROOT = resolve(__dirname, '../../..');
 
 /** Envs the engine still registers but no screen shows. Engine removal deletes their rows, and then this list. */
-const RETIRED = ['racing', 'hideseek'];
+const RETIRED = ['racing'];
 
 /**
  * A new env adds one entry per layer. These checks make the entries agree,
@@ -34,7 +34,7 @@ describe('the per layer entries of every env', () => {
   it('keep every script row on its own slice, with a starter that compiles', () => {
     for (const row of SCRIPT_ENV_TABLE) {
       expect(row.slice.env, row.env).toBe(row.env);
-      expect(isKnownEnv(row.env), row.env).toBe(true);
+      expect(isEpisodeEnv(row.env), row.env).toBe(true);
       const { script, diagnostics } = compileScript(row.starter);
       expect(diagnostics.filter((d) => d.severity === 'error'), row.env).toEqual([]);
       expect(script?.header.env, row.env).toBe(row.env);
@@ -43,7 +43,7 @@ describe('the per layer entries of every env', () => {
 
   it('give every lab row a known env and a page', () => {
     for (const lab of LABS) {
-      expect(isKnownEnv(lab.env), lab.env).toBe(true);
+      expect(isEpisodeEnv(lab.env), lab.env).toBe(true);
       expect(existsSync(resolve(ROOT, `app${lab.path}/page.tsx`)), lab.path).toBe(true);
     }
   });

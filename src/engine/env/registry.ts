@@ -1,4 +1,3 @@
-import { HIDESEEK_ENGINE_VERSION } from '../core/version';
 import { drivingInfo } from '../driving/info';
 import { navigationInfo } from '../navigation/info';
 import { racingInfo } from '../racing/info';
@@ -8,8 +7,7 @@ import type { EnvId } from './types';
 /**
  * Every single population env, by id. This is the one engine entry a new
  * env adds: the trainer, the sim and replay workers, run storage, the
- * benchmark and the lessons all find an env here. Hide and Seek trains two
- * teams in many arenas, a different shape, so it is not listed.
+ * benchmark and the lessons all find an env here.
  *
  * The map holds each env's light info. Its module, with the simulation,
  * loads on demand through `loadEpisodeModule`, so a page that only lists
@@ -61,27 +59,23 @@ export function requireEpisodeModule(env: string): AnyEpisodeModule {
   return m;
 }
 
+/**
+ * True for an env this build has. Stored runs, scripts and files of any
+ * other env (one a later build removed) are hidden or refused rather than
+ * opened.
+ */
 export function isEpisodeEnv(env: string): env is EnvId {
   return infos.has(env);
 }
 
-/**
- * Envs whose runs this build can open: every episode env, plus Hide and
- * Seek, which trains two teams its own way. Stored runs of any other env
- * (one a later build removed) are hidden rather than opened.
- */
-export function isKnownEnv(env: string): env is EnvId {
-  return env === 'hideseek' || infos.has(env);
-}
-
 /** The engine version a run of `env` is stamped with and checked against. */
 export function engineVersionOf(env: EnvId): number {
-  return env === 'hideseek' ? HIDESEEK_ENGINE_VERSION : requireEpisodeInfo(env).engineVersion;
+  return requireEpisodeInfo(env).engineVersion;
 }
 
-/** Display name of an env, such as "Racing". */
+/** Display name of an env, such as "Driving". */
 export function envLabel(env: EnvId): string {
-  return env === 'hideseek' ? 'Hide and Seek' : (infos.get(env)?.label ?? env);
+  return infos.get(env)?.label ?? env;
 }
 
 /** Ids of every registered env, in registration order. */

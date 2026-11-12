@@ -1,6 +1,6 @@
-import { isKnownEnv } from '../env/registry';
+import { isEpisodeEnv } from '../env/registry';
 import type { EnvId } from '../env/types';
-import type { BenchReferences, ReferenceBrain, ReferenceChampion, ReferenceCurve, ReferenceModel, ReferencePoint, ReferenceTier } from './types';
+import type { BenchReferences, ReferenceCurve, ReferenceModel, ReferencePoint, ReferenceTier } from './types';
 
 export const REFERENCE_TIERS: readonly ReferenceTier[] = ['beginner', 'intermediate', 'advanced'];
 
@@ -15,15 +15,6 @@ function isCurve(v: unknown): v is ReferenceCurve {
   return isObj(v) && REFERENCE_TIERS.includes(v.tier as ReferenceTier) && isNum(v.finalScore) && Array.isArray(v.curve) && v.curve.every(isPoint);
 }
 
-/** Checks the parts of an input config the exam reads first. The genome decoder checks the rest when it loads. */
-function isBrain(v: unknown): v is ReferenceBrain {
-  return isObj(v) && typeof v.genome === 'string' && isObj(v.inputs) && isObj(v.inputs.rays) && isNum(v.inputs.rays.count) && isNum(v.inputs.nearestBoxes);
-}
-
-function isChampion(v: unknown): v is ReferenceChampion {
-  return isObj(v) && REFERENCE_TIERS.includes(v.tier as ReferenceTier) && isNum(v.seed) && isNum(v.generation) && isNum(v.rating) && isBrain(v.hider) && isBrain(v.seeker);
-}
-
 function isModel(v: unknown): v is ReferenceModel {
   return isObj(v) && REFERENCE_TIERS.includes(v.tier as ReferenceTier) && isNum(v.seed) && isNum(v.generation) && isNum(v.score) && typeof v.blueprint === 'string' && typeof v.preset === 'string' && typeof v.genome === 'string';
 }
@@ -36,14 +27,12 @@ function isModel(v: unknown): v is ReferenceModel {
 export function parseReferences(data: unknown): BenchReferences | null {
   if (!isObj(data)) return null;
   const { env, benchmarkVersion, engineVersion, generatedAt, seeds, references } = data;
-  if (typeof env !== 'string' || !isKnownEnv(env) || !isNum(benchmarkVersion) || !isNum(engineVersion) || !isNum(seeds)) return null;
+  if (typeof env !== 'string' || !isEpisodeEnv(env) || !isNum(benchmarkVersion) || !isNum(engineVersion) || !isNum(seeds)) return null;
   if (typeof generatedAt !== 'string' || !Array.isArray(references) || !references.every(isCurve)) return null;
-  const { champions } = data;
-  if (champions !== undefined && (!Array.isArray(champions) || !champions.every(isChampion))) return null;
   // An env may ship models of its own shape (Driving's carry their inputs) and parse them itself,
   // so a model this shape does not fit is left out rather than voiding the curves.
   const models = Array.isArray(data.models) ? data.models.filter(isModel) : undefined;
-  return { env, benchmarkVersion, engineVersion, generatedAt, seeds, references, ...(champions !== undefined && { champions }), ...(models !== undefined && { models }) };
+  return { env, benchmarkVersion, engineVersion, generatedAt, seeds, references, ...(models !== undefined && { models }) };
 }
 
 /** Where each environment's reference file is served from, under public/. */
@@ -85,10 +74,9 @@ const round1 = (x: number) => Math.round(x * 10) / 10;
  * are rounded to a tenth, which keeps the shipped file small.
  *
  * The final score is the median of every seed's scores over the last
- * `finalWindow` checkpoints. One checkpoint is enough for Racing. In Hide
- * and Seek both teams keep chasing each other's latest tricks, so one run
- * can swing 20 points from one checkpoint to the next, and a wider window
- * says where a preset really ends up.
+ * `finalWindow` checkpoints. A run's score can swing from one checkpoint
+ * to the next, so a wider window says better where a preset really ends
+ * up.
  */
 export function summarizeCurve(tier: ReferenceTier, generations: readonly number[], scoresBySeed: readonly (readonly number[])[], finalWindow = 1): ReferenceCurve {
   const curve = generations.map((generation, i) => {

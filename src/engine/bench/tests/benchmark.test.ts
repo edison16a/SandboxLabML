@@ -98,8 +98,7 @@ describe('runBenchmark', () => {
     expect(result).toBeNull();
   });
 
-  it('returns null for Hide and Seek and refuses a brain from another run', async () => {
-    expect(await runBenchmark({ ...advanced, env: 'hideseek' }, champion)).toBeNull();
+  it('refuses a brain from another run', async () => {
     const standard = { ...advanced, blueprint: RACING_BLUEPRINTS[2] };
     await expect(runBenchmark(standard, champion)).rejects.toThrow(/inputs/);
   });

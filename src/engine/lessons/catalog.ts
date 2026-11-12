@@ -5,12 +5,6 @@ import driving04 from '@content/lessons/driving/04-senses.json';
 import driving05 from '@content/lessons/driving/05-curriculum.json';
 import driving06 from '@content/lessons/driving/06-debug.json';
 import driving07 from '@content/lessons/driving/07-built-in-reward.json';
-import hideseek01 from '@content/lessons/hideseek/01-points-for-hiding.json';
-import hideseek02 from '@content/lessons/hideseek/02-seeker-goal.json';
-import hideseek03 from '@content/lessons/hideseek/03-boxes.json';
-import hideseek04 from '@content/lessons/hideseek/04-hall-of-fame.json';
-import hideseek05 from '@content/lessons/hideseek/05-shape-rewards.json';
-import hideseek06 from '@content/lessons/hideseek/06-debug.json';
 import navigation01 from '@content/lessons/navigation/01-first-run.json';
 import navigation02 from '@content/lessons/navigation/02-reward-what-you-want.json';
 import navigation03 from '@content/lessons/navigation/03-spikes-and-stop-rules.json';
@@ -28,7 +22,6 @@ import type { EnvId } from '../env/types';
 import type { Lesson } from './types';
 
 const RACING = [lesson01, lesson02, lesson03, lesson04, lesson05, lesson06, lesson07];
-const HIDESEEK = [hideseek01, hideseek02, hideseek03, hideseek04, hideseek05, hideseek06];
 const DRIVING = [driving01, driving02, driving03, driving04, driving05, driving06, driving07];
 const NAVIGATION = [navigation01, navigation02, navigation03, navigation04, navigation05, navigation06];
 
@@ -38,7 +31,7 @@ const NAVIGATION = [navigation01, navigation02, navigation03, navigation04, navi
  * JSON imports are typed loosely (strings where the contract has unions),
  * so they are cast here and checked by validateLesson in the tests.
  */
-export const LESSONS: Lesson[] = [...RACING, ...HIDESEEK, ...DRIVING, ...NAVIGATION] as Lesson[];
+export const LESSONS: Lesson[] = [...RACING, ...DRIVING, ...NAVIGATION] as Lesson[];
 
 export function lessonsFor(course: EnvId): Lesson[] {
   return LESSONS.filter((l) => l.course === course).sort((a, b) => a.order - b.order);

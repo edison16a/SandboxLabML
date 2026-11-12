@@ -1,16 +1,15 @@
 import { requireEpisodeInfo } from '../env/registry';
-import { HIDESEEK_OUTPUT_COUNT, hideSeekInputCount } from '../hideseek/inputConfig';
 import { MAX_HIDDEN_LAYERS } from '../neat/startShape';
 import type { GenomeShape } from '../neat/types';
 import { MAX_INPUTS, MAX_OUTPUTS, type Blueprint, type BlueprintIssue, type EpisodeBlueprint } from './types';
 
 /** Number of brain inputs the blueprint produces before any script sensors. */
 export function blueprintInputCount(b: Blueprint): number {
-  return b.env === 'hideseek' ? hideSeekInputCount(b.inputs) : requireEpisodeInfo(b.env).inputCount(b.inputs);
+  return requireEpisodeInfo(b.env).inputCount(b.inputs);
 }
 
 export function blueprintOutputCount(b: Blueprint): number {
-  return b.env === 'hideseek' ? HIDESEEK_OUTPUT_COUNT : requireEpisodeInfo(b.env).outputs.length;
+  return requireEpisodeInfo(b.env).outputs.length;
 }
 
 /** The genome shape a new run starts from, including script-defined sensors. */
@@ -39,7 +38,7 @@ export function validateBlueprint(b: Blueprint, customSensors = 0): BlueprintIss
   // Every env shares the noise level, so it is checked here, whatever the env checks on top.
   const noise = (b.inputs as { noise?: unknown }).noise;
   if (typeof noise !== 'number' || !(noise >= 0 && noise <= 0.1)) issues.push({ field: 'noise', message: 'Noise must be between 0 and 10%.' });
-  if (b.env === 'racing' || b.env === 'hideseek') {
+  if (b.env === 'racing') {
     if (b.inputs.rays.count < 1 || b.inputs.rays.count > 33) {
       issues.push({ field: 'rays', message: 'Use between 1 and 33 rays.' });
     }

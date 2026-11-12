@@ -1,7 +1,7 @@
-import { engineVersionOf, isKnownEnv } from '@/engine/env/registry';
+import { engineVersionOf, isEpisodeEnv } from '@/engine/env/registry';
 import { base64ToBytes, bytesToBase64 } from '@/engine/neat/serialize';
 import { newRunId, type RunConfig } from '@/engine/training/runConfig';
-import { db, type GenerationRow, type HideSeekGenerationRow } from './db';
+import { db, type GenerationRow } from './db';
 import { fromRow } from './generations';
 import { foldSummary } from './runBest';
 import { createRun, getRun } from './runs';
@@ -16,8 +16,6 @@ export interface RunExport {
   engineVersion: number;
   config: RunConfig;
   generations: Array<Omit<GenerationRow, 'genome'> & { genome: string }>;
-  /** Hide and Seek runs: both champions per generation. Round replays stay behind to keep files small. */
-  hsGenerations?: Array<Omit<HideSeekGenerationRow, 'hiderChampion' | 'seekerChampion' | 'replay'> & { hiderChampion: string; seekerChampion: string }>;
   checkpoint: { generation: number; state: unknown } | null;
 }
 
@@ -26,7 +24,6 @@ export async function exportRun(runId: string): Promise<RunExport> {
   const run = await getRun(runId);
   if (!run) throw new Error('Run not found.');
   const gens = await d.generations.where('runId').equals(runId).sortBy('generation');
-  const hs = await d.hsGenerations.where('runId').equals(runId).sortBy('generation');
   const cps = await d.checkpoints.where('runId').equals(runId).sortBy('generation');
   const last = cps[cps.length - 1];
   return {
@@ -36,7 +33,6 @@ export async function exportRun(runId: string): Promise<RunExport> {
     engineVersion: engineVersionOf(run.config.env),
     config: run.config,
     generations: gens.map((g) => ({ ...g, genome: bytesToBase64(g.genome) })),
-    hsGenerations: hs.map(({ replay: _replay, ...g }) => ({ ...g, hiderChampion: bytesToBase64(g.hiderChampion), seekerChampion: bytesToBase64(g.seekerChampion) })),
     checkpoint: last ? { generation: last.generation, state: last.state } : null,
   };
 }
@@ -62,7 +58,7 @@ export async function importRun(text: string): Promise<RunConfig> {
     throw new ImportError('The run config in this file is incomplete.');
   }
   // A whole run of a lab this build does not have (one a later version removed) is a different problem from a broken file.
-  if (!isKnownEnv(c.env)) {
+  if (!isEpisodeEnv(c.env)) {
     throw new ImportError('This run is from a lab this version does not have.');
   }
   for (const s of c.scripts) if (typeof s.source !== 'string') throw new ImportError('A script in this file is not text.');
@@ -71,13 +67,6 @@ export async function importRun(text: string): Promise<RunConfig> {
   await createRun(config);
   const rows: GenerationRow[] = parsed.generations.map((g) => ({ ...g, runId: config.id, genome: base64ToBytes(g.genome) }));
   await d.generations.bulkPut(rows);
-  const hsRows: HideSeekGenerationRow[] = (parsed.hsGenerations ?? []).map((g) => ({
-    ...g,
-    runId: config.id,
-    hiderChampion: base64ToBytes(g.hiderChampion),
-    seekerChampion: base64ToBytes(g.seekerChampion),
-  }));
-  await d.hsGenerations.bulkPut(hsRows);
   if (parsed.checkpoint) {
     await d.checkpoints.put({
       runId: config.id,
@@ -89,7 +78,7 @@ export async function importRun(text: string): Promise<RunConfig> {
   }
   const created = await d.runs.get(config.id);
   const summary = created ? foldSummary(created, [...rows].sort((a, b) => a.generation - b.generation).map(fromRow)) : {};
-  await d.runs.update(config.id, { ...summary, generation: Math.max(rows.length, hsRows.length) });
+  await d.runs.update(config.id, { ...summary, generation: rows.length });
   return config;
 }
 

@@ -1,4 +1,4 @@
-import { isKnownEnv } from '@/engine/env/registry';
+import { isEpisodeEnv } from '@/engine/env/registry';
 import type { RunConfig } from '@/engine/training/runConfig';
 import { db, type RunRow } from './db';
 
@@ -33,7 +33,7 @@ export function getRun(id: string): Promise<RunRow | undefined> {
  */
 export async function listRuns(): Promise<RunRow[]> {
   const rows = await db().runs.orderBy('updatedAt').reverse().toArray();
-  return rows.filter((r) => !r.deletedAt && isKnownEnv(r.env));
+  return rows.filter((r) => !r.deletedAt && isEpisodeEnv(r.env));
 }
 
 /** Every trashed run, newest first, including ones of envs this build does not have. */
@@ -44,7 +44,7 @@ async function allTrash(): Promise<RunRow[]> {
 
 /** Trashed runs the Runs page can show and restore. */
 export async function listTrash(): Promise<RunRow[]> {
-  return (await allTrash()).filter((r) => isKnownEnv(r.env));
+  return (await allTrash()).filter((r) => isEpisodeEnv(r.env));
 }
 
 export async function updateRun(id: string, patch: Partial<RunRow>): Promise<void> {
@@ -71,6 +71,7 @@ export async function destroyRun(id: string): Promise<void> {
   const d = db();
   await d.transaction('rw', [d.runs, d.generations, d.hsGenerations, d.checkpoints, d.pathCache, d.benchmarks], async () => {
     await d.generations.where('runId').equals(id).delete();
+    // Runs of a removed two team lab kept their generations in a table of their own.
     await d.hsGenerations.where('runId').equals(id).delete();
     await d.checkpoints.where('runId').equals(id).delete();
     await d.pathCache.where('runId').equals(id).delete();

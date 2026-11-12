@@ -43,13 +43,11 @@ export interface RunConfig {
   customSensors: number;
   neat: NeatConfig;
   racing?: RacingSettings;
-  /** Hide and Seek settings are opaque here so this file does not depend on that engine. */
-  hideseek?: Record<string, unknown>;
   /**
    * The env's own options for envs added through the registry (a city, a
    * level, an episode length), opaque here and read only by the env's
-   * module through envSettings. Racing and Hide and Seek predate it and
-   * keep theirs under their own ids.
+   * module through envSettings. Racing predates it and keeps its own
+   * under its id.
    */
   settings?: Readonly<Record<string, unknown>>;
   /** Set when the run was forked from another run. */

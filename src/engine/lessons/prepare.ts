@@ -1,5 +1,5 @@
 import { findPresetBlueprint } from '../blueprints/presets';
-import type { EpisodeBlueprint, EpisodeEnvId, HideSeekBlueprint, RacingBlueprint } from '../blueprints/types';
+import type { EpisodeBlueprint, EpisodeEnvId, RacingBlueprint } from '../blueprints/types';
 import { episodeInfo } from '../env/registry';
 import { Rng } from '../core/rng';
 import { BUILT_IN_TRACKS } from '../racing/track/presets';
@@ -8,14 +8,11 @@ import { compileScript, type CompileResult, type CompiledScript } from '../scrip
 import { lineOf, type Diagnostic } from '../script/diagnostics';
 import { resolveTrackDirective } from '../training/racingSetup';
 import type { PreparedEpisode } from './episode/run';
-import { firstMatchRules, type FirstMatchRules } from './hideseek/rules';
 
 export type { PreparedEpisode };
 
 /** Brain used when a racing script has no `brain` line, the same default a new run uses. */
 export const DEFAULT_LESSON_BRAIN = 'racing-standard';
-/** The Hide and Seek counterpart: the Standard brain, which every built-in Hide and Seek run can use. */
-export const DEFAULT_HIDESEEK_LESSON_BRAIN = 'hideseek-standard';
 
 /** What every compiled lesson script has, whichever game it is for. */
 interface PreparedBase {
@@ -33,20 +30,12 @@ export interface PreparedRacing extends PreparedBase {
   track: TrackSpec;
 }
 
-/** A Hide and Seek lesson script with everything a test match or training check needs. */
-export interface PreparedHideSeek extends PreparedBase {
-  env: 'hideseek';
-  /** Set when the script names a preset Hide and Seek brain. Both teams use it. */
-  blueprint: HideSeekBlueprint | null;
-  rules: FirstMatchRules;
-}
-
 /**
  * A lesson script that compiled. The env field tells the games apart, so a
  * check that only makes sense for one game gets the right shape. Envs
  * added through the registry share one shape and their module's hooks.
  */
-export type PreparedScript = PreparedRacing | PreparedHideSeek | PreparedEpisode;
+export type PreparedScript = PreparedRacing | PreparedEpisode;
 
 export type PrepareResult = { ok: true; value: PreparedScript } | { ok: false; message: string };
 
@@ -74,7 +63,7 @@ function lessonTrack(script: CompiledScript): TrackSpec {
 }
 
 /** The preset brain a script names, or the default, if it belongs to the script's game. */
-function lessonBlueprint<E extends 'racing' | 'hideseek' | EpisodeEnvId>(script: CompiledScript, env: E, fallback: string) {
+function lessonBlueprint<E extends 'racing' | EpisodeEnvId>(script: CompiledScript, env: E, fallback: string) {
   const found = findPresetBlueprint(script.header.brain ?? fallback);
   return found?.env === env ? (found as Extract<typeof found, { env: E }>) : null;
 }
@@ -89,15 +78,11 @@ export function prepareScript(source: string): PrepareResult {
   }
   const base = { source, script, compiled };
   const env = script.header.env;
-  if (env !== 'racing' && env !== 'hideseek') {
+  if (env !== 'racing') {
     const lessons = episodeInfo(env)?.lessons;
     if (!lessons) return { ok: false, message: 'This lab has no lessons yet.' };
     const blueprint = lessonBlueprint(script, env, lessons.brain) as EpisodeBlueprint | null;
     return { ok: true, value: { ...base, env, blueprint } };
-  }
-  if (env === 'hideseek') {
-    const blueprint = lessonBlueprint(script, 'hideseek', DEFAULT_HIDESEEK_LESSON_BRAIN);
-    return { ok: true, value: { ...base, env: 'hideseek', blueprint, rules: firstMatchRules(script) } };
   }
   const blueprint = lessonBlueprint(script, 'racing', DEFAULT_LESSON_BRAIN);
   return { ok: true, value: { ...base, env: 'racing', blueprint, track: lessonTrack(script) } };

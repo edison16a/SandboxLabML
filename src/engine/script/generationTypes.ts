@@ -1,4 +1,3 @@
-import type { HideSeekDirective } from '../hideseek/trainer/types';
 import type { GenerationPlan } from '../neat/plan';
 
 /**
@@ -23,8 +22,6 @@ export type TrackDirective = { kind: 'builtin'; id: string } | { kind: 'random';
 export interface GenerationDirectives {
   plan: GenerationPlan;
   racing?: { track?: TrackDirective };
-  /** Match rules from the Hide and Seek operators, such as prepTime and opponents. */
-  hideseek?: HideSeekDirective;
   /**
    * Requests for the script's own env, one key per request (a level, a
    * traffic density), read by its env module's nextContent. Operators set

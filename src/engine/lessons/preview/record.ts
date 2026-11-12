@@ -4,13 +4,10 @@ import { recordTestDrive } from './drive';
 import { recordEpisodePreview } from './episode';
 import type { PreviewResult } from './types';
 
-/** The match recorder brings in the Rapier physics engine, so it loads the first time a Hide and Seek script is previewed. */
-const matchRecorder = () => import('./match');
-
 /**
  * Records what a lesson script does with the fixed test brain: a test
- * drive for racing, a test match for Hide and Seek, and the env's test
- * episode for an env added through the registry. Never throws, so the
+ * drive for racing, and the env's test episode for an env added through
+ * the registry. Never throws, so the
  * preview can show the reason instead of a broken canvas.
  */
 export async function recordPreview(source: string): Promise<PreviewResult> {
@@ -22,17 +19,13 @@ export async function recordPreview(source: string): Promise<PreviewResult> {
       if (!p.blueprint) return { ok: false, message: 'The preview needs a racing brain, such as brain racing-starter.' };
       return { ok: true, preview: recordTestDrive(p) };
     }
-    if (p.env !== 'hideseek') {
-      // Racing is handled above, so this is an env added through the registry.
-      const e = p as PreparedEpisode;
-      if (!e.blueprint) {
-        const info = requireEpisodeInfo(e.env);
-        return { ok: false, message: `The preview needs a ${info.label} brain, such as brain ${info.lessons?.brain ?? `${e.env}-starter`}.` };
-      }
-      return { ok: true, preview: await recordEpisodePreview({ ...e, blueprint: e.blueprint }) };
+    // Racing is handled above, so this is an env added through the registry.
+    const e = p as PreparedEpisode;
+    if (!e.blueprint) {
+      const info = requireEpisodeInfo(e.env);
+      return { ok: false, message: `The preview needs a ${info.label} brain, such as brain ${info.lessons?.brain ?? `${e.env}-starter`}.` };
     }
-    if (!p.blueprint) return { ok: false, message: 'The preview needs a Hide and Seek brain, such as brain hideseek-starter.' };
-    return { ok: true, preview: await (await matchRecorder()).recordTestMatch(p) };
+    return { ok: true, preview: await recordEpisodePreview({ ...e, blueprint: e.blueprint }) };
   } catch (err) {
     return { ok: false, message: `The preview could not run: ${err instanceof Error ? err.message : String(err)}` };
   }

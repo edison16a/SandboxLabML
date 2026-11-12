@@ -1,11 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 
 /** The src folder, so tests can name entries as 'engine/lessons/evaluate.ts'. */
 export const SRC = resolve(__dirname, '../../..');
-export const RAPIER = '@dimforge/rapier3d-compat';
-/** The one module that imports Rapier, on first use (see loadRapier). */
-export const RAPIER_LOADER = join(SRC, 'engine/hideseek/world/rapier.ts');
 
 /** The file an import specifier points at, or null for packages and JSON content. */
 function resolveImport(from: string, spec: string): string | null {
@@ -40,16 +37,11 @@ export function staticGraph(entry: string): Map<string, string[]> {
 }
 
 /**
- * Modules in the static graph of `entry` that can load Rapier: any that
- * import the package themselves, and the loader that imports it on first
- * use. Reaching the loader puts the Hide and Seek engine in the bundle,
- * even though the 4 MB package itself waits for a call.
+ * Files in the static graph of `entry` that hold an env's simulation: its
+ * module or its env class, relative to src. An env's light info never
+ * reaches them, so a page that reaches one ships the whole simulation
+ * instead of loading it when it first needs it (loadEpisodeModule).
  */
-export function rapierImporters(entry: string): string[] {
-  return [...staticGraph(entry)].filter(([file, specs]) => specs.includes(RAPIER) || file === RAPIER_LOADER).map(([file]) => file);
-}
-
-/** Modules in the static graph of `entry` that import the Rapier package itself, so it downloads before `entry` can run. */
-export function eagerRapierImporters(entry: string): string[] {
-  return [...staticGraph(entry)].filter(([, specs]) => specs.includes(RAPIER)).map(([file]) => file);
+export function simulationImporters(entry: string): string[] {
+  return [...staticGraph(entry).keys()].map((f) => relative(SRC, f)).filter((f) => /^engine\/[a-z]+\/(module|env)\.ts$/.test(f));
 }

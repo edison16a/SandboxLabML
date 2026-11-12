@@ -46,7 +46,7 @@ describe('Navigation courses in storage', () => {
     const next = new SandboxDb(name);
     setDb(next);
     expect((await next.settings.get('k'))?.value).toBe(7);
-    expect(await next.sandboxRooms.count()).toBe(1);
+    expect(await next.table('sandboxRooms').count()).toBe(1);
     await saveCourse(emptyCourse('course-1', 'New'));
     expect(await listCourses()).toHaveLength(1);
   });

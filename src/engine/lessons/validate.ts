@@ -1,9 +1,8 @@
-import { episodeInfo, isKnownEnv } from '../env/registry';
+import { episodeInfo, isEpisodeEnv } from '../env/registry';
 import type { EnvId } from '../env/types';
 import { MAX_CHECK_GENERATIONS } from './checks/metricAbove';
 import { testRunMetricNames, trainingMetricNames } from './episode/names';
 import { TEST_DRIVE_METRICS } from './checks/testRun';
-import { HIDESEEK_TRAINING_METRICS, MAX_HIDESEEK_CHECK_GENERATIONS, TEST_MATCH_METRICS } from './hideseek/metrics';
 import { scriptComments, styleProblems } from './style';
 import { TRAINING_METRICS } from './training';
 import type { AstPattern, Lesson, LessonCheck, LessonStep } from './types';
@@ -15,10 +14,9 @@ interface Measures {
   maxGenerations: number;
 }
 
-/** What Racing and Hide and Seek checks can measure, and how many generations their training checks may ask for. */
+/** What Racing checks can measure, and how many generations their training checks may ask for. */
 const MEASURES: Partial<Record<EnvId, Measures>> = {
   racing: { testRunName: 'a test drive', testRun: TEST_DRIVE_METRICS, training: TRAINING_METRICS, maxGenerations: MAX_CHECK_GENERATIONS },
-  hideseek: { testRunName: 'a test match', testRun: TEST_MATCH_METRICS, training: HIDESEEK_TRAINING_METRICS, maxGenerations: MAX_HIDESEEK_CHECK_GENERATIONS },
 };
 
 /** What a course's checks can measure. Envs added through the registry describe theirs in their module's lesson hooks. */
@@ -117,7 +115,7 @@ function prose(lesson: Lesson): Array<[string, string]> {
 export function validateLesson(lesson: Lesson): string[] {
   const out: string[] = [];
   if (!text(lesson.id) || !KEBAB.test(lesson.id)) out.push('id must be lowercase words joined by hyphens');
-  if (typeof lesson.course !== 'string' || !isKnownEnv(lesson.course)) out.push(`unknown course ${String(lesson.course)}`);
+  if (typeof lesson.course !== 'string' || !isEpisodeEnv(lesson.course)) out.push(`unknown course ${String(lesson.course)}`);
   if (!Number.isInteger(lesson.order) || lesson.order < 1) out.push('order must be a whole number from 1');
   if (!text(lesson.title) || !text(lesson.summary)) out.push('title and summary are required');
   if (!finite(lesson.minutes) || lesson.minutes < 5 || lesson.minutes > 10) out.push('minutes must be between 5 and 10');

@@ -9,7 +9,7 @@ export type CoordinatorEvent =
   | { type: 'generation'; record: GenerationRecord }
   | { type: 'checkpoint'; generation: number; state: EpisodeTrainerState }
   | { type: 'live-start'; generation: number; speed: number }
-  /** What the population trains on (Racing: the track). Sent on load and whenever a script or the curriculum changes it. */
+  /** What the population trains on, such as a level or a course. Sent on load and whenever a script or the curriculum changes it. */
   | { type: 'content'; content: unknown }
   | { type: 'error'; message: string };
 

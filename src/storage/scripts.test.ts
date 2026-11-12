@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { RACING_PRESETS } from '@/engine/script';
+import { DRIVING_PRESETS } from '@/engine/script/presets/driving';
 import { SandboxDb, setDb } from './db';
 import { getLessonProgress, listLessonProgress, resetLessonProgress, saveLessonProgress } from './lessonProgress';
 import {
@@ -19,17 +19,17 @@ import {
 let n = 0;
 beforeEach(() => setDb(new SandboxDb(`scripts-test-${n++}`)));
 
-const src = (name: string, env = 'racing') => `script "${name}" for ${env} v1\n`;
+const src = (name: string, env = 'driving') => `script "${name}" for ${env} v1\n`;
 
 describe('scripts repository', () => {
   it('creates, lists newest first and filters by env', async () => {
     const a = await createScript({ name: 'A', source: src('A') });
     await new Promise((r) => setTimeout(r, 5));
-    const b = await createScript({ name: 'B', source: src('B', 'hideseek') });
-    expect(a.env).toBe('racing');
-    expect(b.env).toBe('hideseek');
+    const b = await createScript({ name: 'B', source: src('B', 'navigation') });
+    expect(a.env).toBe('driving');
+    expect(b.env).toBe('navigation');
     expect((await listScripts()).map((s) => s.name)).toEqual(['B', 'A']);
-    expect((await listScripts('racing')).map((s) => s.name)).toEqual(['A']);
+    expect((await listScripts('driving')).map((s) => s.name)).toEqual(['A']);
   });
 
   it('keeps the last 20 versions, newest first, without duplicates', async () => {
@@ -57,22 +57,24 @@ describe('scripts repository', () => {
   });
 
   it('serves presets read only and duplicates them into editable copies', async () => {
-    const presets = listPresets('racing');
-    expect(presets.map((p) => p.id)).toEqual(RACING_PRESETS.map((p) => p.id));
+    const presets = listPresets('driving');
+    expect(presets.map((p) => p.id)).toEqual(DRIVING_PRESETS.map((p) => p.id));
     expect(presets.every((p) => p.readonly)).toBe(true);
-    const beginner = await getScript('racing-beginner');
+    const beginner = await getScript('driving-beginner');
     expect(beginner?.readonly).toBe(true);
-    await expect(saveScript('racing-beginner', 'x')).rejects.toThrow('read only');
-    await expect(deleteScript('racing-beginner')).rejects.toThrow('read only');
-    const copy = await duplicateScript('racing-beginner');
+    await expect(saveScript('driving-beginner', 'x')).rejects.toThrow('read only');
+    await expect(deleteScript('driving-beginner')).rejects.toThrow('read only');
+    const copy = await duplicateScript('driving-beginner');
     expect(copy.readonly).toBe(false);
     expect(copy.source).toBe(beginner?.source);
     expect(copy.tier).toBe('custom');
   });
 
   it('reads the env from the header', () => {
-    expect(envFromSource('// hi\nscript "x" for hideseek v1')).toBe('hideseek');
-    expect(envFromSource('nothing here', 'racing')).toBe('racing');
+    expect(envFromSource('// hi\nscript "x" for navigation v1')).toBe('navigation');
+    expect(envFromSource('nothing here', 'navigation')).toBe('navigation');
+    // A header naming a lab this version does not have reads as no header.
+    expect(envFromSource('script "x" for hideseek v1', 'navigation')).toBe('navigation');
   });
 });
 

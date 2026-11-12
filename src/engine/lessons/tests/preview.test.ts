@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { HIDESEEK_SNAPSHOT } from '../../hideseek/snapshot';
 import { findScriptPreset } from '../../script/presets';
-import { HIDESEEK_BEGINNER } from '../../script/presets/hideseekBeginner';
 import { testDrive } from '../checks/testRun';
-import { playTestMatch } from '../hideseek/testMatch';
-import { prepareScript, type PreparedHideSeek, type PreparedRacing, type PreparedScript } from '../prepare';
+import { prepareScript, type PreparedRacing, type PreparedScript } from '../prepare';
 import { recordPreview } from '../preview/record';
 import type { LessonPreview } from '../preview/types';
 
@@ -36,22 +33,8 @@ describe('lesson preview', () => {
     expect(p.poses[0]).toBeGreaterThanOrEqual(p.bounds.minX - p.width);
   });
 
-  it('records the test match a check plays, one snapshot per tick', async () => {
-    const p = await preview(HIDESEEK_BEGINNER);
-    const check = await playTestMatch(prepared(HIDESEEK_BEGINNER) as PreparedHideSeek);
-    if (p.kind !== 'hideseek') throw new Error('Expected a match');
-    expect(p.layout).toBe('open');
-    expect(p.ticks).toBe(900);
-    expect(p.prepTicks).toBe(270);
-    expect(p.frames).toHaveLength(900 * HIDESEEK_SNAPSHOT.stride);
-    expect(p.rewards[2 * 899]).toBeCloseTo(check!.hiderReward, 3);
-    expect(p.rewards[2 * 899 + 1]).toBeCloseTo(check!.seekerReward, 3);
-    // The snapshot's clock reads 30 s after the last tick.
-    expect(p.frames[899 * HIDESEEK_SNAPSHOT.stride]).toBeCloseTo(30, 3);
-  });
-
   it('says why it cannot preview a script', async () => {
-    const wrongBrain = await recordPreview(racing.replace(/brain racing-[a-z]+/, 'brain hideseek-starter'));
+    const wrongBrain = await recordPreview(racing.replace(/brain racing-[a-z]+/, 'brain driving-starter'));
     expect(wrongBrain).toMatchObject({ ok: false });
     const broken = await recordPreview('script "x" for racing v1\neach tick {\n  reward car.sped\n}\n');
     expect(!broken.ok && broken.message).toMatch(/Line 3: /);

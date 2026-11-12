@@ -80,10 +80,10 @@ describe('NetworkPainter', () => {
 
   it('shrinks the neurons of a crowded column so no two overlap, and keeps full size where there is room', () => {
     const tracker = new InnovationTracker();
-    // As many inputs as the hero's Hide and Seek brain, in its short card.
-    const template = createTemplate({ inputCount: 17, outputCount: 4, activation: 'tanh', wiring: 'direct' }, tracker);
+    // As many inputs as the Driving Starter brain, in a short card.
+    const template = createTemplate({ inputCount: 17, outputCount: 2, activation: 'tanh', wiring: 'direct' }, tracker);
     const g = createGenome(template, tracker, new Rng(3), 0);
-    const painter = new NetworkPainter(g, new Network(g), ['Move', 'Turn', 'Grab', 'Lock']);
+    const painter = new NetworkPainter(g, new Network(g), ['Steer', 'Pedal']);
     painter.layout({ width: 276, height: 140, margin: { left: 10, right: 104, top: 6, bottom: 6 } });
     const rec = recorder();
     painter.paint(rec.g);

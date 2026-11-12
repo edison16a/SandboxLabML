@@ -1,10 +1,10 @@
 /**
  * Contracts shared by every environment. The renderer, the inputs overlay,
  * the network graph and the script compiler all read these instead of
- * knowing about Racing or Hide and Seek directly.
+ * knowing about any one env.
  */
 
-export type EnvId = 'racing' | 'hideseek' | 'driving' | 'navigation';
+export type EnvId = 'racing' | 'driving' | 'navigation';
 
 /** One brain input, described well enough to label it and draw it in 3D. */
 export interface InputSpec {

@@ -5,7 +5,7 @@
  * a frame.
  */
 
-export type StreamName = 'population' | 'ghosts' | 'arenas' | 'sandbox';
+export type StreamName = 'population' | 'ghosts';
 
 export type SpeedMode = '1x' | '2x' | '4x' | 'turbo' | 'max';
 
@@ -22,17 +22,6 @@ export interface InspectPayload {
   out: Float32Array;
 }
 
-/**
- * Where one worker's slice sits in a stream that several workers fill
- * together, such as the Hide and Seek arenas. The main thread merges the
- * slices by `first`, and drops frames whose `epoch` is not the current one.
- */
-export interface StreamPart {
-  first: number;
-  total: number;
-  epoch: number;
-}
-
 export type StreamOut =
   | {
       kind: 'start';
@@ -41,8 +30,6 @@ export type StreamOut =
       count: number;
       /** Optional per-agent tags, e.g. species id for coloring or ghost generation. */
       tags?: Int32Array;
-      /** A stream split over several workers: this part's first agent, the total across parts and the episode it belongs to. */
-      part?: StreamPart;
       /** Floats of the env's world block (lights, traffic, movers) that follow the agents in every frame. */
       world?: number;
       /** The env's own plain data about the episode (see EpisodeEnv.scene), such as the course on screen. */
@@ -58,7 +45,6 @@ export type StreamOut =
       inspect?: InspectPayload;
       /** Normalized ray readings for every agent, rays per agent = rays.length / count. */
       rays?: Float32Array;
-      part?: StreamPart;
     }
   | { kind: 'end'; stream: StreamName; generation: number };
 

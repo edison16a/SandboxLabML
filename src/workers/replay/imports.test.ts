@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { eagerRapierImporters, rapierImporters } from '@/engine/lessons/tests/importGraph';
+import { simulationImporters } from '@/engine/lessons/tests/importGraph';
 
-describe('replay worker imports', () => {
-  it('boot without Rapier, so a replayed car never waits for the physics download', () => {
-    // The worker plays Hide and Seek too, so it reaches the loader, but the package itself only loads on first use.
-    expect(rapierImporters('workers/replay/replay.worker.ts').length).toBeGreaterThan(0);
-    expect(eagerRapierImporters('workers/replay/replay.worker.ts')).toEqual([]);
+describe('worker imports', () => {
+  it('boot without any env simulation, which each loads for the run it is handed', () => {
+    for (const entry of ['workers/replay/replay.worker.ts', 'workers/sim/sim.worker.ts', 'workers/coordinator/coordinator.worker.ts']) {
+      expect(simulationImporters(entry), entry).toEqual([]);
+    }
   });
 });

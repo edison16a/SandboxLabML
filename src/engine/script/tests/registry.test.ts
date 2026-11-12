@@ -8,9 +8,8 @@ import { REGISTRY, SLICES, entriesByName, type RegistryEntry } from '../registry
 import { TICK_DT } from '../registry/core';
 import { check } from '../checker';
 import { parse } from '../parser';
-import { HIDESEEK_PRESETS } from '../presets/hideseek';
 import { RACING_PRESETS } from '../presets/racing';
-import { errors, inGeneration, inHideSeekGeneration, inHideSeekTick, inNavigationGeneration, inNavigationTick, inTick, problems } from './helpers';
+import { errors, inGeneration, inNavigationGeneration, inNavigationTick, inTick, problems } from './helpers';
 
 const CATEGORIES = ['sensors', 'actions', 'rewards', 'logic', 'math', 'evolution', 'environment'];
 const TIERS = ['beginner', 'intermediate', 'advanced'];
@@ -30,10 +29,6 @@ function exampleScripts(e: RegistryEntry): string[] {
     if (e.scope !== 'generation') out.push(inTick(`  drive(steer: brain.steer, pedal: brain.pedal)\n${body}`));
     if (e.scope !== 'tick') out.push(inGeneration(body));
   }
-  if (e.env === 'hideseek' || e.env === 'core') {
-    if (e.scope !== 'generation') out.push(inHideSeekTick(body));
-    if (e.scope !== 'tick') out.push(inHideSeekGeneration(body));
-  }
   if (e.env === 'navigation' || e.env === 'core') {
     if (e.scope !== 'generation') out.push(inNavigationTick(body));
     if (e.scope !== 'tick') out.push(inNavigationGeneration(body));
@@ -43,7 +38,7 @@ function exampleScripts(e: RegistryEntry): string[] {
 
 describe('registry entries', () => {
   // Envs added through the registry check their own slice next to it, such as registry/driving/driving.test.ts.
-  for (const e of REGISTRY.filter((x) => x.env === 'core' || x.env === 'racing' || x.env === 'hideseek')) {
+  for (const e of REGISTRY.filter((x) => x.env === 'core' || x.env === 'racing' || x.env === 'navigation')) {
     it(`${e.name} is documented and its example compiles`, () => {
       expect(e.summary.length).toBeGreaterThan(10);
       expect(sentences(e.summary)).toBe(1);
@@ -82,17 +77,8 @@ describe('registry entries', () => {
     }
   });
 
-  // Core entries are shared, and their tags describe the racing presets, so only Hide and Seek entries are compared here.
-  it('hide and seek entries list exactly the tiers whose preset uses them', () => {
-    for (const preset of HIDESEEK_PRESETS) {
-      const used = usedBy(preset.source).filter((e) => e.env === 'hideseek').map((e) => e.name);
-      const tagged = REGISTRY.filter((e) => e.env === 'hideseek' && e.presets.includes(preset.tier)).map((e) => e.name);
-      expect(used.sort(), preset.id).toEqual(tagged.sort());
-    }
-  });
-
   it('names are unique within each environment', () => {
-    for (const env of ['racing', 'hideseek', 'navigation'] as const) {
+    for (const env of ['racing', 'navigation'] as const) {
       const names = SLICES.filter((s) => s.env === 'core' || s.env === env).flatMap((s) => s.entries.map((e) => e.name));
       expect(new Set(names).size).toBe(names.length);
       expect(entriesByName(env).size).toBe(names.length);
@@ -103,8 +89,8 @@ describe('registry entries', () => {
     expect(TICK_DT).toBe(SIM_DT);
   });
 
-  it('does not leak racing names into hide and seek scripts', () => {
-    const source = 'script "h" for hideseek v1\neach tick {\n  reward 1 when car.offTrack\n}\n';
+  it('does not leak racing names into navigation scripts', () => {
+    const source = 'script "h" for navigation v1\neach tick {\n  reward 1 when car.offTrack\n}\n';
     expect(errors(source).map((d) => d.code)).toContain('wrong-env');
   });
 });

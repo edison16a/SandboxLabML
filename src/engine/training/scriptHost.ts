@@ -4,7 +4,6 @@ import { defaultPlan } from '../neat/population';
 import type { NeatConfig } from '../neat/config';
 import type { GenerationPlan } from '../neat/plan';
 import type { Track } from '../racing/track/types';
-import type { HideSeekAgent } from '../hideseek/agents/agent';
 
 /** Facts about the finished generation that a script's `each generation` block can read. */
 export interface GenerationContext {
@@ -24,7 +23,6 @@ export type TrackDirective = { kind: 'builtin'; id: string } | { kind: 'random';
 export interface GenerationDirectives {
   plan: GenerationPlan;
   racing?: { track?: TrackDirective };
-  hideseek?: Record<string, unknown>;
   /**
    * Requests for the script's own env, such as a level or a course. A
    * script belongs to one env, so one slot is enough: that env's registry
@@ -55,12 +53,6 @@ export interface ScriptHost {
    * has no script, and the env module uses its own built in reward.
    */
   createController<V>(ctx: ControllerRequest): AgentController<V> | null;
-  /**
-   * Controllers for both Hide and Seek teams. Optional: when it is missing
-   * the trainer uses the built-in rewards. Script sensors for each team come
-   * from the returned controllers' customSensorCount.
-   */
-  createHideSeekControllers?(seed: number): { hider: AgentController<HideSeekAgent>; seeker: AgentController<HideSeekAgent> };
   runGeneration(ctx: GenerationContext, rng: Rng, neat: NeatConfig): GenerationDirectives;
 }
 

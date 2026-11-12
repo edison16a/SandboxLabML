@@ -2,7 +2,7 @@
  * Course data. A course is a rectangular room on the floor: x runs from the
  * start line to the finish line, z across the width, both in meters with the
  * room's center at the origin. Agents face +x at the start, and heading 0
- * points along +x (forward is (cos yaw, -sin yaw), as in Hide and Seek).
+ * points along +x (forward is (cos yaw, -sin yaw)).
  *
  * Specs are plain JSON, so a worker can rebuild exactly the same course
  * from a setup message, and a run can store the courses it trained on.

@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { BenchModel } from '@/engine/bench';
 import { episodeInfo } from '@/engine/env/registry';
+import type { Genome } from '@/engine/neat/types';
 import { isLabEnv } from '@/features/shell/labs';
 import type { RunRow } from '@/storage/db';
 import { listGenerationNumbers } from '@/storage/generationIndex';
@@ -44,7 +44,7 @@ export function generationsOf(run: RunRow): Promise<number[]> {
 }
 
 /** What the benchmark scores for a generation: its champion. */
-export async function loadModel(run: RunRow, generation: number): Promise<BenchModel | null> {
+export async function loadModel(run: RunRow, generation: number): Promise<Genome | null> {
   return loadChampion(run.id, generation);
 }
 

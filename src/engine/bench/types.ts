@@ -1,5 +1,4 @@
 import type { EnvId } from '../env/types';
-import type { HideSeekInputConfig } from '../hideseek/inputConfig';
 
 /** The four axes of the Racing radar chart, each 0 to 1. */
 export interface RacingRadar {
@@ -9,20 +8,12 @@ export interface RacingRadar {
   generalization: number;
 }
 
-/** The four axes of the Hide and Seek radar chart, each 0 to 1. See bench/hideseek/scoring.ts. */
-export interface HideSeekRadar {
-  hiding: number;
-  seeking: number;
-  cover: number;
-  generalization: number;
-}
-
 /**
  * Radar values for one result. Each environment has its own axes, so the
  * chart reads their keys and labels from RADAR_AXES instead of assuming
  * Racing's four.
  */
-export type BenchRadar = RacingRadar | HideSeekRadar | Readonly<Record<string, number>>;
+export type BenchRadar = RacingRadar | Readonly<Record<string, number>>;
 
 /** Progress and cancel for a benchmark that runs in slices. */
 export interface BenchOptions {
@@ -60,34 +51,12 @@ export interface BenchResult {
   /** Composite score, 0 to 100. */
   score: number;
   radar: BenchRadar;
-  /** Raw metrics, e.g. laps, lapTime, crashRate for racing or hiddenShare, winRate, elo for hide and seek. */
+  /** Raw metrics, such as the share of trips that arrived. */
   metrics: Record<string, number>;
-  /** Per track (racing) or per layout and opponent (hide and seek) breakdown. */
+  /** One row per part of the exam, such as a city or a course. */
   parts: Array<{ id: string; label: string; score: number; metrics: Record<string, number> }>;
   /** Score per 100 parameters, which ties the benchmark to the model card. */
   scorePer100Params: number;
-}
-
-/** One team of a shipped reference champion: what it senses and its genome in the binary format, as base64. */
-export interface ReferenceBrain {
-  inputs: HideSeekInputConfig;
-  genome: string;
-}
-
-/**
- * A Hide and Seek reference champion: the hider and seeker champions of
- * one generation of a preset's reference run. They are the exam's
- * opponents, so they ship with the curves and are rebuilt with them.
- */
-export interface ReferenceChampion {
-  tier: ReferenceTier;
-  /** The training seed and generation the pair comes from. */
-  seed: number;
-  generation: number;
-  /** Elo-style rating from a round robin between the reference champions. */
-  rating: number;
-  hider: ReferenceBrain;
-  seeker: ReferenceBrain;
 }
 
 /**
@@ -118,8 +87,6 @@ export interface BenchReferences {
   generatedAt: string;
   seeds: number;
   references: ReferenceCurve[];
-  /** Hide and Seek only: the champions the exam plays against. */
-  champions?: ReferenceChampion[];
-  /** Single population envs: one trained champion per preset, for the Sandbox. */
+  /** One trained champion per preset, for the Sandbox. */
   models?: ReferenceModel[];
 }

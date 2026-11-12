@@ -21,8 +21,6 @@ export interface RunRow {
   /** Best value of each env metric so far, in the direction it prefers, keyed like the env's metrics. */
   best?: Record<string, number>;
   benchmark?: number;
-  /** Hide and Seek only: share of seek time the newest hiders stayed hidden from current seekers, 0 to 1. */
-  hiddenShare?: number;
   /** Soft delete: set when moved to Trash, purged 7 days later. */
   deletedAt?: number;
 }
@@ -105,22 +103,13 @@ export interface BenchmarkRow {
 }
 
 /**
- * One Hide and Seek generation: both teams' stats and champions, plus game
- * stats such as hidden share. Kept apart from racing rows because the shape
- * differs (two populations per generation).
+ * A generation of a two team run, from a lab this version no longer has.
+ * Nothing writes these rows any more. Only their keys are read, so that
+ * destroying such a run still frees its rows.
  */
-export interface HideSeekGenerationRow {
+export interface RetiredGenerationRow {
   runId: string;
   generation: number;
-  /** HideSeekGenerationStats from the engine, stored as plain data. */
-  stats: unknown;
-  hiderChampion: Uint8Array;
-  seekerChampion: Uint8Array;
-  /** Seeds and layouts of the last round, so the grid can replay it. */
-  replay?: unknown;
-  simSeconds: number;
-  wallMs: number;
-  benchmark?: number;
 }
 
 export interface SettingRow {
@@ -133,18 +122,6 @@ export interface TrackRow {
   id: string;
   name: string;
   spec: TrackSpec;
-  updatedAt: number;
-}
-
-/**
- * A Hide and Seek Sandbox room the user drew. Rooms belong to no run, so
- * every trained model can play in every room. `room` is a SandboxRoom as
- * plain data and is cleaned on read.
- */
-export interface SandboxRoomRow {
-  id: string;
-  room: unknown;
-  createdAt: number;
   updatedAt: number;
 }
 
@@ -170,9 +147,8 @@ export class SandboxDb extends Dexie {
   lessonProgress!: Table<LessonProgressRow, string>;
   benchmarks!: Table<BenchmarkRow, [string, number]>;
   settings!: Table<SettingRow, string>;
-  hsGenerations!: Table<HideSeekGenerationRow, [string, number]>;
+  hsGenerations!: Table<RetiredGenerationRow, [string, number]>;
   tracks!: Table<TrackRow, string>;
-  sandboxRooms!: Table<SandboxRoomRow, string>;
   courses!: Table<CourseRow, string>;
 
   constructor(name = 'sandboxlab') {
@@ -188,8 +164,10 @@ export class SandboxDb extends Dexie {
       benchmarks: '[runId+generation], runId',
       settings: 'key',
     });
+    // Versions 2 to 5 only add tables, so existing rows carry over untouched. The
+    // tables of removed labs (hsGenerations, tracks, sandboxRooms) stay declared:
+    // dropping one would need a new version, and their rows harm nothing.
     this.version(2).stores({ hsGenerations: '[runId+generation], runId' });
-    // Versions 3 to 5 only add tables, so existing rows carry over untouched.
     this.version(3).stores({ tracks: 'id, updatedAt' });
     this.version(4).stores({ sandboxRooms: 'id, createdAt' });
     this.version(5).stores({ courses: 'id, createdAt' });

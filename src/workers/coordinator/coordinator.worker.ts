@@ -3,14 +3,11 @@ import * as Comlink from 'comlink';
 import '@/workers/shared/loadScripts';
 import type { RunConfig } from '@/engine/training/runConfig';
 import type { EpisodeTrainerState } from '@/engine/training/episodeTrainer';
-import type { HideSeekTrainerState } from '@/engine/hideseek/trainer/types';
 import type { SpeedMode } from '../shared/protocol';
 import type { SimApi } from '../sim/sim.worker';
 import { loadEpisodeModule } from '@/engine/env/registry';
 import { EpisodeCoordinator } from './episodeCoordinator';
 import type { EventSink } from './events';
-import { HideSeekCoordinator } from './hideSeekCoordinator';
-import type { HideSeekEventSink } from './hideSeekEvents';
 
 /**
  * The coordinator owns NEAT: selection, generations and checkpoints. It never
@@ -21,8 +18,6 @@ let sims: Comlink.Remote<SimApi>[] = [];
 /** The single population run this pool trains. Each lab has its own pool, so one is enough. */
 let episodes: EpisodeCoordinator | null = null;
 let emit: EventSink = () => {};
-let hideseek: HideSeekCoordinator | null = null;
-let emitHideSeek: HideSeekEventSink = () => {};
 
 const api = {
   connect(simPorts: MessagePort[], sink: EventSink) {
@@ -52,31 +47,6 @@ const api = {
   async unload() {
     await episodes?.stop();
     episodes = null;
-  },
-  /** Hide and Seek has its own event sink, so its messages never reach the Racing lab. */
-  connectHideSeek(sink: HideSeekEventSink) {
-    emitHideSeek = sink;
-  },
-  async loadHideSeek(config: RunConfig, state?: HideSeekTrainerState) {
-    await hideseek?.stop();
-    hideseek = new HideSeekCoordinator(config, sims, (e) => emitHideSeek(e), state);
-    return hideseek.generation;
-  },
-  startHideSeek(generations?: number) {
-    hideseek?.start(generations);
-  },
-  pauseHideSeek() {
-    hideseek?.pause();
-  },
-  setHideSeekSpeed(mode: SpeedMode) {
-    hideseek?.setSpeed(mode);
-  },
-  checkpointHideSeek() {
-    return hideseek?.checkpoint() ?? null;
-  },
-  async unloadHideSeek() {
-    await hideseek?.stop();
-    hideseek = null;
   },
 };
 

@@ -13,20 +13,11 @@ export interface EvaluateOptions {
 }
 
 /**
- * The Hide and Seek checks bring in the Rapier physics engine, a few
- * megabytes of WASM, so they load the first time a Hide and Seek lesson
- * plays a match instead of with the Learn tab.
- */
-const hideSeekChecks = () => import('./hideseek/checks');
-
-/**
  * Runs one lesson check against a script. Every check needs the script to
  * compile first, so a learner always hears about the first error before
  * anything else. Never throws: problems come back as a failed outcome with
  * a message meant for the learner. Racing test drives and training run on
- * the track the script picks with useTrack, or the Oval. Hide and Seek test
- * matches play in the first room the script picks with useLayout, or the
- * open room.
+ * the track the script picks with useTrack, or the Oval.
  */
 export async function evaluateCheck(check: LessonCheck, source: string, opts: EvaluateOptions = {}): Promise<CheckOutcome> {
   try {
@@ -40,11 +31,9 @@ export async function evaluateCheck(check: LessonCheck, source: string, opts: Ev
         return astContainsCheck(check, p);
       case 'testRun':
         if (p.env === 'racing') return testRunCheck(check, p);
-        if (p.env === 'hideseek') return await (await hideSeekChecks()).hideSeekTestRunCheck(check, p, opts.signal);
         return await episodeTestRunCheck(check, p);
       case 'metricAbove':
         if (p.env === 'racing') return await metricAboveCheck(check, p, opts);
-        if (p.env === 'hideseek') return await (await hideSeekChecks()).hideSeekMetricCheck(check, p, opts);
         return await episodeMetricCheck(check, p, opts);
       default:
         return { passed: false, message: 'This step has a check this version of the app does not know.' };

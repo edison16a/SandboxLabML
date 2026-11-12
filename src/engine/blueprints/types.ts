@@ -1,5 +1,4 @@
 import type { EnvId } from '../env/types';
-import type { HideSeekInputConfig } from '../hideseek/inputConfig';
 import type { NeatConfig } from '../neat/config';
 import type { Activation, GenomeShape } from '../neat/types';
 import type { RacingInputConfig } from '../racing/sensors/inputConfig';
@@ -38,13 +37,8 @@ export interface RacingBlueprint extends BlueprintBase {
   inputs: RacingInputConfig;
 }
 
-export interface HideSeekBlueprint extends BlueprintBase {
-  env: 'hideseek';
-  inputs: HideSeekInputConfig;
-}
-
 /** Ids of the envs that plug in through the env registry after Racing. */
-export type EpisodeEnvId = Exclude<EnvId, 'racing' | 'hideseek'>;
+export type EpisodeEnvId = Exclude<EnvId, 'racing'>;
 
 /**
  * The sensor config of an env added through the registry. Only its module
@@ -67,7 +61,7 @@ export interface EpisodeBlueprint<E extends EpisodeEnvId = EpisodeEnvId, I exten
  * What a brain senses and how it starts out. Stored as JSON in the
  * blueprints table and frozen into a run's config when the run is created.
  */
-export type Blueprint = RacingBlueprint | HideSeekBlueprint | EpisodeBlueprint;
+export type Blueprint = RacingBlueprint | EpisodeBlueprint;
 
 export interface BlueprintIssue {
   field: string;
