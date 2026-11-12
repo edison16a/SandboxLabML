@@ -129,7 +129,7 @@ describe('what the Navigation viewport shows', () => {
   it("reads training's level under Max, not the level of the replay it holds still", () => {
     const state = lab({ status: 'running', speed: '1x' });
     const { ghosts, feeds } = setup(state);
-    // A replay of a level 1 course has a frame, then training races on under Max to level 4.
+    // A replay of a level 1 course has a frame, then training climbs on under Max to level 4.
     ghosts.start(3, generateCourse(1, 9));
     ghosts.frame(NAV_RUNNING);
     expect(feeds.level(state)).toBe(1);
