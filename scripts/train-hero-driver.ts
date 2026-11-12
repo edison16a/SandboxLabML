@@ -10,16 +10,18 @@
  * those trips, picked to show a stop at a red and a stop for a person.
  *
  * The shipped file came from this, which trains for about a quarter of an
- * hour on one core and then names the trips and the opening moment picked
- * by eye from the trips the pick found:
+ * hour on one core, keeps the champion of generation 201 (the one a full
+ * pick ranked first) and names the trips and the opening moment picked by
+ * eye from the trips it drives cleanly:
  *
- *   npm run hero:driver -- --seed 7 --generations 220 --tries 300 \
- *     --trips 447494230,983170199,2215336046,2008511112,1918831909,2399240596 --opening 300
+ *   npm run hero:driver -- --seed 7 --generations 220 --generation 201 --tries 300 \
+ *     --trips 447494230,983170199,2215336046,2008511112,272948758,2399240596 --opening 300
  *
  * Options, all optional: --seed 7, --generations 220, --population 100,
  * --save file (writes the trained champions, to pick again later),
  * --pool file[,file] (picks from saved brains instead of training: a
- * reference file, a reference generator dump or a --save file), --level 5,
+ * reference file, a reference generator dump or a --save file),
+ * --generation 201 (keeps only the champion of that generation), --level 5,
  * --city midtown, --tries 80 (trip seeds per finalist), --loop 5 (trips in
  * the loop), --budget 240 (seconds of driving in the loop), --trips
  * seed,seed (plays these trips in this order instead, each checked fit
@@ -105,8 +107,11 @@ function main(): void {
   const level = numberArg(args, 'level', 5);
   const out = args.out ?? 'public/hero/driver.json';
   const seed = numberArg(args, 'seed', 7);
-  const candidates = args.pool ? loadDriverPool(args.pool.split(',')) : train(seed, numberArg(args, 'generations', 220), numberArg(args, 'population', 100));
-  if (args.save) saveDriverPool(args.save, candidates);
+  const trained = args.pool ? loadDriverPool(args.pool.split(',')) : train(seed, numberArg(args, 'generations', 220), numberArg(args, 'population', 100));
+  if (args.save) saveDriverPool(args.save, trained);
+  // Naming a generation skips the ranking, so a loop picked by eye stays on the brain it was picked for.
+  const candidates = args.generation ? trained.filter((c) => c.label.endsWith(`generation ${args.generation}`)) : trained;
+  if (candidates.length === 0) throw new Error(`No champion of generation ${args.generation} to pick.`);
   console.log(`${candidates.length} candidates`);
   const { best, trips } = pickDriver(candidates, city, level, numberArg(args, 'tries', 80));
   const loop = args.trips ? namedTrips(best, city, level, args.trips.split(',').map(Number)) : chooseLoop(trips, numberArg(args, 'loop', 5), numberArg(args, 'budget', 240));
