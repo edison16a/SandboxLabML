@@ -19,7 +19,8 @@
     "format": "prettier --write .",
     "refs": "tsx scripts/generate-references.ts",
     "icons": "tsx scripts/generate-icons.ts",
-    "hero:car": "tsx scripts/train-hero-racer.ts",
+    "hero:driver": "tsx scripts/train-hero-driver.ts",
+    "hero:navigator": "tsx scripts/train-hero-navigator.ts",
     "hero:poster": "node scripts/capture-hero-poster.mjs"
   },
   "dependencies": {
