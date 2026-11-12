@@ -1,7 +1,7 @@
 import { SUV, SUV_SIZE } from '@/engine/driving/car/params';
 
 /** 22 inch wheels on low profile tires, m. */
-export const WHEEL = { radius: 0.388, width: 0.29, rim: 0.286 };
+export const WHEEL = { radius: 0.395, width: 0.295, rim: 0.29 };
 
 /**
  * The SUV's frame. +X is forward, +Y up, Z across with +Z on the left, and
@@ -17,7 +17,7 @@ export const BODY = {
   axleFront: SUV.wheelbase / 2 + 0.03,
   axleRear: -SUV.wheelbase / 2 + 0.03,
   /** Half track: wheel centers either side of the centerline. */
-  track: 0.845,
+  track: 0.83,
 };
 
 /** The four wheel centers (x, z), front pair first, so steering can pick them out. */

@@ -18,7 +18,7 @@ export interface SuvMaterials {
 }
 
 /** How strongly each slot mirrors the environment: paint and glass glossy, tires and liners dull. */
-const REFLECT: Partial<Record<Slot, number>> = { paint: 1.05, glass: 1.6, trim: 0.9, clad: 0.35, grille: 0.45, metal: 1, rim: 0.9, caliper: 0.8, disc: 0.5, tire: 0.35, liner: 0.25, tail: 0.6 };
+const REFLECT: Partial<Record<Slot, number>> = { paint: 1.05, glass: 1.05, trim: 0.9, clad: 0.35, grille: 0.45, metal: 1, rim: 0.9, face: 1, caliper: 0.8, disc: 0.5, tire: 0.35, liner: 0.25, tail: 0.6 };
 
 /**
  * Tail lamp glow at rest and under braking. The lamps skip tone mapping,
@@ -46,10 +46,11 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
   const high = d === 'high';
   const textures: THREE.Texture[] = [];
   const keep = <T extends THREE.Texture>(t: T) => (textures.push(t), t);
-  const paint = new THREE.MeshPhysicalMaterial({ color: PARKED_PAINT, metalness: 0.45, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.025 });
+  // A low base roughness and metalness keep the color deep on the hood and roof: the sharp clear coat carries the reflection.
+  const paint = new THREE.MeshPhysicalMaterial({ color: PARKED_PAINT, metalness: 0.3, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.025 });
   if (d !== 'low') {
     paint.normalMap = keep(repeat(flakeNormalMap(high ? 512 : 256), high ? 10 : 6));
-    paint.normalScale.set(0.45, 0.45);
+    paint.normalScale.set(0.3, 0.3);
   }
   const mesh = <T extends THREE.Texture>(t: T) => keep(repeat(t, 14, 14 * HONEYCOMB_ASPECT));
   const grille = new THREE.MeshStandardMaterial({ map: mesh(honeycombColor(128)), normalMap: d === 'low' ? null : mesh(honeycombNormal(128)), roughness: 0.4, metalness: 0.4 });
@@ -61,14 +62,15 @@ export function createSuvMaterials(tier: DrivingTier): SuvMaterials {
     grille,
     disc,
     tail,
-    glass: new THREE.MeshPhysicalMaterial({ color: '#141c24', metalness: 0.25, roughness: 0.04, clearcoat: 0.8, clearcoatRoughness: 0.02 }),
+    glass: new THREE.MeshPhysicalMaterial({ color: '#0b0f14', metalness: 0.1, roughness: 0.05, clearcoat: 0.6, clearcoatRoughness: 0.03 }),
     trim: new THREE.MeshPhysicalMaterial({ color: '#08090b', metalness: 0.2, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.04 }),
     clad: new THREE.MeshStandardMaterial({ color: '#16171a', roughness: 0.62, metalness: 0.05 }),
     led: new THREE.MeshBasicMaterial({ color: new THREE.Color(4.2, 4.2, 3.9), toneMapped: false }),
     liner: new THREE.MeshStandardMaterial({ color: '#050506', roughness: 0.95 }),
     metal: new THREE.MeshStandardMaterial({ color: '#cfd3d8', metalness: 1, roughness: 0.16 }),
     tire: new THREE.MeshStandardMaterial({ color: '#17181b', roughness: 0.88 }),
-    rim: new THREE.MeshPhysicalMaterial({ color: '#a8acb2', metalness: 0.95, roughness: 0.24, clearcoat: 0.5, clearcoatRoughness: 0.1 }),
+    rim: new THREE.MeshPhysicalMaterial({ color: '#2c2f34', metalness: 0.75, roughness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.08 }),
+    face: new THREE.MeshPhysicalMaterial({ color: '#c3c7cc', metalness: 1, roughness: 0.27, clearcoat: 0.6, clearcoatRoughness: 0.12 }),
     caliper: new THREE.MeshPhysicalMaterial({ color: '#b01c14', roughness: 0.3, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.06 }),
   };
   for (const [slot, k] of Object.entries(REFLECT)) (slots[slot as Slot] as THREE.MeshStandardMaterial).envMapIntensity = k;
