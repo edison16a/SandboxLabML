@@ -52,7 +52,7 @@ export const toyBuiltin: AgentController<ToyWalker> = {
  * Every walker walks along a line toward its goal, and a beacon swings
  * back and forth as shared world state. The controller (the built in
  * reward or a compiled script) turns brain outputs into a pace, a reward
- * and a stop, the way Racing's controller turns them into a drive.
+ * and a stop, the way Driving's controller turns them into a drive.
  */
 export class ToyEnv implements EpisodeEnv<ToyResult> {
   readonly worldFloats = 2;

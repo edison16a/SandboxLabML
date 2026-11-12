@@ -1,14 +1,15 @@
-import { describe, expect, it } from 'vitest';
-import { SIM_DT } from '../../racing/car/params';
-import { buildTrack } from '../../racing/track/buildTrack';
-import { BUILT_IN_TRACKS } from '../../racing/track/presets';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { episodeInfo, registerEpisodeModule } from '../../env/registry';
+import { toyModule } from '../../env/tests/toyEnv';
+import { TOY_SCRIPT_ENV } from '../../env/tests/toyScript';
 import { migrate } from '../autocorrect';
 import { compileScript } from '../compiler';
+import { registerScriptEnv } from '../envs';
+import { SCRIPT_PRESETS } from '../presets';
 import { REGISTRY, SLICES, entriesByName, type RegistryEntry } from '../registry';
 import { TICK_DT } from '../registry/core';
 import { check } from '../checker';
 import { parse } from '../parser';
-import { RACING_PRESETS } from '../presets/racing';
 import { errors, inGeneration, inNavigationGeneration, inNavigationTick, inTick, problems } from './helpers';
 
 const CATEGORIES = ['sensors', 'actions', 'rewards', 'logic', 'math', 'evolution', 'environment'];
@@ -25,7 +26,7 @@ const holes = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]
 function exampleScripts(e: RegistryEntry): string[] {
   const body = `  ${e.example.replace(/\n/g, '\n  ')}`;
   const out: string[] = [];
-  if (e.env === 'racing' || e.env === 'core') {
+  if (e.env === 'core') {
     if (e.scope !== 'generation') out.push(inTick(`  drive(steer: brain.steer, pedal: brain.pedal)\n${body}`));
     if (e.scope !== 'tick') out.push(inGeneration(body));
   }
@@ -37,8 +38,8 @@ function exampleScripts(e: RegistryEntry): string[] {
 }
 
 describe('registry entries', () => {
-  // Envs added through the registry check their own slice next to it, such as registry/driving/driving.test.ts.
-  for (const e of REGISTRY.filter((x) => x.env === 'core' || x.env === 'racing' || x.env === 'navigation')) {
+  // Driving checks its own slice in registry/driving/driving.test.ts.
+  for (const e of REGISTRY.filter((x) => x.env === 'core' || x.env === 'navigation')) {
     it(`${e.name} is documented and its example compiles`, () => {
       expect(e.summary.length).toBeGreaterThan(10);
       expect(sentences(e.summary)).toBe(1);
@@ -55,8 +56,7 @@ describe('registry entries', () => {
       expect(e.cost).toBeGreaterThan(0);
       for (const source of exampleScripts(e)) {
         expect(errors(source), source).toEqual([]);
-        const track = buildTrack(BUILT_IN_TRACKS[0]);
-        expect(() => compileScript(source).script?.createController({ seed: 1, track })).not.toThrow();
+        expect(() => compileScript(source).script?.createController({ seed: 1 })).not.toThrow();
       }
     });
   }
@@ -69,39 +69,47 @@ describe('registry entries', () => {
     return [...used];
   }
 
-  it('presets lists exactly the tiers whose preset script uses the entry', () => {
-    for (const preset of RACING_PRESETS) {
-      const used = usedBy(preset.source).map((e) => e.name);
-      const tagged = REGISTRY.filter((e) => (e.env === 'core' || e.env === 'racing') && e.presets.includes(preset.tier)).map((e) => e.name);
-      expect(used.sort(), preset.id).toEqual(tagged.sort());
+  // Each env compares its own entries with its own presets (see navigationPresets.test.ts and registry/driving/presets.test.ts).
+  it('core entries list exactly the tiers whose preset uses them, in any env', () => {
+    for (const e of REGISTRY.filter((x) => x.env === 'core')) {
+      const tiers = new Set(SCRIPT_PRESETS.filter((p) => usedBy(p.source).includes(e)).map((p) => p.tier));
+      expect([...e.presets].sort(), e.name).toEqual([...tiers].sort());
     }
   });
 
   it('names are unique within each environment', () => {
-    for (const env of ['racing', 'navigation'] as const) {
+    for (const env of ['driving', 'navigation'] as const) {
       const names = SLICES.filter((s) => s.env === 'core' || s.env === env).flatMap((s) => s.entries.map((e) => e.name));
       expect(new Set(names).size).toBe(names.length);
       expect(entriesByName(env).size).toBe(names.length);
     }
   });
 
-  it('the tick length matches the racing simulation step', () => {
-    expect(TICK_DT).toBe(SIM_DT);
+  it('the tick length matches the simulation step of every env', () => {
+    for (const env of ['driving', 'navigation']) expect(TICK_DT).toBe(1 / episodeInfo(env)!.tickHz);
   });
 
-  it('does not leak racing names into navigation scripts', () => {
-    const source = 'script "h" for navigation v1\neach tick {\n  reward 1 when car.offTrack\n}\n';
+  it('does not leak Driving names into Navigation scripts', () => {
+    const source = 'script "h" for navigation v1\neach tick {\n  reward 1 when car.offRoad\n}\n';
     expect(errors(source).map((d) => d.code)).toContain('wrong-env');
   });
 });
 
+// No shipped entry has an old name yet, so the toy env carries one: walker.x was once walker.position.
 describe('renamed entries', () => {
-  const OLD = inTick('  drive(steer: brain.steer, pedal: brain.pedal)\n  reward +1 when checkpoint.hit\n  stop "crash" when car.offRoad');
-  const NEW = inTick('  drive(steer: brain.steer, pedal: brain.pedal)\n  reward +1 when checkpoint.passed\n  stop "crash" when car.offTrack');
+  let undo: Array<() => void> = [];
+  beforeAll(() => {
+    undo = [registerEpisodeModule(toyModule), registerScriptEnv(TOY_SCRIPT_ENV)];
+  });
+  afterAll(() => undo.forEach((f) => f()));
+
+  const toy = (when: string) => `script "t" for toy v1\nbrain toy-basic\n\neach tick {\n  walk(move: brain.move)\n  reward 1 when ${when} > 2 m\n  stop "far" when ${when} > 8 m\n}\n`;
+  const OLD = toy('walker.position');
+  const NEW = toy('walker.x');
 
   it('an old script still compiles, with a warning that offers the new name', () => {
     const found = problems(OLD).filter((d) => d.code === 'renamed');
-    expect(found.map((d) => d.message)).toEqual(['checkpoint.hit is now called checkpoint.passed.', 'car.offRoad is now called car.offTrack.']);
+    expect(found.map((d) => d.message)).toEqual(['walker.position is now called walker.x.', 'walker.position is now called walker.x.']);
     expect(compileScript(OLD).script).not.toBeNull();
   });
 
@@ -112,5 +120,9 @@ describe('renamed entries', () => {
   it('migrate rewrites the text', () => {
     expect(migrate(OLD)).toBe(NEW);
     expect(migrate(NEW)).toBe(NEW);
+  });
+
+  it('a renamed name of another env is not offered', () => {
+    expect(problems(inTick(`  drive(steer: brain.steer, pedal: brain.pedal)\n  reward 1 when walker.position > 2 m`)).map((d) => d.code)).not.toContain('renamed');
   });
 });

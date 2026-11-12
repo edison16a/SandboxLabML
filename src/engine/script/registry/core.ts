@@ -1,14 +1,16 @@
 import { entry, param } from './define';
 import type { Reader, RegistrySlice } from './types';
 
-/** Seconds per simulation tick. Both environments step at 30 Hz, and a test checks it against the racing SIM_DT. */
+/** Seconds per simulation tick. Every env steps at 30 Hz, and a test checks it against each env's tick rate. */
 export const TICK_DT = 1 / 30;
 
 const any = (name: string, summary: string) => param(name, 'number', '*', summary);
 
 /**
  * Math that works the same in every environment and both block scopes. None
- * of these read the world, so constant arguments fold at compile time.
+ * of these read the world, so constant arguments fold at compile time. The
+ * preset tags of a core entry name every tier whose preset uses it, in any
+ * env.
  */
 export const CORE_SLICE: RegistrySlice = {
   env: 'core',
@@ -24,6 +26,7 @@ export const CORE_SLICE: RegistrySlice = {
       summary: 'The size of a number without its sign.',
       description: 'Turns negative numbers positive and leaves positive ones alone. Handy when only the size of an error matters, not its direction.',
       example: 'let wobble = abs(rand() - 0.5)',
+      presets: ['intermediate', 'advanced'],
       block: { category: 'math', label: 'abs {value}' },
       explain: 'the size of {value}',
       binding: { kind: 'fn', call: ([a]) => (v, io) => Math.abs(a(v, io)), fold: ([a]) => Math.abs(a) },
@@ -39,6 +42,7 @@ export const CORE_SLICE: RegistrySlice = {
       summary: 'The smaller of two numbers.',
       description: 'Returns whichever of the two numbers is smaller. Both must have the same unit.',
       example: 'let low = min(rand(), 0.5)',
+      presets: ['intermediate', 'advanced'],
       block: { category: 'math', label: 'smaller of {a} and {b}' },
       explain: 'the smaller of {a} and {b}',
       binding: { kind: 'fn', call: ([a, b]) => (v, io) => Math.min(a(v, io), b(v, io)), fold: ([a, b]) => Math.min(a, b) },
@@ -54,6 +58,7 @@ export const CORE_SLICE: RegistrySlice = {
       summary: 'The larger of two numbers.',
       description: 'Returns whichever of the two numbers is larger. Both must have the same unit.',
       example: 'let high = max(rand(), 0.5)',
+      presets: ['intermediate', 'advanced'],
       block: { category: 'math', label: 'larger of {a} and {b}' },
       explain: 'the larger of {a} and {b}',
       binding: { kind: 'fn', call: ([a, b]) => (v, io) => Math.max(a(v, io), b(v, io)), fold: ([a, b]) => Math.max(a, b) },

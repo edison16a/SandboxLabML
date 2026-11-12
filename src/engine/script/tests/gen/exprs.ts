@@ -25,7 +25,7 @@ const NUMBERS = ['0.5', '1', '2', '3', '10', '0.01', '0.002', '25', '0.25', '7']
 
 function sensorsBy(scope: 'tick' | 'generation'): Map<string, string[]> {
   const map = new Map<string, string[]>();
-  for (const e of entriesFor('racing', scope)) {
+  for (const e of entriesFor('driving', scope)) {
     if (e.kind !== 'sensor' || e.type !== 'number') continue;
     const key = formatDim(dimOf(e.unit as UnitName));
     map.set(key, [...(map.get(key) ?? []), e.name]);
@@ -35,7 +35,7 @@ function sensorsBy(scope: 'tick' | 'generation'): Map<string, string[]> {
 
 const TICK_SENSORS = sensorsBy('tick');
 const GEN_SENSORS = sensorsBy('generation');
-const BOOL_SENSORS = entriesFor('racing', 'tick')
+const BOOL_SENSORS = entriesFor('driving', 'tick')
   .filter((e) => e.kind === 'sensor' && e.type === 'bool')
   .map((e) => e.name);
 
@@ -55,8 +55,7 @@ export function numExpr(env: Env, unit: U, depth: number): string {
     const sensors = env.sensor ? all.filter((n) => !n.startsWith('brain.')) : all;
     const locals = env.locals.filter((l) => l.kind === 'num' && l.unit === unit).map((l) => l.name);
     const options = [...sensors, ...locals];
-    if (unit === 'm' && env.scope === 'tick' && rng.chance(0.2)) return `car.ray(${rng.int(3)})`;
-    if (unit === '1/m' && env.scope === 'tick') return `track.curvatureAhead(distance: ${literal(env, 'm')})`;
+    if (unit === '1/m' && env.scope === 'tick') return `1 / max(route.remaining, ${literal(env, 'm')})`;
     if (unit === '' && rng.chance(0.15)) return 'rand()';
     if (options.length > 0 && rng.chance(0.7)) return rng.pick(options);
     return literal(env, unit);

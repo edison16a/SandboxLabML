@@ -74,7 +74,7 @@ describe('the driving script slice', () => {
     expect(plan).toEqual(defaultPlan(DEFAULT_NEAT));
   });
 
-  it('does not leak racing names into driving scripts', () => {
-    expect(errors(inTick('  reward 1 when car.offTrack')).map((d) => d.code)).toContain('wrong-env');
+  it('does not leak Navigation names into Driving scripts', () => {
+    expect(errors(inTick('  reward 1 when agent.finished')).map((d) => d.code)).toContain('wrong-env');
   });
 });

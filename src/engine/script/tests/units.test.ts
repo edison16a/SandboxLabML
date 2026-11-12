@@ -1,11 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { registerEpisodeModule } from '../../env/registry';
+import { toyModule } from '../../env/tests/toyEnv';
+import { TOY_SCRIPT_ENV } from '../../env/tests/toyScript';
+import { registerScriptEnv } from '../envs';
 import { applyEdits } from '../diagnostics';
 import { parse } from '../parser';
 import { check } from '../checker';
 import { dimWords, formatDim, mulDim, sqrtDim, toBase } from '../units';
-import { errors, inTick } from './helpers';
+import { DRIVE, errors, inTick } from './helpers';
 
-const body = (line: string) => inTick(`  drive(steer: brain.steer, pedal: brain.pedal)\n  ${line}`);
+const body = (line: string) => inTick(`  ${DRIVE}\n  ${line}`);
 const codes = (line: string) => errors(body(line)).map((d) => d.code);
 
 /** The constant value the checker worked out for the `when` of the first reward. */
@@ -19,7 +23,7 @@ function rewardWhenValue(line: string): number | boolean | undefined {
 
 describe('unit checks', () => {
   it('meters plus seconds is an error with a fix', () => {
-    const source = body('reward car.distance + 5 s');
+    const source = body('reward route.remaining + 5 s');
     const [d] = errors(source);
     expect(d.message).toBe('Adding meters to seconds. Did you mean 5 m?');
     expect(errors(applyEdits(source, d.fixes![0].edits))).toEqual([]);
@@ -37,7 +41,7 @@ describe('unit checks', () => {
   });
 
   it('multiplying and dividing combine units', () => {
-    expect(codes('reward 1 when car.distance / car.time > 3 m/s')).toEqual([]);
+    expect(codes('reward 1 when route.remaining / car.time > 3 m/s')).toEqual([]);
     expect(codes('reward 1 when car.speed * car.time > 10 m')).toEqual([]);
     expect(codes('reward 1 when car.speed / car.time > 2 m/s2')).toEqual([]);
     expect(codes('reward 1 when car.speed * car.time > 10 s')).toEqual(['unit-mismatch']);
@@ -51,12 +55,11 @@ describe('unit checks', () => {
   it('function arguments must share a unit', () => {
     expect(codes('reward min(car.speed, 3 m/s)')).toEqual([]);
     expect(codes('reward min(car.speed, 3 s)')).toEqual(['unit-mismatch']);
-    expect(codes('reward 1 when track.curvatureAhead(distance: 20) > 0')).toEqual(['unit-mismatch']);
   });
 
   it('square roots halve units and refuse odd ones', () => {
-    expect(codes('reward 1 when sqrt(car.distance * car.distance) > 1 m')).toEqual([]);
-    expect(codes('reward 1 when sqrt(car.distance) > 1')).toEqual(['bad-unit']);
+    expect(codes('reward 1 when sqrt(route.remaining * route.remaining) > 1 m')).toEqual([]);
+    expect(codes('reward 1 when sqrt(route.remaining) > 1')).toEqual(['bad-unit']);
   });
 
   it('rewards accept any unit', () => {
@@ -68,8 +71,24 @@ describe('unit checks', () => {
     expect(rewardWhenValue('reward 30 deg')).toBeCloseTo(Math.PI / 6, 15);
     expect(rewardWhenValue('reward 20%')).toBeCloseTo(0.2, 15);
     expect(rewardWhenValue('reward 2 m/s² * 3 s')).toBe(6);
-    expect(codes('reward 1 when car.headingError > 30 deg')).toEqual([]);
-    expect(codes('reward 1 when track.curvatureAhead(distance: 20 m) > 0.05 1/m')).toEqual([]);
+    expect(codes('reward 1 when lane.headingError > 30 deg')).toEqual([]);
+    expect(codes('reward 1 when 1 / route.remaining > 0.05 1/m')).toEqual([]);
+  });
+
+  describe('a parameter with a unit of its own', () => {
+    let undo: Array<() => void> = [];
+    beforeAll(() => {
+      undo = [registerEpisodeModule(toyModule), registerScriptEnv(TOY_SCRIPT_ENV)];
+    });
+    afterAll(() => undo.forEach((f) => f()));
+
+    const toy = (line: string) => errors(`script "t" for toy v1\nbrain toy-basic\n\neach tick {\n  walk(move: brain.move)\n  ${line}\n}\n`).map((d) => d.code);
+
+    it('takes an argument in that unit, and refuses a plain number or another unit', () => {
+      expect(toy('reward 1 when toy.ahead(distance: 2 m) > walker.goal')).toEqual([]);
+      expect(toy('reward 1 when toy.ahead(distance: 2) > walker.goal')).toEqual(['unit-mismatch']);
+      expect(toy('reward 1 when toy.ahead(distance: 2 s) > walker.goal')).toEqual(['unit-mismatch']);
+    });
   });
 
   it('describes units in words', () => {

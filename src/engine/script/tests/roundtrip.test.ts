@@ -3,7 +3,7 @@ import { fromBlocks, toBlocks } from '../blocks';
 import { compileScript } from '../compiler';
 import { parse } from '../parser';
 import { SCRIPT_PRESETS } from '../presets';
-import { RACING_PRESETS } from '../presets/racing';
+import { DRIVING_PRESETS } from '../presets/driving';
 import { print } from '../printer';
 import { randomProgram } from './gen/program';
 import { errors, shape } from './helpers';
@@ -66,8 +66,8 @@ describe('block round trip', () => {
   });
 
   it('keeps block ids of unchanged statements when another statement changes', () => {
-    const preset = RACING_PRESETS[1].source;
-    const edited = preset.replace('reward +10 when lap.completed', 'reward +20 when lap.completed');
+    const preset = DRIVING_PRESETS[1].source;
+    const edited = preset.replace('reward +10 when car.arrived', 'reward +20 when car.arrived');
     const ids = (src: string) => toBlocks(parse(src).program).items.flatMap((i) => (i.children.body ?? []).map((b) => b.id));
     const before = ids(preset);
     const after = ids(edited);

@@ -18,13 +18,16 @@ export function errors(source: string): Diagnostic[] {
   return problems(source).filter((d) => d.severity === 'error');
 }
 
-/** Wraps lines in a racing script with one block, for short tests. */
+/** The line that makes an SUV follow its brain. */
+export const DRIVE = 'drive(steer: brain.steer, pedal: brain.pedal)';
+
+/** Wraps lines in a Driving script with one block, for short tests. */
 export function inTick(lines: string, extra = ''): string {
-  return `script "t" for racing v1\nbrain racing-standard\n${extra}\neach tick {\n${lines}\n}\n`;
+  return `script "t" for driving v1\nbrain driving-standard\n${extra}\neach tick {\n${lines}\n}\n`;
 }
 
 export function inGeneration(lines: string): string {
-  return `script "t" for racing v1\neach tick {\n  drive(steer: brain.steer, pedal: brain.pedal)\n}\n\neach generation {\n${lines}\n}\n`;
+  return `script "t" for driving v1\neach tick {\n  ${DRIVE}\n}\n\neach generation {\n${lines}\n}\n`;
 }
 
 /** The line that makes a Navigation runner follow its brain. */

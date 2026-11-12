@@ -2,7 +2,7 @@ import { Rng } from '../../../core/rng';
 import { boolExpr, literal, numExpr, UNITS, type Env, type Local } from './exprs';
 
 /**
- * Seeded generator of valid racing scripts, with comments and blank lines
+ * Seeded generator of valid Driving scripts, with comments and blank lines
  * sprinkled in. Round trip tests run it a few hundred times, so it covers
  * shapes no hand-written test would think of.
  */
@@ -34,8 +34,8 @@ class Gen {
   program(): string {
     const rng = this.rng;
     this.comment('');
-    this.lines.push(`script "Random ${rng.int(1000)}" for racing v1${this.trailing()}`);
-    if (rng.chance(0.8)) this.lines.push(`brain ${rng.pick(['racing-tiny', 'racing-starter', 'racing-standard', 'racing-advanced'])}`);
+    this.lines.push(`script "Random ${rng.int(1000)}" for driving v1${this.trailing()}`);
+    if (rng.chance(0.8)) this.lines.push(`brain ${rng.pick(['driving-starter', 'driving-standard', 'driving-advanced'])}`);
     for (let i = rng.int(3); i > 0; i--) {
       this.comment('');
       const unit = rng.pick(UNITS);
@@ -122,7 +122,7 @@ class Gen {
       this.nested(env, `repeat ${1 + rng.int(4)}`, indent, depth);
     } else if (tick) {
       const name = this.fresh('r');
-      this.nested(env, `for each ${name} in rays`, indent, depth, { name, kind: 'num', unit: 'm' });
+      this.nested(env, `for each ${name} in lidar`, indent, depth, { name, kind: 'num', unit: 'm' });
     } else {
       this.lines.push(`${indent}keepChampions()`);
     }
@@ -130,7 +130,7 @@ class Gen {
 
   private operator(env: Env): string {
     const rng = this.rng;
-    switch (rng.int(5)) {
+    switch (rng.int(6)) {
       case 0:
         return `speciate(target: ${1 + rng.int(12)}${rng.chance(0.3) ? ', adaptive: true' : ''})`;
       case 1:
@@ -138,7 +138,9 @@ class Gen {
       case 2:
         return `breed(crossover: ${rng.pick(['0.5', '0.75'])}, mutate: { weights: 0.8, addNode: ${literal(env, '')} / 100 })`;
       case 3:
-        return rng.chance(0.5) ? 'useTrack(id: "hairpin")' : 'randomTrack(seed: generation)';
+        return rng.chance(0.5) ? 'useCity(id: "harbor")' : 'randomCity(seed: generation)';
+      case 4:
+        return `useLevel(level: ${1 + rng.int(5)})`;
       default:
         return 'keepChampions()';
     }

@@ -41,7 +41,7 @@ describe('Navigation presets', () => {
     }
   });
 
-  // Core entries are shared, and their tags describe the racing presets, so only Navigation entries are compared.
+  // Core entries are shared by every env, and registry.test.ts checks their tags, so only Navigation entries are compared.
   it('navigation entries list exactly the tiers whose preset uses them', () => {
     for (const preset of NAVIGATION_PRESETS) {
       const used = usedBy(preset.source).filter((e) => e.env === 'navigation').map((e) => e.name);

@@ -15,7 +15,7 @@ export type { ToyResult, ToySetup } from './toyWalk';
  * toward a goal 10 m away per level, and a beacon swings back and forth as
  * shared world state. It is small on purpose, so the tests can drive the
  * whole generic pipeline (trainer, sim, ghosts, storage, scripts, lessons)
- * with an env that is not Racing and check every seam of the contract.
+ * with an env of their own and check every seam of the contract.
  * Its script slice is in toyScript.ts.
  */
 export const TOY_ENV = 'toy' as EnvId;

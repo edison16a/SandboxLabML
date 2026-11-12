@@ -11,10 +11,10 @@ const codes = (source: string) => parse(source).diagnostics.map((d) => d.code);
 
 describe('tokenize', () => {
   it('labels every kind of span, including words that are keywords only in context', () => {
-    const src = 'brain racing-starter\neach tick { // hi\n  reward +0.5 * car.speed when x >= 3 m/s\n  stop "a" when brain.steer > 20% and generation % 10 == 0 ; }';
+    const src = 'brain driving-starter\neach tick { // hi\n  reward +0.5 * car.speed when x >= 3 m/s\n  stop "a" when brain.steer > 20% and generation % 10 == 0 ; }';
     const spans = tokenize(src).map((s) => `${s.kind}:${src.slice(s.from, s.to)}`);
     expect(spans).toEqual([
-      'keyword:brain', 'ident:racing-starter', 'keyword:each', 'keyword:tick', 'punctuation:{', 'comment:// hi', 'keyword:reward', 'operator:+',
+      'keyword:brain', 'ident:driving-starter', 'keyword:each', 'keyword:tick', 'punctuation:{', 'comment:// hi', 'keyword:reward', 'operator:+',
       'number:0.5', 'operator:*', 'ident:car', 'punctuation:.', 'ident:speed', 'keyword:when', 'ident:x', 'operator:>=', 'number:3', 'unit:m/s',
       'keyword:stop', 'string:"a"', 'keyword:when', 'ident:brain', 'punctuation:.', 'ident:steer', 'operator:>', 'number:20', 'unit:%',
       'keyword:and', 'ident:generation', 'operator:%', 'number:10', 'operator:==', 'number:0', 'invalid:;', 'punctuation:}',
@@ -35,14 +35,14 @@ describe('tokenize', () => {
 
 describe('parser', () => {
   it('reports one error per broken line and keeps the good lines', () => {
-    const src = inTick('  reward +1 when checkpoint.passed\n  reward ) 3\n  stop "crash" when car.offTrack\n  let = 2\n  reward 2');
+    const src = inTick('  reward +1 when car.arrived\n  reward ) 3\n  stop "crash" when car.offRoad\n  let = 2\n  reward 2');
     const errors = parse(src).diagnostics.filter((d) => d.severity === 'error');
     expect(errors).toHaveLength(2);
     expect(tickBody(src).map((s) => s.kind)).toEqual(['reward', 'stop', 'reward']);
   });
 
   it('reports a missing closing brace with a fix that makes the script valid', () => {
-    const src = 'script "t" for racing v1\neach tick {\n  reward 1 // keep\n\neach generation {\n  keepChampions()\n}\n';
+    const src = 'script "t" for driving v1\neach tick {\n  reward 1 // keep\n\neach generation {\n  keepChampions()\n}\n';
     const d = parse(src).diagnostics.find((x) => x.code === 'missing-brace');
     expect(d?.message).toBe('Missing } to close the block opened on line 2.');
     const fixed = applyEdits(src, d!.fixes![0].edits);
@@ -84,8 +84,8 @@ describe('parser', () => {
   });
 
   it('tells % for percent apart from % for remainder', () => {
-    const src = inTick('  reward 1 when generation % 10 == 0 and car.slip > 20%');
+    const src = inTick('  reward 1 when generation % 10 == 0 and route.completion > 20%');
     const printed = print(parse(src).program);
-    expect(printed).toContain('generation % 10 == 0 and car.slip > 20%');
+    expect(printed).toContain('generation % 10 == 0 and route.completion > 20%');
   });
 });

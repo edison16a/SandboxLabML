@@ -48,7 +48,8 @@ function operator(name: string, key: string): RegistryEntry {
 export const TOY_SLICE: RegistrySlice = {
   env: TOY_ENV,
   entries: [
-    sensor('walker.x', 'm', { kind: 'num', read: () => (v) => walker(v).x }),
+    // Once called walker.position, so the tests can check that renamed names still work.
+    { ...sensor('walker.x', 'm', { kind: 'num', read: () => (v) => walker(v).x }), renamedFrom: ['walker.position'] },
     sensor('walker.goal', 'm', { kind: 'num', read: (ctx) => { const goal = goalOf(ctx); return () => goal; } }),
     sensor('walker.reached', '', { kind: 'bool', read: (ctx) => { const goal = goalOf(ctx); return (v) => walker(v).x >= goal; } }),
     { ...sensor('brain.move', '', { kind: 'num', read: () => (_v, io) => io.brain[0] }), notInSensor: true },
@@ -64,6 +65,20 @@ export const TOY_SLICE: RegistrySlice = {
       example: 'walk(move: brain.move)',
       block: { category: 'actions', label: 'walk {move}' },
       binding: { kind: 'effect', apply: (args) => { const move = req(args.num, 'move'); return (v, io) => { io.action[0] = move(v, io); }; } },
+    }),
+    // A function whose parameter has a unit, so the tests can check that arguments must carry it.
+    entry({
+      ...docs,
+      name: 'toy.ahead',
+      kind: 'function',
+      scope: 'tick',
+      env: TOY_ENV,
+      type: 'number',
+      unit: 'm',
+      params: [param('distance', 'number', 'm', 'How far past the walker to look.', { range: [0, 100] })],
+      example: 'reward 1 when toy.ahead(distance: 2 m) > walker.goal',
+      block: { category: 'sensors', label: 'ahead {distance}' },
+      binding: { kind: 'fn', call: ([distance]) => (v, io) => walker(v).x + distance(v, io) },
     }),
     metricSensor({ ...docs, name: 'toy.reached', env: TOY_ENV, key: 'reachedShare', unit: '', label: 'share reached', example: 'if toy.reached > 0.5 {\n  toyLevel(value: 3)\n}' }),
     operator('toyLevel', 'level'),

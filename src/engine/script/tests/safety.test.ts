@@ -10,14 +10,10 @@ import { parse } from '../parser';
 import { SCRIPT_PRESETS } from '../presets';
 import { print } from '../printer';
 import { inTick } from './helpers';
-import { buildTrack } from '../../racing/track/buildTrack';
-import { BUILT_IN_TRACKS } from '../../racing/track/presets';
-
-const oval = buildTrack(BUILT_IN_TRACKS[0]);
 
 const VOCAB = [
-  'script', 'for', 'racing', 'v1', 'brain', 'racing-starter', 'each', 'tick', 'generation', 'sensor', 'let', 'reward', 'stop', 'when',
-  'if', 'else', 'repeat', 'in', 'and', 'or', 'not', 'true', 'false', 'car.speed', 'drive', 'rays', 'x', '(', ')', '{', '}', ',', ':', '.',
+  'script', 'for', 'driving', 'v1', 'brain', 'driving-starter', 'each', 'tick', 'generation', 'sensor', 'let', 'reward', 'stop', 'when',
+  'if', 'else', 'repeat', 'in', 'and', 'or', 'not', 'true', 'false', 'car.speed', 'drive', 'lidar', 'x', '(', ')', '{', '}', ',', ':', '.',
   '..', '+', '-', '*', '/', '%', '<', '>=', '==', '=', '!=', '1', '0.5', '5 s', '2 m/s2', '20%', '"crash"', '"open', '//c', '\n', '\n',
   '&&', '||', '!', ';', '[', ']', '`', '@', '#', 'é', '😀', '\\', "'", '1e999', 'constructor', '__proto__', 'speciate(target: 8)',
 ];
@@ -30,7 +26,7 @@ function everything(source: string): void {
   toBlocks(parsed.program);
   fromBlocks(toBlocks(parsed.program));
   const result = compileScript(source);
-  if (result.script) result.script.createController({ seed: 1, track: oval });
+  if (result.script) result.script.createController({ seed: 1 });
 }
 
 describe('fuzzing', () => {
