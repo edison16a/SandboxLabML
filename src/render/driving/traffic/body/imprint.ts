@@ -174,7 +174,7 @@ function split(pc: Piece, a: Pt, b: Pt, segBox: Box, flat: (b: Bary) => Pt): Pie
   const len2 = dx * dx + dy * dy;
   const scale = Math.sqrt(len2) * 1e-7;
   if (d.every((x) => x >= -scale) || d.every((x) => x <= scale)) return [pc];
-  // Only cut where the segment itself crosses the piece, not just its line.
+  // Cut only where the segment itself crosses the piece. Crossing its line is not enough.
   let t0 = Infinity;
   let t1 = -Infinity;
   for (let i = 0; i < pts.length; i++) {
