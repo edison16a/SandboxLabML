@@ -84,9 +84,9 @@ export async function openInitial(requested: string | null): Promise<boolean> {
   const last = await getSetting<string>(LAST_SCRIPT_KEY).catch(() => null);
   for (const id of [requested, last]) {
     const entry = id ? await getScript(id) : undefined;
-    if (!entry) continue;
-    if (!shownScript(entry)) {
-      if (id === requested) toast.info('That script is for a lab this version does not have.');
+    if (!entry || !shownScript(entry)) {
+      // Only a link says so; a last script that went away is passed over quietly.
+      if (id && id === requested) toast.info(entry ? 'That script is for a lab this version does not have.' : 'That script is not on this device.');
       continue;
     }
     await openScript(entry.id, { force: true });
