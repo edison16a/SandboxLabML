@@ -3,7 +3,7 @@ import type { FaceCut } from './face';
 import { bothSides, gridGeometry, type Vec3 } from './grid';
 import type { Detail, PartBin } from './parts';
 import { NOSE, sectionAt, sillY } from './profile';
-import { capFill, facing, offset, recess, ringGeometry, rounded } from './recess';
+import { capFill, facing, offset, recess, ringGeometry, ringSplit, rounded } from './recess';
 import type { Pt } from './section';
 
 /**
@@ -33,18 +33,19 @@ export function intakeCut(): FaceCut {
 }
 
 /**
- * A side intake, outboard of the central one: 0.17 m wide and 0.29 m
+ * A side intake, outboard of the central one: 0.17 m wide and 0.335 m
  * tall, its sides leaning in toward the top like the central intake's,
- * so the three openings read as one trapezoid mouth. Its raised frame
- * stops just above the cladding that wraps the bumper's corner below
- * it. It wraps onto the corner by the face's unrolled coordinates.
- * Counterclockwise in (s, y).
+ * so the three openings read as one trapezoid mouth. Its foot stands on
+ * the cladding that wraps the bumper's corner, level with the central
+ * intake's floor, so one dark line runs from the lip through the intake
+ * bottoms to the sills. It wraps onto the corner by the face's unrolled
+ * coordinates. Counterclockwise in (s, y).
  */
-const SIDE: Pt[] = [[0.585, 0.43], [0.755, 0.43], [0.695, 0.72], [0.525, 0.72]];
-const SIDE_Y = { lo: 0.43, hi: 0.72 };
+const SIDE: Pt[] = [[0.594, 0.385], [0.764, 0.385], [0.695, 0.72], [0.525, 0.72]];
+const SIDE_Y = { lo: 0.385, hi: 0.72 };
 
 /** The side intake's fin line at height y: down the middle of the opening, leaning with it. */
-const finAt = (y: number) => 0.67 - ((y - SIDE_Y.lo) / (SIDE_Y.hi - SIDE_Y.lo)) * 0.06;
+const finAt = (y: number) => 0.679 - ((y - SIDE_Y.lo) / (SIDE_Y.hi - SIDE_Y.lo)) * 0.069;
 
 /**
  * Across the frame the bumper raises round each side intake, as (out
@@ -81,8 +82,11 @@ export function addIntakes(bin: PartBin, detail: Detail): void {
   if (!open) return;
   const mid = onCap(1, 0.64, (SIDE_Y.lo + SIDE_Y.hi) / 2, 0);
   const inward = (p: Vec3): Vec3 => [mid[0] - p[0], mid[1] - p[1], mid[2] - p[2]];
-  // The frame is a soft swell, so it can take longer steps than the opening's own edge.
-  bin.add('paint', bothSides(facing(ringGeometry(1, side, FRAME, Math.max(step, 0.032)), [1, 0, 0])));
+  // The frame is a soft swell, so it can take longer steps than the opening's own edge. Its foot lies on the
+  // cladding and is satin black like it, so the opening seems to stand on the dark base.
+  const [foot, frame] = ringSplit(1, side, FRAME, Math.max(step, 0.032), ([, y]) => y < SIDE_Y.lo + 0.01);
+  bin.add('clad', ...foot.map((g) => bothSides(facing(g, [1, 0, 0]))));
+  bin.add('paint', ...frame.map((g) => bothSides(facing(g, [1, 0, 0]))));
   bin.add('trim', bothSides(facing(ringGeometry(1, side, [[0.004, 0.0072], [-0.004, 0.0012]], Math.max(step, 0.032)), inward)));
   if (!detail.fine) return;
   // The fin: a slim body colored bar with walls, standing up to the frame's height.
