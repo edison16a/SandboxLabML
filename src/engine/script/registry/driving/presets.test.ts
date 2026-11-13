@@ -71,6 +71,25 @@ describe('the Driving presets', () => {
     }
   });
 
+  it('Beginner charges 2 points for each red light run and changes nothing else', () => {
+    const beginner = preset('beginner');
+    const cost = '  reward -2 when rules.ranRedLight\n';
+    expect(beginner).toContain(cost);
+    const free = compiled(beginner.replace(cost, ''));
+    let runs = 0;
+    for (const [level, seed] of [[2, 4], [2, 7], [2, 11]]) {
+      const charged = drive(level, seed, compiled(beginner).createController({ seed: 1 }));
+      const uncharged = drive(level, seed, free.createController({ seed: 1 }));
+      charged.forEach((r, i) => {
+        expect(r.stopReason).toBe(uncharged[i].stopReason);
+        expect(r.fitness).toBeCloseTo(uncharged[i].fitness - 2 * r.redLightRuns, 6);
+        runs += r.redLightRuns;
+      });
+    }
+    // Some SUVs ran a red, or the test would prove nothing.
+    expect(runs).toBeGreaterThan(0);
+  });
+
   it('Intermediate and Beginner ask for exactly the plan a run without a script uses', () => {
     for (const tier of ['beginner', 'intermediate']) expect(compiled(preset(tier)).runGeneration(GEN, new Rng(1), NEAT).plan).toEqual(defaultPlan(NEAT));
   });

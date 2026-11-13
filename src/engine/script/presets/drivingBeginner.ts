@@ -1,4 +1,9 @@
-/** Beginner driving preset: progress and arriving only, a small brain and the automatic curriculum. */
+/**
+ * Beginner driving preset: progress and arriving, two costs (leaving the
+ * road and running a red light), a small brain and the automatic
+ * curriculum. Without the red light cost its champions run reds forever,
+ * and a run never leaves the traffic lights level.
+ */
 export const DRIVING_BEGINNER = `// Beginner: teach SUVs to find their way on quiet streets.
 // Lines that start with // are comments. They explain the script and do nothing.
 script "Beginner: first trips" for driving v1
@@ -18,6 +23,8 @@ each tick {
   reward +10 when car.arrived
   // Leaving the road ends the trip, and costs a couple of points on top.
   reward -2 when car.offRoad
+  // Running a red light costs as much. Without this cost, running reds would pay best.
+  reward -2 when rules.ranRedLight
 
   // A brain that parks is going nowhere, so its trip ends after 8 seconds of that.
   // Waiting at a red light or for a person does not count as parking.
@@ -36,8 +43,7 @@ each generation {
   // The best brain of each species moves on unchanged, so it is never lost.
   keepChampions()
   // Move up a level once last generation's champions arrive safely on half their new trips.
-  // Nothing here punishes a red light. Its brains learn to stop for one late, once
-  // cross traffic turns running it into a crash that ends the trip.
+  // A trip with a red light run is not safe, so stopping at red is what moves a run past level 2.
   autoLevel(share: 50%)
 }
 `;
