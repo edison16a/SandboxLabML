@@ -28,7 +28,9 @@ function useLive(stream: SnapshotStream | null): Live {
   useEffect(() => {
     const id = setInterval(() => {
       const buf = stream?.curr?.buffer;
-      if (!buf || !stream) return setLive((l) => (l.total === 0 ? l : NONE));
+      if (!stream || stream.count === 0) return setLive((l) => (l.total === 0 ? l : NONE));
+      // A new run announces its SUVs a moment before its first frame (every Sandbox loop does): the last numbers stand meanwhile.
+      if (!buf) return setLive((l) => (l.total === stream.count ? l : NONE));
       const next = { total: stream.count, driving: 0, arrived: 0, violations: 0, speed: 0 };
       for (let i = 0; i < stream.count; i++) {
         const o = i * STRIDE;

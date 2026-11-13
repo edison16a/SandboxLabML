@@ -2,45 +2,28 @@
 
 import { useEffect, useState } from 'react';
 import { LoaderCircle, Pause, Play, RotateCcw } from 'lucide-react';
-import { STATUS_ARRIVED, STATUS_DRIVING } from '@/engine/driving/agent/learner';
-import { DRIVING_SNAPSHOT, SNAP } from '@/engine/driving/snapshotLayout';
 import { Button } from '@/ui/primitives/Button';
 import { Tooltip } from '@/ui/primitives/Tooltip';
 import { drivingSession } from '../../session/DrivingSession';
+import { NO_TRIP, readTrip, tripOver, type TripCount } from '../../sandbox/tripCount';
 import { useDrivingLab } from '../../state/labStore';
 import { overlayButton } from './overlay';
 
-const STRIDE = DRIVING_SNAPSHOT.stride;
-
-interface Trip {
-  total: number;
-  driving: number;
-  arrived: number;
-}
-
-/** SUVs still driving and arrived, read from the ghost stream four times a second. */
-function useTrip(): Trip {
-  const [trip, setTrip] = useState<Trip>({ total: 0, driving: 0, arrived: 0 });
+/** The trip's count from the ghost stream four times a second (see readTrip). */
+function useTrip(): TripCount {
+  const [trip, setTrip] = useState<TripCount>(NO_TRIP);
   useEffect(() => {
-    const id = setInterval(() => {
-      const stream = drivingSession().streams?.ghosts;
-      const buf = stream?.curr?.buffer;
-      if (!stream || !buf) return setTrip((t) => (t.total === 0 ? t : { total: 0, driving: 0, arrived: 0 }));
-      let driving = 0;
-      let arrived = 0;
-      for (let i = 0; i < stream.count; i++) {
-        const status = buf[i * STRIDE + SNAP.status];
-        if (status === STATUS_DRIVING) driving++;
-        else if (status === STATUS_ARRIVED) arrived++;
-      }
-      setTrip((t) => (t.driving === driving && t.arrived === arrived && t.total === stream.count ? t : { total: stream.count, driving, arrived }));
-    }, 250);
+    const id = setInterval(() => setTrip((t) => readTrip(drivingSession().streams?.ghosts ?? null, t)), 250);
     return () => clearInterval(id);
   }, []);
   return trip;
 }
 
-/** Play, pause and restart for the Sandbox trip, with a live count of SUVs driving and arrived, or why none are. */
+/**
+ * Play, pause and restart for the Sandbox trip, with a live count of SUVs
+ * driving and arrived, how many arrived once the trip is over (the replay
+ * then drives it again, and restart is at hand), or why none drive.
+ */
 export function SandboxBar() {
   const paused = useDrivingLab((s) => s.sandboxPaused);
   // The trained model is on its way: say so rather than that nothing drives.
@@ -67,6 +50,13 @@ export function SandboxBar() {
         </span>
       ) : trip.total === 0 ? (
         <span className="ml-auto text-[12px] text-white/60">Nothing to drive yet</span>
+      ) : tripOver(trip) ? (
+        <div className="ml-auto flex items-baseline gap-3 text-[12px] text-white/60" role="status">
+          <span className="text-white/80">Trip over</span>
+          <span>
+            <span className="tabular font-mono text-white">{trip.arrived}</span> of {trip.total} arrived
+          </span>
+        </div>
       ) : (
         <div className="ml-auto flex items-baseline gap-3 text-[12px] text-white/60">
           <span>
