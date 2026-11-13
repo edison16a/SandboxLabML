@@ -67,6 +67,30 @@ test.describe('Driving Sandbox', () => {
     await expect(page.getByRole('radiogroup', { name: 'What to show' })).toBeVisible();
   });
 
+  test('shows the trip as over once every SUV arrived, then drives it again', async ({ page }) => {
+    await openLab(page);
+    // Four times real time, so the first trip ends in well under a minute.
+    await page.keyboard.press('3');
+    const panel = await openSandbox(page);
+    await expect(panel.getByText('of 3 driving')).toBeVisible({ timeout: 120_000 });
+
+    // The first trip is one every copy of the trained model arrives on safely.
+    const over = panel.getByRole('status').filter({ hasText: 'Trip over' });
+    await expect(over).toBeVisible({ timeout: 180_000 });
+    await expect(over).toContainText('3 of 3 arrived');
+
+    // The replay drives it again, and the bar never reads as empty on the way.
+    const nothing = panel.getByText('Nothing to drive yet');
+    const driving = panel.getByText('of 3 driving');
+    const until = Date.now() + 60_000;
+    while (Date.now() < until && !(await driving.isVisible())) {
+      expect(await nothing.isVisible()).toBe(false);
+      await page.waitForTimeout(100);
+    }
+    await expect(driving).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Restart the trip' })).toBeEnabled();
+  });
+
   test('says so when the trained model cannot be loaded', async ({ page }) => {
     await page.route('**/references/driving.json', (route) => route.fulfill({ status: 404, body: '' }));
     await openLab(page);
