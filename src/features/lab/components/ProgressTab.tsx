@@ -4,6 +4,7 @@ import { metricValue } from '@/engine/env/metrics';
 import { FitnessChart } from '@/features/charts/FitnessChart';
 import { SpeciesChart } from '@/features/charts/SpeciesChart';
 import { BenchmarkChart } from '@/features/charts/BenchmarkChart';
+import { matchingTier } from '@/features/charts/benchmarkTier';
 import { Stat } from '@/ui/primitives/Panel';
 import { useLab, useLabContext } from '../LabContext';
 import { MetricsSection } from './MetricsSection';
@@ -21,6 +22,7 @@ import { Section } from './Section';
 export function ProgressTab({ extra, metrics }: { extra?: React.ReactNode; metrics?: React.ReactNode }) {
   const { env, module } = useLabContext();
   const records = useLab((s) => s.records);
+  const run = useLab((s) => s.run);
   const last = records[records.length - 1];
   const recent = records.slice(-8).reverse();
   const columns = module.metrics.filter((m) => m.source === 'champion');
@@ -46,7 +48,7 @@ export function ProgressTab({ extra, metrics }: { extra?: React.ReactNode; metri
       {extra}
       {module.bench && (
         <Section title="Benchmark" hint={module.bench.hint}>
-          <BenchmarkChart env={env} records={records} />
+          <BenchmarkChart env={env} records={records} match={matchingTier(run)} />
         </Section>
       )}
       <Section title="Species" hint="share of the population" tour="species">
