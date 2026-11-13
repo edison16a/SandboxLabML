@@ -80,7 +80,7 @@ The defaults are 6 seeds of 500 generations with 100 SUVs. A run climbs slowly, 
 
 ### The shipped run
 
-The shipped file uses the defaults: 6 seeds of 500 generations per preset, 18 runs. Intermediate and Advanced trained in 2 hours on three worker threads, each run taking 5 to 32 minutes. Beginner was trained again on its own once its script charged for red lights (`--tiers beginner`, 72 minutes on three threads, each run 19 to 36 minutes), and `--from-dump` built the file from both dumps, so the other two presets kept their curves and models. Runs that climb further take longer, since busier streets cost more to simulate and better drivers stay on the road for the whole trip: a generation at rush hour takes about eight times as long as one at traffic lights. Picking the models took another 15 minutes on one thread.
+The shipped file uses the defaults: 6 seeds of 500 generations per preset, 18 runs. Intermediate and Advanced trained in 2 hours on three worker threads, each run taking 13 to 32 minutes. Beginner was trained again on its own once its script charged for red lights (`--tiers beginner`, 72 minutes on three threads, each run 19 to 36 minutes), and `--from-dump` built the file from both dumps, so the other two presets kept their curves and models. Runs that climb further take longer, since busier streets cost more to simulate and better drivers stay on the road for the whole trip: a generation at rush hour takes about eight times as long as one at traffic lights. Picking the models took another 15 minutes on one thread.
 
 | Preset | Final score | Middle half at generation 500 | Level at generation 500 |
 | --- | --- | --- | --- |
