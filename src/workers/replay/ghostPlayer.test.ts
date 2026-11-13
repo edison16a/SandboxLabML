@@ -137,23 +137,57 @@ describe('ghost player loop', () => {
     player.stop();
   });
 
-  it('keeps a pause and a new speed pressed during the gap', async () => {
+  it('holds a pause pressed during the gap on the finished run, then starts over at the new speed', async () => {
     const { player, out, length } = await finishedFirstRun();
     vi.advanceTimersByTime(500);
     player.setPaused(true);
     player.setSpeed(2);
+    // The gap ends while paused: no new run starts, so the finished run stays on screen.
     vi.advanceTimersByTime(800);
-    expect(out.starts.count).toBe(2);
-    const framesBefore = out.ticks.length;
     vi.advanceTimersByTime(2000);
-    expect(out.ticks.length).toBe(framesBefore);
+    expect(out.starts.count).toBe(1);
+    expect(out.ticks.at(-1)).toBe(length);
 
-    // Unpaused, it runs at the speed picked during the gap: about 15 ticks in a quarter second at 2x.
+    // Resumed, the next run starts at once, opens on its lineup and runs at the speed picked during the gap: about 15 ticks in a quarter second at 2x.
     expect(length).toBeGreaterThan(20);
     player.setPaused(false);
+    expect(out.starts.count).toBe(2);
+    expect(out.ticks.at(-1)).toBe(0);
     vi.advanceTimersByTime(250);
     expect(out.ticks[out.ticks.length - 1]).toBeGreaterThanOrEqual(13);
     expect(out.ticks[out.ticks.length - 1]).toBeLessThanOrEqual(16);
+    player.stop();
+  });
+
+  it('drops a restart held by a pause when the replay stops', async () => {
+    const { player, out } = await finishedFirstRun();
+    player.setPaused(true);
+    vi.advanceTimersByTime(2000);
+    player.stop();
+    player.setPaused(false);
+    vi.advanceTimersByTime(2000);
+    expect(out.starts.count).toBe(1);
+  });
+
+  it('opens every run on its lineup frame, even one started paused with every buffer out', async () => {
+    const { setup, ghost } = await scene();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
+    const out = capture();
+    const player = new GhostPlayer(out.sender);
+    await player.setScene('navigation', setup, [ghost(4, 0), ghost(2, 1)]);
+    // A first run sizes the buffers. Then the main thread holds them all, as it can right after a run starts.
+    player.play(1, true);
+    player.stop();
+    const held: Float32Array[] = [];
+    for (let b = out.sender.ring.take(); b; b = out.sender.ring.take()) held.push(b);
+    expect(held.length).toBeGreaterThan(0);
+    const before = out.ticks.length;
+    player.play(1, true);
+    player.setPaused(true);
+    vi.advanceTimersByTime(2000);
+    expect(out.starts.count).toBe(2);
+    expect(out.ticks.slice(before)).toEqual([0]);
+    expect(out.frames.at(-1)?.length).toBe(held[0].length);
     player.stop();
   });
 });

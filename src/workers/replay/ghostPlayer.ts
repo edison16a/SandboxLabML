@@ -31,6 +31,8 @@ export class GhostPlayer {
   /** The rest between loops. See play. */
   private gap = LOOP_GAP_MS;
   private run = 0;
+  /** A loop restart that came due while paused. It waits for the resume, so a paused finished run stays on screen. */
+  private pendingReplay = false;
   /** Counts setScene calls, so an older scene that finishes loading late is dropped. */
   private scenes = 0;
 
@@ -59,7 +61,9 @@ export class GhostPlayer {
    * open on an agent already under way. The ticks are the same ones a cold
    * start would run, so the run itself does not change. A loop rests `gap`
    * ms on the last frame before it starts over: a Sandbox rests longer, so
-   * the finished trip can be read.
+   * the finished trip can be read. The lineup goes out with the start, so
+   * the screen never holds a run that has no frame yet, even one that
+   * opens paused.
    */
   play(speed: number, loop: boolean, warmup = 0, gap = LOOP_GAP_MS): void {
     this.stop();
@@ -74,6 +78,7 @@ export class GhostPlayer {
     for (let k = 0; k < warmup; k++) for (const e of this.envs) if (!e.env.done) e.env.step();
     const runId = ++this.run;
     this.frames.start(envModule, this.envs, this.ghosts.map((g) => g.generation));
+    this.frames.send(this.envs, true);
     const pacer = new Pacer(
       speed,
       envModule.tickHz,
@@ -91,7 +96,7 @@ export class GhostPlayer {
       () => this.frames.send(this.envs),
       () => {
         this.frames.send(this.envs);
-        if (this.loop && runId === this.run) setTimeout(() => runId === this.run && this.replay(), this.gap);
+        if (this.loop && runId === this.run) setTimeout(() => runId === this.run && this.loopDue(), this.gap);
       },
     );
     this.pacer = pacer;
@@ -106,21 +111,28 @@ export class GhostPlayer {
   setPaused(paused: boolean): void {
     this.paused = paused;
     this.pacer?.setPaused(paused);
+    if (!paused && this.pendingReplay) this.replay();
   }
 
   /**
-   * The loop's own restart. It keeps the speed picked since the loop began,
-   * and a pause pressed during the gap between runs still holds afterwards.
+   * The gap after a finished run is over. A pause pressed during it holds
+   * the finished run on screen until the user resumes, rather than
+   * starting the next run frozen at the start line.
    */
-  private replay(): void {
-    const paused = this.paused;
-    this.play(this.speed, true, this.warmup, this.gap);
-    if (paused) this.setPaused(true);
+  private loopDue(): void {
+    if (this.paused) this.pendingReplay = true;
+    else this.replay();
   }
 
-  /** Stops the replay, including a loop restart still waiting out the gap between runs. */
+  /** The loop's own restart. It keeps the speed picked since the loop began. */
+  private replay(): void {
+    this.play(this.speed, true, this.warmup, this.gap);
+  }
+
+  /** Stops the replay, including a loop restart still waiting out the gap between runs or a pause. */
   stop(): void {
     this.run++;
+    this.pendingReplay = false;
     this.pacer?.stop();
     this.pacer = null;
   }

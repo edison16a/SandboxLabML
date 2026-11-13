@@ -21,8 +21,8 @@ export interface TripStream {
 /**
  * The trip's count from the ghost stream, or `last` while there is
  * nothing new to read. The replay starts a finished trip over on its
- * own, and each new run announces its SUVs a moment before its first
- * frame. Read as nothing, that moment made the bar say there was nothing
+ * own, and each new run announces its SUVs just before its lineup frame
+ * lands. Read as nothing, that moment made the bar say there was nothing
  * to drive right after every SUV arrived. Only a stream with no SUVs at
  * all (no lineup, or a scene being swapped) counts as empty.
  */

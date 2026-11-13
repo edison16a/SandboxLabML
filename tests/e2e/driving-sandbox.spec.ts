@@ -5,6 +5,22 @@ async function counters(page: Page) {
   return page.evaluate(() => window.__sbl?.stats.instances ?? null);
 }
 
+/** Runs in the page: waits for the Sandbox bar to say the trip is over, then presses its Pause button at once. */
+function pauseWhenTripOver(): Promise<void> {
+  return new Promise((resolve) => {
+    const look = () => {
+      const panel = document.querySelector('[aria-label="Sandbox"]');
+      const over = Array.from(panel?.querySelectorAll('[role="status"]') ?? []).some((n) => n.textContent?.includes('Trip over'));
+      const pause = panel?.querySelector<HTMLButtonElement>('button[aria-label="Pause"]');
+      if (over && pause) {
+        pause.click();
+        resolve();
+      } else setTimeout(look, 25);
+    };
+    look();
+  });
+}
+
 async function openLab(page: Page) {
   await page.addInitScript(() => window.localStorage.setItem('sandboxlab.tour.driving', '1'));
   await page.goto('/lab/driving?quality=low');
@@ -67,19 +83,30 @@ test.describe('Driving Sandbox', () => {
     await expect(page.getByRole('radiogroup', { name: 'What to show' })).toBeVisible();
   });
 
-  test('shows the trip as over once every SUV arrived, then drives it again', async ({ page }) => {
+  test('shows the trip as over once every SUV arrived, holds it while paused, then drives it again', async ({ page }) => {
     await openLab(page);
     // Four times real time, so the first trip ends in well under a minute.
     await page.keyboard.press('3');
     const panel = await openSandbox(page);
     await expect(panel.getByText('of 3 driving')).toBeVisible({ timeout: 120_000 });
+    // The page presses Pause itself the moment the trip is over, so a slow test runner cannot miss the 4 s rest.
+    const paused = page.evaluate(pauseWhenTripOver);
 
     // The first trip is one every copy of the trained model arrives on safely.
     const over = panel.getByRole('status').filter({ hasText: 'Trip over' });
     await expect(over).toBeVisible({ timeout: 180_000 });
+    await paused;
     await expect(over).toContainText('3 of 3 arrived');
 
-    // The replay drives it again, and the bar never reads as empty on the way.
+    // Paused while it rests, the finished trip stays on screen past the rest: all three SUVs, one of them followed.
+    await expect(panel.getByRole('button', { name: 'Play' })).toBeVisible();
+    await page.waitForTimeout(7_000);
+    await expect(over).toBeVisible();
+    expect(await counters(page)).toMatchObject({ population: 3 });
+    expect((await counters(page))?.focus ?? -1).toBeGreaterThanOrEqual(0);
+
+    // Resumed, the replay drives it again, and the bar never reads as empty on the way.
+    await panel.getByRole('button', { name: 'Play' }).click();
     const nothing = panel.getByText('Nothing to drive yet');
     const driving = panel.getByText('of 3 driving');
     const until = Date.now() + 60_000;

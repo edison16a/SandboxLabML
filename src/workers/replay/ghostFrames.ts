@@ -35,8 +35,14 @@ export class GhostFrames {
     this.stream.send({ kind: 'start', stream: 'ghosts', generation: 0, count: this.count, tags: Int32Array.from(generations), world: this.world, scene: groups[0]?.env.scene?.() });
   }
 
-  send(groups: readonly GhostGroup[]): void {
-    const buffer = this.stream.ring.take();
+  /**
+   * Sends the frame for the groups' current tick. A frame finds no buffer
+   * while the main thread still holds them all, and is dropped. A run's
+   * lineup is the exception (`always`): it gets a fresh buffer, since a
+   * run that opens paused would otherwise show nothing until it resumes.
+   */
+  send(groups: readonly GhostGroup[], always = false): void {
+    const buffer = this.stream.ring.take() ?? (always ? new Float32Array(this.count * this.stride + this.world) : null);
     if (!buffer) return;
     const stride = this.stride;
     let tick = 0;
