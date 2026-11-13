@@ -22,8 +22,9 @@ jobs:
   regenerate:
     name: Regenerate ${{ matrix.env }} references
     runs-on: ubuntu-latest
-    # Driving trains 18 runs of 500 generations, about 330 CPU minutes plus the pick, on a few cores.
-    timeout-minutes: 300
+    # Driving trains 18 runs of 500 generations (about 480 CPU minutes), then picks its models on one thread for about 20.
+    # That is about 4.5 hours on a 2 core runner, so the job gets the 6 hours a hosted runner allows.
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
