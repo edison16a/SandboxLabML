@@ -10,7 +10,7 @@ export const DRIVING_PRESETS: readonly ScriptPreset[] = [
     name: 'Beginner',
     tier: 'beginner',
     env: 'driving',
-    description: 'Progress and arriving pay, and running a red light or leaving the road costs. It trains the small Driving Starter brain.',
+    description: 'Progress and arriving pay, and running a red light costs. Leaving the road costs too, and it trains the small Driving Starter brain.',
     source: DRIVING_BEGINNER,
   },
   {
@@ -18,7 +18,7 @@ export const DRIVING_PRESETS: readonly ScriptPreset[] = [
     name: 'Intermediate',
     tier: 'intermediate',
     env: 'driving',
-    description: 'The built-in reward written out, with a cost for every broken rule. It pays for progress and arriving, and runs exactly like a run without a script.',
+    description: 'The built-in reward written out, with costs for broken rules. It pays for progress and arriving, and runs exactly like a run without a script.',
     source: DRIVING_INTERMEDIATE,
   },
   {

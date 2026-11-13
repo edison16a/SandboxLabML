@@ -17,7 +17,7 @@ export const NAVIGATION_PRESETS: readonly ScriptPreset[] = [
     name: 'Intermediate',
     tier: 'intermediate',
     env: 'navigation',
-    description: 'The built-in reward written out, with costs for dying and standing still. It pays for new ground and the finish, and trains exactly like a run without a script on the same brain.',
+    description: 'The built-in reward written out, with costs for dying and idling. It pays for new ground and the finish, and trains exactly like a run without a script on the same brain.',
     source: NAVIGATION_INTERMEDIATE,
   },
   {

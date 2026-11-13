@@ -36,7 +36,7 @@ const table: ScriptEnv[] = [
     env: 'driving',
     slice: DRIVING_SLICE,
     presets: DRIVING_PRESETS,
-    builtin: 'Progress, a bonus for arriving, and small costs for breaking rules.',
+    builtin: 'Progress and arriving pay, and broken rules cost a little.',
     starter: [
       'script "My script" for driving v1',
       'brain driving-standard',
@@ -62,7 +62,7 @@ const table: ScriptEnv[] = [
     env: 'navigation',
     slice: NAVIGATION_SLICE,
     presets: NAVIGATION_PRESETS,
-    builtin: 'New ground, a finish bonus and a cost for dying.',
+    builtin: 'New ground and the finish pay, and dying and idling cost.',
     starter: [
       'script "My script" for navigation v1',
       'brain navigation-starter',
