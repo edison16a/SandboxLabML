@@ -28,6 +28,9 @@ describe('public/references/driving.json', () => {
       expect(genome.inputs.length, m.tier).toBe(builtInInputCount(m.inputs));
       expect(genome.outputs).toHaveLength(2);
       expect(findPresetBlueprint(m.blueprint)?.env).toBe('driving');
+      // The Sandbox offers the safest model, so every shipped one carries the share it drove on the check trips.
+      expect(m.safeShare, m.tier).toBeGreaterThan(0);
+      expect(m.safeShare, m.tier).toBeLessThanOrEqual(1);
     }
   });
 

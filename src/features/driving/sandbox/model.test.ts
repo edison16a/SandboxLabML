@@ -64,6 +64,13 @@ describe('the model the Sandbox offers', () => {
     const twin = model('intermediate', 80, STANDARD, 0.74);
     expect(pickModel([advanced, twin], runOn(DEFAULT_DRIVING_BLUEPRINT))).toBe(twin);
   });
+
+  it('is, for a new run, the safest shipped model with standard inputs', () => {
+    const standard = SHIPPED.filter((m) => JSON.stringify(m.inputs) === JSON.stringify(STANDARD));
+    expect(standard.length).toBeGreaterThan(1);
+    const safest = Math.max(...standard.map((m) => m.safeShare ?? 0));
+    expect(shippedModel().model.safeShare).toBe(safest);
+  });
 });
 
 /** The replay worker's rehearsal, run in place. */
