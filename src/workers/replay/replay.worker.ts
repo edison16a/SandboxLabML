@@ -29,8 +29,8 @@ const api = {
   async setGhostScene(env: string, setup: EpisodeSetup, specs: GhostSpec[]) {
     await ghosts?.setScene(env, setup, specs);
   },
-  playGhosts(speed: number, loop: boolean, warmup?: number) {
-    ghosts?.play(speed, loop, warmup);
+  playGhosts(speed: number, loop: boolean, warmup?: number, gap?: number) {
+    ghosts?.play(speed, loop, warmup, gap);
   },
   setGhostSpeed(speed: number) {
     ghosts?.setSpeed(speed);

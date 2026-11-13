@@ -7,6 +7,9 @@ import { ghostGroups, type GhostSpec } from './ghostEnvs';
 
 export type { GhostSpec } from './ghostEnvs';
 
+/** How long a looping replay rests on its last frame before it starts over, ms. */
+export const LOOP_GAP_MS = 1200;
+
 /**
  * Re-simulates stored champions of any episode env as ghosts. Ghosts are
  * driven by the same env code as training, so they reproduce their
@@ -25,6 +28,8 @@ export class GhostPlayer {
   private speed = 1;
   /** Ticks every run skips before it is shown. See play. */
   private warmup = 0;
+  /** The rest between loops. See play. */
+  private gap = LOOP_GAP_MS;
   private run = 0;
   /** Counts setScene calls, so an older scene that finishes loading late is dropped. */
   private scenes = 0;
@@ -52,13 +57,16 @@ export class GhostPlayer {
    * Restarts every ghost from its grid slot at `speed` times real time.
    * `warmup` ticks are simulated before the first frame, so a showcase can
    * open on an agent already under way. The ticks are the same ones a cold
-   * start would run, so the run itself does not change.
+   * start would run, so the run itself does not change. A loop rests `gap`
+   * ms on the last frame before it starts over: a Sandbox rests longer, so
+   * the finished trip can be read.
    */
-  play(speed: number, loop: boolean, warmup = 0): void {
+  play(speed: number, loop: boolean, warmup = 0, gap = LOOP_GAP_MS): void {
     this.stop();
     this.paused = false;
     this.speed = speed;
     this.warmup = warmup;
+    this.gap = gap;
     const envModule = this.module;
     if (!envModule || !this.setup || this.ghosts.length === 0) return;
     this.loop = loop;
@@ -83,7 +91,7 @@ export class GhostPlayer {
       () => this.frames.send(this.envs),
       () => {
         this.frames.send(this.envs);
-        if (this.loop && runId === this.run) setTimeout(() => runId === this.run && this.replay(), 1200);
+        if (this.loop && runId === this.run) setTimeout(() => runId === this.run && this.replay(), this.gap);
       },
     );
     this.pacer = pacer;
@@ -106,7 +114,7 @@ export class GhostPlayer {
    */
   private replay(): void {
     const paused = this.paused;
-    this.play(this.speed, true, this.warmup);
+    this.play(this.speed, true, this.warmup, this.gap);
     if (paused) this.setPaused(true);
   }
 

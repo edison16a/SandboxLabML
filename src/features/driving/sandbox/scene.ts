@@ -68,6 +68,9 @@ export function scheduleSandboxScene(pool: WorkerPool, delay = 120): void {
   timer = setTimeout(() => void sendSandboxScene(pool), delay);
 }
 
+/** How long a finished Sandbox trip rests on its last frame before it drives again, ms: long enough to read who arrived. */
+export const SANDBOX_LOOP_GAP_MS = 4000;
+
 /** Replay rate: the watch speed picked in the toolbar, or real time under Turbo and Max. */
 function replaySpeed(): number {
   const { speed } = store();
@@ -124,7 +127,7 @@ export async function sendSandboxScene(pool: WorkerPool): Promise<void> {
   if (!specs.length) {
     await pool.replay.stopGhosts();
     pool.ghosts.clear();
-  } else await pool.replay.playGhosts(replaySpeed(), true);
+  } else await pool.replay.playGhosts(replaySpeed(), true, 0, SANDBOX_LOOP_GAP_MS);
 }
 
 /** What the Sandbox panel drives. Training never runs through any of it. */
@@ -150,7 +153,7 @@ export function sandboxControls(pool: WorkerPool): SandboxControls {
     },
     async restart() {
       store().set({ sandboxPaused: false });
-      await pool.replay.playGhosts(replaySpeed(), true);
+      await pool.replay.playGhosts(replaySpeed(), true, 0, SANDBOX_LOOP_GAP_MS);
     },
     update,
     setTrip(patch) {

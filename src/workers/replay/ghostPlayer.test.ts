@@ -101,14 +101,14 @@ describe('ghost player warm up', () => {
 describe('ghost player loop', () => {
   afterEach(() => vi.useRealTimers());
 
-  /** One ghost that loops. Its first run goes flat out, so it ends within a few fake milliseconds and the 1200 ms gap starts. */
-  async function finishedFirstRun() {
+  /** One ghost that loops. Its first run goes flat out, so it ends within a few fake milliseconds and the gap (1200 ms unless given) starts. */
+  async function finishedFirstRun(gap?: number) {
     const { setup, ghost } = await scene();
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
     const out = capture();
     const player = new GhostPlayer(out.sender);
     await player.setScene('navigation', setup, [ghost(4, 0)]);
-    player.play(Infinity, true);
+    player.play(Infinity, true, 0, gap);
     vi.advanceTimersByTime(100);
     expect(out.starts.count).toBe(1);
     expect(out.ticks.length).toBeGreaterThan(0);
@@ -121,6 +121,20 @@ describe('ghost player loop', () => {
     player.stop();
     vi.advanceTimersByTime(5000);
     expect(out.starts.count).toBe(1);
+  });
+
+  it('rests on the last frame for the gap it was given, every loop', async () => {
+    const { player, out } = await finishedFirstRun(4000);
+    vi.advanceTimersByTime(3500);
+    expect(out.starts.count).toBe(1);
+    vi.advanceTimersByTime(600);
+    expect(out.starts.count).toBe(2);
+    // The second run ends flat out too, and waits the same 4 s again.
+    vi.advanceTimersByTime(3500);
+    expect(out.starts.count).toBe(2);
+    vi.advanceTimersByTime(600);
+    expect(out.starts.count).toBe(3);
+    player.stop();
   });
 
   it('keeps a pause and a new speed pressed during the gap', async () => {
