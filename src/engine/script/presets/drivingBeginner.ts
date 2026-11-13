@@ -4,7 +4,7 @@
  * curriculum. Without the red light cost its champions run reds forever,
  * and a run never leaves the traffic lights level.
  */
-export const DRIVING_BEGINNER = `// Beginner: teach SUVs to find their way on quiet streets.
+export const DRIVING_BEGINNER = `// Beginner: teach SUVs to drive a route through the city.
 // Lines that start with // are comments. They explain the script and do nothing.
 script "Beginner: first trips" for driving v1
 

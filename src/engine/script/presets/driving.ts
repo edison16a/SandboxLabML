@@ -10,7 +10,7 @@ export const DRIVING_PRESETS: readonly ScriptPreset[] = [
     name: 'Beginner',
     tier: 'beginner',
     env: 'driving',
-    description: 'Progress and arriving pay, and red lights and leaving the road cost. It trains the small Driving Starter brain.',
+    description: 'Progress and arriving pay, and running a red light or leaving the road costs. It trains the small Driving Starter brain.',
     source: DRIVING_BEGINNER,
   },
   {
