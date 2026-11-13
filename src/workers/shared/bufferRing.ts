@@ -2,7 +2,9 @@
  * Recycles snapshot buffers between a worker and the main thread. Each frame
  * transfers one buffer away; the main thread transfers it back once it has
  * been replaced. If none is free the frame is simply dropped, so a slow tab
- * never makes the queue grow.
+ * never makes the queue grow. The one exception is a ghost run's lineup
+ * frame, which takes a fresh buffer (see GhostFrames.send); give keeps at
+ * most four free, so the ring stays small.
  */
 export class BufferRing {
   private free: ArrayBuffer[] = [];

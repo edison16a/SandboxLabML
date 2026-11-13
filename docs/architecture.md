@@ -27,7 +27,7 @@ Both labs, Driving and Navigation, are plugins of one generic episode pipeline. 
 | Replay worker | Ghosts of past champions, the Sandbox and background benchmarks | Main thread, with its own snapshot stream |
 | Test run worker | The Studio's test runs and lesson previews (`src/studio/panels/testrun/testRun.worker.ts`) | The Studio |
 
-* Commands and results go through Comlink. Snapshots never do: each stream (`population` and `ghosts`) has its own `MessagePort`, and buffers cycle through a ring of three so the main thread never queues more than two frames.
+* Commands and results go through Comlink. Snapshots never do: each stream (`population` and `ghosts`) has its own `MessagePort`, and buffers cycle through a small ring (three, plus one the ghost replay may add for a run's lineup frame), so the main thread never queues more than two frames.
 * Watch speeds (1x, 2x and 4x) run the whole generation live in one sim worker, paced to real time. Turbo and Max split the population across all sim workers and run flat out. Turbo keeps the viewport busy with ghosts. Max stops drawing and holds the viewport so every core trains.
 * At Turbo and Max several generations can finish each second. The lab hands records to its store at most twice a second, so the charts repaint in step with the eye instead of with the trainer.
 * The replay worker re-simulates stored champions. It is separate so watching never slows training down.

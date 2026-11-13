@@ -41,11 +41,11 @@ async function scene() {
   return { setup: trainer.setup(), ghost };
 }
 
-/** Plays until the first frames arrive. The first frame waits for a timer slice; poll rather than guess how long a busy machine takes. */
-async function firstFrames(player: GhostPlayer, frames: Float32Array[], warmup = 0) {
+/** Plays and stops at once, keeping the lineup frame: play sends it with the start, at tick `warmup`, before any timer runs. */
+function firstFrames(player: GhostPlayer, frames: Float32Array[], warmup = 0) {
   player.play(1, false, warmup);
-  for (let waited = 0; frames.length === 0 && waited < 5000; waited += 20) await new Promise((r) => setTimeout(r, 20));
   player.stop();
+  expect(frames).toHaveLength(1);
 }
 
 describe('ghost player grid', () => {
@@ -54,7 +54,7 @@ describe('ghost player grid', () => {
     const { sender, frames } = capture();
     const player = new GhostPlayer(sender);
     await player.setScene('navigation', setup, [ghost(3, 2), ghost(3, 1), ghost(3, 0)]);
-    await firstFrames(player, frames);
+    firstFrames(player, frames);
     const first = frames[0];
     for (let a = 0; a < 3; a++) {
       for (let b = a + 1; b < 3; b++) {
@@ -69,11 +69,11 @@ describe('ghost player grid', () => {
     const crowd = capture();
     const field = new GhostPlayer(crowd.sender);
     await field.setScene('navigation', setup, [ghost(1, 3), ghost(2, 2), ghost(2, 0)]);
-    await firstFrames(field, crowd.frames, 60);
+    firstFrames(field, crowd.frames, 60);
     const lone = capture();
     const alone = new GhostPlayer(lone.sender);
     await alone.setScene('navigation', setup, [ghost(2, 0)]);
-    await firstFrames(alone, lone.frames, 60);
+    firstFrames(alone, lone.frames, 60);
     expect(crowd.ticks[0]).toBe(lone.ticks[0]);
     expect(Array.from(crowd.frames[0].subarray(2 * STRIDE, 3 * STRIDE))).toEqual(Array.from(lone.frames[0].subarray(0, STRIDE)));
   });
@@ -85,7 +85,7 @@ describe('ghost player warm up', () => {
     const warm = capture();
     const player = new GhostPlayer(warm.sender);
     await player.setScene('navigation', setup, [ghost(2, 0)]);
-    await firstFrames(player, warm.frames, 40);
+    firstFrames(player, warm.frames, 40);
     expect(warm.ticks[0]).toBeGreaterThanOrEqual(40);
     // The same ghost run cold, headless, the way the player builds it: no script and the ghost controller seed.
     const env = (await loadEpisodeModule('navigation')).createEnv({ ...setup, scriptSource: null }, builtinHost, mixSeed(0x9405));
