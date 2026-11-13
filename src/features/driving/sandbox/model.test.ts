@@ -1,11 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parseDrivingModels } from '@/engine/bench/driving/models';
+import { parseDrivingModels, type DrivingReferenceModel } from '@/engine/bench/driving/models';
+import { findPresetBlueprint } from '@/engine/blueprints/presets';
+import type { Blueprint, EpisodeBlueprint } from '@/engine/blueprints/types';
 import { mixSeed } from '@/engine/core/rng';
 import { DEFAULT_DRIVING_BLUEPRINT } from '@/engine/driving/blueprints';
 import { drivingModule } from '@/engine/driving/module';
 import type { DrivingRunResult } from '@/engine/driving/run/results';
 import { DEFAULT_DRIVING_SETTINGS } from '@/engine/driving/run/settings';
+import type { DrivingInputConfig } from '@/engine/driving/sensors/inputConfig';
 import { createEpisodeRunConfig } from '@/engine/training/newRun';
 import { rehearseScene } from '@/workers/replay/ghostEnvs';
 import { checkedTrip, modelSetup, sandboxScene, type Rehearse } from './firstTrip';
@@ -16,13 +19,52 @@ import { firstSandbox, STARTING_MODEL_COPIES } from './state';
 const TRIPS = 20;
 const SAFE_SHARE = 0.7;
 
+const SHIPPED = parseDrivingModels(JSON.parse(readFileSync('public/references/driving.json', 'utf8')));
+const runOn = (blueprint: Blueprint) => createEpisodeRunConfig({ env: 'driving', name: 'new', seed: 1, blueprint, populationSize: 100, settings: { ...DEFAULT_DRIVING_SETTINGS } });
+
 /** The model a new default run picks, ready to drive. */
 function shippedModel() {
-  const run = createEpisodeRunConfig({ env: 'driving', name: 'new', seed: 1, blueprint: DEFAULT_DRIVING_BLUEPRINT, populationSize: 100, settings: { ...DEFAULT_DRIVING_SETTINGS } });
-  const model = pickModel(parseDrivingModels(JSON.parse(readFileSync('public/references/driving.json', 'utf8'))), run);
+  const model = pickModel(SHIPPED, runOn(DEFAULT_DRIVING_BLUEPRINT));
   expect(model).not.toBeNull();
   return trainedModel(model!);
 }
+
+const STANDARD = DEFAULT_DRIVING_BLUEPRINT.inputs as DrivingInputConfig;
+const STARTER = (findPresetBlueprint('driving-starter') as EpisodeBlueprint).inputs as DrivingInputConfig;
+const model = (tier: DrivingReferenceModel['tier'], score: number, inputs: DrivingInputConfig, safeShare?: number): DrivingReferenceModel => ({
+  tier,
+  seed: 1,
+  generation: 100,
+  score,
+  blueprint: 'driving-standard',
+  inputs,
+  genome: tier,
+  ...(safeShare === undefined ? {} : { safeShare }),
+});
+
+describe('the model the Sandbox offers', () => {
+  const beginner = model('beginner', 60, STARTER, 0.9);
+  const intermediate = model('intermediate', 70, STANDARD, 0.86);
+  const advanced = model('advanced', 78, STANDARD, 0.74);
+
+  it('is the safest one whose inputs match the run, whatever it scores', () => {
+    expect(pickModel([advanced, intermediate, beginner], runOn(DEFAULT_DRIVING_BLUEPRINT))).toBe(intermediate);
+    expect(pickModel([advanced, intermediate, beginner], runOn(findPresetBlueprint('driving-starter')!))).toBe(beginner);
+  });
+
+  it('is the safest of all when no inputs match, and none without a model', () => {
+    expect(pickModel([advanced, intermediate, beginner], runOn(findPresetBlueprint('driving-advanced')!))).toBe(beginner);
+    expect(pickModel([advanced, intermediate, beginner], null)).toBe(beginner);
+    expect(pickModel([], runOn(DEFAULT_DRIVING_BLUEPRINT))).toBeNull();
+  });
+
+  it('goes by benchmark when a model has no safe share, and on a tie', () => {
+    const older = model('intermediate', 70, STANDARD);
+    expect(pickModel([older, advanced], runOn(DEFAULT_DRIVING_BLUEPRINT))).toBe(advanced);
+    const twin = model('intermediate', 80, STANDARD, 0.74);
+    expect(pickModel([advanced, twin], runOn(DEFAULT_DRIVING_BLUEPRINT))).toBe(twin);
+  });
+});
 
 /** The replay worker's rehearsal, run in place. */
 const rehearse: Rehearse = async (setup, specs) => rehearseScene(drivingModule, setup, specs);

@@ -19,13 +19,28 @@ export interface TrainedModel {
 }
 
 /**
- * The model the Sandbox offers: the best scoring one whose inputs match the
- * open run's, so its sensors read like the run's own champions, or the
- * best scoring one of all when none match.
+ * The best of a few models for a newcomer to watch: the safest on the
+ * generator's check trips, since the Sandbox shows whether SUVs arrive
+ * safely and the benchmark also pays for pace. When any of them has no
+ * safe share (a file from before the field) they are ranked by benchmark,
+ * as they were then. Ties go to the higher benchmark.
+ */
+function safest(models: readonly DrivingReferenceModel[]): DrivingReferenceModel | null {
+  if (models.length === 0) return null;
+  const bySafety = models.every((m) => m.safeShare !== undefined);
+  const rank = (m: DrivingReferenceModel) => (bySafety ? (m.safeShare ?? 0) : m.score);
+  return [...models].sort((a, b) => rank(b) - rank(a) || b.score - a.score)[0];
+}
+
+/**
+ * The model the Sandbox offers: the safest one whose inputs match the open
+ * run's, so its sensors read like the run's own champions, or the safest
+ * of all when none match.
  */
 export function pickModel(models: readonly DrivingReferenceModel[], run: RunConfig | null): DrivingReferenceModel | null {
   const inputs = run?.blueprint.env === 'driving' ? JSON.stringify((run.blueprint as EpisodeBlueprint).inputs) : null;
-  return models.find((m) => JSON.stringify(m.inputs) === inputs) ?? models[0] ?? null;
+  const matching = models.filter((m) => JSON.stringify(m.inputs) === inputs);
+  return safest(matching.length ? matching : models);
 }
 
 /**
