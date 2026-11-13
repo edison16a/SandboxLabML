@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { DrivingReferenceModel } from '@/engine/bench/driving/models';
 import type { DrivingContent } from '@/engine/driving/run/content';
 import type { DrivingInputConfig } from '@/engine/driving/sensors/inputConfig';
 import type { DrivingSetup } from '@/engine/driving/setup';
@@ -34,8 +35,10 @@ export interface DrivingLabState extends LabState {
   sandboxInputs: DrivingInputConfig | null;
   /** True while the Sandbox rehearses routes off screen for the trained model's first trip. */
   sandboxChecking: boolean;
-  /** The shipped trained model, once loaded; null before, or when the build ships none. */
+  /** The shipped trained model picked for the open run, once loaded; null before, or when the build ships none. */
   trained: TrainedModel | null;
+  /** Every shipped model, kept once loaded, so a run opened later gets its own pick without fetching the file again. */
+  trainedModels: DrivingReferenceModel[] | null;
   /** Where loading the trained model stands, so the Sandbox can say it failed rather than wait forever. */
   trainedLoad: 'idle' | 'loading' | 'ready' | 'failed';
   set: (patch: Partial<DrivingLabState>) => void;
@@ -43,11 +46,13 @@ export interface DrivingLabState extends LabState {
 
 /**
  * Lab state for a run that was just opened: the shared fields and nothing
- * left from the run before. The content is not touched: the coordinator
- * sends the new run's content while it loads, before this lands.
+ * left from the run before. That includes the trained model, since the
+ * Sandbox picks the one whose inputs match the run. The loaded models
+ * stay. The content is not touched: the coordinator sends the new run's
+ * content while it loads, before this lands.
  */
 export function openedRunState(run: RunConfig, records: GenerationRecord[], liveGeneration: number, leaving: DrivingLabState['mode'] = 'train'): Partial<DrivingLabState> {
-  return { ...openedLabState(run, records, liveGeneration, DRIVING_ENGINE_VERSION, leaving), trip: 0, trips: 1, followed: -1, sandbox: null, sandboxSetup: null, sandboxInputs: null, sandboxBrain: null };
+  return { ...openedLabState(run, records, liveGeneration, DRIVING_ENGINE_VERSION, leaving), trip: 0, trips: 1, followed: -1, sandbox: null, sandboxSetup: null, sandboxInputs: null, sandboxBrain: null, trained: null };
 }
 
 export const useDrivingLab = create<DrivingLabState>((set) => ({
@@ -64,6 +69,7 @@ export const useDrivingLab = create<DrivingLabState>((set) => ({
   sandboxInputs: null,
   sandboxChecking: false,
   trained: null,
+  trainedModels: null,
   trainedLoad: 'idle',
   set: (patch) => set(patch),
 }));

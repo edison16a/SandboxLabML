@@ -1,4 +1,4 @@
-import { loadDrivingModels } from '@/engine/bench/driving/models';
+import { loadDrivingModels, type DrivingReferenceModel } from '@/engine/bench/driving/models';
 import type { SandboxTrip } from '@/engine/driving/sandbox';
 import type { WorkerPool } from '@/workers/client/workerPool';
 import { isWatchSpeed, WATCH_SPEEDS } from '@/workers/shared/protocol';
@@ -17,26 +17,42 @@ interface SandboxHost {
 }
 
 /**
- * Loads the shipped trained model once, then replays the Sandbox if it was
- * waiting for it. When the file cannot be loaded (offline, or a build that
- * ships none) the Sandbox says so and drives the run's champions instead,
- * if it has any. The next opening of the Sandbox tries again.
+ * Offers the shipped model pickModel picks for the open run, whose inputs
+ * decide which one suits it. Gives true when it differs from the model
+ * offered before, such as for a run opened since on another brain.
+ */
+function offerTrained(models: readonly DrivingReferenceModel[]): boolean {
+  const model = pickModel(models, store().run);
+  if (!model || store().trained?.model === model) return false;
+  store().set({ trained: trainedModel(model), trainedLoad: 'ready' });
+  return true;
+}
+
+/**
+ * Loads the shipped models once, offers the one that suits the open run,
+ * then replays the Sandbox if it was waiting for it. Once loaded, every
+ * opening picks again at once, before the Sandbox builds its scene. When
+ * the file cannot be loaded (offline, or a build that ships none) the
+ * Sandbox says so and drives the run's champions instead, if it has any.
+ * The next opening of the Sandbox tries again.
  */
 function ensureTrained(pool: WorkerPool): void {
-  const { trained, trainedLoad } = store();
-  if (trained || trainedLoad === 'loading') return;
+  const { trainedModels, trainedLoad } = store();
+  if (trainedModels) {
+    offerTrained(trainedModels);
+    return;
+  }
+  if (trainedLoad === 'loading') return;
   store().set({ trainedLoad: 'loading' });
   void loadDrivingModels().then((models) => {
-    const model = pickModel(models, store().run);
-    if (store().trained) return;
-    if (!model) {
+    if (models.length === 0) {
       store().set({ trainedLoad: 'failed' });
       const sb = store().sandbox;
       if (sb?.model && sb.field.length > 0) sandboxControls(pool).update({ model: false });
       return;
     }
-    store().set({ trained: trainedModel(model), trainedLoad: 'ready' });
-    if (store().sandbox?.model) scheduleSandboxScene(pool, 0);
+    store().set({ trainedModels: models });
+    if (offerTrained(models) && store().sandbox?.model) scheduleSandboxScene(pool, 0);
   });
 }
 

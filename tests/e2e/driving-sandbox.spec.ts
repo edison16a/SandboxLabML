@@ -118,6 +118,26 @@ test.describe('Driving Sandbox', () => {
     await expect(panel.getByRole('button', { name: 'Restart the trip' })).toBeEnabled();
   });
 
+  test('offers each run the trained model made for its brain', async ({ page }) => {
+    await openLab(page);
+    // A new run on the Standard brain gets the safest model with Standard inputs.
+    let panel = await openSandbox(page);
+    await expect(panel.getByText(/The Intermediate preset's champion, benchmark \d+/)).toBeVisible({ timeout: 60_000 });
+    await panel.getByRole('button', { name: 'Back to training' }).click();
+    await expect(panel).toBeHidden();
+
+    // A Beginner run, made in the same page session, trains the Starter brain and gets the model trained on it.
+    await page.getByRole('button', { name: 'New run' }).click();
+    const dialog = page.getByRole('dialog', { name: 'New driving run' });
+    await dialog.getByRole('button', { name: /^Beginner/ }).click();
+    await dialog.getByRole('button', { name: 'Create and train' }).click();
+    await expect(dialog).toBeHidden({ timeout: 60_000 });
+    panel = await openSandbox(page);
+    await panel.getByRole('tab', { name: /SUVs/ }).click();
+    await expect(panel.getByText(/The Beginner preset's champion, benchmark \d+/)).toBeVisible({ timeout: 60_000 });
+    await expect(panel.getByText(/The Intermediate preset's champion/)).toBeHidden();
+  });
+
   test('says so when the trained model cannot be loaded', async ({ page }) => {
     await page.route('**/references/driving.json', (route) => route.fulfill({ status: 404, body: '' }));
     await openLab(page);
