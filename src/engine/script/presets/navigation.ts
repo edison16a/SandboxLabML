@@ -17,7 +17,7 @@ export const NAVIGATION_PRESETS: readonly ScriptPreset[] = [
     name: 'Intermediate',
     tier: 'intermediate',
     env: 'navigation',
-    description: 'The built-in reward written out: new ground, the finish, a cost for dying and for standing still. Trains exactly like a run without a script on the same brain.',
+    description: 'The built-in reward written out, with costs for dying and standing still. It pays for new ground and the finish, and trains exactly like a run without a script on the same brain.',
     source: NAVIGATION_INTERMEDIATE,
   },
   {
@@ -25,7 +25,7 @@ export const NAVIGATION_PRESETS: readonly ScriptPreset[] = [
     name: 'Advanced',
     tier: 'advanced',
     env: 'navigation',
-    description: 'Dying costs more, brushing spikes costs a little, and harder levels run three courses per brain, so it learns to stay safe in any room.',
+    description: 'Dying costs more and brushing spikes costs a little. Harder levels run three courses per brain, so it learns to stay safe in any room.',
     source: NAVIGATION_ADVANCED,
   },
 ];

@@ -18,7 +18,7 @@ export const DRIVING_PRESETS: readonly ScriptPreset[] = [
     name: 'Intermediate',
     tier: 'intermediate',
     env: 'driving',
-    description: 'The built-in reward written out: progress, arriving, and costs for every broken rule. Runs exactly like a run without a script.',
+    description: 'The built-in reward written out, with a cost for every broken rule. It pays for progress and arriving, and runs exactly like a run without a script.',
     source: DRIVING_INTERMEDIATE,
   },
   {
@@ -26,7 +26,7 @@ export const DRIVING_PRESETS: readonly ScriptPreset[] = [
     name: 'Advanced',
     tier: 'advanced',
     env: 'driving',
-    description: 'The built-in reward plus care around people and cars, and new random cities once the lights are learned.',
+    description: 'The built-in reward plus care around people and cars. Once the lights are learned, it trains in new random cities.',
     source: DRIVING_ADVANCED,
   },
 ];
