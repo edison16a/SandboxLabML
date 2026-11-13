@@ -22,7 +22,8 @@ jobs:
   regenerate:
     name: Regenerate ${{ matrix.env }} references
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    # Driving trains 18 runs of 500 generations, about 330 CPU minutes plus the pick, on a few cores.
+    timeout-minutes: 300
     strategy:
       fail-fast: false
       matrix:
