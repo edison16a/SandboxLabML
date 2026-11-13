@@ -16,7 +16,7 @@ type DrivingReferences = Omit<BenchReferences, 'models'> & { models: DrivingRefe
 
 const percent = (share: number) => `${Math.round(share * 100)}%`;
 
-/** The model a tier's runs offer (see pickDrivingModel). How reliable it is goes to the log, not the file. */
+/** The model a tier's runs offer (see pickDrivingModel), with how reliable it is in the log. */
 async function modelOf(tier: ReferenceTier, runs: DrivingReferenceResult[]): Promise<PickedDrivingModel> {
   const picked = await pickDrivingModel(tier, runs);
   const levels = SANDBOX_LEVELS.map((l, i) => `level ${l} ${percent(picked.checkShares[i])}`).join(', ');

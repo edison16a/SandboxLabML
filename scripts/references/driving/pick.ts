@@ -28,7 +28,11 @@ export function rankDrivers<T extends DriverResult>(list: readonly T[]): T[] {
   return [...list].sort((a, b) => weightedShare(b.shares) - weightedShare(a.shares) || b.shares[0] - a.shares[0] || b.generation - a.generation);
 }
 
-/** A shipped model with how it did, for the log and docs/benchmark.md. None of this goes in the file. */
+/**
+ * A shipped model with how it did, for the log and docs/benchmark.md. Only
+ * the weighted check share goes in the file, as the model's safeShare
+ * (see keepBetterModels).
+ */
 export interface PickedDrivingModel extends DrivingReferenceModel {
   /** Weighted safe share on the pick and final trips. */
   pickShare: number;

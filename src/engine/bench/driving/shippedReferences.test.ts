@@ -36,4 +36,14 @@ describe('public/references/driving.json', () => {
     expect(parseDrivingModels({ env: 'driving', models: [{ tier: 'beginner' }] })).toEqual([]);
     expect(parseDrivingModels(null)).toEqual([]);
   });
+
+  it('reads a model with no safe share, and none with a share that is not one', () => {
+    const file = JSON.parse(readFileSync('public/references/driving.json', 'utf8'));
+    const model = file.models[0];
+    const { safeShare: _share, ...older } = model;
+    const read = (m: object) => parseDrivingModels({ ...file, models: [m] });
+    expect(read(older)).toHaveLength(1);
+    expect(read(older)[0].safeShare).toBeUndefined();
+    for (const safeShare of [-0.1, 1.5, '0.8', null, Number.NaN]) expect(read({ ...model, safeShare }), String(safeShare)).toEqual([]);
+  });
 });

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import type { DrivingReferenceModel } from '../../../src/engine/bench/driving/models';
 import { DRIVING_BENCHMARK_VERSION, DRIVING_ENGINE_VERSION } from '../../../src/engine/driving/version';
-import { keepBetterModels, shippedModels } from './keep';
+import { keepBetterModels, shippedModels, storedShare } from './keep';
 import type { PickedDrivingModel } from './pick';
 
 const inputs = { lidar: { count: 5, fov: 2, range: 40 }, noise: 0 } as unknown as DrivingReferenceModel['inputs'];
@@ -14,14 +14,25 @@ const picked = (tier: DrivingReferenceModel['tier'], seed: number, checkShares: 
 describe('keeping the better Driving model', () => {
   vi.spyOn(console, 'log').mockImplementation(() => {});
 
-  it('keeps the shipped model, unchanged, only where it drives the check trips better', () => {
+  it('keeps the shipped model, unchanged but for its share, only where it drives the check trips better', () => {
     const old = [model('beginner', 1), model('advanced', 2)];
     const drive = (m: DrivingReferenceModel) => (m.seed === 1 ? [0.9, 0.9, 0.9, 0.9] : [0.2, 0.2, 0.2, 0.2]);
     const out = keepBetterModels([picked('beginner', 7, [0.5, 0.5, 0.5, 0.5]), picked('intermediate', 8, [0.1, 0, 0, 0]), picked('advanced', 9, [0.6, 0.6, 0.6, 0.6])], old, drive);
-    expect(out[0]).toBe(old[0]);
-    // No shipped model of a tier means the pick ships, and the pick's own numbers stay out of the file.
-    expect(out[1]).toEqual(model('intermediate', 8));
-    expect(out[2]).toEqual(model('advanced', 9));
+    expect(out[0]).toEqual({ ...old[0], safeShare: 0.9 });
+    // No shipped model of a tier means the pick ships. Its pick share stays out of the file, and its check shares go in weighted.
+    expect(out[1]).toEqual({ ...model('intermediate', 8), safeShare: 0.04 });
+    expect(out[2]).toEqual({ ...model('advanced', 9), safeShare: 0.6 });
+  });
+
+  it('stores the share a kept model drove now, not the one its old file held', () => {
+    const old = { ...model('beginner', 1), safeShare: 0.5 };
+    const out = keepBetterModels([picked('beginner', 7, [0.1, 0.1, 0.1, 0.1])], [old], () => [0.7, 0.7, 0.7, 0.7]);
+    expect(out[0]).toEqual({ ...old, safeShare: 0.7 });
+  });
+
+  it('rounds the stored share to a tenth of a percent', () => {
+    expect(storedShare([1 / 3, 1 / 3, 1 / 3, 1 / 3])).toBe(0.333);
+    expect(storedShare([1, 0, 0, 0])).toBe(0.4);
   });
 
   it('gives a tie to the new pick', () => {

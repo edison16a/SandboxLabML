@@ -35,17 +35,24 @@ export type CheckDrive = (model: DrivingReferenceModel) => number[];
 
 const onCheckTrips: CheckDrive = (m) => sandboxShares(m.genome, m.inputs, m.seed, CHECK_TRIPS);
 
+/** A weighted safe share as the file stores it, to a tenth of a percent. */
+export function storedShare(shares: readonly number[]): number {
+  return Math.round(weightedShare(shares) * 1000) / 1000;
+}
+
 /**
  * The model each tier ships: the new pick, unless the model it would
  * replace drives the check trips more safely. Both drive the same unseen
  * trips, three copies each, and the weighted safe share decides, a tie
  * going to the new pick. A new set of seeds can simply be unluckier than
  * the last, and a regenerated file should never hand a newcomer a worse
- * driver. A kept model is copied unchanged, so a rerun on the same engine
- * keeps it again and writes the same file.
+ * driver. Either way the model ships with the share it drove here, which
+ * the Sandbox picks by. A kept model is otherwise copied unchanged, so a
+ * rerun on the same engine keeps it again and writes the same file.
  */
 export function keepBetterModels(picked: readonly PickedDrivingModel[], old: readonly DrivingReferenceModel[], drive: CheckDrive = onCheckTrips): DrivingReferenceModel[] {
-  return picked.map(({ pickShare: _pick, checkShares, ...model }) => {
+  return picked.map(({ pickShare: _pick, checkShares, ...pick }) => {
+    const model: DrivingReferenceModel = { ...pick, safeShare: storedShare(checkShares) };
     const before = old.find((m) => m.tier === model.tier);
     if (!before) return model;
     const shares = drive(before);
@@ -54,6 +61,6 @@ export function keepBetterModels(picked: readonly PickedDrivingModel[], old: rea
     console.log(describe('new pick', model, checkShares));
     console.log(describe('shipped', before, shares));
     console.log(`  ships the ${keep ? 'shipped one again' : 'new pick'}`);
-    return keep ? before : model;
+    return keep ? { ...before, safeShare: storedShare(shares) } : model;
   });
 }

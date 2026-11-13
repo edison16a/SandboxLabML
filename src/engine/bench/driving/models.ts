@@ -21,6 +21,13 @@ export interface DrivingReferenceModel {
   inputs: DrivingInputConfig;
   /** The genome in the binary format, as base64. */
   genome: string;
+  /**
+   * Its safe share on the generator's unseen check trips, 0 to 1, weighted
+   * across the Sandbox levels as the generator compares models. The
+   * Sandbox offers the safest model, since a newcomer watches it drive.
+   * Files written before it existed have none.
+   */
+  safeShare?: number;
 }
 
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
@@ -31,9 +38,21 @@ function isInputs(v: unknown): v is DrivingInputConfig {
   return isObj(v) && isObj(v.lidar) && isNum(v.lidar.count) && isNum(v.lidar.range) && isNum(v.lidar.fov) && isNum(v.noise);
 }
 
+/** A share is optional, but one that is there has to be a number from 0 to 1. */
+const isShare = (v: unknown) => v === undefined || (isNum(v) && v >= 0 && v <= 1);
+
 function isModel(v: unknown): v is DrivingReferenceModel {
   if (!isObj(v)) return false;
-  return REFERENCE_TIERS.includes(v.tier as ReferenceTier) && isNum(v.seed) && isNum(v.generation) && isNum(v.score) && typeof v.blueprint === 'string' && typeof v.genome === 'string' && isInputs(v.inputs);
+  return (
+    REFERENCE_TIERS.includes(v.tier as ReferenceTier) &&
+    isNum(v.seed) &&
+    isNum(v.generation) &&
+    isNum(v.score) &&
+    typeof v.blueprint === 'string' &&
+    typeof v.genome === 'string' &&
+    isInputs(v.inputs) &&
+    isShare(v.safeShare)
+  );
 }
 
 /**
